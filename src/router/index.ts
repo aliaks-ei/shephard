@@ -6,7 +6,7 @@ import {
   createWebHistory,
 } from 'vue-router';
 import routes from './routes';
-import { authGuard } from 'src/guards/auth';
+import { authGuard } from 'src/router/guards/auth';
 
 /*
  * If not building with SSR mode, you can

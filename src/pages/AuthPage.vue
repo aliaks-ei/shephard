@@ -30,7 +30,10 @@ const isLoading = ref(false);
 
 const handleLogin = async () => {
   isLoading.value = true;
+
   await authStore.signInWithOtp(email.value);
+
+  alert('Check your email for the login link!');
   isLoading.value = false;
 };
 </script>
