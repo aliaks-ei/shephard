@@ -32,17 +32,17 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       isLoading.value = true;
 
-      const { error } = await supabase.auth.signInWithOtp({
+      const { data, error } = await supabase.auth.signInWithOtp({
         email,
       });
 
-      if (error) throw error;
-
-      alert('Check your email for the login link!');
-    } catch (error) {
-      if (error instanceof Error) {
-        alert(error.message);
+      if (error) {
+        throw error;
       }
+
+      return { data, error: null };
+    } catch (error) {
+      console.error('Error signing in with OTP:', error);
     } finally {
       isLoading.value = false;
     }
@@ -86,13 +86,11 @@ export const useAuthStore = defineStore('auth', () => {
   });
 
   return {
-    // State
     user,
     session,
     isLoading,
     isAuthenticated,
 
-    // Methods
     init,
     signInWithOtp,
     signOut,

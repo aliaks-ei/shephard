@@ -1,25 +1,49 @@
-// Quasar SCSS (& Sass) Variables
-// --------------------------------------------------
-// To customize the look and feel of this app, you can override
-// the Sass/SCSS variables found in Quasar's source Sass/SCSS files.
+$red: #f7374f !default;
+$red-1: #feedee !default;
+$red-2: #fbc3c6 !default;
+$red-3: #f98990 !default;
+$red-4: #f7374f !default;
+$red-5: #bd1a33 !default;
+$red-6: #7f0e1f !default;
+$red-7: #47040d !default;
 
-// Check documentation for full list of Quasar variables
+$green: #118b50 !default;
+$green-1: #affecb !default;
+$green-2: #22e185 !default;
+$green-3: #19b56a !default;
+$green-4: #118b50 !default;
+$green-5: #096338 !default;
+$green-6: #033e21 !default;
+$green-7: #011d0c !default;
 
-// Your own variables (that are declared here) and Quasar's own
-// ones will be available out of the box in your .vue/.scss/.sass files
+$orange: #fe7743 !default;
+$orange-1: #ffe9e6 !default;
+$orange-2: #feb4a3 !default;
+$orange-3: #fe7743 !default;
+$orange-4: #ce5309 !default;
+$orange-5: #953a04 !default;
+$orange-6: #602302 !default;
+$orange-7: #300d00 !default;
 
-// It's highly recommended to change the default colors
-// to match your app's branding.
-// Tip: Use the "Theme Builder" on Quasar's documentation website.
+$cyan: #00919a !default;
+$cyan-1: #caf9ff !default;
+$cyan-2: #00e5f3 !default;
+$cyan-3: #00bac6 !default;
+$cyan-4: #00919a !default;
+$cyan-5: #006a71 !default;
+$cyan-6: #00454a !default;
+$cyan-7: #002427 !default;
 
-$primary   : #1976D2;
-$secondary : #26A69A;
-$accent    : #9C27B0;
+$primary: #00919a;
+$secondary: #a47b7b;
+$accent: #00919a;
 
-$dark      : #1D1D1D;
-$dark-page : #121212;
+$dark: #131010;
+$dark-page: #121212;
+$bg-color: #fbfafa;
+$text-color: #32302d;
 
-$positive  : #21BA45;
-$negative  : #C10015;
-$info      : #31CCEC;
-$warning   : #F2C037;
+$positive: #118b50;
+$negative: #f7374f;
+$info: #5d7c80;
+$warning: #fe7743;
