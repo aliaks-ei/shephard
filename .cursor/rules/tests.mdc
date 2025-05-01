@@ -1,0 +1,151 @@
+---
+description: 
+globs: **/*.test.ts
+alwaysApply: false
+---
+# Test Guidelines
+
+Before writing tests, come up with a plan for which exact things you want to test, and check that with me.
+
+## Framework and Libraries
+
+- Tests are written using `Vitest` as the test runner and framework
+- For Vue component testing, use `@vue/test-utils` version 2+
+
+## File Structure
+
+- Test files must have the `.test.ts` extension
+- Test files should be co-located with the file they are testing
+
+## Test Organization
+
+- When testing Vue components, do NOT use a root `describe` block
+- For non-component tests, using a root `describe` block is acceptable
+
+## Best Practices
+
+- Follow guiding principles: test your software the way users use it
+- Write tests that are resilient to implementation changes
+
+## Mocking
+
+- When mocking, do not add unnecessary mocks, such as `$patch: vi.fn()`, `$reset: vi.fn()`. Only mock minimal number of things that are used so that test can run.
+- Before writing a custom `vi.mock('...')`, check if there is already a mock for that module in `__mocks__` subfolder of wherever mocked module file is.
+
+## Which tests to write
+
+- Be cautious about what tests to write. Do not write tests that don't offer any real safety checks.
+
+## Comments
+
+- Don't write useless comments, such as a single "Mock a function" before a line that mocks a function
+
+# Core Testing Philosophy
+
+- Write concise, readable tests that focus on a single functionality
+- Use absolute minimum test data necessary to verify the specific behavior
+- For component testing, use createTestingPinia to mock store behavior and isolate component logic
+
+# Custom Test Rendering
+
+- Create a dedicated render function at the top of each test file
+- Include common props, providers, and stubs in the custom render function
+- Type component props using ComponentProps<typeof ComponentName>
+
+# Pinia Store Testing
+
+- Initialize Pinia before each test using createTestingPinia with createSpy: vi.fn
+  ```typescript
+  beforeEach(() => {
+    const pinia = createTestingPinia({ createSpy: vi.fn });
+    setActivePinia(pinia);
+  });
+  ```
+- Access stores using their respective hook functions (e.g., useCaseStore())
+- With createTestingPinia, store state becomes fully writable and actions are automatically stubbed
+- Directly modify store state using Vue's ref() with // @ts-expect-error comment
+  Example:
+  ```typescript
+  // @ts-expect-error - Testing Pinia
+  storeInstance.propertyName = ref(mockValue);
+  ```
+
+- Avoid mocking entire store instances or their $reset methods
+- Verify store method calls with expect().toHaveBeenCalledWith()
+- Toggle action stubbing with stubActions option:
+  ```typescript
+  createTestingPinia({ stubActions: false }); // execute real actions
+  ```
+- For unit testing stores themselves (not components), use regular createPinia
+
+# Quasar testing
+- Ensure to call `installQuasarPlugin()` with necessary arguments at the top of each test
+  Example:
+  ```vue
+  <template>
+    <q-header>
+      <q-toolbar>
+        <q-toolbar-title>Header</q-toolbar-title>
+      </q-toolbar>
+    </q-header>
+    <q-footer>
+      <q-toolbar>
+        <q-toolbar-title>Footer</q-toolbar-title>
+      </q-toolbar>
+    </q-footer>
+  </template>
+  ```
+
+  ```typescript
+  import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest';
+  import { mount } from '@vue/test-utils';
+  import { describe, expect, it } from 'vitest';
+  import LayoutComponent from './demo/LayoutComponent.vue';
+
+  installQuasarPlugin();
+
+  describe('layout example', () => {
+    it('should mount component properly', () => {
+      const wrapper = mount(LayoutComponent);
+      expect(wrapper.exists()).toBe(true);
+    });
+  });
+  ```
+- Mock Quasar components where necessary (e.g., dialogs, notifications).
+- Test components in isolation unless explicitly testing integration.
+- Stub Quasar plugins (Notify, Dialog, etc.).
+- Stub slots and props when testing layout components (`<q-layout>`, `<q-page>`, etc.).
+- Do not test third-party behavior unless wrapped.
+
+# Test Organization
+
+- Group related tests with descriptive describe blocks
+- Use beforeEach for common setup and afterEach for cleanup
+- Test component lifecycle events (mount/unmount effects)
+- Use clear, descriptive test names that explain the expected behavior
+
+# Test Data Creation
+
+- Only include properties required for the specific test case
+- Create data structures that reflect real application data patterns
+
+# Component Context
+
+- Provide required context tokens using the global.provide option
+- Stub only necessary child components using global.stubs
+- Use real components when their behavior is relevant to the test
+
+# TypeScript Integration
+
+- Use proper types for all test data
+- Add // @ts-expect-error comments with explanations when bypassing type checking
+
+# Test Cleanup
+
+- Always clean up after tests using afterEach(cleanup)
+- Verify that component unmount effects work correctly
+
+# Assertions
+
+- Write clear, focused assertions that test one aspect at a time
+- Prefer specific assertions over generic ones

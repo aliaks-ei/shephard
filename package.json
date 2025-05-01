@@ -9,10 +9,12 @@
   "scripts": {
     "lint": "eslint -c ./eslint.config.js \"./src*/**/*.{ts,js,cjs,mjs,vue}\"",
     "format": "prettier --write \"**/*.{js,ts,vue,scss,html,md,json}\" --ignore-path .gitignore",
-    "test": "echo \"No test specified\" && exit 0",
+    "test": "echo \"See package.json => scripts for available tests.\" && exit 0",
     "dev": "quasar dev",
     "build": "quasar build",
-    "postinstall": "quasar prepare"
+    "postinstall": "quasar prepare",
+    "test:unit": "vitest",
+    "test:unit:ci": "vitest run"
   },
   "dependencies": {
     "@quasar/extras": "^1.16.4",
@@ -29,6 +31,7 @@
     "@eslint/js": "^9.14.0",
     "@intlify/unplugin-vue-i18n": "^4.0.0",
     "@quasar/app-vite": "^2.1.0",
+    "@quasar/quasar-app-extension-testing-unit-vitest": "^1.1.0",
     "@types/node": "^20.5.9",
     "@vue/eslint-config-prettier": "^10.1.0",
     "@vue/eslint-config-typescript": "^14.4.0",
@@ -47,7 +50,9 @@
     "workbox-expiration": "^7.3.0",
     "workbox-precaching": "^7.3.0",
     "workbox-routing": "^7.3.0",
-    "workbox-strategies": "^7.3.0"
+    "workbox-strategies": "^7.3.0",
+    "@vue/test-utils": "^2.4.4",
+    "vitest": "^2.0.5"
   },
   "engines": {
     "node": "^28 || ^26 || ^24 || ^22 || ^20 || ^18",
