@@ -1,30 +1,41 @@
 <template>
-  <div class="row flex-center flex">
-    <div class="col-6 form-widget">
-      <h1 class="header">Sign in</h1>
-      <div v-if="hashedNonce">
-        <component :is="'script'" src="https://accounts.google.com/gsi/client" async />
-        <div
-          id="g_id_onload"
-          data-client_id="714982504675-o57hsgsh6nfg1qj7snd6k1hmccmpk3sv.apps.googleusercontent.com"
-          data-context="signin"
-          data-ux_mode="popup"
-          data-callback="handleGoogleSignIn"
-          data-auto_prompt="false"
-          :data-nonce="hashedNonce"
-        ></div>
+  <div class="auth-page flex flex-center q-pa-md">
+    <q-card class="auth-card shadow-5">
+      <q-card-section class="bg-primary text-white text-center">
+        <div class="text-h4">Welcome to Shephard</div>
+      </q-card-section>
 
-        <div
-          class="g_id_signin"
-          data-type="standard"
-          data-shape="pill"
-          data-theme="outline"
-          data-text="signin_with"
-          data-size="large"
-          data-logo_alignment="left"
-        ></div>
-      </div>
-    </div>
+      <q-card-section class="q-pa-lg">
+        <div class="text-subtitle1 text-center q-mb-md">Please sign in to continue</div>
+
+        <div v-if="hashedNonce" class="flex flex-center">
+          <component :is="'script'" src="https://accounts.google.com/gsi/client" async />
+          <div
+            id="g_id_onload"
+            data-client_id="714982504675-o57hsgsh6nfg1qj7snd6k1hmccmpk3sv.apps.googleusercontent.com"
+            data-context="signin"
+            data-ux_mode="popup"
+            data-callback="handleGoogleSignIn"
+            data-auto_prompt="false"
+            :data-nonce="hashedNonce"
+          ></div>
+
+          <div
+            class="g_id_signin"
+            data-type="standard"
+            data-shape="pill"
+            data-theme="outline"
+            data-text="signin_with"
+            data-size="large"
+            data-logo_alignment="left"
+          ></div>
+        </div>
+
+        <div v-else class="flex flex-center">
+          <q-spinner color="primary" size="2em" />
+        </div>
+      </q-card-section>
+    </q-card>
   </div>
 </template>
 
@@ -80,7 +91,12 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.form-widget {
+.auth-page {
+  min-height: 100vh;
+}
+
+.auth-card {
   max-width: 480px;
+  width: 100%;
 }
 </style>
