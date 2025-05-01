@@ -3,11 +3,14 @@ import { ref, computed } from 'vue';
 
 import { supabase } from 'src/lib/supabase/client';
 import type { User, Session } from '@supabase/supabase-js';
+import { generateSecureNonce } from 'src/utils/crypto';
+import type { NonceResult, GoogleSignInResponse } from 'src/boot/google-auth';
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null);
   const session = ref<Session | null>(null);
   const isLoading = ref(true);
+  const currentNonce = ref<NonceResult | null>(null);
 
   const isAuthenticated = computed(() => !!user.value);
 
@@ -27,24 +30,35 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  // Sign in with email and password
-  async function signInWithOtp(email: string) {
-    try {
-      isLoading.value = true;
+  // Generate a new nonce for Google authentication
+  async function generateNonce(): Promise<NonceResult> {
+    const nonceData = await generateSecureNonce();
+    currentNonce.value = nonceData;
+    return nonceData;
+  }
 
-      const { data, error } = await supabase.auth.signInWithOtp({
-        email,
+  async function signInWithGoogle(response: GoogleSignInResponse) {
+    if (!currentNonce.value) {
+      console.error('No nonce available for authentication');
+      return { data: null, error: new Error('No nonce available for authentication') };
+    }
+
+    try {
+      const { data, error } = await supabase.auth.signInWithIdToken({
+        provider: 'google',
+        token: response.credential || '',
+        nonce: currentNonce.value.nonce,
       });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
+
+      // Clear the nonce after use
+      currentNonce.value = null;
 
       return { data, error: null };
     } catch (error) {
-      console.error('Error signing in with OTP:', error);
-    } finally {
-      isLoading.value = false;
+      console.error('Error signing in with Google:', error);
+      return { data: null, error };
     }
   }
 
@@ -90,10 +104,12 @@ export const useAuthStore = defineStore('auth', () => {
     session,
     isLoading,
     isAuthenticated,
+    currentNonce,
 
     init,
-    signInWithOtp,
     signOut,
     updateProfile,
+    signInWithGoogle,
+    generateNonce,
   };
 });
