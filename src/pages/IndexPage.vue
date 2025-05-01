@@ -63,14 +63,29 @@
           </q-item>
         </q-list>
       </q-card-section>
+
+      <q-card-actions align="center">
+        <q-btn
+          color="negative"
+          icon="logout"
+          label="Sign Out"
+          flat
+          :loading="isSigningOut"
+          @click="handleSignOut"
+        />
+      </q-card-actions>
     </q-card>
   </q-page>
 </template>
 
 <script setup lang="ts">
 import { useAuthStore } from 'src/stores/auth';
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 
 const authStore = useAuthStore();
+const router = useRouter();
+const isSigningOut = ref(false);
 
 function getFirstLetter(email: string): string {
   if (!email) return '?';
@@ -89,6 +104,23 @@ function getUserName(): string {
 
   // Return username part of email or full email if @ not found
   return atIndex > 0 ? email.substring(0, atIndex) : email;
+}
+
+async function handleSignOut() {
+  isSigningOut.value = true;
+  try {
+    const { error } = await authStore.signOut();
+    if (error) {
+      throw new Error('Failed to sign out');
+    }
+
+    // Redirect to auth page
+    await router.push('/auth');
+  } catch (error) {
+    console.error('Error signing out:', error);
+  } finally {
+    isSigningOut.value = false;
+  }
 }
 </script>
 
