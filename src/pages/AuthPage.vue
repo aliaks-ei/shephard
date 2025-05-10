@@ -1,13 +1,48 @@
 <template>
-  <div class="auth-page flex flex-center q-pa-md">
+  <div class="auth-page flex flex-center column q-pa-md">
+    <h1 class="text-h4 text-primary q-mb-xl">Welcome to Shephard</h1>
     <q-card class="auth-card shadow-5">
       <q-card-section class="bg-primary text-white text-center">
-        <div class="text-h4">Welcome to Shephard</div>
+        <div class="text-h5">Sign In</div>
       </q-card-section>
 
       <q-card-section class="q-pa-lg">
         <div class="text-subtitle1 text-center q-mb-md">Please sign in to continue</div>
 
+        <!-- Email OTP Authentication -->
+        <q-form @submit.prevent="handleEmailSubmit" class="q-gutter-md q-mb-md" novalidate>
+          <q-input
+            v-model="email"
+            label="Email"
+            type="email"
+            :disable="authStore.isEmailSent"
+            outlined
+            :rules="emailRules()"
+            lazy-rules="ondemand"
+          />
+
+          <div class="text-negative q-mb-sm" v-if="authStore.emailError">
+            {{ authStore.emailError }}
+          </div>
+
+          <div v-if="authStore.isEmailSent" class="text-positive q-mb-md">
+            We've sent a magic link to your email. Please check your inbox and click the link to
+            sign in.
+          </div>
+
+          <q-btn
+            type="submit"
+            :label="authStore.isEmailSent ? 'Resend Email' : 'Sign in with Email'"
+            color="primary"
+            class="full-width"
+            :loading="isEmailLoading"
+          />
+        </q-form>
+
+        <q-separator class="q-my-md" />
+        <div class="text-center q-mb-md">OR</div>
+
+        <!-- Google Authentication -->
         <div v-if="hashedNonce" class="flex flex-center">
           <component :is="'script'" src="https://accounts.google.com/gsi/client" async />
           <div
@@ -43,6 +78,8 @@
 import { useAuthStore } from 'src/stores/auth';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+
+import { emailRules } from 'src/utils/validation-rules';
 import type { GoogleSignInResponse } from 'src/boot/google-auth';
 
 // Import boot file for global handlers
@@ -52,11 +89,16 @@ const authStore = useAuthStore();
 const router = useRouter();
 const route = useRoute();
 const hashedNonce = ref('');
+const email = ref('');
+const isEmailLoading = ref(false);
 
 onMounted(async () => {
   // Generate new nonce for this authentication session
   const nonceData = await authStore.generateNonce();
   hashedNonce.value = nonceData.hashedNonce;
+
+  // Reset email state when component is mounted
+  authStore.resetEmailState();
 
   // Set up the callback function that will be called by the global handleGoogleSignIn
   window.vueGoogleCallback = (response: GoogleSignInResponse) => {
@@ -83,6 +125,24 @@ async function handleGoogleSignIn(response: GoogleSignInResponse) {
   }
 }
 
+// Handle Email OTP authentication
+async function handleEmailSubmit() {
+  if (!email.value) return;
+
+  isEmailLoading.value = true;
+  try {
+    const result = await authStore.signInWithOtp(email.value);
+
+    if (result.error) {
+      console.error('Email authentication failed:', result.error);
+    }
+  } catch (err) {
+    console.error('Error during email authentication:', err);
+  } finally {
+    isEmailLoading.value = false;
+  }
+}
+
 onUnmounted(() => {
   if (window.vueGoogleCallback) {
     delete window.vueGoogleCallback;
@@ -96,7 +156,7 @@ onUnmounted(() => {
 }
 
 .auth-card {
-  max-width: 480px;
+  max-width: 380px;
   width: 100%;
 }
 </style>

@@ -11,6 +11,8 @@ export const useAuthStore = defineStore('auth', () => {
   const session = ref<Session | null>(null);
   const isLoading = ref(true);
   const currentNonce = ref<NonceResult | null>(null);
+  const isEmailSent = ref(false);
+  const emailError = ref<string | null>(null);
 
   const isAuthenticated = computed(() => !!user.value);
 
@@ -62,6 +64,48 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // Send OTP to email
+  async function signInWithOtp(email: string) {
+    try {
+      isEmailSent.value = false;
+      emailError.value = null;
+
+      const { data, error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) throw error;
+
+      isEmailSent.value = true;
+      return { data, error: null };
+    } catch (error) {
+      emailError.value = error instanceof Error ? error.message : 'An unknown error occurred';
+      console.error('Error sending OTP to email:', error);
+      return { data: null, error };
+    }
+  }
+
+  // Verify OTP sent to email
+  async function verifyOtp(email: string, token: string) {
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token,
+        type: 'magiclink',
+      });
+
+      if (error) throw error;
+
+      return { data, error: null };
+    } catch (error) {
+      console.error('Error verifying OTP:', error);
+      return { data: null, error };
+    }
+  }
+
   // Sign out
   async function signOut() {
     try {
@@ -93,6 +137,12 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // Reset email state
+  function resetEmailState() {
+    isEmailSent.value = false;
+    emailError.value = null;
+  }
+
   // Subscribe to auth state changes
   supabase.auth.onAuthStateChange((_event, currentSession) => {
     session.value = currentSession;
@@ -105,11 +155,16 @@ export const useAuthStore = defineStore('auth', () => {
     isLoading,
     isAuthenticated,
     currentNonce,
+    isEmailSent,
+    emailError,
 
     init,
     signOut,
     updateProfile,
     signInWithGoogle,
+    signInWithOtp,
+    verifyOtp,
     generateNonce,
+    resetEmailState,
   };
 });

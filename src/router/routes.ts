@@ -16,6 +16,13 @@ const routes: RouteRecordRaw[] = [
       requiresAuth: false,
     },
   },
+  {
+    path: '/auth/callback',
+    component: () => import('pages/AuthCallbackPage.vue'),
+    meta: {
+      requiresAuth: false,
+    },
+  },
 
   // Always leave this as last one,
   // but you can also remove it
