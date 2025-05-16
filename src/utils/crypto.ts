@@ -3,6 +3,7 @@ import type { NonceResult } from 'src/boot/google-auth';
 /**
  * Generates a secure nonce and its hashed version for Google authentication
  * The nonce is used with Supabase auth, while the hashed nonce is sent to Google
+ * @returns {NonceResult} An object containing the nonce and its hashed version
  */
 export async function generateSecureNonce(): Promise<NonceResult> {
   // Generate random bytes and convert to base64 string

@@ -35,6 +35,7 @@ export const useAuthStore = defineStore('auth', () => {
   // Generate a new nonce for Google authentication
   async function generateNonce(): Promise<NonceResult> {
     const nonceData = await generateSecureNonce();
+
     currentNonce.value = nonceData;
     return nonceData;
   }
@@ -80,10 +81,12 @@ export const useAuthStore = defineStore('auth', () => {
       if (error) throw error;
 
       isEmailSent.value = true;
+
       return { data, error: null };
     } catch (error) {
       emailError.value = error instanceof Error ? error.message : 'An unknown error occurred';
       console.error('Error sending OTP to email:', error);
+
       return { data: null, error };
     }
   }
@@ -102,6 +105,7 @@ export const useAuthStore = defineStore('auth', () => {
       return { data, error: null };
     } catch (error) {
       console.error('Error verifying OTP:', error);
+
       return { data: null, error };
     }
   }

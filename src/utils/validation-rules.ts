@@ -1,8 +1,4 @@
 /**
- * Utility functions for form validation rules
- */
-
-/**
  * Validates if a value exists (is not empty)
  * @param val - The value to check
  * @param message - Optional custom error message

@@ -82,7 +82,6 @@ import { useRouter, useRoute } from 'vue-router';
 import { emailRules } from 'src/utils/validation-rules';
 import type { GoogleSignInResponse } from 'src/boot/google-auth';
 
-// Import boot file for global handlers
 import 'src/boot/google-auth';
 
 const authStore = useAuthStore();
