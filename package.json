@@ -1,0 +1,63 @@
+{
+  "name": "shephard",
+  "version": "0.0.1",
+  "description": "Smart expenses wallet",
+  "productName": "Shephard",
+  "author": "Aliaksei Mazheika <aliaksei.mazheika@v7labs.com>",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "lint": "eslint -c ./eslint.config.js \"./src*/**/*.{ts,js,cjs,mjs,vue}\"",
+    "format": "prettier --write \"**/*.{js,ts,vue,scss,html,md,json}\" --ignore-path .gitignore",
+    "test": "echo \"See package.json => scripts for available tests.\" && exit 0",
+    "dev": "quasar dev",
+    "build": "quasar build",
+    "postinstall": "quasar prepare",
+    "test:unit": "vitest",
+    "test:unit:ci": "vitest run"
+  },
+  "dependencies": {
+    "@quasar/extras": "^1.16.4",
+    "@supabase/supabase-js": "^2.49.1",
+    "axios": "^1.2.1",
+    "pinia": "^3.0.1",
+    "quasar": "^2.16.0",
+    "register-service-worker": "^1.7.2",
+    "vue": "^3.4.18",
+    "vue-i18n": "^11.0.0",
+    "vue-router": "^4.0.12"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.14.0",
+    "@intlify/unplugin-vue-i18n": "^4.0.0",
+    "@quasar/app-vite": "^2.1.0",
+    "@quasar/quasar-app-extension-testing-unit-vitest": "^1.1.0",
+    "@types/node": "^20.5.9",
+    "@vue/eslint-config-prettier": "^10.1.0",
+    "@vue/eslint-config-typescript": "^14.4.0",
+    "autoprefixer": "^10.4.2",
+    "eslint": "^9.14.0",
+    "eslint-plugin-vue": "^9.30.0",
+    "eslint-plugin-vuejs-accessibility": "^2.4.1",
+    "globals": "^15.12.0",
+    "prettier": "^3.3.3",
+    "supabase": "^2.20.3",
+    "typescript": "~5.5.3",
+    "vite-plugin-checker": "^0.9.0",
+    "vue-tsc": "^2.0.29",
+    "workbox-build": "^7.3.0",
+    "workbox-cacheable-response": "^7.3.0",
+    "workbox-core": "^7.3.0",
+    "workbox-expiration": "^7.3.0",
+    "workbox-precaching": "^7.3.0",
+    "workbox-routing": "^7.3.0",
+    "workbox-strategies": "^7.3.0",
+    "@vue/test-utils": "^2.4.4",
+    "vitest": "^2.0.5"
+  },
+  "engines": {
+    "node": "^28 || ^26 || ^24 || ^22 || ^20 || ^18",
+    "npm": ">= 6.13.4",
+    "yarn": ">= 1.21.1"
+  }
+}
