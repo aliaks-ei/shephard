@@ -1,19 +1,19 @@
-import { defineRouter } from '#q-app/wrappers';
+import { defineRouter } from '#q-app/wrappers'
 import {
   createMemoryHistory,
   createRouter,
   createWebHashHistory,
   createWebHistory,
-} from 'vue-router';
-import routes from './routes';
-import { authGuard } from 'src/router/guards/auth';
+} from 'vue-router'
+import routes from './routes'
+import { authGuard } from 'src/router/guards/auth'
 
 export default defineRouter(function (/* { store, ssrContext } */) {
   const createHistory = process.env.SERVER
     ? createMemoryHistory
     : process.env.VUE_ROUTER_MODE === 'history'
       ? createWebHistory
-      : createWebHashHistory;
+      : createWebHashHistory
 
   const Router = createRouter({
     scrollBehavior: () => ({ left: 0, top: 0 }),
@@ -23,10 +23,10 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     // quasar.conf.js -> build -> vueRouterMode
     // quasar.conf.js -> build -> publicPath
     history: createHistory(process.env.VUE_ROUTER_BASE),
-  });
+  })
 
   // Add global navigation guard
-  Router.beforeEach(authGuard);
+  Router.beforeEach(authGuard)
 
-  return Router;
-});
+  return Router
+})

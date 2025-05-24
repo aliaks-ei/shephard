@@ -6,17 +6,40 @@
       </q-card-section>
 
       <q-card-section class="q-pa-lg flex flex-center column">
-        <div v-if="isLoading" class="q-mb-md">
-          <q-spinner color="primary" size="3em" />
+        <div
+          v-if="isLoading"
+          class="q-mb-md"
+        >
+          <q-spinner
+            color="primary"
+            size="3em"
+          />
           <div class="text-subtitle1 q-mt-md">Verifying your login...</div>
         </div>
-        <div v-else-if="error" class="text-negative">
-          <q-icon name="error" size="3em" />
+        <div
+          v-else-if="error"
+          class="text-negative"
+        >
+          <q-icon
+            name="error"
+            size="3em"
+          />
           <div class="text-subtitle1 q-mt-md">{{ error }}</div>
-          <q-btn color="primary" label="Back to Login" to="/auth" class="q-mt-md" />
+          <q-btn
+            color="primary"
+            label="Back to Login"
+            to="/auth"
+            class="q-mt-md"
+          />
         </div>
-        <div v-else class="text-positive">
-          <q-icon name="check_circle" size="3em" />
+        <div
+          v-else
+          class="text-positive"
+        >
+          <q-icon
+            name="check_circle"
+            size="3em"
+          />
           <div class="text-subtitle1 q-mt-md">Successfully authenticated!</div>
           <div class="text-subtitle2 q-mb-md">Redirecting you...</div>
         </div>
@@ -26,37 +49,37 @@
 </template>
 
 <script setup lang="ts">
-import { useAuthStore } from 'src/stores/auth';
-import { onMounted, ref } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import { useAuthStore } from 'src/stores/auth'
+import { onMounted, ref } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 
-const authStore = useAuthStore();
-const router = useRouter();
-const route = useRoute();
-const isLoading = ref(true);
-const error = ref<string | null>(null);
+const authStore = useAuthStore()
+const router = useRouter()
+const route = useRoute()
+const isLoading = ref(true)
+const error = ref<string | null>(null)
 
 onMounted(async () => {
   try {
     // The hash fragment contains the auth info from Supabase
     // Supabase client will automatically handle this
-    await authStore.init();
+    await authStore.init()
 
     // After a brief delay to show success message, redirect to home
     setTimeout(() => {
-      redirectToHomePage();
-    }, 1500);
+      redirectToHomePage()
+    }, 1500)
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Authentication failed';
-    console.error('Error during authentication callback:', err);
+    error.value = err instanceof Error ? err.message : 'Authentication failed'
+    console.error('Error during authentication callback:', err)
   } finally {
-    isLoading.value = false;
+    isLoading.value = false
   }
-});
+})
 
 async function redirectToHomePage(): Promise<void> {
-  const redirectPath = route.query.redirectTo?.toString() || '/';
-  await router.push(redirectPath);
+  const redirectPath = route.query.redirectTo?.toString() || '/'
+  await router.push(redirectPath)
 }
 </script>
 

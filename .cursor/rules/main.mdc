@@ -28,6 +28,7 @@ You are an expert in QuasarTypeScript, Node.js, Vite, Vue.js, Vue Router, and Pi
 
 - Use the "function" keyword for pure functions to benefit from hoisting and clarity.
 - Always use the Vue Composition API script setup style.
+- Don't write unneccessary commments, especially if variable or function name is explicit.
 
 ## Quasar
 
