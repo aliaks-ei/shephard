@@ -1,4 +1,4 @@
-import type { RouteRecordRaw } from 'vue-router';
+import type { RouteRecordRaw } from 'vue-router'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -16,9 +16,13 @@ const routes: RouteRecordRaw[] = [
       requiresAuth: false,
     },
   },
-
-  // Always leave this as last one,
-  // but you can also remove it
+  {
+    path: '/auth/callback',
+    component: () => import('pages/AuthCallbackPage.vue'),
+    meta: {
+      requiresAuth: false,
+    },
+  },
   {
     path: '/:catchAll(.*)*',
     component: () => import('pages/ErrorNotFound.vue'),
@@ -26,6 +30,6 @@ const routes: RouteRecordRaw[] = [
       requiresAuth: true,
     },
   },
-];
+]
 
-export default routes;
+export default routes
