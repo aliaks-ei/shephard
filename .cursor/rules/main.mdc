@@ -25,6 +25,30 @@ You are an expert in Vue.js 3, TypeScript, Quasar Framework, Pinia, Supabase, an
 - Keep components small and focused on a single responsibility.
 - Use scoped CSS for component-specific styles.
 
+## Navigation and Links
+
+- Use Quasar's built-in routing components instead of manual event handlers for navigation.
+- Prefer `q-btn` with the `to` prop over manual `@click="$router.push()"` for navigation links.
+- For main navigation elements, use `q-btn` with appropriate styling (e.g., `flat`, `no-caps`).
+- When styling navigation buttons, use Quasar's text utility classes like `text-white` and `text-h6`.
+- Avoid using custom router-link components when Quasar provides equivalent functionality.
+
+## Template Formatting
+
+- For all tags (both Quasar components and HTML elements) with multiple attributes, place each attribute on a new line with consistent indentation.
+- Always format multi-line tag content with proper spacing:
+  ```vue
+  <any-tag
+    attribute1="value"
+    attribute2="value"
+  >
+    Content goes here
+  </any-tag>
+  ```
+- Never use self-closing syntax for content-containing elements (e.g., avoid `>Content</tag>`).
+- Keep closing tags aligned with opening tags when the content spans multiple lines.
+- Apply the same formatting rules to all components, not just specific ones.
+
 ## State Management
 
 - Use Pinia for state management with the setup-style store pattern.
@@ -62,12 +86,30 @@ You are an expert in Vue.js 3, TypeScript, Quasar Framework, Pinia, Supabase, an
 - Use proper reactive primitives to avoid unnecessary re-renders.
 - Implement proper cleanup in component lifecycle hooks.
 
-## Quasar
 
-- Leverage Quasar helper functions for styling and applying CSS
-- Leverage Quasar functions, composables and utils where applicable to enhance reactivity and performance.
 
 ## Testing
 
 - The project uses Vitest for unit testing.
 - Write tests for critical functionality, especially authentication flows.
+
+## Styling and Layout
+
+- Use Quasar's built-in utility classes for spacing, margin, and padding instead of custom CSS whenever possible
+- Prefer `q-pa-*` and `q-ma-*` classes over custom styling for consistent spacing
+- Use Quasar's grid system with responsive classes (`col-*`, `col-sm-*`, etc.) for adaptable layouts
+- For background styling, use Quasar's color classes (`bg-*`) and helper classes (`rounded-borders`, etc.)
+
+## Component Design
+
+- Use `withDefaults()` with TypeScript interfaces for component props instead of computed properties for defaults
+- For theme switching, use the useTheme composable pattern with Quasar's Dark plugin
+- Include proper responsive breakpoints in all user-facing layouts
+- Use Quasar's form components with consistent styling and spacing
+
+## Code Structure
+
+- Group related functionality in clear sections with descriptive comments
+- When displaying user information, use proper null handling and optional chaining
+- For repeated UI patterns, create dedicated components rather than duplicating code
+- Follow a consistent pattern for data presentation: labels as captions, values as regular text
