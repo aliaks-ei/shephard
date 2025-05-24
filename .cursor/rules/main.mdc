@@ -3,36 +3,71 @@ description:
 globs: **/*.vue,**/*.ts
 alwaysApply: false
 ---
-# Main Guidelines
+# Shephard Project Guidelines
 
-You are an expert in QuasarTypeScript, Node.js, Vite, Vue.js, Vue Router, and Pinia, with a deep understanding of best practices and performance optimization techniques in these technologies. 
+You are an expert in Vue.js 3, TypeScript, Quasar Framework, Pinia, Supabase, and modern frontend development. The Shephard project is a smart expenses wallet application using the Quasar framework with Vue 3 and TypeScript.
 
 ## Code Style and Structure
 
-- Write concise, maintainable, and technically accurate TypeScript code with relevant examples.
-- Use functional and declarative programming patterns; avoid classes.
-- Favor iteration and modularization to adhere to DRY principles and avoid code duplication.
-- Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError).
-- Organize files systematically: each file should contain only related content, such as exported components, subcomponents, helpers, static content, and types.
-
-## Naming Conventions
-
-- Favor named exports for functions.
-
-## TypeScript Usage
-
-- Use TypeScript for all code; prefer types over interfaces.
-- Avoid enums; use plain objects instead for better type safety and flexibility.
-
-## Syntax and Formatting
-
-- Use the "function" keyword for pure functions to benefit from hoisting and clarity.
-- Always use the Vue Composition API script setup style.
+- Use the Vue 3 Composition API with `<script setup lang="ts">` in all components.
+- Prefer named exports and functional programming patterns; avoid classes.
+- Use TypeScript for all code with explicit typing; prefer `type` over `interface`.
+- Organize files systematically: each file should have a single responsibility.
+- Follow a clean component structure with clear separation of template, script, and styles.
+- Use descriptive variable names with auxiliary verbs (e.g., `isLoading`, `hasError`).
 - Don't write unneccessary commments, especially if variable or function name is explicit.
+
+## Component Guidelines
+
+- Use Quasar components (prefixed with `q-`) for UI elements.
+- Implement responsive design with Quasar's flex utilities and responsive classes.
+- Use composables for reusable logic across components.
+- Keep components small and focused on a single responsibility.
+- Use scoped CSS for component-specific styles.
+
+## State Management
+
+- Use Pinia for state management with the setup-style store pattern.
+- Create separate stores for different domains (auth, user data, etc.).
+- Use computed properties for derived state.
+- Use refs for reactive state within components and stores.
+
+## Authentication
+
+- The app uses Supabase for authentication with both Magic Link (OTP) and Google Sign-In.
+- Security features like CSRF protection and nonce validation are implemented.
+- Use the auth store for managing authentication state and operations.
+
+## Routing
+
+- The app uses Vue Router with lazy-loaded components.
+- Auth guards are implemented to protect routes.
+- Meta fields are used to specify route requirements.
+
+## API Integration
+
+- Supabase client is used for backend integration.
+- Typed database schema is implemented.
+- Environment variables are used for configuration.
+
+## Error Handling
+
+- Implement proper error handling with try/catch blocks.
+- Provide user-friendly error messages.
+- Log errors to console for debugging.
+
+## Performance Considerations
+
+- Lazy load routes and components.
+- Use proper reactive primitives to avoid unnecessary re-renders.
+- Implement proper cleanup in component lifecycle hooks.
 
 ## Quasar
 
 - Leverage Quasar helper functions for styling and applying CSS
 - Leverage Quasar functions, composables and utils where applicable to enhance reactivity and performance.
 
+## Testing
 
+- The project uses Vitest for unit testing.
+- Write tests for critical functionality, especially authentication flows.
