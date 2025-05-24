@@ -49,10 +49,9 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
 import { useGoogleAuth } from 'src/composables/useGoogleAuth'
-import { AUTH_CONFIG } from 'src/config/auth'
 import 'src/boot/google-auth'
 
-const googleClientId = ref(AUTH_CONFIG.GOOGLE_CLIENT_ID)
+const googleClientId = ref(import.meta.env.VITE_GOOGLE_CLIENT_ID as string)
 const { hashedNonce, isNonceReady, initGoogleAuth, cleanup, generateNonce } = useGoogleAuth()
 
 async function refreshGoogleAuth() {
