@@ -266,34 +266,3 @@ async function handleSignOut() {
   }
 }
 </script>
-
-<style lang="scss" scoped>
-.section-title {
-  color: var(--section-title);
-}
-
-.text-primary {
-  color: var(--text-primary);
-}
-
-.text-secondary {
-  color: var(--text-secondary);
-}
-
-.text-caption {
-  color: var(--caption-color);
-}
-
-.card-bg {
-  background-color: var(--card-bg);
-}
-
-.separator {
-  background: var(--separator-color);
-}
-
-.logout-btn {
-  background-color: var(--btn-negative);
-  color: var(--btn-negative-text);
-}
-</style>

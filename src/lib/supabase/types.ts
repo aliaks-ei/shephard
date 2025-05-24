@@ -299,6 +299,7 @@ export type Database = {
           id: string
           name: string
           updated_at: string | null
+          preferences: Json | null
         }
         Insert: {
           avatar?: string | null
@@ -307,6 +308,7 @@ export type Database = {
           id?: string
           name: string
           updated_at?: string | null
+          preferences?: Json | null
         }
         Update: {
           avatar?: string | null
@@ -315,6 +317,7 @@ export type Database = {
           id?: string
           name?: string
           updated_at?: string | null
+          preferences?: Json | null
         }
         Relationships: []
       }

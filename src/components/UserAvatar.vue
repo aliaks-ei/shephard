@@ -17,7 +17,7 @@
       :text-color="textColor"
       :size="size"
     >
-      {{ getFirstLetter(user?.email || '') }}
+      {{ firstLetter }}
     </q-avatar>
   </div>
 </template>
@@ -41,8 +41,9 @@ const props = withDefaults(defineProps<UserAvatarProps>(), {
 
 const avatarUrl = computed(() => props.user?.user_metadata?.avatar_url)
 
-function getFirstLetter(email: string): string {
+const firstLetter = computed(() => {
+  const email = props.user?.email || ''
   if (!email) return '?'
   return email.charAt(0).toUpperCase()
-}
+})
 </script>

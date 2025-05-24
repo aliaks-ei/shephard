@@ -116,6 +116,7 @@ The application is configured as a Progressive Web App. You can customize the PW
 │   ├── lib/             # Libraries and utilities
 │   ├── pages/           # Application pages
 │   ├── router/          # Vue Router configuration
+│   ├── services/        # Domain-driven service layer for business logic
 │   ├── stores/          # Pinia stores
 │   └── utils/           # Utility functions
 ├── src-pwa/             # PWA specific files

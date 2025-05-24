@@ -24,6 +24,7 @@ You are an expert in Vue.js 3, TypeScript, Quasar Framework, Pinia, Supabase, an
 - Use composables for reusable logic across components.
 - Keep components small and focused on a single responsibility.
 - Use scoped CSS for component-specific styles.
+- Always use computed properties instead of calling functions directly in templates for better reactivity and performance.
 
 ## Navigation and Links
 
@@ -74,6 +75,17 @@ You are an expert in Vue.js 3, TypeScript, Quasar Framework, Pinia, Supabase, an
 - Typed database schema is implemented.
 - Environment variables are used for configuration.
 
+## Services Architecture
+
+- Use a domain-driven service layer pattern with files named `[domain].service.ts`.
+- Export all services through a barrel file (index.ts) for easy importing.
+- Service functions should be standalone and focused on a single responsibility.
+- Implement centralized error handling with context-aware error messages.
+- Services should abstract database interactions from UI components.
+- Services should contain business logic for data processing and validation.
+- Type all service function parameters and return values explicitly.
+- Use descriptive JSDoc comments for service function documentation.
+
 ## Error Handling
 
 - Implement proper error handling with try/catch blocks.
@@ -85,8 +97,6 @@ You are an expert in Vue.js 3, TypeScript, Quasar Framework, Pinia, Supabase, an
 - Lazy load routes and components.
 - Use proper reactive primitives to avoid unnecessary re-renders.
 - Implement proper cleanup in component lifecycle hooks.
-
-
 
 ## Testing
 
