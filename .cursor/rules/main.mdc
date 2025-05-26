@@ -24,6 +24,31 @@ You are an expert in Vue.js 3, TypeScript, Quasar Framework, Pinia, Supabase, an
 - Use composables for reusable logic across components.
 - Keep components small and focused on a single responsibility.
 - Use scoped CSS for component-specific styles.
+- Always use computed properties instead of calling functions directly in templates for better reactivity and performance.
+
+## Navigation and Links
+
+- Use Quasar's built-in routing components instead of manual event handlers for navigation.
+- Prefer `q-btn` with the `to` prop over manual `@click="$router.push()"` for navigation links.
+- For main navigation elements, use `q-btn` with appropriate styling (e.g., `flat`, `no-caps`).
+- When styling navigation buttons, use Quasar's text utility classes like `text-white` and `text-h6`.
+- Avoid using custom router-link components when Quasar provides equivalent functionality.
+
+## Template Formatting
+
+- For all tags (both Quasar components and HTML elements) with multiple attributes, place each attribute on a new line with consistent indentation.
+- Always format multi-line tag content with proper spacing:
+  ```vue
+  <any-tag
+    attribute1="value"
+    attribute2="value"
+  >
+    Content goes here
+  </any-tag>
+  ```
+- Never use self-closing syntax for content-containing elements (e.g., avoid `>Content</tag>`).
+- Keep closing tags aligned with opening tags when the content spans multiple lines.
+- Apply the same formatting rules to all components, not just specific ones.
 
 ## State Management
 
@@ -50,6 +75,17 @@ You are an expert in Vue.js 3, TypeScript, Quasar Framework, Pinia, Supabase, an
 - Typed database schema is implemented.
 - Environment variables are used for configuration.
 
+## Services Architecture
+
+- Use a domain-driven service layer pattern with files named `[domain].service.ts`.
+- Export all services through a barrel file (index.ts) for easy importing.
+- Service functions should be standalone and focused on a single responsibility.
+- Implement centralized error handling with context-aware error messages.
+- Services should abstract database interactions from UI components.
+- Services should contain business logic for data processing and validation.
+- Type all service function parameters and return values explicitly.
+- Use descriptive JSDoc comments for service function documentation.
+
 ## Error Handling
 
 - Implement proper error handling with try/catch blocks.
@@ -62,12 +98,46 @@ You are an expert in Vue.js 3, TypeScript, Quasar Framework, Pinia, Supabase, an
 - Use proper reactive primitives to avoid unnecessary re-renders.
 - Implement proper cleanup in component lifecycle hooks.
 
-## Quasar
-
-- Leverage Quasar helper functions for styling and applying CSS
-- Leverage Quasar functions, composables and utils where applicable to enhance reactivity and performance.
-
 ## Testing
 
 - The project uses Vitest for unit testing.
 - Write tests for critical functionality, especially authentication flows.
+
+## Styling and Layout
+
+- Use Quasar's built-in utility classes for spacing, margin, and padding instead of custom CSS whenever possible
+- Prefer `q-pa-*` and `q-ma-*` classes over custom styling for consistent spacing
+- Use Quasar's grid system with responsive classes (`col-*`, `col-sm-*`, etc.) for adaptable layouts
+- For background styling, use Quasar's color classes (`bg-*`) and helper classes (`rounded-borders`, etc.)
+
+## Component Design
+
+- Use `withDefaults()` with TypeScript interfaces for component props instead of computed properties for defaults
+- Include proper responsive breakpoints in all user-facing layouts
+- Use Quasar's form components with consistent styling and spacing
+- Avoid logic in templates. Encourage extracting even small logic to the `<script setup>` block
+
+## Code Structure
+
+- Group related functionality in clear sections with descriptive comments
+- When displaying user information, use proper null handling and optional chaining
+- For repeated UI patterns, create dedicated components rather than duplicating code
+- Follow a consistent pattern for data presentation: labels as captions, values as regular text
+
+## Type Management
+
+- Use the Supabase-generated types (`Tables`, `TablesInsert`, `TablesUpdate`) for database operations
+- Export types from service files and import them where needed rather than duplicating definitions
+- Use `import type` syntax for type-only imports
+- Prefer nullish coalescing (`??`) for handling potentially undefined values
+- Maintain a single source of truth for type definitions, especially for shared concepts like user preferences
+- When working with Supabase JSON fields, define explicit types that extend the base Json type
+- Use type assertions sparingly and only when you can guarantee type safety
+- For cross-module type references, ensure imports are properly maintained when refactoring
+
+## Service-Store Pattern
+
+- Service files should define and export data types used in their operations
+- Store files should import types from services rather than redefining them
+- When a store needs to extend a service type, use type composition rather than duplication
+- Stores should handle type conversions between the UI layer and service layer when necessary

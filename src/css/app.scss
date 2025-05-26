@@ -39,6 +39,9 @@
   font-display: swap;
 }
 
+// Import theme variables
+@import './theme.scss';
+
 html {
   background-color: $bg-color;
   color: $text-color;

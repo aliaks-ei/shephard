@@ -49,11 +49,11 @@
 </template>
 
 <script setup lang="ts">
-import { useAuthStore } from 'src/stores/auth'
+import { useUserStore } from 'src/stores/user'
 import { onMounted, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 
-const authStore = useAuthStore()
+const userStore = useUserStore()
 const router = useRouter()
 const route = useRoute()
 const isLoading = ref(true)
@@ -61,11 +61,8 @@ const error = ref<string | null>(null)
 
 onMounted(async () => {
   try {
-    // The hash fragment contains the auth info from Supabase
-    // Supabase client will automatically handle this
-    await authStore.init()
+    await userStore.initUser()
 
-    // After a brief delay to show success message, redirect to home
     setTimeout(() => {
       redirectToHomePage()
     }, 1500)
