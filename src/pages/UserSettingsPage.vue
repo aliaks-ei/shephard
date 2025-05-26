@@ -208,7 +208,8 @@
       <!-- Sign Out Button -->
       <div class="q-mt-xl text-center">
         <q-btn
-          class="logout-btn"
+          color="negative"
+          text-color="white"
           icon="logout"
           label="Sign Out"
           padding="sm lg"
