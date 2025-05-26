@@ -80,17 +80,28 @@ You are an expert in Vue.js 3, TypeScript, Quasar Framework, Pinia, Supabase, an
 - Use a domain-driven service layer pattern with files named `[domain].service.ts`.
 - Export all services through a barrel file (index.ts) for easy importing.
 - Service functions should be standalone and focused on a single responsibility.
-- Implement centralized error handling with context-aware error messages.
 - Services should abstract database interactions from UI components.
 - Services should contain business logic for data processing and validation.
 - Type all service function parameters and return values explicitly.
 - Use descriptive JSDoc comments for service function documentation.
+- Services should throw errors directly rather than handling them internally.
 
 ## Error Handling
 
-- Implement proper error handling with try/catch blocks.
-- Provide user-friendly error messages.
-- Log errors to console for debugging.
+- Always use the `useError` composable to handle errors consistently throughout the application.
+- Follow a clear error handling hierarchy:
+  1. **Services**: Services should throw errors directly without handling them.
+  2. **Stores**: Catch errors from services using the `useError` composable's `handleError` function. Stores are responsible for error management.
+  3. **Components**: Do not implement error handling logic. Components should call store methods and let the stores handle any errors.
+- Use descriptive, user-friendly error messages with context (e.g., "Failed to load user preferences" rather than "API error").
+- In stores, import and use the `useError` composable, and use appropriate `handleError` options based on the error severity:
+  - `{ notify: true }` (default) for errors that should be shown to users
+  - `{ notify: false }` for errors that should be logged but not shown to users
+  - `{ log: false }` for errors that should be shown but not logged (rare)
+- Keep UI components clean by avoiding direct error handling or error state management.
+- For composables, let errors propagate to calling stores rather than handling them internally.
+- Use asynchronous functions with clear return types including possible error states.
+- Maintain a centralized error message system in `src/config/error-messages.ts` for consistent messaging.
 
 ## Performance Considerations
 

@@ -45,8 +45,8 @@
             </q-item-section>
             <q-item-section side>
               <q-toggle
-                :model-value="userStore.areNotificationsEnabled"
-                @update:model-value="userStore.setNotificationsEnabled"
+                :model-value="userStore.arePushNotificationsEnabled"
+                @update:model-value="userStore.setPushNotificationsEnabled"
                 color="primary"
               />
             </q-item-section>
@@ -156,18 +156,12 @@ const isSigningOut = ref(false)
 // Handle sign out
 async function handleSignOut() {
   isSigningOut.value = true
-  try {
-    const { error } = await userStore.signOut()
 
-    if (error) {
-      throw new Error('Failed to sign out')
-    }
+  const { error } = await userStore.signOut()
 
-    await router.push('/auth')
-  } catch (error) {
-    console.error('Error signing out:', error)
-  } finally {
-    isSigningOut.value = false
-  }
+  if (error) return
+
+  await router.push('/auth')
+  isSigningOut.value = false
 }
 </script>

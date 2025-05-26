@@ -25,7 +25,7 @@ export const useUserStore = defineStore('user', () => {
   const userId = computed(() => authStore.user?.id)
   const userPreferences = computed(() => preferencesStore.preferences)
   const isDarkMode = computed(() => preferencesStore.isDark)
-  const areNotificationsEnabled = computed(() => preferencesStore.areNotificationsEnabled)
+  const arePushNotificationsEnabled = computed(() => preferencesStore.arePushNotificationsEnabled)
   const avatarUrl = computed(() => authStore.user?.user_metadata?.avatar_url)
   const authProvider = computed(() => authStore.user?.app_metadata?.provider)
   const createdAt = computed(() => authStore.user?.created_at)
@@ -90,8 +90,8 @@ export const useUserStore = defineStore('user', () => {
     preferencesStore.toggleDarkMode()
   }
 
-  function setNotificationsEnabled(enabled: boolean) {
-    preferencesStore.setNotificationsEnabled(enabled)
+  function setPushNotificationsEnabled(enabled: boolean) {
+    preferencesStore.setPushNotificationsEnabled(enabled)
   }
 
   async function updatePreference<K extends keyof UserPreferences>(
@@ -102,19 +102,19 @@ export const useUserStore = defineStore('user', () => {
   }
 
   async function signOut() {
-    return authStore.signOut()
+    return await authStore.signOut()
   }
 
   async function updateProfile(updates: { email?: string; data?: object }) {
-    return authStore.updateProfile(updates)
+    return await authStore.updateProfile(updates)
   }
 
   async function signInWithOtp(email: string) {
-    return authStore.signInWithOtp(email)
+    return await authStore.signInWithOtp(email)
   }
 
   async function verifyOtp(email: string, token: string) {
-    return authStore.verifyOtp(email, token)
+    return await authStore.verifyOtp(email, token)
   }
 
   function resetEmailState() {
@@ -122,7 +122,7 @@ export const useUserStore = defineStore('user', () => {
   }
 
   async function signInWithGoogle(response: GoogleSignInResponse) {
-    return authStore.signInWithGoogle(response)
+    return await authStore.signInWithGoogle(response)
   }
 
   return {
@@ -139,14 +139,14 @@ export const useUserStore = defineStore('user', () => {
     formattedCreatedAt,
     userPreferences,
     isDarkMode,
-    areNotificationsEnabled,
+    arePushNotificationsEnabled,
     userProfile,
     isEmailSent,
     emailError,
 
     initUser,
     toggleDarkMode,
-    setNotificationsEnabled,
+    setPushNotificationsEnabled,
     updatePreference,
     signOut,
     updateProfile,

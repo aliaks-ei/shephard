@@ -5,9 +5,11 @@ import { supabase } from 'src/lib/supabase/client'
 import type { User, Session } from '@supabase/supabase-js'
 import type { GoogleSignInResponse } from 'src/boot/google-auth'
 import { useNonce } from 'src/composables/useNonce'
+import { useError } from 'src/composables/useError'
 
 export const useAuthStore = defineStore('auth', () => {
   const { getCurrentNonce } = useNonce()
+  const { handleError } = useError()
 
   const user = ref<User | null>(null)
   const session = ref<Session | null>(null)
@@ -26,7 +28,7 @@ export const useAuthStore = defineStore('auth', () => {
       session.value = currentSession
       user.value = currentSession?.user ?? null
     } catch (error) {
-      console.error('Error initializing auth:', error)
+      handleError(error, 'AUTH.INIT_FAILED')
     } finally {
       isLoading.value = false
     }
@@ -36,8 +38,9 @@ export const useAuthStore = defineStore('auth', () => {
     const currentNonce = getCurrentNonce()
 
     if (!currentNonce) {
-      console.error('No nonce available for authentication')
-      return { data: null, error: new Error('No nonce available for authentication') }
+      const error = new Error('No nonce available for authentication')
+      handleError(error, 'AUTH.GOOGLE_SIGNIN_NO_NONCE')
+      return { data: null, error }
     }
 
     try {
@@ -51,7 +54,7 @@ export const useAuthStore = defineStore('auth', () => {
 
       return { data, error: null }
     } catch (error) {
-      console.error('Error signing in with Google:', error)
+      handleError(error, 'AUTH.GOOGLE_SIGNIN_FAILED')
       return { data: null, error }
     }
   }
@@ -76,7 +79,7 @@ export const useAuthStore = defineStore('auth', () => {
       return { data, error: null }
     } catch (error) {
       emailError.value = error instanceof Error ? error.message : 'An unknown error occurred'
-      console.error('Error sending OTP to email:', error)
+      handleError(error, 'AUTH.OTP_SEND_FAILED')
 
       return { data: null, error }
     }
@@ -95,8 +98,7 @@ export const useAuthStore = defineStore('auth', () => {
 
       return { data, error: null }
     } catch (error) {
-      console.error('Error verifying OTP:', error)
-
+      handleError(error, 'AUTH.OTP_VERIFY_FAILED')
       return { data: null, error }
     }
   }
@@ -113,6 +115,7 @@ export const useAuthStore = defineStore('auth', () => {
 
       return { error: null }
     } catch (error) {
+      handleError(error, 'AUTH.SIGNOUT_FAILED')
       return { error }
     }
   }
@@ -128,6 +131,7 @@ export const useAuthStore = defineStore('auth', () => {
 
       return { data, error: null }
     } catch (error) {
+      handleError(error, 'AUTH.PROFILE_UPDATE_FAILED')
       return { data: null, error }
     }
   }

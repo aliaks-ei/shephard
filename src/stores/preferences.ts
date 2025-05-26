@@ -7,18 +7,20 @@ import {
   saveUserPreference,
   type UserPreferences,
 } from 'src/services/user.service'
+import { useError } from 'src/composables/useError'
 
 export const usePreferencesStore = defineStore('preferences', () => {
   const authStore = useAuthStore()
+  const { handleError } = useError()
 
   const preferences = ref<UserPreferences>({
     darkMode: false,
-    notificationsEnabled: false,
+    pushNotificationsEnabled: false,
   })
   const isLoading = ref(false)
 
   const isDark = computed(() => preferences.value.darkMode)
-  const areNotificationsEnabled = computed(() => preferences.value.notificationsEnabled)
+  const arePushNotificationsEnabled = computed(() => preferences.value.pushNotificationsEnabled)
 
   function getSystemDarkMode(): boolean {
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -53,13 +55,13 @@ export const usePreferencesStore = defineStore('preferences', () => {
       if (userPrefs) {
         preferences.value = {
           darkMode: userPrefs.darkMode ?? false,
-          notificationsEnabled: userPrefs.notificationsEnabled ?? false,
+          pushNotificationsEnabled: userPrefs.pushNotificationsEnabled ?? false,
         }
       }
 
       applyPreferences()
     } catch (err) {
-      console.error('Error loading user preferences:', err)
+      handleError(err, 'USER.PREFERENCES_LOAD_FAILED')
       initializeWithDefaults()
     } finally {
       isLoading.value = false
@@ -78,7 +80,7 @@ export const usePreferencesStore = defineStore('preferences', () => {
       try {
         await saveUserPreference(authStore.user.id, key, value as boolean | string | number | null)
       } catch (err) {
-        console.error(`Error saving preference ${key}:`, err)
+        handleError(err, 'USER.PREFERENCE_UPDATE_FAILED', { entityName: key.toString() })
       }
     }
   }
@@ -87,8 +89,8 @@ export const usePreferencesStore = defineStore('preferences', () => {
     savePreference('darkMode', !preferences.value.darkMode)
   }
 
-  function setNotificationsEnabled(enabled: boolean) {
-    savePreference('notificationsEnabled', enabled)
+  function setPushNotificationsEnabled(enabled: boolean) {
+    savePreference('pushNotificationsEnabled', enabled)
   }
 
   // Watch for changes in auth state and reload preferences accordingly
@@ -105,11 +107,11 @@ export const usePreferencesStore = defineStore('preferences', () => {
     preferences,
     isLoading,
     isDark,
-    areNotificationsEnabled,
+    arePushNotificationsEnabled,
     loadPreferences,
     savePreference,
     toggleDarkMode,
-    setNotificationsEnabled,
+    setPushNotificationsEnabled,
     initializeWithDefaults,
   }
 })

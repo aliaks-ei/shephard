@@ -58,17 +58,10 @@ async function handleEmailSubmit() {
   if (!email.value) return
 
   isLoading.value = true
-  try {
-    const result = await userStore.signInWithOtp(email.value)
 
-    if (result.error) {
-      console.error('Email authentication failed:', result.error)
-    }
-  } catch (err) {
-    console.error('Error during email authentication:', err)
-  } finally {
-    isLoading.value = false
-  }
+  await userStore.signInWithOtp(email.value)
+
+  isLoading.value = false
 }
 
 onMounted(() => {

@@ -66,9 +66,6 @@ onMounted(async () => {
     setTimeout(() => {
       redirectToHomePage()
     }, 1500)
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Authentication failed'
-    console.error('Error during authentication callback:', err)
   } finally {
     isLoading.value = false
   }

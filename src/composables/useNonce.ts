@@ -21,16 +21,11 @@ export function useNonce() {
    * @returns {Promise<NonceData>} A timestamped nonce data object
    */
   async function generateNonce(): Promise<NonceData> {
-    try {
-      const nonceData = await generateSecureNonce()
-      const timestampedNonce = createTimestampedNonce(nonceData)
+    const nonceData = await generateSecureNonce()
+    const timestampedNonce = createTimestampedNonce(nonceData)
 
-      currentNonce.value = timestampedNonce
-      return timestampedNonce
-    } catch (error) {
-      console.error('Failed to generate nonce:', error)
-      throw error
-    }
+    currentNonce.value = timestampedNonce
+    return timestampedNonce
   }
 
   /**
