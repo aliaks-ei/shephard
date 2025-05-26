@@ -115,6 +115,7 @@ You are an expert in Vue.js 3, TypeScript, Quasar Framework, Pinia, Supabase, an
 - Use `withDefaults()` with TypeScript interfaces for component props instead of computed properties for defaults
 - Include proper responsive breakpoints in all user-facing layouts
 - Use Quasar's form components with consistent styling and spacing
+- Avoid logic in templates. Encourage extracting even small logic to the `<script setup>` block
 
 ## Code Structure
 
@@ -122,3 +123,21 @@ You are an expert in Vue.js 3, TypeScript, Quasar Framework, Pinia, Supabase, an
 - When displaying user information, use proper null handling and optional chaining
 - For repeated UI patterns, create dedicated components rather than duplicating code
 - Follow a consistent pattern for data presentation: labels as captions, values as regular text
+
+## Type Management
+
+- Use the Supabase-generated types (`Tables`, `TablesInsert`, `TablesUpdate`) for database operations
+- Export types from service files and import them where needed rather than duplicating definitions
+- Use `import type` syntax for type-only imports
+- Prefer nullish coalescing (`??`) for handling potentially undefined values
+- Maintain a single source of truth for type definitions, especially for shared concepts like user preferences
+- When working with Supabase JSON fields, define explicit types that extend the base Json type
+- Use type assertions sparingly and only when you can guarantee type safety
+- For cross-module type references, ensure imports are properly maintained when refactoring
+
+## Service-Store Pattern
+
+- Service files should define and export data types used in their operations
+- Store files should import types from services rather than redefining them
+- When a store needs to extend a service type, use type composition rather than duplication
+- Stores should handle type conversions between the UI layer and service layer when necessary

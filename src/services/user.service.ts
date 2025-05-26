@@ -1,9 +1,14 @@
 import { supabase } from 'src/lib/supabase/client'
+import type { Json, Tables, TablesInsert, TablesUpdate } from 'src/lib/supabase/types'
 
-export type UserPreferences = {
-  darkMode?: boolean
-  notificationsEnabled?: boolean
-}
+// Use the proper typing from Supabase schema
+export type UserPreferences =
+  NonNullable<Tables<'users'>['preferences']> extends Json
+    ? Partial<{
+        darkMode: boolean
+        notificationsEnabled: boolean
+      }>
+    : never
 
 // Error handling utility
 function handleError(error: unknown, context: string): never {
@@ -15,7 +20,7 @@ function handleError(error: unknown, context: string): never {
 /**
  * Get user by ID
  */
-export async function getUserById(userId: string) {
+export async function getUserById(userId: string): Promise<Tables<'users'> | null> {
   try {
     const { data, error } = await supabase.from('users').select('*').eq('id', userId).maybeSingle()
 
@@ -37,10 +42,7 @@ export async function getUserPreferences(userId: string): Promise<UserPreference
       return null
     }
 
-    if (user && typeof user === 'object' && 'preferences' in user) {
-      return (user.preferences as UserPreferences) || null
-    }
-    return null
+    return (user.preferences as UserPreferences) || null
   } catch (error) {
     handleError(error, 'Failed to get user preferences')
   }
@@ -57,13 +59,12 @@ export async function saveUserPreferences(
     const user = await getUserById(userId)
 
     if (user) {
-      const { error } = await supabase
-        .from('users')
-        .update({
-          preferences,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', userId)
+      const updateData: TablesUpdate<'users'> = {
+        preferences,
+        updated_at: new Date().toISOString(),
+      }
+
+      const { error } = await supabase.from('users').update(updateData).eq('id', userId)
 
       if (error) throw error
     } else {
@@ -102,26 +103,30 @@ export async function createUser(
       const userEmail = userData.email || user.email || ''
 
       // Use the local variables that are guaranteed to be strings
-      const { error } = await supabase.from('users').insert({
+      const insertData: TablesInsert<'users'> = {
         id: userId,
         name: userName,
         email: userEmail,
         preferences,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-      })
+      }
+
+      const { error } = await supabase.from('users').insert(insertData)
 
       if (error) throw error
     } else {
       // userData.name and userData.email are both defined
-      const { error } = await supabase.from('users').insert({
+      const insertData: TablesInsert<'users'> = {
         id: userId,
         name: userData.name,
         email: userData.email,
         preferences,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-      })
+      }
+
+      const { error } = await supabase.from('users').insert(insertData)
 
       if (error) throw error
     }

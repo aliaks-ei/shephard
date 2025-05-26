@@ -2,13 +2,11 @@ import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
 import { Dark } from 'quasar'
 import { useAuthStore } from './auth'
-import { getUserPreferences, saveUserPreference } from 'src/services/user.service'
-
-export interface UserPreferences {
-  darkMode: boolean
-  notificationsEnabled: boolean
-  // Add more preferences here as needed
-}
+import {
+  getUserPreferences,
+  saveUserPreference,
+  type UserPreferences,
+} from 'src/services/user.service'
 
 export const usePreferencesStore = defineStore('preferences', () => {
   const authStore = useAuthStore()
@@ -35,7 +33,7 @@ export const usePreferencesStore = defineStore('preferences', () => {
   }
 
   function applyPreferences() {
-    Dark.set(preferences.value.darkMode)
+    Dark.set(!!preferences.value.darkMode)
 
     // Apply other preferences as needed
     // ...
@@ -78,7 +76,7 @@ export const usePreferencesStore = defineStore('preferences', () => {
 
     if (authStore.isAuthenticated && authStore.user?.id) {
       try {
-        await saveUserPreference(authStore.user.id, key, value)
+        await saveUserPreference(authStore.user.id, key, value as boolean | string | number | null)
       } catch (err) {
         console.error(`Error saving preference ${key}:`, err)
       }

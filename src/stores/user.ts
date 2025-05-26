@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { computed } from 'vue'
 import { useAuthStore } from './auth'
 import { usePreferencesStore } from './preferences'
-import type { UserPreferences } from './preferences'
+import type { UserPreferences } from 'src/services/user.service'
 import type { GoogleSignInResponse } from 'src/boot/google-auth'
 
 /**
