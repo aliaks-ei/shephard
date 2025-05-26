@@ -3,20 +3,17 @@
     round
     flat
   >
-    <UserAvatar :user="user" />
+    <UserAvatar />
 
     <q-menu>
       <q-list style="min-width: 220px">
         <div class="text-center q-pt-md q-pb-md">
-          <UserAvatar
-            :user="user"
-            size="72px"
-          />
+          <UserAvatar size="72px" />
           <div class="text-center q-mt-sm text-weight-bold text-h6">
-            <UserName :user="user" />
+            {{ userStore.displayName }}
           </div>
           <div class="text-center text-caption">
-            {{ user?.email }}
+            {{ userStore.userEmail }}
           </div>
         </div>
 
@@ -41,10 +38,10 @@
         <q-separator />
 
         <q-item
+          class="q-py-md text-negative"
           clickable
           v-ripple
           @click="signOut"
-          class="q-py-md text-negative"
         >
           <q-item-section avatar>
             <q-icon
@@ -62,20 +59,14 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { useAuthStore } from 'src/stores/auth'
+import { useUserStore } from 'src/stores/user'
 import UserAvatar from './UserAvatar.vue'
-import UserName from './UserName.vue'
-import type { User } from '@supabase/supabase-js'
 
-defineProps<{
-  user: User | null
-}>()
-
-const authStore = useAuthStore()
+const userStore = useUserStore()
 const router = useRouter()
 
 const signOut = async () => {
-  await authStore.signOut()
+  await userStore.signOut()
   router.push('/auth')
 }
 </script>

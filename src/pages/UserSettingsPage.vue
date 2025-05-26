@@ -9,13 +9,13 @@
         <div class="row items-center">
           <div class="col-auto q-mr-lg">
             <UserAvatar
-              :user="authStore.user"
+              :user="userStore.currentUser"
               size="100px"
             />
           </div>
           <div class="col">
-            <div class="text-h4 q-mb-xs section-title"><UserName :user="authStore.user" /></div>
-            <div class="text-subtitle1 text-secondary">{{ authStore.user?.email }}</div>
+            <div class="text-h4 q-mb-xs section-title">{{ userStore.displayName }}</div>
+            <div class="text-subtitle1">{{ userStore.userEmail }}</div>
           </div>
         </div>
       </div>
@@ -45,7 +45,8 @@
             </q-item-section>
             <q-item-section side>
               <q-toggle
-                v-model="notificationsEnabled"
+                :model-value="userStore.areNotificationsEnabled"
+                @update:model-value="userStore.setNotificationsEnabled"
                 color="primary"
               />
             </q-item-section>
@@ -54,7 +55,7 @@
           <q-item class="q-pa-sm card-bg">
             <q-item-section avatar>
               <q-icon
-                :name="isDark ? 'dark_mode' : 'light_mode'"
+                :name="userStore.isDarkMode ? 'dark_mode' : 'light_mode'"
                 color="primary"
                 size="md"
               />
@@ -70,9 +71,9 @@
             </q-item-section>
             <q-item-section side>
               <q-toggle
-                :model-value="isDark"
+                :model-value="userStore.isDarkMode"
                 color="primary"
-                @click="toggleDarkMode"
+                @click="userStore.toggleDarkMode"
               />
             </q-item-section>
           </q-item>
@@ -85,123 +86,41 @@
         <q-separator class="q-mb-md separator" />
 
         <div class="row q-col-gutter-md q-col-gutter-y-xs">
-          <div class="col-12 col-sm-6">
-            <q-item class="q-pa-sm card-bg">
-              <q-item-section avatar>
-                <q-icon
-                  name="email"
-                  color="primary"
-                />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label
-                  caption
-                  class="text-caption"
-                >
-                  Email
-                </q-item-label>
-                <q-item-label class="text-primary">{{ authStore.user?.email }}</q-item-label>
-              </q-item-section>
-            </q-item>
-          </div>
+          <InfoItem
+            icon="email"
+            label="Email"
+            :value="userStore.userEmail"
+          />
 
-          <div
-            class="col-12 col-sm-6"
-            v-if="authStore.user?.user_metadata?.full_name"
-          >
-            <q-item class="q-pa-sm card-bg">
-              <q-item-section avatar>
-                <q-icon
-                  name="person"
-                  color="primary"
-                />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label
-                  caption
-                  class="text-caption"
-                >
-                  Full Name
-                </q-item-label>
-                <q-item-label class="text-primary">{{
-                  authStore.user?.user_metadata?.full_name
-                }}</q-item-label>
-              </q-item-section>
-            </q-item>
-          </div>
+          <InfoItem
+            v-if="userStore.displayName"
+            icon="person"
+            label="Full Name"
+            :value="userStore.displayName"
+          />
 
-          <div
-            class="col-12 col-sm-6"
-            v-if="authStore.user?.app_metadata?.provider"
-          >
-            <q-item class="q-pa-sm card-bg">
-              <q-item-section avatar>
-                <q-icon
-                  name="login"
-                  color="primary"
-                />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label
-                  caption
-                  class="text-caption"
-                >
-                  Sign-in Provider
-                </q-item-label>
-                <q-item-label class="text-primary">{{
-                  authStore.user?.app_metadata?.provider
-                }}</q-item-label>
-              </q-item-section>
-            </q-item>
-          </div>
+          <InfoItem
+            v-if="userStore.authProvider"
+            icon="login"
+            label="Sign-in Provider"
+            :value="userStore.authProvider"
+          />
 
-          <div
-            class="col-12 col-sm-6"
-            v-if="authStore.user?.created_at"
-          >
-            <q-item class="q-pa-sm card-bg">
-              <q-item-section avatar>
-                <q-icon
-                  name="calendar_today"
-                  color="primary"
-                />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label
-                  caption
-                  class="text-caption"
-                >
-                  Joined On
-                </q-item-label>
-                <q-item-label class="text-primary">{{
-                  formatDate(authStore.user?.created_at)
-                }}</q-item-label>
-              </q-item-section>
-            </q-item>
-          </div>
+          <InfoItem
+            v-if="userStore.createdAt"
+            icon="calendar_today"
+            label="Joined On"
+            :value="userStore.formattedCreatedAt"
+          />
 
-          <div
-            class="col-12"
-            v-if="authStore.user?.id"
-          >
-            <q-item class="q-pa-sm card-bg">
-              <q-item-section avatar>
-                <q-icon
-                  name="fingerprint"
-                  color="primary"
-                />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label
-                  caption
-                  class="text-caption"
-                >
-                  User ID
-                </q-item-label>
-                <q-item-label class="ellipsis text-primary">{{ authStore.user?.id }}</q-item-label>
-              </q-item-section>
-            </q-item>
-          </div>
+          <InfoItem
+            v-if="userStore.userId"
+            icon="fingerprint"
+            label="User ID"
+            :value="userStore.userId"
+            fullWidth
+            valueClass="ellipsis text-primary"
+          />
         </div>
       </div>
 
@@ -224,41 +143,26 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from 'src/stores/auth'
-import { useTheme } from 'src/composables/useTheme'
+
 import UserAvatar from 'src/components/UserAvatar.vue'
-import UserName from 'src/components/UserName.vue'
+import InfoItem from 'src/components/InfoItem.vue'
+import { useUserStore } from 'src/stores/user'
 
-const authStore = useAuthStore()
+const userStore = useUserStore()
 const router = useRouter()
+
 const isSigningOut = ref(false)
-const notificationsEnabled = ref(false)
-
-// Theme toggle functionality
-const { isDark, toggleDarkMode } = useTheme()
-
-// Format dates for better readability
-function formatDate(dateString?: string): string {
-  if (!dateString) return 'Not available'
-
-  const date = new Date(dateString)
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  }).format(date)
-}
 
 // Handle sign out
 async function handleSignOut() {
   isSigningOut.value = true
   try {
-    const { error } = await authStore.signOut()
+    const { error } = await userStore.signOut()
+
     if (error) {
       throw new Error('Failed to sign out')
     }
 
-    // Redirect to auth page
     await router.push('/auth')
   } catch (error) {
     console.error('Error signing out:', error)

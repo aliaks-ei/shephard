@@ -113,7 +113,6 @@ You are an expert in Vue.js 3, TypeScript, Quasar Framework, Pinia, Supabase, an
 ## Component Design
 
 - Use `withDefaults()` with TypeScript interfaces for component props instead of computed properties for defaults
-- For theme switching, use the useTheme composable pattern with Quasar's Dark plugin
 - Include proper responsive breakpoints in all user-facing layouts
 - Use Quasar's form components with consistent styling and spacing
 

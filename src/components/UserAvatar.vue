@@ -1,11 +1,11 @@
 <template>
   <div>
     <q-avatar
-      v-if="avatarUrl"
+      v-if="userStore.avatarUrl"
       :size="size"
     >
       <q-img
-        :src="avatarUrl"
+        :src="userStore.avatarUrl"
         :ratio="1"
         no-spinner
         loading="eager"
@@ -17,33 +17,25 @@
       :text-color="textColor"
       :size="size"
     >
-      {{ firstLetter }}
+      {{ userStore.nameInitial }}
     </q-avatar>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import type { User } from '@supabase/supabase-js'
+import { useUserStore } from 'src/stores/user'
 
 interface UserAvatarProps {
-  user: User | null
   size?: string
   color?: string
   textColor?: string
 }
 
-const props = withDefaults(defineProps<UserAvatarProps>(), {
+withDefaults(defineProps<UserAvatarProps>(), {
   size: '40px',
   color: 'grey-4',
   textColor: 'primary',
 })
 
-const avatarUrl = computed(() => props.user?.user_metadata?.avatar_url)
-
-const firstLetter = computed(() => {
-  const email = props.user?.email || ''
-  if (!email) return '?'
-  return email.charAt(0).toUpperCase()
-})
+const userStore = useUserStore()
 </script>

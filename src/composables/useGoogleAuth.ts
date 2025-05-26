@@ -1,9 +1,9 @@
 import { onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useAuthStore } from 'src/stores/auth'
-import type { GoogleSignInResponse } from 'src/boot/google-auth'
+import { useUserStore } from 'src/stores/user'
 import { getCsrfToken, clearCsrfToken, generateCsrfToken } from 'src/utils/csrf'
 import { useNonce } from 'src/composables/useNonce'
+import type { GoogleSignInResponse } from 'src/boot/google-auth'
 
 declare global {
   interface Window {
@@ -12,7 +12,7 @@ declare global {
 }
 
 export function useGoogleAuth() {
-  const authStore = useAuthStore()
+  const userStore = useUserStore()
   const router = useRouter()
   const route = useRoute()
 
@@ -70,7 +70,7 @@ export function useGoogleAuth() {
         csrfToken,
       }
 
-      const result = await authStore.signInWithGoogle(authRequest)
+      const result = await userStore.signInWithGoogle(authRequest)
 
       if (result.error) {
         console.error('Authentication failed:', result.error)

@@ -15,7 +15,7 @@
           />
         </q-toolbar-title>
 
-        <UserDropdownMenu :user="authStore.user" />
+        <UserDropdownMenu />
       </q-toolbar>
     </q-header>
 
@@ -26,8 +26,5 @@
 </template>
 
 <script setup lang="ts">
-import { useAuthStore } from 'src/stores/auth'
 import UserDropdownMenu from 'src/components/UserDropdownMenu.vue'
-
-const authStore = useAuthStore()
 </script>

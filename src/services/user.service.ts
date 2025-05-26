@@ -1,9 +1,8 @@
 import { supabase } from 'src/lib/supabase/client'
-import type { Json } from 'src/lib/supabase/types'
 
 export type UserPreferences = {
   darkMode?: boolean
-  [key: string]: boolean | string | number | null | undefined
+  notificationsEnabled?: boolean
 }
 
 // Error handling utility
@@ -55,15 +54,13 @@ export async function saveUserPreferences(
   preferences: UserPreferences,
 ): Promise<void> {
   try {
-    // Check if user exists
     const user = await getUserById(userId)
 
     if (user) {
-      // Update existing user
       const { error } = await supabase
         .from('users')
         .update({
-          preferences: preferences as Json,
+          preferences,
           updated_at: new Date().toISOString(),
         })
         .eq('id', userId)
@@ -109,7 +106,7 @@ export async function createUser(
         id: userId,
         name: userName,
         email: userEmail,
-        preferences: preferences as Json,
+        preferences,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
@@ -121,7 +118,7 @@ export async function createUser(
         id: userId,
         name: userData.name,
         email: userData.email,
-        preferences: preferences as Json,
+        preferences,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
