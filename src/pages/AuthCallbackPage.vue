@@ -2,7 +2,7 @@
   <div class="auth-callback-page flex flex-center q-pa-md">
     <q-card class="auth-card shadow-5">
       <q-card-section class="bg-primary text-white text-center">
-        <div class="text-h4">Welcome to Shephard</div>
+        <h1 class="text-h4">Welcome to Shephard</h1>
       </q-card-section>
 
       <q-card-section class="q-pa-lg flex flex-center column">
@@ -14,7 +14,7 @@
             color="primary"
             size="3em"
           />
-          <div class="text-subtitle1 q-mt-md">Verifying your login...</div>
+          <p class="text-subtitle1 q-mt-md">Verifying your login...</p>
         </div>
         <div
           v-else-if="error"
@@ -24,7 +24,7 @@
             name="error"
             size="3em"
           />
-          <div class="text-subtitle1 q-mt-md">{{ error }}</div>
+          <p class="text-subtitle1 q-mt-md">{{ error }}</p>
           <q-btn
             color="primary"
             label="Back to Login"
@@ -40,8 +40,8 @@
             name="check_circle"
             size="3em"
           />
-          <div class="text-subtitle1 q-mt-md">Successfully authenticated!</div>
-          <div class="text-subtitle2 q-mb-md">Redirecting you...</div>
+          <p class="text-subtitle1 q-mt-md">Successfully authenticated!</p>
+          <p class="text-subtitle2 q-mb-md">Redirecting you...</p>
         </div>
       </q-card-section>
     </q-card>
@@ -60,15 +60,13 @@ const isLoading = ref(true)
 const error = ref<string | null>(null)
 
 onMounted(async () => {
-  try {
-    await userStore.initUser()
+  await userStore.initUser()
 
-    setTimeout(() => {
-      redirectToHomePage()
-    }, 1500)
-  } finally {
-    isLoading.value = false
-  }
+  setTimeout(() => {
+    redirectToHomePage()
+  }, 1500)
+
+  isLoading.value = false
 })
 
 async function redirectToHomePage(): Promise<void> {

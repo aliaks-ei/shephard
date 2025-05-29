@@ -10,11 +10,8 @@ export type ErrorMessageKey =
   | 'USER.GET_FAILED'
   | 'USER.PREFERENCES_LOAD_FAILED'
   | 'USER.PREFERENCES_SAVE_FAILED'
-  | 'USER.PREFERENCE_UPDATE_FAILED'
   | 'USER.CREATE_FAILED'
   | 'USER.INIT_FAILED'
-  | 'USER.DARK_MODE_TOGGLE_FAILED'
-  | 'USER.PUSH_NOTIFICATIONS_UPDATE_FAILED'
   | 'USER.EMAIL_RESET_FAILED'
   | 'UNKNOWN'
 
@@ -26,7 +23,6 @@ interface ErrorMessageConfig {
   log?: boolean
   throw?: boolean
 }
-
 
 export const ERROR_MESSAGES: Record<ErrorMessageKey, ErrorMessageConfig> = {
   // Authentication errors
@@ -90,13 +86,6 @@ export const ERROR_MESSAGES: Record<ErrorMessageKey, ErrorMessageConfig> = {
     notify: true,
     log: true,
   },
-  'USER.PREFERENCE_UPDATE_FAILED': {
-    message: 'Unable to save preference',
-    withEntityName: true, // Will add the preference name
-    throw: true,
-    notify: true,
-    log: true,
-  },
   'USER.CREATE_FAILED': {
     message: 'Unable to create user account',
     throw: true,
@@ -105,16 +94,6 @@ export const ERROR_MESSAGES: Record<ErrorMessageKey, ErrorMessageConfig> = {
   },
   'USER.INIT_FAILED': {
     message: 'Unable to initialize user data',
-    notify: true,
-    log: true,
-  },
-  'USER.DARK_MODE_TOGGLE_FAILED': {
-    message: 'Unable to toggle dark mode',
-    notify: true,
-    log: true,
-  },
-  'USER.PUSH_NOTIFICATIONS_UPDATE_FAILED': {
-    message: 'Unable to update notification settings',
     notify: true,
     log: true,
   },

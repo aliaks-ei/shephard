@@ -1,25 +1,23 @@
 <template>
-  <div>
-    <q-avatar
-      v-if="userStore.avatarUrl"
-      :size="size"
-    >
-      <q-img
-        :src="userStore.avatarUrl"
-        :ratio="1"
-        no-spinner
-        loading="eager"
-      />
-    </q-avatar>
-    <q-avatar
-      v-else
-      :color="color"
-      :text-color="textColor"
-      :size="size"
-    >
-      {{ userStore.nameInitial }}
-    </q-avatar>
-  </div>
+  <q-avatar
+    v-if="userStore.avatarUrl"
+    :size="size"
+  >
+    <q-img
+      :src="userStore.avatarUrl"
+      :ratio="1"
+      no-spinner
+      loading="eager"
+    />
+  </q-avatar>
+  <q-avatar
+    v-else
+    :color="color"
+    :text-color="textColor"
+    :size="size"
+  >
+    {{ userStore.nameInitial }}
+  </q-avatar>
 </template>
 
 <script setup lang="ts">

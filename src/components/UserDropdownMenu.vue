@@ -9,12 +9,12 @@
       <q-list style="min-width: 220px">
         <div class="text-center q-pt-md q-pb-md">
           <UserAvatar size="72px" />
-          <div class="text-center q-mt-sm text-weight-bold text-h6">
+          <p class="text-center q-mt-sm text-weight-bold text-h6">
             {{ userStore.displayName }}
-          </div>
-          <div class="text-center text-caption">
+          </p>
+          <p class="text-center text-caption">
             {{ userStore.userEmail }}
-          </div>
+          </p>
         </div>
 
         <q-separator />

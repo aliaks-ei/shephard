@@ -46,7 +46,9 @@
             <q-item-section side>
               <q-toggle
                 :model-value="userStore.arePushNotificationsEnabled"
-                @update:model-value="userStore.setPushNotificationsEnabled"
+                @update:model-value="
+                  (value) => userStore.updatePreferences({ pushNotificationsEnabled: value })
+                "
                 color="primary"
               />
             </q-item-section>
@@ -73,7 +75,7 @@
               <q-toggle
                 :model-value="userStore.isDarkMode"
                 color="primary"
-                @click="userStore.toggleDarkMode"
+                @update:model-value="(value) => userStore.updatePreferences({ darkMode: value })"
               />
             </q-item-section>
           </q-item>

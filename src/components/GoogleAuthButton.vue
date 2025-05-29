@@ -33,7 +33,7 @@
         size="2em"
         class="q-mb-sm"
       />
-      <div class="text-body2 q-mb-sm">Preparing secure authentication...</div>
+      <p class="text-body2 q-mb-sm">Preparing secure authentication...</p>
       <q-btn
         flat
         dense
@@ -51,7 +51,7 @@ import { onMounted, onUnmounted, ref } from 'vue'
 import { useGoogleAuth } from 'src/composables/useGoogleAuth'
 import 'src/boot/google-auth'
 
-const googleClientId = ref(import.meta.env.VITE_GOOGLE_CLIENT_ID as string)
+const googleClientId = ref(import.meta.env.VITE_GOOGLE_CLIENT_ID)
 const { hashedNonce, isNonceReady, initGoogleAuth, cleanup, generateNonce } = useGoogleAuth()
 
 async function refreshGoogleAuth() {

@@ -2,12 +2,9 @@ import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
 import { Dark } from 'quasar'
 import { useAuthStore } from './auth'
-import {
-  getUserPreferences,
-  saveUserPreference,
-  type UserPreferences,
-} from 'src/services/user.service'
+import { getUserPreferences, saveUserPreferences } from 'src/api/user'
 import { useError } from 'src/composables/useError'
+import type { UserPreferences } from 'src/lib/supabase/types'
 
 export const usePreferencesStore = defineStore('preferences', () => {
   const authStore = useAuthStore()
@@ -68,32 +65,23 @@ export const usePreferencesStore = defineStore('preferences', () => {
     }
   }
 
-  async function savePreference<K extends keyof UserPreferences>(
-    key: K,
-    value: UserPreferences[K],
-  ) {
-    preferences.value[key] = value
+  async function updatePreferences(updates: Partial<UserPreferences>) {
+    preferences.value = {
+      ...preferences.value,
+      ...updates,
+    }
 
     applyPreferences()
 
-    if (authStore.isAuthenticated && authStore.user?.id) {
+    if (authStore.user?.id) {
       try {
-        await saveUserPreference(authStore.user.id, key, value as boolean | string | number | null)
+        await saveUserPreferences(authStore.user.id, preferences.value)
       } catch (err) {
-        handleError(err, 'USER.PREFERENCE_UPDATE_FAILED', { entityName: key.toString() })
+        handleError(err, 'USER.PREFERENCES_SAVE_FAILED')
       }
     }
   }
 
-  function toggleDarkMode() {
-    savePreference('darkMode', !preferences.value.darkMode)
-  }
-
-  function setPushNotificationsEnabled(enabled: boolean) {
-    savePreference('pushNotificationsEnabled', enabled)
-  }
-
-  // Watch for changes in auth state and reload preferences accordingly
   watch(
     () => authStore.user,
     (newUser, oldUser) => {
@@ -109,9 +97,7 @@ export const usePreferencesStore = defineStore('preferences', () => {
     isDark,
     arePushNotificationsEnabled,
     loadPreferences,
-    savePreference,
-    toggleDarkMode,
-    setPushNotificationsEnabled,
+    updatePreferences,
     initializeWithDefaults,
   }
 })

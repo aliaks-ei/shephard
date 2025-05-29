@@ -9,7 +9,7 @@
         style="width: 350px"
       >
         <q-card-section class="bg-primary text-white">
-          <div class="text-h6">Quick Actions</div>
+          <h3 class="text-h6 q-my-none">Quick Actions</h3>
         </q-card-section>
 
         <q-card-section>

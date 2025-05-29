@@ -15,20 +15,19 @@
         lazy-rules="ondemand"
       />
 
-      <div
-        class="text-negative q-mb-sm"
+      <p
         v-if="userStore.emailError"
+        class="text-negative q-mb-sm"
       >
         {{ userStore.emailError }}
-      </div>
+      </p>
 
-      <div
+      <p
         v-if="userStore.isEmailSent"
         class="text-positive q-mb-md"
       >
-        We've sent a magic link to your email. Please check your inbox and click the link to sign
-        in.
-      </div>
+        We've sent a magic link to your email. Please check your inbox and click the link to signin.
+      </p>
 
       <q-btn
         type="submit"

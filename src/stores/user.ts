@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { computed } from 'vue'
 import { useAuthStore } from './auth'
 import { usePreferencesStore } from './preferences'
-import type { UserPreferences } from 'src/services/user.service'
+import type { UserPreferences } from 'src/lib/supabase/types'
 import type { GoogleSignInResponse } from 'src/boot/google-auth'
 
 /**
@@ -86,19 +86,8 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  function toggleDarkMode() {
-    preferencesStore.toggleDarkMode()
-  }
-
-  function setPushNotificationsEnabled(enabled: boolean) {
-    preferencesStore.setPushNotificationsEnabled(enabled)
-  }
-
-  async function updatePreference<K extends keyof UserPreferences>(
-    key: K,
-    value: UserPreferences[K],
-  ) {
-    await preferencesStore.savePreference(key, value)
+  async function updatePreferences(updates: Partial<UserPreferences>) {
+    await preferencesStore.updatePreferences(updates)
   }
 
   async function signOut() {
@@ -145,9 +134,7 @@ export const useUserStore = defineStore('user', () => {
     emailError,
 
     initUser,
-    toggleDarkMode,
-    setPushNotificationsEnabled,
-    updatePreference,
+    updatePreferences,
     signOut,
     updateProfile,
     signInWithOtp,
