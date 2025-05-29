@@ -10,10 +10,10 @@
         <div class="text-center q-pt-md q-pb-md">
           <UserAvatar size="72px" />
           <p class="text-center q-mt-sm text-weight-bold text-h6">
-            {{ userStore.displayName }}
+            {{ userStore.userProfile?.displayName }}
           </p>
           <p class="text-center text-caption">
-            {{ userStore.userEmail }}
+            {{ userStore.userProfile?.email }}
           </p>
         </div>
 

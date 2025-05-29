@@ -100,33 +100,6 @@ The application is configured as a Progressive Web App. You can customize the PW
 - `src-pwa/manifest.json` - For app icons, name, and theme colors
 - `src-pwa/register-service-worker.js` - For service worker configuration
 
-## Project Structure
-
-```
-.
-├── public/              # Static assets
-├── src/                 # Source files
-│   ├── assets/          # Application assets
-│   ├── boot/            # Boot files (executed before app startup)
-│   ├── components/      # Vue components
-│   ├── composables/     # Reusable composition functions
-│   ├── css/             # Global CSS
-│   ├── i18n/            # Internationalization
-│   ├── layouts/         # Application layouts
-│   ├── lib/             # Libraries and utilities
-│   ├── pages/           # Application pages
-│   ├── router/          # Vue Router configuration
-│   ├── services/        # Domain-driven service layer for business logic
-│   ├── stores/          # Pinia stores
-│   └── utils/           # Utility functions
-├── src-pwa/             # PWA specific files
-│   └── manifest.json    # PWA manifest
-├── test/                # Test files
-├── .env                 # Environment variables (create this)
-├── quasar.config.ts     # Quasar Framework configuration
-└── tsconfig.json        # TypeScript configuration
-```
-
 ## Authentication
 
 Shephard uses Supabase for authentication with two methods:

@@ -6,6 +6,14 @@ import type { User, Session } from '@supabase/supabase-js'
 import type { GoogleSignInResponse } from 'src/boot/google-auth'
 import { useNonce } from 'src/composables/useNonce'
 import { useError } from 'src/composables/useError'
+import {
+  getCurrentSession,
+  signInWithIdToken,
+  sendOtpToEmail,
+  verifyEmailOtp,
+  signOutUser,
+  updateUserProfile,
+} from 'src/api/auth'
 
 export const useAuthStore = defineStore('auth', () => {
   const { getCurrentNonce } = useNonce()
@@ -21,9 +29,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function init() {
     try {
-      const {
-        data: { session: currentSession },
-      } = await supabase.auth.getSession()
+      const currentSession = await getCurrentSession()
 
       session.value = currentSession
       user.value = currentSession?.user ?? null
@@ -40,22 +46,19 @@ export const useAuthStore = defineStore('auth', () => {
     if (!currentNonce) {
       const error = new Error('No nonce available for authentication')
       handleError(error, 'AUTH.GOOGLE_SIGNIN_NO_NONCE')
-      return { data: null, error }
+      return
     }
 
     try {
-      const { data, error } = await supabase.auth.signInWithIdToken({
+      const data = await signInWithIdToken({
         provider: 'google',
         token: response.credential || '',
         nonce: currentNonce.nonce,
       })
 
-      if (error) throw error
-
-      return { data, error: null }
+      return data
     } catch (error) {
       handleError(error, 'AUTH.GOOGLE_SIGNIN_FAILED')
-      return { data: null, error }
     }
   }
 
@@ -65,74 +68,50 @@ export const useAuthStore = defineStore('auth', () => {
       isEmailSent.value = false
       emailError.value = null
 
-      const { data, error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
-      })
-
-      if (error) throw error
+      const data = await sendOtpToEmail(email, `${window.location.origin}/auth/callback`)
 
       isEmailSent.value = true
 
-      return { data, error: null }
+      return data
     } catch (error) {
       emailError.value = error instanceof Error ? error.message : 'An unknown error occurred'
       handleError(error, 'AUTH.OTP_SEND_FAILED')
-
-      return { data: null, error }
     }
   }
 
   // Verify OTP sent to email
   async function verifyOtp(email: string, token: string) {
     try {
-      const { data, error } = await supabase.auth.verifyOtp({
-        email,
-        token,
-        type: 'magiclink',
-      })
+      const data = await verifyEmailOtp(email, token)
 
-      if (error) throw error
-
-      return { data, error: null }
+      return data
     } catch (error) {
       handleError(error, 'AUTH.OTP_VERIFY_FAILED')
-      return { data: null, error }
     }
   }
 
   // Sign out
   async function signOut() {
     try {
-      const { error } = await supabase.auth.signOut()
-
-      if (error) throw error
+      await signOutUser()
 
       session.value = null
       user.value = null
-
-      return { error: null }
     } catch (error) {
       handleError(error, 'AUTH.SIGNOUT_FAILED')
-      return { error }
     }
   }
 
   // Update profile
   async function updateProfile(updates: { email?: string; data?: object }) {
     try {
-      const { data, error } = await supabase.auth.updateUser(updates)
-
-      if (error) throw error
+      const data = await updateUserProfile(updates)
 
       user.value = data.user
 
-      return { data, error: null }
+      return data
     } catch (error) {
       handleError(error, 'AUTH.PROFILE_UPDATE_FAILED')
-      return { data: null, error }
     }
   }
 

@@ -1,10 +1,10 @@
 <template>
   <q-avatar
-    v-if="userStore.avatarUrl"
+    v-if="userStore.userProfile?.avatarUrl"
     :size="size"
   >
     <q-img
-      :src="userStore.avatarUrl"
+      :src="userStore.userProfile.avatarUrl"
       :ratio="1"
       no-spinner
       loading="eager"
@@ -16,7 +16,7 @@
     :text-color="textColor"
     :size="size"
   >
-    {{ userStore.nameInitial }}
+    {{ userStore.userProfile?.nameInitial || '?' }}
   </q-avatar>
 </template>
 

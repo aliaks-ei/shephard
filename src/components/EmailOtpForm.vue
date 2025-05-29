@@ -9,21 +9,21 @@
         v-model="email"
         label="Email"
         type="email"
-        :disable="userStore.isEmailSent"
+        :disable="userStore.auth.isEmailSent"
         outlined
         :rules="emailRules()"
         lazy-rules="ondemand"
       />
 
       <p
-        v-if="userStore.emailError"
+        v-if="userStore.auth.emailError"
         class="text-negative q-mb-sm"
       >
-        {{ userStore.emailError }}
+        {{ userStore.auth.emailError }}
       </p>
 
       <p
-        v-if="userStore.isEmailSent"
+        v-if="userStore.auth.isEmailSent"
         class="text-positive q-mb-md"
       >
         We've sent a magic link to your email. Please check your inbox and click the link to signin.
@@ -50,7 +50,7 @@ const email = ref('')
 const isLoading = ref(false)
 
 const submitBtnLabel = computed(() =>
-  userStore.isEmailSent ? 'Resend Email' : 'Sign in with Email',
+  userStore.auth.isEmailSent ? 'Resend Email' : 'Sign in with Email',
 )
 
 async function handleEmailSubmit() {
@@ -58,12 +58,12 @@ async function handleEmailSubmit() {
 
   isLoading.value = true
 
-  await userStore.signInWithOtp(email.value)
+  await userStore.auth.signInWithOtp(email.value)
 
   isLoading.value = false
 }
 
 onMounted(() => {
-  userStore.resetEmailState()
+  userStore.auth.resetEmailState()
 })
 </script>

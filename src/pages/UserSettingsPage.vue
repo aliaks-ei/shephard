@@ -9,13 +9,15 @@
         <div class="row items-center">
           <div class="col-auto q-mr-lg">
             <UserAvatar
-              :user="userStore.currentUser"
+              :user="userStore.userProfile"
               size="100px"
             />
           </div>
           <div class="col">
-            <div class="text-h4 q-mb-xs section-title">{{ userStore.displayName }}</div>
-            <div class="text-subtitle1">{{ userStore.userEmail }}</div>
+            <div class="text-h4 q-mb-xs section-title">
+              {{ userStore.userProfile?.displayName }}
+            </div>
+            <div class="text-subtitle1">{{ userStore.userProfile?.email }}</div>
           </div>
         </div>
       </div>
@@ -45,9 +47,12 @@
             </q-item-section>
             <q-item-section side>
               <q-toggle
-                :model-value="userStore.arePushNotificationsEnabled"
+                :model-value="userStore.preferences.arePushNotificationsEnabled"
                 @update:model-value="
-                  (value) => userStore.updatePreferences({ pushNotificationsEnabled: value })
+                  (value) =>
+                    userStore.updateUserProfile({
+                      preferences: { pushNotificationsEnabled: value },
+                    })
                 "
                 color="primary"
               />
@@ -57,7 +62,7 @@
           <q-item class="q-pa-sm card-bg">
             <q-item-section avatar>
               <q-icon
-                :name="userStore.isDarkMode ? 'dark_mode' : 'light_mode'"
+                :name="userStore.preferences.isDark ? 'dark_mode' : 'light_mode'"
                 color="primary"
                 size="md"
               />
@@ -73,9 +78,11 @@
             </q-item-section>
             <q-item-section side>
               <q-toggle
-                :model-value="userStore.isDarkMode"
+                :model-value="userStore.preferences.isDark"
                 color="primary"
-                @update:model-value="(value) => userStore.updatePreferences({ darkMode: value })"
+                @update:model-value="
+                  (value) => userStore.updateUserProfile({ preferences: { darkMode: value } })
+                "
               />
             </q-item-section>
           </q-item>
@@ -91,35 +98,35 @@
           <InfoItem
             icon="email"
             label="Email"
-            :value="userStore.userEmail"
+            :value="userStore.userProfile?.email"
           />
 
           <InfoItem
-            v-if="userStore.displayName"
+            v-if="userStore.userProfile?.displayName"
             icon="person"
             label="Full Name"
-            :value="userStore.displayName"
+            :value="userStore.userProfile.displayName"
           />
 
           <InfoItem
-            v-if="userStore.authProvider"
+            v-if="userStore.userProfile?.authProvider"
             icon="login"
             label="Sign-in Provider"
-            :value="userStore.authProvider"
+            :value="userStore.userProfile.authProvider"
           />
 
           <InfoItem
-            v-if="userStore.createdAt"
+            v-if="userStore.userProfile?.createdAt"
             icon="calendar_today"
             label="Joined On"
-            :value="userStore.formattedCreatedAt"
+            :value="userStore.userProfile.formattedCreatedAt"
           />
 
           <InfoItem
-            v-if="userStore.userId"
+            v-if="userStore.userProfile?.id"
             icon="fingerprint"
             label="User ID"
-            :value="userStore.userId"
+            :value="userStore.userProfile.id"
             fullWidth
             valueClass="ellipsis text-primary"
           />
@@ -159,9 +166,7 @@ const isSigningOut = ref(false)
 async function handleSignOut() {
   isSigningOut.value = true
 
-  const { error } = await userStore.signOut()
-
-  if (error) return
+  await userStore.signOut()
 
   await router.push('/auth')
   isSigningOut.value = false

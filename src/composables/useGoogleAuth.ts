@@ -64,20 +64,17 @@ export function useGoogleAuth() {
         csrfToken,
       }
 
-      const result = await userStore.signInWithGoogle(authRequest)
+      const data = await userStore.auth.signInWithGoogle(authRequest)
 
-      if (result.error) {
-        return result
-      } else if (result.data) {
+      if (data) {
         resetNonce()
         clearCsrfToken()
 
         const redirectPath = route.query.redirect?.toString() || '/'
         await router.push(redirectPath)
-        return result
       }
 
-      return result
+      return { data, error: null }
     } catch (err) {
       return { error: err }
     }
