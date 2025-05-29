@@ -1,5 +1,8 @@
 import { supabase } from 'src/lib/supabase/client'
+import type { User } from '@supabase/supabase-js'
 import type { Tables, TablesUpdate } from 'src/lib/supabase/types'
+
+export type { User }
 
 export type UserPreferences = Partial<{
   darkMode: boolean

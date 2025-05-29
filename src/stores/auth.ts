@@ -1,9 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
-import { supabase } from 'src/lib/supabase/client'
-import type { User, Session } from '@supabase/supabase-js'
-import type { GoogleSignInResponse } from 'src/boot/google-auth'
 import { useNonce } from 'src/composables/useNonce'
 import { useError } from 'src/composables/useError'
 import {
@@ -13,8 +10,12 @@ import {
   verifyEmailOtp,
   signOutUser,
   updateUserProfile,
+  onAuthStateChange,
 } from 'src/api/auth'
 import { usePreferencesStore } from './preferences'
+import type { Session } from 'src/api/auth'
+import type { User } from 'src/api/user'
+import type { GoogleSignInResponse } from 'src/types'
 
 export const useAuthStore = defineStore('auth', () => {
   const { getCurrentNonce } = useNonce()
@@ -121,7 +122,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   // Subscribe to auth state changes
-  supabase.auth.onAuthStateChange(async (_event, currentSession) => {
+  onAuthStateChange(async (event, currentSession) => {
     const previousUserId = user.value?.id
 
     session.value = currentSession

@@ -49,7 +49,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
 import { useGoogleAuth } from 'src/composables/useGoogleAuth'
-import 'src/boot/google-auth'
+import 'src/boot/auth'
 
 const googleClientId = ref(import.meta.env.VITE_GOOGLE_CLIENT_ID)
 const { hashedNonce, isNonceReady, initGoogleAuth, cleanup, generateNonce } = useGoogleAuth()

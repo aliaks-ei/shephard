@@ -1,5 +1,13 @@
 import { supabase } from 'src/lib/supabase/client'
-import type { Session, AuthResponse, AuthOtpResponse, UserResponse } from '@supabase/supabase-js'
+import type {
+  Session,
+  AuthResponse,
+  AuthOtpResponse,
+  UserResponse,
+  AuthChangeEvent,
+} from '@supabase/supabase-js'
+
+export type { Session }
 
 export async function getCurrentSession(): Promise<Session | null> {
   const { data, error } = await supabase.auth.getSession()
@@ -63,4 +71,10 @@ export async function updateUserProfile(updates: {
 
   if (error) throw error
   return data
+}
+
+export function onAuthStateChange(
+  callback: (event: AuthChangeEvent, session: Session | null) => Promise<void>,
+) {
+  supabase.auth.onAuthStateChange(callback)
 }

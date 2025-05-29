@@ -3,13 +3,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from 'src/stores/user'
 import { getCsrfToken, clearCsrfToken, generateCsrfToken } from 'src/utils/csrf'
 import { useNonce } from 'src/composables/useNonce'
-import type { GoogleSignInResponse } from 'src/boot/google-auth'
-
-declare global {
-  interface Window {
-    vueGoogleCallback?: (response: GoogleSignInResponse) => void
-  }
-}
+import type { GoogleSignInResponse } from 'src/types'
 
 export function useGoogleAuth() {
   const userStore = useUserStore()
@@ -34,7 +28,7 @@ export function useGoogleAuth() {
 
     generateCsrfToken()
 
-    window.vueGoogleCallback = (response: GoogleSignInResponse) => {
+    window.vueGoogleCallback = (response) => {
       handleGoogleSignIn(response)
     }
 
