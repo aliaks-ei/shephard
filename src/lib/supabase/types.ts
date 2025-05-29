@@ -1,10 +1,5 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
-export type UserPreferences = Partial<{
-  darkMode: boolean
-  pushNotificationsEnabled: boolean
-}>
-
 export type Database = {
   graphql_public: {
     Tables: {
@@ -277,7 +272,7 @@ export type Database = {
           email: string
           id: string
           name: string
-          preferences: UserPreferences | null
+          preferences: Json | null
           updated_at: string | null
         }
         Insert: {

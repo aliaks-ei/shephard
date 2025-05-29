@@ -1,7 +1,19 @@
 import { supabase } from 'src/lib/supabase/client'
-import type { Tables, TablesUpdate, UserPreferences } from 'src/lib/supabase/types'
+import type { Tables, TablesUpdate } from 'src/lib/supabase/types'
 
-export async function _getUserById(userId: string): Promise<Tables<'users'> | null> {
+export type UserPreferences = Partial<{
+  darkMode: boolean
+  pushNotificationsEnabled: boolean
+}>
+
+export type CompleteUserPreferences = Required<UserPreferences>
+
+export const DEFAULT_PREFERENCES: CompleteUserPreferences = {
+  darkMode: false,
+  pushNotificationsEnabled: false,
+} as const
+
+async function getUserById(userId: string): Promise<Tables<'users'> | null> {
   const { data, error } = await supabase.from('users').select('*').eq('id', userId).maybeSingle()
 
   if (error) throw error
@@ -9,9 +21,11 @@ export async function _getUserById(userId: string): Promise<Tables<'users'> | nu
 }
 
 export async function getUserPreferences(userId: string): Promise<UserPreferences | null> {
-  const user = await _getUserById(userId)
+  const user = await getUserById(userId)
 
-  return user?.preferences ?? null
+  if (!user?.preferences) return null
+
+  return user.preferences as UserPreferences
 }
 
 export async function saveUserPreferences(

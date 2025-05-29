@@ -5,7 +5,7 @@ import { useDateFormat } from '@vueuse/core'
 import { useAuthStore } from './auth'
 import { usePreferencesStore } from './preferences'
 import { getUserInitial, getDisplayName } from 'src/utils/name'
-import type { UserPreferences } from 'src/lib/supabase/types'
+import type { UserPreferences } from 'src/api/user'
 
 export type UserProfile = {
   id: string

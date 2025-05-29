@@ -14,10 +14,12 @@ import {
   signOutUser,
   updateUserProfile,
 } from 'src/api/auth'
+import { usePreferencesStore } from './preferences'
 
 export const useAuthStore = defineStore('auth', () => {
   const { getCurrentNonce } = useNonce()
   const { handleError } = useError()
+  const preferencesStore = usePreferencesStore()
 
   const user = ref<User | null>(null)
   const session = ref<Session | null>(null)
@@ -62,7 +64,6 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  // Send OTP to email
   async function signInWithOtp(email: string) {
     try {
       isEmailSent.value = false
@@ -79,7 +80,6 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  // Verify OTP sent to email
   async function verifyOtp(email: string, token: string) {
     try {
       const data = await verifyEmailOtp(email, token)
@@ -90,19 +90,19 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  // Sign out
   async function signOut() {
     try {
       await signOutUser()
 
       session.value = null
       user.value = null
+
+      preferencesStore.reset()
     } catch (error) {
       handleError(error, 'AUTH.SIGNOUT_FAILED')
     }
   }
 
-  // Update profile
   async function updateProfile(updates: { email?: string; data?: object }) {
     try {
       const data = await updateUserProfile(updates)
@@ -115,16 +115,21 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  // Reset email state
   function resetEmailState() {
     isEmailSent.value = false
     emailError.value = null
   }
 
   // Subscribe to auth state changes
-  supabase.auth.onAuthStateChange((_event, currentSession) => {
+  supabase.auth.onAuthStateChange(async (_event, currentSession) => {
+    const previousUserId = user.value?.id
+
     session.value = currentSession
     user.value = currentSession?.user ?? null
+
+    if (currentSession?.user && currentSession.user.id !== previousUserId) {
+      await preferencesStore.loadPreferences()
+    }
   })
 
   return {
