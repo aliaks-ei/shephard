@@ -28,7 +28,7 @@
         >
           <q-item-section avatar>
             <q-icon
-              name="settings"
+              name="eva-settings-2-outline"
               size="sm"
             />
           </q-item-section>
@@ -45,7 +45,7 @@
         >
           <q-item-section avatar>
             <q-icon
-              name="logout"
+              name="eva-log-out-outline"
               size="sm"
               color="negative"
             />

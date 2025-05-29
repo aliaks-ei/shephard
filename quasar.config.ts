@@ -22,13 +22,13 @@ export default defineConfig((ctx) => {
       // 'ionicons-v4',
       // 'mdi-v7',
       // 'fontawesome-v6',
-      // 'eva-icons',
+      'eva-icons',
       // 'themify',
       // 'line-awesome',
       // 'roboto-font-latin-ext', // this or either 'roboto-font', NEVER both!
 
       // 'roboto-font', // optional, you are not bound to it
-      'material-icons', // optional, you are not bound to it
+      // 'material-icons', // optional, you are not bound to it
     ],
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#build
@@ -46,7 +46,7 @@ export default defineConfig((ctx) => {
 
       vueRouterMode: 'history', // available values: 'hash', 'history'
       // vueRouterBase,
-      // vueDevtools,
+      vueDevtools: true,
       // vueOptionsAPI: false,
 
       // rebuildCache: true, // rebuilds Vite/linter/etc cache on startup
@@ -107,7 +107,7 @@ export default defineConfig((ctx) => {
         dark: 'auto',
       },
 
-      // iconSet: 'material-icons', // Quasar icon set
+      iconSet: 'eva-icons', // Quasar icon set
       // lang: 'en-US', // Quasar language pack
 
       // For special cases outside of where the auto-import strategy can have an impact

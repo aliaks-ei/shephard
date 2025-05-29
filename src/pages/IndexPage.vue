@@ -21,7 +21,7 @@
             >
               <q-item-section avatar>
                 <q-icon
-                  name="settings"
+                  name="eva-settings-2-outline"
                   color="primary"
                 />
               </q-item-section>

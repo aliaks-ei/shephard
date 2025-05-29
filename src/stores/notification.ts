@@ -18,22 +18,22 @@ export const useNotificationStore = defineStore('notification', () => {
   const defaultOptions: Record<NotificationType, QNotifyCreateOptions> = {
     info: {
       type: 'info',
-      icon: 'info',
+      icon: 'eva-info-outline',
       timeout: 3000,
     },
     positive: {
       type: 'positive',
-      icon: 'check_circle',
+      icon: 'eva-checkmark-circle-outline',
       timeout: 3000,
     },
     negative: {
       type: 'negative',
-      icon: 'error',
+      icon: 'eva-alert-triangle-outline',
       timeout: 5000,
     },
     warning: {
       type: 'warning',
-      icon: 'warning',
+      icon: 'eva-alert-triangle-outline',
       timeout: 4000,
     },
   }

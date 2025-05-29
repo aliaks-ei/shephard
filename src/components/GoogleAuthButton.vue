@@ -39,7 +39,7 @@
         dense
         color="primary"
         label="Refresh"
-        icon="refresh"
+        icon="eva-refresh-outline"
         @click="refreshGoogleAuth"
       />
     </div>

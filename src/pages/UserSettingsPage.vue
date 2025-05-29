@@ -29,7 +29,7 @@
           <q-item class="q-pa-sm card-bg q-mb-sm">
             <q-item-section avatar>
               <q-icon
-                name="notifications"
+                name="eva-bell-outline"
                 color="primary"
                 size="md"
               />
@@ -60,7 +60,7 @@
           <q-item class="q-pa-sm card-bg">
             <q-item-section avatar>
               <q-icon
-                :name="userStore.preferences.isDark ? 'dark_mode' : 'light_mode'"
+                :name="userStore.preferences.isDark ? 'eva-moon-outline' : 'eva-sun-outline'"
                 color="primary"
                 size="md"
               />
@@ -93,35 +93,35 @@
 
         <div class="row q-col-gutter-md q-col-gutter-y-xs">
           <InfoItem
-            icon="email"
+            icon="eva-email-outline"
             label="Email"
             :value="userStore.userProfile?.email"
           />
 
           <InfoItem
             v-if="userStore.userProfile?.displayName"
-            icon="person"
+            icon="eva-person-outline"
             label="Full Name"
             :value="userStore.userProfile.displayName"
           />
 
           <InfoItem
             v-if="userStore.userProfile?.authProvider"
-            icon="login"
+            icon="eva-log-in-outline"
             label="Sign-in Provider"
             :value="userStore.userProfile.authProvider"
           />
 
           <InfoItem
             v-if="userStore.userProfile?.createdAt"
-            icon="calendar_today"
+            icon="eva-calendar-outline"
             label="Joined On"
             :value="userStore.userProfile.formattedCreatedAt"
           />
 
           <InfoItem
             v-if="userStore.userProfile?.id"
-            icon="fingerprint"
+            icon="eva-keypad-outline"
             label="User ID"
             :value="userStore.userProfile.id"
             full-width
@@ -133,7 +133,7 @@
         <q-btn
           color="negative"
           text-color="white"
-          icon="logout"
+          icon="eva-log-out-outline"
           label="Sign Out"
           padding="sm lg"
           :loading="isSigningOut"

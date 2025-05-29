@@ -21,7 +21,7 @@
           class="text-negative"
         >
           <q-icon
-            name="error"
+            name="eva-alert-triangle-outline"
             size="3em"
           />
           <p class="text-subtitle1 q-mt-md">{{ error }}</p>
@@ -37,7 +37,7 @@
           class="text-positive"
         >
           <q-icon
-            name="check_circle"
+            name="eva-checkmark-circle-outline"
             size="3em"
           />
           <p class="text-subtitle1 q-mt-md">Successfully authenticated!</p>
