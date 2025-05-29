@@ -69,28 +69,76 @@ You are an expert in Vue.js 3, TypeScript, Quasar Framework, Pinia, Supabase, an
 - Auth guards are implemented to protect routes.
 - Meta fields are used to specify route requirements.
 
-## API Integration
+## API Layer Architecture
 
-- Supabase client is used for backend integration.
-- Typed database schema is implemented.
-- Environment variables are used for configuration.
+- Use a dedicated API layer in `src/api/` to abstract all external data operations (Supabase, third-party APIs).
+- Create domain-specific API files named `[domain].ts` (e.g., `auth.ts`, `user.ts`, `expenses.ts`).
+- Export all API functions through a barrel file (`src/api/index.ts`) for centralized imports.
+- API functions should be pure data fetchers with single responsibility.
+- API functions must throw errors directly rather than returning error objects.
+- API functions should return data directly, not wrapped in `{data, error}` objects.
+- Use precise TypeScript return types (e.g., `AuthResponse['data']` instead of `AuthResponse`).
+- Functions that don't return data should have `void` return type.
 
-## Services Architecture
+### API Function Pattern:
+```typescript
+export async function getUserById(userId: string): Promise<Tables<'users'> | null> {
+  const { data, error } = await supabase.from('users').select('*').eq('id', userId).maybeSingle()
+  
+  if (error) throw error
+  return data
+}
+```
 
-- Use a domain-driven service layer pattern with files named `[domain].service.ts`.
-- Export all services through a barrel file (index.ts) for easy importing.
-- Service functions should be standalone and focused on a single responsibility.
-- Implement centralized error handling with context-aware error messages.
-- Services should abstract database interactions from UI components.
-- Services should contain business logic for data processing and validation.
-- Type all service function parameters and return values explicitly.
-- Use descriptive JSDoc comments for service function documentation.
+## Store-API Integration
+
+- Stores should import and use API functions instead of making direct Supabase calls.
+- Only exception: `supabase.auth.onAuthStateChange()` subscriptions should remain in stores for reactive state management.
+- Stores are responsible for catching API errors using the `useError` composable.
+- Stores should return data directly to components, not `{data, error}` objects.
+- Error handling is centralized in stores; components should not check for errors.
+- State management logic (setting loading states, reactive updates) belongs in stores.
+
+### Store Function Pattern:
+```typescript
+async function loadUser(userId: string) {
+  try {
+    const user = await getUserById(userId)
+    userState.value = user
+    return user
+  } catch (error) {
+    handleError('USER.LOAD_FAILED', error, { userId })
+  }
+}
+
+// For void functions:
+async function saveData() {
+  try {
+    await saveToDatabase()
+    // Update state...
+  } catch (error) {
+    handleError('DATA.SAVE_FAILED', error)
+    // No return needed for void functions
+  }
+}
+```
 
 ## Error Handling
 
-- Implement proper error handling with try/catch blocks.
-- Provide user-friendly error messages.
-- Log errors to console for debugging.
+- Always use the `useError` composable to handle errors consistently throughout the application.
+- Follow a clear error handling hierarchy:
+  1. **API Layer**: API functions should throw errors directly without handling them.
+  2. **Stores**: Catch errors from API functions using the `useError` composable's `handleError` function. Stores are responsible for error management.
+  3. **Components**: Do not implement error handling logic. Components should call store methods and let the stores handle any errors.
+- Use the `handleError` method with predefined error keys from the error configuration system for consistent, user-friendly messaging.
+- Use descriptive, user-friendly error messages with context (e.g., "Failed to load user preferences" rather than "API error").
+- In stores, import and use the `useError` composable with the `handleError` method
+- Pass relevant context information (userId, component, action, etc.) to provide better debugging information
+- Keep UI components clean by avoiding direct error handling or error state management.
+- For composables, let errors propagate to calling stores rather than handling them internally.
+- Use asynchronous functions with clear return types including possible error states.
+- Maintain a centralized error message system in `src/config/error-messages.ts` for consistent messaging.
+- In catch blocks after calling error handling methods, don't use return statement no matter the function.
 
 ## Performance Considerations
 
@@ -127,17 +175,22 @@ You are an expert in Vue.js 3, TypeScript, Quasar Framework, Pinia, Supabase, an
 ## Type Management
 
 - Use the Supabase-generated types (`Tables`, `TablesInsert`, `TablesUpdate`) for database operations
-- Export types from service files and import them where needed rather than duplicating definitions
+- Export types from API files and import them where needed rather than duplicating definitions
 - Use `import type` syntax for type-only imports
 - Prefer nullish coalescing (`??`) for handling potentially undefined values
 - Maintain a single source of truth for type definitions, especially for shared concepts like user preferences
 - When working with Supabase JSON fields, define explicit types that extend the base Json type
 - Use type assertions sparingly and only when you can guarantee type safety
 - For cross-module type references, ensure imports are properly maintained when refactoring
+- Use precise return types from Supabase response objects (e.g., `AuthResponse['data']`) for better type safety
 
-## Service-Store Pattern
+## API-Store-Component Pattern
 
-- Service files should define and export data types used in their operations
-- Store files should import types from services rather than redefining them
-- When a store needs to extend a service type, use type composition rather than duplication
-- Stores should handle type conversions between the UI layer and service layer when necessary
+- **API Layer** (`src/api/`): Pure data fetchers that throw errors and return data directly
+- **Store Layer** (`src/stores/`): State management, error handling, business logic coordination
+- **Component Layer**: UI rendering and user interaction, delegates to stores for data operations
+- API files should define and export data types used in their operations
+- Store files should import types from API files rather than redefining them
+- When a store needs to extend an API type, use type composition rather than duplication
+- Stores should handle type conversions between the UI layer and API layer when necessary
+- Maintain consistent file organization: each domain should have corresponding API and store files

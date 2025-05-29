@@ -1,13 +1,26 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
-import { supabase } from 'src/lib/supabase/client'
-import type { User, Session } from '@supabase/supabase-js'
-import type { GoogleSignInResponse } from 'src/boot/google-auth'
 import { useNonce } from 'src/composables/useNonce'
+import { useError } from 'src/composables/useError'
+import {
+  getCurrentSession,
+  signInWithIdToken,
+  sendOtpToEmail,
+  verifyEmailOtp,
+  signOutUser,
+  updateUserProfile,
+  onAuthStateChange,
+} from 'src/api/auth'
+import { usePreferencesStore } from './preferences'
+import type { Session } from 'src/api/auth'
+import type { User } from 'src/api/user'
+import type { GoogleSignInResponse } from 'src/types'
 
 export const useAuthStore = defineStore('auth', () => {
-  const { getCurrentNonce } = useNonce()
+  const { currentNonce } = useNonce()
+  const { handleError } = useError()
+  const preferencesStore = usePreferencesStore()
 
   const user = ref<User | null>(null)
   const session = ref<Session | null>(null)
@@ -19,129 +32,105 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function init() {
     try {
-      const {
-        data: { session: currentSession },
-      } = await supabase.auth.getSession()
+      const currentSession = await getCurrentSession()
 
       session.value = currentSession
       user.value = currentSession?.user ?? null
     } catch (error) {
-      console.error('Error initializing auth:', error)
+      handleError('AUTH.INIT_FAILED', error)
     } finally {
       isLoading.value = false
     }
   }
 
   async function signInWithGoogle(response: GoogleSignInResponse) {
-    const currentNonce = getCurrentNonce()
-
-    if (!currentNonce) {
-      console.error('No nonce available for authentication')
-      return { data: null, error: new Error('No nonce available for authentication') }
+    if (!currentNonce.value) {
+      const error = new Error('No nonce available for authentication')
+      handleError('AUTH.GOOGLE_SIGNIN_NO_NONCE', error)
+      return
     }
 
     try {
-      const { data, error } = await supabase.auth.signInWithIdToken({
+      const data = await signInWithIdToken({
         provider: 'google',
         token: response.credential || '',
-        nonce: currentNonce.nonce,
+        nonce: currentNonce.value.nonce,
       })
 
-      if (error) throw error
-
-      return { data, error: null }
+      return data
     } catch (error) {
-      console.error('Error signing in with Google:', error)
-      return { data: null, error }
+      handleError('AUTH.GOOGLE_SIGNIN_FAILED', error)
     }
   }
 
-  // Send OTP to email
   async function signInWithOtp(email: string) {
     try {
       isEmailSent.value = false
       emailError.value = null
 
-      const { data, error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
-      })
-
-      if (error) throw error
+      const data = await sendOtpToEmail(email, `${window.location.origin}/auth/callback`)
 
       isEmailSent.value = true
 
-      return { data, error: null }
+      return data
     } catch (error) {
       emailError.value = error instanceof Error ? error.message : 'An unknown error occurred'
-      console.error('Error sending OTP to email:', error)
-
-      return { data: null, error }
+      handleError('AUTH.OTP_SEND_FAILED', error, { action: 'sending OTP' })
     }
   }
 
-  // Verify OTP sent to email
   async function verifyOtp(email: string, token: string) {
     try {
-      const { data, error } = await supabase.auth.verifyOtp({
-        email,
-        token,
-        type: 'magiclink',
-      })
+      const data = await verifyEmailOtp(email, token)
 
-      if (error) throw error
-
-      return { data, error: null }
+      return data
     } catch (error) {
-      console.error('Error verifying OTP:', error)
-
-      return { data: null, error }
+      handleError('AUTH.OTP_VERIFY_FAILED', error, { action: 'verifying OTP' })
     }
   }
 
-  // Sign out
   async function signOut() {
     try {
-      const { error } = await supabase.auth.signOut()
-
-      if (error) throw error
+      await signOutUser()
 
       session.value = null
       user.value = null
 
-      return { error: null }
+      preferencesStore.reset()
     } catch (error) {
-      return { error }
+      const context = user.value?.id ? { userId: user.value.id } : undefined
+      handleError('AUTH.SIGNOUT_FAILED', error, context)
     }
   }
 
-  // Update profile
   async function updateProfile(updates: { email?: string; data?: object }) {
     try {
-      const { data, error } = await supabase.auth.updateUser(updates)
-
-      if (error) throw error
+      const data = await updateUserProfile(updates)
 
       user.value = data.user
 
-      return { data, error: null }
+      return data
     } catch (error) {
-      return { data: null, error }
+      const context = user.value?.id ? { userId: user.value.id } : undefined
+      handleError('AUTH.PROFILE_UPDATE_FAILED', error, context)
     }
   }
 
-  // Reset email state
   function resetEmailState() {
     isEmailSent.value = false
     emailError.value = null
   }
 
   // Subscribe to auth state changes
-  supabase.auth.onAuthStateChange((_event, currentSession) => {
+  onAuthStateChange(async (event, currentSession) => {
+    const previousUserId = user.value?.id
+
     session.value = currentSession
     user.value = currentSession?.user ?? null
+
+    if (currentSession?.user && currentSession.user.id !== previousUserId) {
+      await preferencesStore.loadPreferences()
+    }
   })
 
   return {

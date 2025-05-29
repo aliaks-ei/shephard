@@ -3,17 +3,17 @@
     <h1 class="text-h4 text-primary q-mb-xl">Welcome to Shephard</h1>
     <q-card class="auth-card shadow-5">
       <q-card-section class="bg-primary text-white text-center">
-        <div class="text-h5">Sign In</div>
+        <h2 class="text-h5">Sign In</h2>
       </q-card-section>
 
       <q-card-section class="q-pa-lg">
-        <div class="text-subtitle1 text-center q-mb-md">Please sign in to continue</div>
+        <p class="text-subtitle1 text-center q-mb-md">Please sign in to continue</p>
 
         <!-- Email OTP Authentication -->
         <EmailOtpForm />
 
         <q-separator class="q-my-md" />
-        <div class="text-center q-mb-md">OR</div>
+        <p class="text-center q-mb-md">OR</p>
 
         <!-- Google Authentication -->
         <GoogleAuthButton />

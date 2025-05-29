@@ -3,11 +3,11 @@
     class="col-12"
     :class="columnClass"
   >
-    <q-item class="q-pa-sm card-bg">
+    <q-item class="q-pa-sm">
       <q-item-section avatar>
         <q-icon
           :name="icon"
-          :color="iconColor"
+          color="primary"
         />
       </q-item-section>
       <q-item-section>
@@ -17,7 +17,7 @@
         >
           {{ label }}
         </q-item-label>
-        <q-item-label :class="valueClass">{{ value }}</q-item-label>
+        <q-item-label class="text-primary">{{ value }}</q-item-label>
       </q-item-section>
     </q-item>
   </div>
@@ -30,15 +30,11 @@ interface Props {
   icon: string
   label: string
   value: string | null | undefined
-  iconColor?: string
   fullWidth?: boolean
-  valueClass?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  iconColor: 'primary',
   fullWidth: false,
-  valueClass: 'text-primary',
 })
 
 const columnClass = computed(() => (props.fullWidth ? 'col-sm-12' : 'col-sm-6'))

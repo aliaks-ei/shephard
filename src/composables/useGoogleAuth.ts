@@ -1,68 +1,35 @@
-import { onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useUserStore } from 'src/stores/user'
+
+import { useAuthStore } from 'src/stores/auth'
 import { getCsrfToken, clearCsrfToken, generateCsrfToken } from 'src/utils/csrf'
 import { useNonce } from 'src/composables/useNonce'
-import type { GoogleSignInResponse } from 'src/boot/google-auth'
-
-declare global {
-  interface Window {
-    vueGoogleCallback?: (response: GoogleSignInResponse) => void
-  }
-}
+import { useError } from 'src/composables/useError'
+import type { GoogleSignInResponse } from 'src/types'
 
 export function useGoogleAuth() {
-  const userStore = useUserStore()
+  const authStore = useAuthStore()
   const router = useRouter()
   const route = useRoute()
+  const { handleError } = useError()
 
-  const {
-    isNonceReady,
-    hashedNonce,
-    generateNonce,
-    resetNonce,
-    ensureFreshNonce,
-    getCurrentNonce,
-  } = useNonce()
+  const { isNonceReady, hashedNonce, generateNonce, resetNonce, ensureFreshNonce } = useNonce()
 
   async function initGoogleAuth() {
     const nonce = await ensureFreshNonce()
-
-    if (!nonce) {
-      console.error('Failed to generate nonce for Google authentication')
-      return false
-    }
+    if (!nonce) return
 
     generateCsrfToken()
 
-    window.vueGoogleCallback = (response: GoogleSignInResponse) => {
-      handleGoogleSignIn(response).catch((err) => {
-        console.error('Error during authentication:', err)
-      })
+    window.vueGoogleCallback = (response) => {
+      handleGoogleSignIn(response)
     }
-
-    return true
   }
 
   async function handleGoogleSignIn(response: GoogleSignInResponse) {
     try {
-      // Double-check we have a valid nonce
-      if (!isNonceReady.value) {
-        console.error('Authentication failed: No valid nonce available')
-        return { error: 'No valid nonce available' }
-      }
-
-      // Verify nonce exists
-      const currentNonce = getCurrentNonce()
-      if (!currentNonce) {
-        console.error('Authentication failed: Nonce data is missing')
-        return { error: 'Nonce data is missing' }
-      }
-
       const csrfToken = getCsrfToken()
       if (!csrfToken) {
-        console.error('Authentication failed: CSRF token is missing')
-        return { error: 'CSRF token is missing' }
+        throw new Error('CSRF token is missing')
       }
 
       const authRequest = {
@@ -70,24 +37,17 @@ export function useGoogleAuth() {
         csrfToken,
       }
 
-      const result = await userStore.signInWithGoogle(authRequest)
+      const data = await authStore.signInWithGoogle(authRequest)
 
-      if (result.error) {
-        console.error('Authentication failed:', result.error)
-        return result
-      } else if (result.data) {
-        resetNonce()
-        clearCsrfToken()
+      if (!data) return
 
-        const redirectPath = route.query.redirect?.toString() || '/'
-        await router.push(redirectPath)
-        return result
-      }
+      resetNonce()
+      clearCsrfToken()
 
-      return result
+      const redirectPath = route.query.redirect?.toString() || '/'
+      await router.push(redirectPath)
     } catch (err) {
-      console.error('Error during authentication:', err)
-      return { error: err }
+      handleError('AUTH.GOOGLE_SIGNIN_FAILED', err, { component: 'GoogleAuth' })
     }
   }
 
@@ -100,18 +60,12 @@ export function useGoogleAuth() {
     clearCsrfToken()
   }
 
-  function setupAutoCleanup() {
-    onBeforeUnmount(cleanup)
-  }
-
   return {
     hashedNonce,
     isNonceReady,
     generateNonce,
-    resetNonce,
     initGoogleAuth,
     handleGoogleSignIn,
     cleanup,
-    setupAutoCleanup,
   }
 }

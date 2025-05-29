@@ -16,53 +16,27 @@ const isNonceReady = computed(() => {
 })
 
 export function useNonce() {
-  /**
-   * Generates a new secure nonce for authentication
-   * @returns {Promise<NonceData>} A timestamped nonce data object
-   */
   async function generateNonce(): Promise<NonceData> {
-    try {
-      const nonceData = await generateSecureNonce()
-      const timestampedNonce = createTimestampedNonce(nonceData)
+    const nonceData = await generateSecureNonce()
+    const timestampedNonce = createTimestampedNonce(nonceData)
 
-      currentNonce.value = timestampedNonce
-      return timestampedNonce
-    } catch (error) {
-      console.error('Failed to generate nonce:', error)
-      throw error
-    }
+    currentNonce.value = timestampedNonce
+    return timestampedNonce
   }
 
-  /**
-   * Resets the current nonce
-   */
   function resetNonce(): void {
     currentNonce.value = null
   }
 
-  /**
-   * Ensures a fresh valid nonce is available
-   * Generates a new one if none exists or if the current one has expired
-   * @returns {Promise<NonceData | null>} The current valid nonce or null if generation failed
-   */
   async function ensureFreshNonce(): Promise<NonceData | null> {
     if (!currentNonce.value) {
       return generateNonce()
     }
 
-    // Check if nonce has expired
     if (!isNonceValid(currentNonce.value.createdAt)) {
       return generateNonce()
     }
 
-    return currentNonce.value
-  }
-
-  /**
-   * Gets the current nonce data
-   * @returns {NonceData | null} The current nonce or null if none exists
-   */
-  function getCurrentNonce(): NonceData | null {
     return currentNonce.value
   }
 
@@ -73,6 +47,5 @@ export function useNonce() {
     generateNonce,
     resetNonce,
     ensureFreshNonce,
-    getCurrentNonce,
   }
 }

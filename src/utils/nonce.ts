@@ -1,4 +1,7 @@
-import type { NonceResult } from 'src/boot/google-auth'
+export interface NonceResult {
+  nonce: string
+  hashedNonce: string
+}
 
 export interface NonceData extends NonceResult {
   createdAt: number
@@ -12,7 +15,6 @@ export const NONCE_MAX_AGE_MS = 5 * 60 * 1000
 
 /**
  * Generates a secure nonce and its hashed version for Google authentication
- * The nonce is used with Supabase auth, while the hashed nonce is sent to Google
  * @returns {NonceResult} An object containing the nonce and its hashed version
  */
 export async function generateSecureNonce(): Promise<NonceResult> {

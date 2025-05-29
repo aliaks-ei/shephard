@@ -1,44 +1,41 @@
 <template>
-  <div class="email-otp-form">
-    <q-form
-      @submit.prevent="handleEmailSubmit"
-      class="q-gutter-md q-mb-md"
-      novalidate
+  <q-form
+    class="q-gutter-md q-mb-md"
+    novalidate
+    @submit.prevent="handleEmailSubmit"
+  >
+    <q-input
+      v-model="email"
+      label="Email"
+      type="email"
+      :disable="userStore.auth.isEmailSent"
+      outlined
+      :rules="emailRules()"
+      lazy-rules="ondemand"
+    />
+
+    <p
+      v-if="userStore.auth.emailError"
+      class="text-negative q-mb-sm"
     >
-      <q-input
-        v-model="email"
-        label="Email"
-        type="email"
-        :disable="userStore.isEmailSent"
-        outlined
-        :rules="emailRules()"
-        lazy-rules="ondemand"
-      />
+      {{ userStore.auth.emailError }}
+    </p>
 
-      <div
-        class="text-negative q-mb-sm"
-        v-if="userStore.emailError"
-      >
-        {{ userStore.emailError }}
-      </div>
+    <p
+      v-if="userStore.auth.isEmailSent"
+      class="text-positive q-mb-md"
+    >
+      We've sent a magic link to your email. Please check your inbox and click the link to signin.
+    </p>
 
-      <div
-        v-if="userStore.isEmailSent"
-        class="text-positive q-mb-md"
-      >
-        We've sent a magic link to your email. Please check your inbox and click the link to sign
-        in.
-      </div>
-
-      <q-btn
-        type="submit"
-        :label="submitBtnLabel"
-        color="primary"
-        class="full-width"
-        :loading="isLoading"
-      />
-    </q-form>
-  </div>
+    <q-btn
+      type="submit"
+      :label="submitBtnLabel"
+      color="primary"
+      class="full-width"
+      :loading="isLoading"
+    />
+  </q-form>
 </template>
 
 <script setup lang="ts">
@@ -51,27 +48,20 @@ const email = ref('')
 const isLoading = ref(false)
 
 const submitBtnLabel = computed(() =>
-  userStore.isEmailSent ? 'Resend Email' : 'Sign in with Email',
+  userStore.auth.isEmailSent ? 'Resend Email' : 'Sign in with Email',
 )
 
 async function handleEmailSubmit() {
   if (!email.value) return
 
   isLoading.value = true
-  try {
-    const result = await userStore.signInWithOtp(email.value)
 
-    if (result.error) {
-      console.error('Email authentication failed:', result.error)
-    }
-  } catch (err) {
-    console.error('Error during email authentication:', err)
-  } finally {
-    isLoading.value = false
-  }
+  await userStore.auth.signInWithOtp(email.value)
+
+  isLoading.value = false
 }
 
 onMounted(() => {
-  userStore.resetEmailState()
+  userStore.auth.resetEmailState()
 })
 </script>

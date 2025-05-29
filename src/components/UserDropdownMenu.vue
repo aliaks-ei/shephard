@@ -9,12 +9,12 @@
       <q-list style="min-width: 220px">
         <div class="text-center q-pt-md q-pb-md">
           <UserAvatar size="72px" />
-          <div class="text-center q-mt-sm text-weight-bold text-h6">
-            {{ userStore.displayName }}
-          </div>
-          <div class="text-center text-caption">
-            {{ userStore.userEmail }}
-          </div>
+          <p class="text-center q-mt-sm text-weight-bold text-h6">
+            {{ userStore.userProfile?.displayName }}
+          </p>
+          <p class="text-center text-caption">
+            {{ userStore.userProfile?.email }}
+          </p>
         </div>
 
         <q-separator />
@@ -28,7 +28,7 @@
         >
           <q-item-section avatar>
             <q-icon
-              name="settings"
+              name="eva-settings-2-outline"
               size="sm"
             />
           </q-item-section>
@@ -45,7 +45,7 @@
         >
           <q-item-section avatar>
             <q-icon
-              name="logout"
+              name="eva-log-out-outline"
               size="sm"
               color="negative"
             />
