@@ -19,12 +19,15 @@ export function generateCsrfToken(): string {
  */
 export function getCsrfToken(): string | null {
   const cookies = document.cookie.split(';')
+
   for (const cookie of cookies) {
     const [name, value] = cookie.trim().split('=')
+
     if (name === CSRF_TOKEN_COOKIE && value !== undefined) {
       return value
     }
   }
+
   return null
 }
 

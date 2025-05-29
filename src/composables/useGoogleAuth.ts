@@ -1,56 +1,35 @@
-import { onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useUserStore } from 'src/stores/user'
+
+import { useAuthStore } from 'src/stores/auth'
 import { getCsrfToken, clearCsrfToken, generateCsrfToken } from 'src/utils/csrf'
 import { useNonce } from 'src/composables/useNonce'
+import { useError } from 'src/composables/useError'
 import type { GoogleSignInResponse } from 'src/types'
 
 export function useGoogleAuth() {
-  const userStore = useUserStore()
+  const authStore = useAuthStore()
   const router = useRouter()
   const route = useRoute()
+  const { handleError } = useError()
 
-  const {
-    isNonceReady,
-    hashedNonce,
-    generateNonce,
-    resetNonce,
-    ensureFreshNonce,
-    getCurrentNonce,
-  } = useNonce()
+  const { isNonceReady, hashedNonce, generateNonce, resetNonce, ensureFreshNonce } = useNonce()
 
   async function initGoogleAuth() {
     const nonce = await ensureFreshNonce()
-
-    if (!nonce) {
-      return false
-    }
+    if (!nonce) return
 
     generateCsrfToken()
 
     window.vueGoogleCallback = (response) => {
       handleGoogleSignIn(response)
     }
-
-    return true
   }
 
   async function handleGoogleSignIn(response: GoogleSignInResponse) {
     try {
-      // Double-check we have a valid nonce
-      if (!isNonceReady.value) {
-        return { error: new Error('No valid nonce available') }
-      }
-
-      // Verify nonce exists
-      const currentNonce = getCurrentNonce()
-      if (!currentNonce) {
-        return { error: new Error('Nonce data is missing') }
-      }
-
       const csrfToken = getCsrfToken()
       if (!csrfToken) {
-        return { error: new Error('CSRF token is missing') }
+        throw new Error('CSRF token is missing')
       }
 
       const authRequest = {
@@ -58,19 +37,17 @@ export function useGoogleAuth() {
         csrfToken,
       }
 
-      const data = await userStore.auth.signInWithGoogle(authRequest)
+      const data = await authStore.signInWithGoogle(authRequest)
 
-      if (data) {
-        resetNonce()
-        clearCsrfToken()
+      if (!data) return
 
-        const redirectPath = route.query.redirect?.toString() || '/'
-        await router.push(redirectPath)
-      }
+      resetNonce()
+      clearCsrfToken()
 
-      return { data, error: null }
+      const redirectPath = route.query.redirect?.toString() || '/'
+      await router.push(redirectPath)
     } catch (err) {
-      return { error: err }
+      handleError('AUTH.GOOGLE_SIGNIN_FAILED', err, { component: 'GoogleAuth' })
     }
   }
 
@@ -83,18 +60,12 @@ export function useGoogleAuth() {
     clearCsrfToken()
   }
 
-  function setupAutoCleanup() {
-    onBeforeUnmount(cleanup)
-  }
-
   return {
     hashedNonce,
     isNonceReady,
     generateNonce,
-    resetNonce,
     initGoogleAuth,
     handleGoogleSignIn,
     cleanup,
-    setupAutoCleanup,
   }
 }

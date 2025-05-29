@@ -18,7 +18,7 @@ import type { User } from 'src/api/user'
 import type { GoogleSignInResponse } from 'src/types'
 
 export const useAuthStore = defineStore('auth', () => {
-  const { getCurrentNonce } = useNonce()
+  const { currentNonce } = useNonce()
   const { handleError } = useError()
   const preferencesStore = usePreferencesStore()
 
@@ -37,18 +37,16 @@ export const useAuthStore = defineStore('auth', () => {
       session.value = currentSession
       user.value = currentSession?.user ?? null
     } catch (error) {
-      handleError(error, 'AUTH.INIT_FAILED')
+      handleError('AUTH.INIT_FAILED', error)
     } finally {
       isLoading.value = false
     }
   }
 
   async function signInWithGoogle(response: GoogleSignInResponse) {
-    const currentNonce = getCurrentNonce()
-
-    if (!currentNonce) {
+    if (!currentNonce.value) {
       const error = new Error('No nonce available for authentication')
-      handleError(error, 'AUTH.GOOGLE_SIGNIN_NO_NONCE')
+      handleError('AUTH.GOOGLE_SIGNIN_NO_NONCE', error)
       return
     }
 
@@ -56,12 +54,12 @@ export const useAuthStore = defineStore('auth', () => {
       const data = await signInWithIdToken({
         provider: 'google',
         token: response.credential || '',
-        nonce: currentNonce.nonce,
+        nonce: currentNonce.value.nonce,
       })
 
       return data
     } catch (error) {
-      handleError(error, 'AUTH.GOOGLE_SIGNIN_FAILED')
+      handleError('AUTH.GOOGLE_SIGNIN_FAILED', error)
     }
   }
 
@@ -77,7 +75,7 @@ export const useAuthStore = defineStore('auth', () => {
       return data
     } catch (error) {
       emailError.value = error instanceof Error ? error.message : 'An unknown error occurred'
-      handleError(error, 'AUTH.OTP_SEND_FAILED')
+      handleError('AUTH.OTP_SEND_FAILED', error, { action: 'sending OTP' })
     }
   }
 
@@ -87,7 +85,7 @@ export const useAuthStore = defineStore('auth', () => {
 
       return data
     } catch (error) {
-      handleError(error, 'AUTH.OTP_VERIFY_FAILED')
+      handleError('AUTH.OTP_VERIFY_FAILED', error, { action: 'verifying OTP' })
     }
   }
 
@@ -100,7 +98,8 @@ export const useAuthStore = defineStore('auth', () => {
 
       preferencesStore.reset()
     } catch (error) {
-      handleError(error, 'AUTH.SIGNOUT_FAILED')
+      const context = user.value?.id ? { userId: user.value.id } : undefined
+      handleError('AUTH.SIGNOUT_FAILED', error, context)
     }
   }
 
@@ -112,7 +111,8 @@ export const useAuthStore = defineStore('auth', () => {
 
       return data
     } catch (error) {
-      handleError(error, 'AUTH.PROFILE_UPDATE_FAILED')
+      const context = user.value?.id ? { userId: user.value.id } : undefined
+      handleError('AUTH.PROFILE_UPDATE_FAILED', error, context)
     }
   }
 

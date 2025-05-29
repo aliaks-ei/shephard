@@ -107,7 +107,7 @@ async function loadUser(userId: string) {
     userState.value = user
     return user
   } catch (error) {
-    handleError(error, 'USER.LOAD_FAILED')
+    handleError('USER.LOAD_FAILED', error, { userId })
   }
 }
 
@@ -117,7 +117,7 @@ async function saveData() {
     await saveToDatabase()
     // Update state...
   } catch (error) {
-    handleError(error, 'DATA.SAVE_FAILED')
+    handleError('DATA.SAVE_FAILED', error)
     // No return needed for void functions
   }
 }
@@ -130,16 +130,15 @@ async function saveData() {
   1. **API Layer**: API functions should throw errors directly without handling them.
   2. **Stores**: Catch errors from API functions using the `useError` composable's `handleError` function. Stores are responsible for error management.
   3. **Components**: Do not implement error handling logic. Components should call store methods and let the stores handle any errors.
+- Use the `handleError` method with predefined error keys from the error configuration system for consistent, user-friendly messaging.
 - Use descriptive, user-friendly error messages with context (e.g., "Failed to load user preferences" rather than "API error").
-- In stores, import and use the `useError` composable, and use appropriate `handleError` options based on the error severity:
-  - `{ notify: true }` (default) for errors that should be shown to users
-  - `{ notify: false }` for errors that should be logged but not shown to users
-  - `{ log: false }` for errors that should be shown but not logged (rare)
+- In stores, import and use the `useError` composable with the `handleError` method
+- Pass relevant context information (userId, component, action, etc.) to provide better debugging information
 - Keep UI components clean by avoiding direct error handling or error state management.
 - For composables, let errors propagate to calling stores rather than handling them internally.
 - Use asynchronous functions with clear return types including possible error states.
 - Maintain a centralized error message system in `src/config/error-messages.ts` for consistent messaging.
-- In catch blocks after calling `handleError()`, don't use return statement no matter the function.
+- In catch blocks after calling error handling methods, don't use return statement no matter the function.
 
 ## Performance Considerations
 

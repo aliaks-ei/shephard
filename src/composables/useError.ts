@@ -7,26 +7,52 @@ type ErrorOptions = {
   throw?: boolean
 }
 
-/**
- * Get error message configuration for a given error key
- */
-export function getErrorConfig(
+type ErrorContext = {
+  action?: string
+  component?: string
+  userId?: string
+  requestId?: string
+  entityName?: string
+  [key: string]: string | undefined
+}
+
+const DEFAULT_OPTIONS: Required<ErrorOptions> = {
+  notify: true,
+  log: true,
+  throw: false,
+}
+
+function extractErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message
+  }
+  if (typeof error === 'string') {
+    return error
+  }
+  return 'Unknown error occurred'
+}
+
+function getErrorConfig(
   errorKey: ErrorMessageKey,
-  entityName?: string,
+  context?: ErrorContext,
 ): {
   message: string
-  options: ErrorOptions
+  options: Required<ErrorOptions>
 } {
   const config = ERROR_MESSAGES[errorKey] || ERROR_MESSAGES.UNKNOWN
 
   let message = config.message
 
-  if (config.withEntityName && entityName) {
-    message = `${message}: ${entityName}`
+  if (config.withEntityName && context?.entityName) {
+    message = `${message}: ${context.entityName}`
   }
 
-  // Create options object only with defined properties
-  const options: ErrorOptions = {}
+  const options: Required<ErrorOptions> = {
+    ...DEFAULT_OPTIONS,
+    notify: config.notify ?? DEFAULT_OPTIONS.notify,
+    log: config.log ?? DEFAULT_OPTIONS.log,
+    throw: config.throw ?? DEFAULT_OPTIONS.throw,
+  }
 
   return {
     message,
@@ -34,71 +60,84 @@ export function getErrorConfig(
   }
 }
 
-/**
- * Composable for error handling with notification display
- */
-export function useError() {
+function formatErrorMessage(
+  baseMessage: string,
+  originalError: unknown,
+  context?: ErrorContext,
+  includeErrorMessage = false,
+): string {
+  let message = baseMessage
+
+  // Add original error message if requested
+  if (includeErrorMessage) {
+    const errorMessage = extractErrorMessage(originalError)
+    message = `${message}: ${errorMessage}`
+  }
+
+  // Add context information (excluding entityName as it's handled separately)
+  const contextEntries = Object.entries(context || {})
+    .filter(([key, value]) => key !== 'entityName' && value !== undefined)
+    .map(([key, value]) => `${key}: ${value}`)
+
+  if (contextEntries.length > 0) {
+    message = `${message} (${contextEntries.join(', ')})`
+  }
+
+  return message
+}
+
+function logError(message: string, originalError: unknown, context?: ErrorContext): void {
+  const logData = {
+    message,
+    originalError: originalError instanceof Error ? originalError.message : originalError,
+    context,
+    timestamp: new Date().toISOString(),
+  }
+
+  console.error('[Error]', logData)
+}
+
+function notifyError(message: string): void {
   const notificationStore = useNotificationStore()
+  notificationStore.showError(message)
+}
 
-  /**
-   * Handles errors by logging them and optionally showing a notification
-   *
-   * @param error The error object or message
-   * @param contextOrKey A string describing where the error occurred or an error key from the error messages
-   * @param options Additional options or entity name when using error key
-   * @returns The formatted error message
-   */
+export function useError() {
   function handleError(
+    errorKey: ErrorMessageKey,
     error: unknown,
-    contextOrKey: string,
-    options: {
-      notify?: boolean
-      log?: boolean
-      throw?: boolean
-      entityName?: string
-    } = { notify: true, log: true, throw: false },
+    context?: ErrorContext,
+    options?: Partial<ErrorOptions>,
   ): string {
-    const errorMessage = error instanceof Error ? error.message : String(error)
+    const { message: baseMessage, options: defaultOptions } = getErrorConfig(errorKey, context)
+    const config = ERROR_MESSAGES[errorKey]
 
-    // Check if contextOrKey is an error key from our system
-    const isErrorKey = contextOrKey in ERROR_MESSAGES
-
-    let fullMessage: string
-    let finalOptions = options
-
-    if (isErrorKey) {
-      // Using the error message system
-      const errorKey = contextOrKey as ErrorMessageKey
-      const { message, options: configOptions } = getErrorConfig(errorKey, options.entityName)
-
-      fullMessage = message
-      finalOptions = { ...configOptions, ...options }
-
-      // Check if we need to include the original error message
-      const config = ERROR_MESSAGES[errorKey]
-      if (config && config.includeErrorMessage) {
-        fullMessage = `${message}: ${errorMessage}`
-      }
-    } else {
-      fullMessage = `${contextOrKey}: ${errorMessage}`
+    // Merge options: defaults < config < user provided
+    const finalOptions = {
+      ...defaultOptions,
+      ...options,
     }
 
-    // Log the error
+    const formattedMessage = formatErrorMessage(
+      baseMessage,
+      error,
+      context,
+      config?.includeErrorMessage,
+    )
+
     if (finalOptions.log) {
-      console.error(`[Error] ${fullMessage}`, error)
+      logError(formattedMessage, error, context)
     }
 
-    // Show notification
     if (finalOptions.notify) {
-      notificationStore.showError(fullMessage)
+      notifyError(baseMessage)
     }
 
-    // Throw the error if requested
     if (finalOptions.throw) {
-      throw new Error(fullMessage)
+      throw new Error(formattedMessage)
     }
 
-    return fullMessage
+    return formattedMessage
   }
 
   return {

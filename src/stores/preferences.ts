@@ -57,7 +57,7 @@ export const usePreferencesStore = defineStore('preferences', () => {
           userPreferences.pushNotificationsEnabled ?? DEFAULT_PREFERENCES.pushNotificationsEnabled,
       }
     } catch (err) {
-      handleError(err, 'USER.PREFERENCES_LOAD_FAILED')
+      handleError('USER.PREFERENCES_LOAD_FAILED', err, { userId: authStore.user?.id })
       initializeWithDefaults()
     } finally {
       isLoading.value = false
@@ -75,7 +75,7 @@ export const usePreferencesStore = defineStore('preferences', () => {
     try {
       await saveUserPreferences(authStore.user.id, preferences.value)
     } catch (err) {
-      handleError(err, 'USER.PREFERENCES_SAVE_FAILED')
+      handleError('USER.PREFERENCES_SAVE_FAILED', err, { userId: authStore.user?.id })
     }
   }
 
@@ -87,7 +87,6 @@ export const usePreferencesStore = defineStore('preferences', () => {
   return {
     preferences,
     isLoading,
-    systemDarkMode,
     isDark,
     arePushNotificationsEnabled,
     loadPreferences,
