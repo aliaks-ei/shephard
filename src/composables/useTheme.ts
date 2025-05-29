@@ -1,6 +1,5 @@
 import { Dark } from 'quasar'
-import { watch, onUnmounted, ref } from 'vue'
-import type { Ref } from 'vue'
+import { watch, ref, type Ref } from 'vue'
 
 export type ThemeAdapter = {
   setDarkMode: (isDark: boolean) => void
@@ -37,14 +36,7 @@ export function useTheme(
     }
   }
 
-  function cleanupSystemDarkModeListener() {
-    if (systemDarkModeListener) {
-      systemDarkModeListener.removeEventListener('change', () => {})
-      systemDarkModeListener = null
-    }
-  }
-
-  const stopWatcher = watch(
+  watch(
     isDark,
     () => {
       adapter.setDarkMode(!!isDark.value)
@@ -53,11 +45,6 @@ export function useTheme(
   )
 
   setupSystemDarkModeListener()
-
-  onUnmounted(() => {
-    stopWatcher()
-    cleanupSystemDarkModeListener()
-  })
 
   return {
     systemDarkMode,

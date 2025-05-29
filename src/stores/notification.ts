@@ -1,48 +1,39 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { useQuasar } from 'quasar'
-import type  { QNotifyCreateOptions } from 'quasar'
+import { Notify, type QNotifyCreateOptions } from 'quasar'
 
 export type NotificationType = 'info' | 'positive' | 'negative' | 'warning'
 
-export interface NotificationHistoryItem {
+export interface NotificationItem {
   id: string
   type: NotificationType
   message: string
   timestamp: Date
+  group?: string | number | boolean
 }
 
 export const useNotificationStore = defineStore('notification', () => {
-  const $q = useQuasar()
-  const notificationHistory = ref<NotificationHistoryItem[]>([])
+  const notifications = ref<NotificationItem[]>([])
 
   const defaultOptions: Record<NotificationType, QNotifyCreateOptions> = {
     info: {
       type: 'info',
-      color: 'info',
       icon: 'info',
-      position: 'top',
       timeout: 3000,
     },
     positive: {
       type: 'positive',
-      color: 'positive',
       icon: 'check_circle',
-      position: 'top',
       timeout: 3000,
     },
     negative: {
       type: 'negative',
-      color: 'negative',
       icon: 'error',
-      position: 'top',
       timeout: 5000,
     },
     warning: {
       type: 'warning',
-      color: 'warning',
       icon: 'warning',
-      position: 'top',
       timeout: 4000,
     },
   }
@@ -54,22 +45,25 @@ export const useNotificationStore = defineStore('notification', () => {
   ) {
     const id = crypto.randomUUID()
 
-    notificationHistory.value.unshift({
+    notifications.value.unshift({
       id,
       type,
       message,
       timestamp: new Date(),
+      ...(options.group !== undefined && { group: options.group }),
     })
 
-    if (notificationHistory.value.length > 20) {
-      notificationHistory.value = notificationHistory.value.slice(0, 20)
+    if (notifications.value.length > 20) {
+      notifications.value = notifications.value.slice(0, 20)
     }
 
-    $q.notify({
+    const notificationConfig: QNotifyCreateOptions = {
       ...defaultOptions[type],
       message,
       ...options,
-    })
+    }
+
+    Notify.create(notificationConfig)
 
     return id
   }
@@ -90,17 +84,13 @@ export const useNotificationStore = defineStore('notification', () => {
     return showNotification(message, 'warning', options)
   }
 
-  function clearHistory() {
-    notificationHistory.value = []
-  }
-
   return {
-    notificationHistory,
+    notifications,
+
     showNotification,
     showInfo,
     showSuccess,
     showError,
     showWarning,
-    clearHistory,
   }
 })

@@ -1,5 +1,5 @@
 import { type ErrorMessageKey, ERROR_MESSAGES } from 'src/config/error-messages'
-import { useNotification } from 'src/composables/useNotification'
+import { useNotificationStore } from 'src/stores/notification'
 
 type ErrorOptions = {
   notify?: boolean
@@ -38,7 +38,7 @@ export function getErrorConfig(
  * Composable for error handling with notification display
  */
 export function useError() {
-  const { showError } = useNotification()
+  const notificationStore = useNotificationStore()
 
   /**
    * Handles errors by logging them and optionally showing a notification
@@ -90,7 +90,7 @@ export function useError() {
 
     // Show notification
     if (finalOptions.notify) {
-      showError(fullMessage)
+      notificationStore.showError(fullMessage)
     }
 
     // Throw the error if requested
