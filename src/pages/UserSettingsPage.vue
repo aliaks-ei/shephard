@@ -4,7 +4,6 @@
     class="row justify-center"
   >
     <div class="col-12 col-md-8 col-lg-6 q-pt-md">
-      <!-- User Profile Header -->
       <div class="q-mb-md">
         <div class="row items-center">
           <div class="col-auto q-mr-lg">
@@ -22,7 +21,6 @@
         </div>
       </div>
 
-      <!-- Preferences Section -->
       <div class="q-mt-lg q-mb-xl">
         <h5 class="q-mt-none q-mb-md section-title text-primary">Preferences</h5>
         <q-separator class="q-mb-md separator" />
@@ -89,7 +87,6 @@
         </q-list>
       </div>
 
-      <!-- Account Information Section -->
       <div class="q-mb-xl">
         <h5 class="q-mt-none q-mb-md section-title text-primary">Account Information</h5>
         <q-separator class="q-mb-md separator" />
@@ -127,13 +124,11 @@
             icon="fingerprint"
             label="User ID"
             :value="userStore.userProfile.id"
-            fullWidth
-            valueClass="ellipsis text-primary"
+            full-width
           />
         </div>
       </div>
 
-      <!-- Sign Out Button -->
       <div class="q-mt-xl text-center">
         <q-btn
           color="negative"
@@ -162,7 +157,6 @@ const router = useRouter()
 
 const isSigningOut = ref(false)
 
-// Handle sign out
 async function handleSignOut() {
   isSigningOut.value = true
 

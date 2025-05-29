@@ -27,85 +27,87 @@ interface ErrorMessageConfig {
 export const ERROR_MESSAGES: Record<ErrorMessageKey, ErrorMessageConfig> = {
   // Authentication errors
   'AUTH.INIT_FAILED': {
-    message: 'Unable to initialize authentication',
+    message: "We couldn't start the sign-in process. Please try again or check your connection.",
     notify: true,
     log: true,
   },
   'AUTH.GOOGLE_SIGNIN_FAILED': {
-    message: 'Google sign-in was unsuccessful',
+    message: "We couldn't sign you in with Google. Please try again or use a different method.",
     notify: true,
     log: true,
   },
   'AUTH.GOOGLE_SIGNIN_NO_NONCE': {
-    message: 'Authentication security check failed',
+    message:
+      "Something didn't match during sign-in. Please try again or contact support if the issue continues.",
     notify: true,
     log: true,
   },
   'AUTH.OTP_SEND_FAILED': {
-    message: 'Unable to send login code to your email',
+    message:
+      "We couldn't send the login code. Please check your email address or try again shortly.",
     notify: true,
     log: true,
   },
   'AUTH.OTP_VERIFY_FAILED': {
-    message: 'The login code you entered is invalid or expired',
+    message: "That code doesn't work or has expired. Please request a new one.",
     notify: true,
     log: true,
   },
   'AUTH.SIGNOUT_FAILED': {
-    message: 'Unable to sign out',
+    message: "We couldn't log you out. Please refresh the page or try again.",
     notify: true,
     log: true,
   },
   'AUTH.PROFILE_UPDATE_FAILED': {
-    message: 'Unable to update your profile',
+    message: "We couldn't save your changes. Please try again.",
     notify: true,
     log: true,
   },
   'AUTH.NOT_AUTHENTICATED': {
-    message: 'You must be signed in to perform this action',
+    message: 'Please sign in to continue.',
     notify: true,
     log: true,
   },
 
-  // User errors
+  // Account errors
   'USER.GET_FAILED': {
-    message: 'Unable to retrieve your user information',
+    message: "We couldn't load your account details. Please refresh or try again later.",
     throw: true,
     notify: true,
     log: true,
   },
   'USER.PREFERENCES_LOAD_FAILED': {
-    message: 'Unable to load your preferences',
+    message: "We couldn't load your settings. Please try again or check your connection.",
     throw: true,
     notify: true,
     log: true,
   },
   'USER.PREFERENCES_SAVE_FAILED': {
-    message: 'Unable to save your preferences',
+    message: "We couldn't save your settings. Please try again.",
     throw: true,
     notify: true,
     log: true,
   },
   'USER.CREATE_FAILED': {
-    message: 'Unable to create user account',
+    message: "We couldn't create your account. Please check your info and try again.",
     throw: true,
     notify: true,
     log: true,
   },
   'USER.INIT_FAILED': {
-    message: 'Unable to initialize user data',
+    message: 'We had trouble setting up your account. Please try again or contact support.',
     notify: true,
     log: true,
   },
   'USER.EMAIL_RESET_FAILED': {
-    message: 'Unable to reset email state',
+    message: 'Something went wrong while resetting your email settings. Please try again.',
     notify: true,
     log: true,
   },
 
   // Default error
   UNKNOWN: {
-    message: 'An unexpected error occurred',
+    message: 'Something went wrong. Please try again or contact support if it continues.',
     includeErrorMessage: true,
     notify: true,
     log: true,

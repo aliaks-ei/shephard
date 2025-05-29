@@ -1,5 +1,5 @@
 <template>
-  <div class="fullscreen bg-cyan text-white text-center q-pa-md flex flex-center">
+  <div class="fullscreen bg-cyan text-white text-center q-pa-md column flex-center">
     <h1>404</h1>
 
     <p

@@ -41,10 +41,3 @@
     </div>
   </q-page>
 </template>
-
-<style scoped>
-.user-profile-card {
-  border-radius: 12px;
-  overflow: hidden;
-}
-</style>

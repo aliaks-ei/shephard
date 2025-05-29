@@ -1,5 +1,5 @@
 <template>
-  <div class="google-auth-container flex flex-center flex-column">
+  <div class="flex flex-center flex-column">
     <div v-if="isNonceReady">
       <component
         :is="'script'"
@@ -48,10 +48,11 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
+
 import { useGoogleAuth } from 'src/composables/useGoogleAuth'
 import 'src/boot/auth'
 
-const googleClientId = ref(import.meta.env.VITE_GOOGLE_CLIENT_ID)
+const googleClientId = ref<string>(import.meta.env.VITE_GOOGLE_CLIENT_ID)
 const { hashedNonce, isNonceReady, initGoogleAuth, cleanup, generateNonce } = useGoogleAuth()
 
 async function refreshGoogleAuth() {
@@ -67,9 +68,3 @@ onUnmounted(() => {
   cleanup()
 })
 </script>
-
-<style scoped>
-.google-auth-container {
-  width: 100%;
-}
-</style>

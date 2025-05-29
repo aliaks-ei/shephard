@@ -1,43 +1,41 @@
 <template>
-  <div class="email-otp-form">
-    <q-form
-      @submit.prevent="handleEmailSubmit"
-      class="q-gutter-md q-mb-md"
-      novalidate
+  <q-form
+    class="q-gutter-md q-mb-md"
+    novalidate
+    @submit.prevent="handleEmailSubmit"
+  >
+    <q-input
+      v-model="email"
+      label="Email"
+      type="email"
+      :disable="userStore.auth.isEmailSent"
+      outlined
+      :rules="emailRules()"
+      lazy-rules="ondemand"
+    />
+
+    <p
+      v-if="userStore.auth.emailError"
+      class="text-negative q-mb-sm"
     >
-      <q-input
-        v-model="email"
-        label="Email"
-        type="email"
-        :disable="userStore.auth.isEmailSent"
-        outlined
-        :rules="emailRules()"
-        lazy-rules="ondemand"
-      />
+      {{ userStore.auth.emailError }}
+    </p>
 
-      <p
-        v-if="userStore.auth.emailError"
-        class="text-negative q-mb-sm"
-      >
-        {{ userStore.auth.emailError }}
-      </p>
+    <p
+      v-if="userStore.auth.isEmailSent"
+      class="text-positive q-mb-md"
+    >
+      We've sent a magic link to your email. Please check your inbox and click the link to signin.
+    </p>
 
-      <p
-        v-if="userStore.auth.isEmailSent"
-        class="text-positive q-mb-md"
-      >
-        We've sent a magic link to your email. Please check your inbox and click the link to signin.
-      </p>
-
-      <q-btn
-        type="submit"
-        :label="submitBtnLabel"
-        color="primary"
-        class="full-width"
-        :loading="isLoading"
-      />
-    </q-form>
-  </div>
+    <q-btn
+      type="submit"
+      :label="submitBtnLabel"
+      color="primary"
+      class="full-width"
+      :loading="isLoading"
+    />
+  </q-form>
 </template>
 
 <script setup lang="ts">
