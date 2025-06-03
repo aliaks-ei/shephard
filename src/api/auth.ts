@@ -63,7 +63,7 @@ export async function signOutUser(): Promise<void> {
   if (error) throw error
 }
 
-export async function updateUserProfile(updates: {
+export async function updateUserPreferences(updates: {
   email?: string
   data?: object
 }): Promise<UserResponse['data']> {

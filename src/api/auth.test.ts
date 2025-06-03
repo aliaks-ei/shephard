@@ -5,7 +5,7 @@ import {
   sendOtpToEmail,
   verifyEmailOtp,
   signOutUser,
-  updateUserProfile,
+  updateUserPreferences,
   onAuthStateChange,
 } from './auth'
 import type { Session, AuthError, User } from '@supabase/supabase-js'
@@ -192,26 +192,26 @@ it('signOutUser should throw error when unsuccessful', async () => {
   expect(signOutSpy).toHaveBeenCalled()
 })
 
-// updateUserProfile tests
-it('updateUserProfile should return user data when successful', async () => {
+// updateUserPreferences tests
+it('updateUserPreferences should return user data when successful', async () => {
   const mockUser = { id: 'user-id', email: 'updated@example.com' } as User
   mockSupabase.auth.updateUser.mockResolvedValue({ data: { user: mockUser }, error: null })
 
   const updates = { email: 'updated@example.com', data: { name: 'Updated Name' } }
   const updateUserSpy = vi.spyOn(mockSupabase.auth, 'updateUser')
-  const result = await updateUserProfile(updates)
+  const result = await updateUserPreferences(updates)
 
   expect(updateUserSpy).toHaveBeenCalledWith(updates)
   expect(result).toEqual({ user: mockUser })
 })
 
-it('updateUserProfile should throw error when unsuccessful', async () => {
+it('updateUserPreferences should throw error when unsuccessful', async () => {
   const mockError = createAuthError('Failed to update user profile')
   mockSupabase.auth.updateUser.mockResolvedValue({ data: { user: null }, error: mockError })
 
   const updates = { email: 'updated@example.com' }
   const updateUserSpy = vi.spyOn(mockSupabase.auth, 'updateUser')
-  await expect(updateUserProfile(updates)).rejects.toThrow('Failed to update user profile')
+  await expect(updateUserPreferences(updates)).rejects.toThrow('Failed to update user profile')
   expect(updateUserSpy).toHaveBeenCalledWith(updates)
 })
 

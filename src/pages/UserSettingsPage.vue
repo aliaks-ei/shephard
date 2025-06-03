@@ -152,7 +152,7 @@ const router = useRouter()
 const isSigningOut = ref(false)
 
 function updatePreference(preferenceKey: 'pushNotificationsEnabled' | 'darkMode', value: boolean) {
-  userStore.updateUserProfile({
+  userStore.updateUserPreferences({
     preferences: { [preferenceKey]: value },
   })
 }

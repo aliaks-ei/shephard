@@ -9,7 +9,7 @@ import {
   sendOtpToEmail,
   verifyEmailOtp,
   signOutUser,
-  updateUserProfile,
+  updateUserPreferences,
   onAuthStateChange,
 } from 'src/api/auth'
 import { usePreferencesStore } from './preferences'
@@ -105,7 +105,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function updateProfile(updates: { email?: string; data?: object }) {
     try {
-      const data = await updateUserProfile(updates)
+      const data = await updateUserPreferences(updates)
 
       user.value = data.user
 
