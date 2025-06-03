@@ -5,147 +5,189 @@ alwaysApply: false
 ---
 # Test Guidelines
 
-Before writing tests, come up with a plan for which exact things you want to test, and check that with me.
+Before writing tests, create a plan for what exactly to test and check it with me.
 
-## Framework and Libraries
+## Framework & Libraries
 
-- Tests are written using `Vitest` as the test runner and framework
-- For Vue component testing, use `@vue/test-utils` version 2+
+- Use `Vitest` as the test runner.
+- Use `@vue/test-utils` v2+ for Vue component testing.
 
 ## File Structure
 
-- Test files must have the `.test.ts` extension
-- Test files should be co-located with the file they are testing
+- Use `.test.ts` extension.
+- Co-locate test files with the files they test.
 
 ## Test Organization
 
-- When testing Vue components, do NOT use a root `describe` block
-- For non-component tests, using a root `describe` block is acceptable
+- For Vue components, **do not** use a root `describe` block.
+- For other modules, use a root `describe` block if helpful.
+- Group related tests under `describe` blocks with clear descriptions.
+- Use `beforeEach` for setup and `afterEach` for cleanup, only when needed.
+- Use descriptive test names that explain the expected behavior.
+- Test mount/unmount effects if relevant.
 
 ## Best Practices
 
-- Follow guiding principles: test your software the way users use it
-- Write tests that are resilient to implementation changes
+- Test features the way users use them.
+- Write minimal, focused, readable tests that verify one behavior at a time.
+- Avoid unnecessary test data—use the smallest data structure needed.
+- Avoid writing tests that offer no real safety or insight.
 
 ## Mocking
 
-- When mocking, do not add unnecessary mocks, such as `$patch: vi.fn()`, `$reset: vi.fn()`. Only mock minimal number of things that are used so that test can run.
-- Before writing a custom `vi.mock('...')`, check if there is already a mock for that module in `__mocks__` subfolder of wherever mocked module file is.
+- Only mock what is necessary for the test to run.
+- Avoid unnecessary stubs like `$patch: vi.fn()` or `$reset: vi.fn()`.
+- Before mocking with `vi.mock()`, check if the module is already mocked in a local `__mocks__` folder.
+- Prefer extracting individual mock functions for clarity and type safety.
 
-## Which tests to write
-
-- Be cautious about what tests to write. Do not write tests that don't offer any real safety checks.
+### Example:
+```ts
+const mockRouterPush = vi.fn()
+const mockRouter = { push: mockRouterPush }
+```
 
 ## Comments
 
-- Don't write useless comments, such as a single "Mock a function" before a line that mocks a function
+- **You don’t need to write comments.**
+  Avoid obvious comments like `// Mock a function`.
 
-# Core Testing Philosophy
+## Component Testing
 
-- Write concise, readable tests that focus on a single functionality
-- Use absolute minimum test data necessary to verify the specific behavior
-- For component testing, use createTestingPinia to mock store behavior and isolate component logic
+- Use `createTestingPinia` to mock store behavior and isolate logic.
+- Add a dedicated `render` function at the top of the test file.
+  - Include common props, providers, and stubs.
+  - Type component props using `ComponentProps<typeof ComponentName>`.
+- Use `global.provide` and `global.stubs` for context and child components.
+- Use real child components only when their logic matters to the test.
 
-# Custom Test Rendering
+## Quasar Component Testing
 
-- Create a dedicated render function at the top of each test file
-- Include common props, providers, and stubs in the custom render function
-- Type component props using ComponentProps<typeof ComponentName>
-
-# Pinia Store Testing
-
-- Initialize Pinia before each test using createTestingPinia with createSpy: vi.fn
-  ```typescript
-  beforeEach(() => {
-    const pinia = createTestingPinia({ createSpy: vi.fn });
-    setActivePinia(pinia);
-  });
-  ```
-- Access stores using their respective hook functions (e.g., useCaseStore())
-- With createTestingPinia, store state becomes fully writable and actions are automatically stubbed
-- Directly modify store state using Vue's ref() with // @ts-expect-error comment
-  Example:
-  ```typescript
-  // @ts-expect-error - Testing Pinia
-  storeInstance.propertyName = ref(mockValue);
-  ```
-
-- Avoid mocking entire store instances or their $reset methods
-- Verify store method calls with expect().toHaveBeenCalledWith()
-- Toggle action stubbing with stubActions option:
-  ```typescript
-  createTestingPinia({ stubActions: false }); // execute real actions
-  ```
-- For unit testing stores themselves (not components), use regular createPinia
-
-# Quasar testing
-- Ensure to call `installQuasarPlugin()` with necessary arguments at the top of each test
-  Example:
-  ```vue
-  <template>
-    <q-header>
-      <q-toolbar>
-        <q-toolbar-title>Header</q-toolbar-title>
-      </q-toolbar>
-    </q-header>
-    <q-footer>
-      <q-toolbar>
-        <q-toolbar-title>Footer</q-toolbar-title>
-      </q-toolbar>
-    </q-footer>
-  </template>
-  ```
-
-  ```typescript
-  import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest';
-  import { mount } from '@vue/test-utils';
-  import { describe, expect, it } from 'vitest';
-  import LayoutComponent from './demo/LayoutComponent.vue';
-
-  installQuasarPlugin();
-
-  describe('layout example', () => {
-    it('should mount component properly', () => {
-      const wrapper = mount(LayoutComponent);
-      expect(wrapper.exists()).toBe(true);
-    });
-  });
-  ```
-- Mock Quasar components where necessary (e.g., dialogs, notifications).
-- Test components in isolation unless explicitly testing integration.
+- Use `installQuasarPlugin()` at the start of the test file.
 - Stub Quasar plugins (Notify, Dialog, etc.).
-- Stub slots and props when testing layout components (`<q-layout>`, `<q-page>`, etc.).
-- Do not test third-party behavior unless wrapped.
+- Test layout components (`<q-layout>`, `<q-page>`) in isolation.
+- Avoid testing third-party behavior unless you explicitly wrap it.
 
-# Test Organization
+### Example:
+```ts
+installQuasarPlugin()
 
-- Group related tests with descriptive describe blocks
-- Use beforeEach for common setup and afterEach for cleanup
-- Test component lifecycle events (mount/unmount effects)
-- Use clear, descriptive test names that explain the expected behavior
+describe('layout example', () => {
+  it('should mount component properly', () => {
+    const wrapper = mount(LayoutComponent)
+    expect(wrapper.exists()).toBe(true)
+  })
+})
+```
 
-# Test Data Creation
+## Pinia Store Testing
 
-- Only include properties required for the specific test case
-- Create data structures that reflect real application data patterns
+- Initialize stores using `createTestingPinia({ createSpy: vi.fn })` in `beforeEach`.
+- Access stores via their hooks (`useStore()`).
+- Modify store state using `ref()` and `// @ts-expect-error` for type bypassing.
 
-# Component Context
+### Example:
+```ts
+// @ts-expect-error - Testing Pinia
+storeInstance.someProperty = ref(mockValue)
+```
 
-- Provide required context tokens using the global.provide option
-- Stub only necessary child components using global.stubs
-- Use real components when their behavior is relevant to the test
+- Use `expect().toHaveBeenCalledWith()` to verify method calls.
+- Use `stubActions: false` in `createTestingPinia()` when real actions are needed.
+- For testing the store itself, use `createPinia()` directly.
 
-# TypeScript Integration
+## TypeScript Integration
 
-- Use proper types for all test data
-- Add // @ts-expect-error comments with explanations when bypassing type checking
+- Never use `any`. Use `unknown` for conversions:
+  ```ts
+  mock as unknown as TargetType
+  ```
+- Use `// @ts-expect-error` with a reason when needed.
+- Use interface merging to extend global types:
+  ```ts
+  declare global {
+    interface Window {
+      customProperty?: SomeType
+    }
+  }
+  ```
 
-# Test Cleanup
+## Test Lifecycle & Cleanup
 
-- Always clean up after tests using afterEach(cleanup)
-- Verify that component unmount effects work correctly
+- Use `beforeEach` for resetting test state.
+- Use `afterEach` only if cleanup can't happen in `beforeEach`.
+- Avoid duplicate cleanup in both hooks.
+- Clean up global state (e.g., `window`) in setup.
 
-# Assertions
+## Import Management
 
-- Write clear, focused assertions that test one aspect at a time
-- Prefer specific assertions over generic ones
+- Only import what’s used.
+- Remove unused lifecycle hooks like `beforeAll`, `afterEach`, etc.
+- Prefer specific imports over entire libraries.
+
+## Test Data Creation
+
+- Create realistic, minimal test data reflecting app patterns.
+- Avoid excessive or irrelevant properties.
+
+## Vue Composable Testing
+
+- Test both initial state and reactivity.
+- Test meaningful branches of logic.
+- Mock external dependencies like APIs and browser features.
+- Ensure proper cleanup and type safety.
+
+### Quasar Mocks
+- Include `Quasar` export when mocking:
+  ```ts
+  vi.mock('quasar', () => ({
+    Dark: { set: vi.fn() },
+    Quasar: {}, // required
+  }))
+  ```
+
+### Reactivity Example
+```ts
+it('should react to state changes', async () => {
+  const someRef = ref(false)
+  expect(something).toBe(initialValue)
+
+  vi.clearAllMocks()
+  someRef.value = true
+  await nextTick()
+  expect(something).toBe(newValue)
+})
+```
+
+## Browser API Mocks
+
+- Create reusable helpers for mocking browser APIs (like `matchMedia`).
+
+### Example:
+```ts
+const mockMatchMedia = () => {
+  const mockMediaQueryList = {
+    matches: false,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  }
+
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation(() => mockMediaQueryList),
+  })
+
+  return mockMediaQueryList
+}
+```
+
+## Type-Safe Event Testing
+
+- Use optional chaining and guards:
+  ```ts
+  const cb = mock.addEventListener.mock.calls[0]?.[1]
+  expect(cb).toBeDefined()
+  if (cb) {
+    cb({ someData: true } as SomeEventType)
+    expect(result).toBe(expected)
+  }
+  ```
