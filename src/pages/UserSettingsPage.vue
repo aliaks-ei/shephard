@@ -8,7 +8,8 @@
         <div class="row items-center">
           <div class="col-auto q-mr-lg">
             <UserAvatar
-              :user="userStore.userProfile"
+              :avatar-url="userStore.userProfile?.avatarUrl"
+              :name-initial="userStore.userProfile?.nameInitial"
               size="100px"
             />
           </div>

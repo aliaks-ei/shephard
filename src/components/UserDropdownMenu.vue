@@ -3,16 +3,23 @@
     round
     flat
   >
-    <UserAvatar />
+    <UserAvatar
+      :avatar-url="userStore.userProfile?.avatarUrl"
+      :name-initial="userStore.userProfile?.nameInitial"
+    />
 
     <q-menu>
       <q-list style="min-width: 220px">
         <div class="text-center q-pt-md q-pb-md">
-          <UserAvatar size="72px" />
-          <p class="text-center q-mt-sm text-weight-bold text-h6">
+          <UserAvatar
+            :avatar-url="userStore.userProfile?.avatarUrl"
+            :name-initial="userStore.userProfile?.nameInitial"
+            size="72px"
+          />
+          <p class="text-center q-mt-sm text-weight-bold text-h6 q-mb-none">
             {{ userStore.userProfile?.displayName }}
           </p>
-          <p class="text-center text-caption">
+          <p class="text-center text-caption q-mb-none">
             {{ userStore.userProfile?.email }}
           </p>
         </div>

@@ -1,12 +1,15 @@
 <template>
   <q-avatar
-    v-if="userProfile?.avatarUrl"
+    v-if="avatarUrl && !imageError"
     :size="size"
   >
     <q-img
-      :src="userProfile.avatarUrl"
+      :src="avatarUrl"
       :ratio="1"
       no-spinner
+      referrerpolicy="no-referrer"
+      crossorigin="anonymous"
+      @error="imageError = true"
     />
   </q-avatar>
   <q-avatar
@@ -15,22 +18,23 @@
     text-color="primary"
     :size="size"
   >
-    {{ userProfile?.nameInitial || '?' }}
+    {{ nameInitial }}
   </q-avatar>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useUserStore } from 'src/stores/user'
+import { ref } from 'vue'
 
 interface UserAvatarProps {
+  avatarUrl: string | undefined
+  nameInitial: string | undefined
   size?: string
 }
 
 withDefaults(defineProps<UserAvatarProps>(), {
   size: '40px',
+  nameInitial: '?',
 })
 
-const userStore = useUserStore()
-const userProfile = computed(() => userStore.userProfile)
+const imageError = ref(false)
 </script>
