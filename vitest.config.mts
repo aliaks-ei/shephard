@@ -8,6 +8,13 @@ const testConfig = {
   environment: 'happy-dom',
   setupFiles: 'test/vitest/setup-file.ts',
   include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+  environmentOptions: {
+    env: {
+      VITE_SUPABASE_URL: 'https://mock-supabase-url.supabase.co',
+      VITE_SUPABASE_ANON_KEY: 'mock-anon-key',
+      VITE_GOOGLE_CLIENT_ID: 'test-client-id',
+    },
+  },
 }
 
 // Create plugins separately

@@ -108,7 +108,7 @@ it('should call cleanup on unmount', () => {
   expect(mockCleanup).toHaveBeenCalledTimes(1)
 })
 
-it.only('should refresh Google auth when refresh button is clicked', async () => {
+it('tests refresh functionality', async () => {
   const { wrapper } = mountComponent(false)
   await wrapper.vm.$nextTick()
 

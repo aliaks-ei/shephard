@@ -95,7 +95,7 @@ describe('EmailOtpForm', () => {
     expect(userStore.auth.signInWithOtp).not.toHaveBeenCalled()
   })
 
-  it.only('calls signInWithOtp with email on submit', async () => {
+  it('calls signInWithOtp with email on submit', async () => {
     const { wrapper, userStore } = mountComponent()
 
     const qInputWrapper = wrapper.findComponent({ name: 'QInput' })
