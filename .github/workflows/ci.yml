@@ -27,5 +27,3 @@ jobs:
 
       - name: Run unit tests
         run: npm run test:unit:ci
-        env:
-          MODE: test
