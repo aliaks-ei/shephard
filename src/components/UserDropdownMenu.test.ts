@@ -73,14 +73,6 @@ describe('UserDropdownMenu', () => {
     expect(avatar.exists()).toBe(true)
   })
 
-  it.skip('displays user information in the dropdown', () => {
-    const { wrapper } = createWrapper()
-
-    const html = wrapper.html()
-    expect(html).toContain('Test User')
-    expect(html).toContain('test@example.com')
-  })
-
   it('has a settings menu item with correct link', () => {
     const { wrapper } = createWrapper()
 

@@ -122,7 +122,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   // Subscribe to auth state changes
-  onAuthStateChange(async (event, currentSession) => {
+  onAuthStateChange(async (_event, currentSession) => {
     const previousUserId = user.value?.id
 
     session.value = currentSession
