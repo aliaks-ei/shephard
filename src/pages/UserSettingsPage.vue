@@ -8,7 +8,8 @@
         <div class="row items-center">
           <div class="col-auto q-mr-lg">
             <UserAvatar
-              :user="userStore.userProfile"
+              :avatar-url="userStore.userProfile?.avatarUrl"
+              :name-initial="userStore.userProfile?.nameInitial"
               size="100px"
             />
           </div>
@@ -45,14 +46,9 @@
             </q-item-section>
             <q-item-section side>
               <q-toggle
-                :model-value="userStore.preferences.arePushNotificationsEnabled"
-                @update:model-value="
-                  (value) =>
-                    userStore.updateUserProfile({
-                      preferences: { pushNotificationsEnabled: value },
-                    })
-                "
                 color="primary"
+                :model-value="userStore.preferences.arePushNotificationsEnabled"
+                @update:model-value="updatePreference('pushNotificationsEnabled', $event)"
               />
             </q-item-section>
           </q-item>
@@ -68,19 +64,17 @@
             <q-item-section>
               <q-item-label class="text-primary">Dark Mode</q-item-label>
               <q-item-label
-                caption
                 class="text-caption"
+                caption
               >
                 Toggle between light and dark theme
               </q-item-label>
             </q-item-section>
             <q-item-section side>
               <q-toggle
-                :model-value="userStore.preferences.isDark"
                 color="primary"
-                @update:model-value="
-                  (value) => userStore.updateUserProfile({ preferences: { darkMode: value } })
-                "
+                :model-value="userStore.preferences.isDark"
+                @update:model-value="updatePreference('darkMode', $event)"
               />
             </q-item-section>
           </q-item>
@@ -157,12 +151,18 @@ const router = useRouter()
 
 const isSigningOut = ref(false)
 
+function updatePreference(preferenceKey: 'pushNotificationsEnabled' | 'darkMode', value: boolean) {
+  userStore.updateUserPreferences({
+    preferences: { [preferenceKey]: value },
+  })
+}
+
 async function handleSignOut() {
   isSigningOut.value = true
 
   await userStore.signOut()
-
   await router.push('/auth')
+
   isSigningOut.value = false
 }
 </script>
