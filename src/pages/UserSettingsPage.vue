@@ -37,12 +37,7 @@
             </q-item-section>
             <q-item-section>
               <q-item-label class="text-primary">Currency</q-item-label>
-              <q-item-label
-                caption
-                class="text-caption"
-              >
-                Select your preferred currency
-              </q-item-label>
+              <q-item-label caption> Select your preferred currency </q-item-label>
             </q-item-section>
             <q-item-section side>
               <q-select
@@ -66,12 +61,7 @@
             </q-item-section>
             <q-item-section>
               <q-item-label class="text-primary">Notifications</q-item-label>
-              <q-item-label
-                caption
-                class="text-caption"
-              >
-                Enable push notifications
-              </q-item-label>
+              <q-item-label caption> Enable push notifications </q-item-label>
             </q-item-section>
             <q-item-section side>
               <q-toggle
@@ -92,12 +82,7 @@
             </q-item-section>
             <q-item-section>
               <q-item-label class="text-primary">Dark Mode</q-item-label>
-              <q-item-label
-                class="text-caption"
-                caption
-              >
-                Toggle between light and dark theme
-              </q-item-label>
+              <q-item-label caption> Toggle between light and dark theme </q-item-label>
             </q-item-section>
             <q-item-section side>
               <q-toggle
