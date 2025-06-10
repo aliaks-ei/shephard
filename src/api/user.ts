@@ -7,6 +7,7 @@ export type { User }
 export type UserPreferences = Partial<{
   darkMode: boolean
   pushNotificationsEnabled: boolean
+  currency: string
 }>
 
 export type CompleteUserPreferences = Required<UserPreferences>
@@ -14,6 +15,7 @@ export type CompleteUserPreferences = Required<UserPreferences>
 export const DEFAULT_PREFERENCES: CompleteUserPreferences = {
   darkMode: false,
   pushNotificationsEnabled: false,
+  currency: 'EUR',
 } as const
 
 async function getUserById(userId: string): Promise<Tables<'users'> | null> {

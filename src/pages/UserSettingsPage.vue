@@ -30,6 +30,35 @@
           <q-item class="q-pa-sm card-bg q-mb-sm">
             <q-item-section avatar>
               <q-icon
+                name="eva-credit-card-outline"
+                color="primary"
+                size="md"
+              />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label class="text-primary">Currency</q-item-label>
+              <q-item-label
+                caption
+                class="text-caption"
+              >
+                Select your preferred currency
+              </q-item-label>
+            </q-item-section>
+            <q-item-section side>
+              <q-select
+                :model-value="selectedCurrency"
+                :options="currencyOptions"
+                dense
+                outlined
+                emit-value
+                @update:model-value="updatePreference('currency', $event)"
+              />
+            </q-item-section>
+          </q-item>
+
+          <q-item class="q-pa-sm card-bg q-mb-sm">
+            <q-item-section avatar>
+              <q-icon
                 name="eva-bell-outline"
                 color="primary"
                 size="md"
@@ -139,7 +168,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 import UserAvatar from 'src/components/UserAvatar.vue'
@@ -151,7 +180,18 @@ const router = useRouter()
 
 const isSigningOut = ref(false)
 
-function updatePreference(preferenceKey: 'pushNotificationsEnabled' | 'darkMode', value: boolean) {
+const currencyOptions = [
+  { label: 'Euro (EUR)', value: 'EUR' },
+  { label: 'US Dollar (USD)', value: 'USD' },
+  { label: 'British Pound (GBP)', value: 'GBP' },
+]
+
+const selectedCurrency = computed(() => userStore.preferences.currency)
+
+function updatePreference(
+  preferenceKey: 'pushNotificationsEnabled' | 'darkMode' | 'currency',
+  value: boolean | string,
+) {
   userStore.updateUserPreferences({
     preferences: { [preferenceKey]: value },
   })

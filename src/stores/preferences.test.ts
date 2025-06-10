@@ -26,6 +26,7 @@ vi.mock('src/api/user', () => ({
   DEFAULT_PREFERENCES: {
     darkMode: false,
     pushNotificationsEnabled: false,
+    currency: 'EUR',
   },
 }))
 
@@ -76,6 +77,7 @@ describe('Preferences Store', () => {
       expect(preferencesStore.isLoading).toBe(false)
       expect(preferencesStore.isDark).toBe(false)
       expect(preferencesStore.arePushNotificationsEnabled).toBe(false)
+      expect(preferencesStore.currency).toBe('EUR')
     })
   })
 
@@ -97,6 +99,7 @@ describe('Preferences Store', () => {
       const mockPreferences = {
         darkMode: true,
         pushNotificationsEnabled: true,
+        currency: 'USD',
       }
 
       vi.mocked(userApi.getUserPreferences).mockResolvedValue(mockPreferences)
