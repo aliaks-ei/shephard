@@ -1,9 +1,6 @@
 <template>
-  <q-page
-    padding
-    class="row justify-center"
-  >
-    <div class="col-12 col-md-8 col-lg-6 q-pt-md">
+  <div class="row justify-center">
+    <div class="col-12 col-md-8 col-lg-6 q-pt-xl">
       <div class="q-mb-md">
         <div class="row items-center">
           <div class="col-auto q-mr-lg">
@@ -141,7 +138,7 @@
         />
       </div>
     </div>
-  </q-page>
+  </div>
 </template>
 
 <script setup lang="ts">

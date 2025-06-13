@@ -18,6 +18,11 @@ const routes: RouteRecordRaw[] = [
         component: () => import('pages/TemplatePage.vue'),
         name: 'template',
       },
+      {
+        path: 'categories',
+        component: () => import('pages/CategoriesPage.vue'),
+        name: 'categories',
+      },
     ],
     meta: {
       requiresAuth: true,

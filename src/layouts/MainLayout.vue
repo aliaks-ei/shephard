@@ -1,11 +1,9 @@
 <template>
-  <q-layout view="hHh lpR fFf">
-    <q-header
-      class="bg-primary text-white"
-      elevated
-    >
+  <q-layout view="lHh Lpr fff">
+    <q-header>
       <q-toolbar>
         <q-btn
+          v-if="!$q.screen.gt.sm"
           icon="eva-menu-outline"
           aria-label="Menu"
           flat
@@ -29,49 +27,64 @@
     <q-drawer
       v-model="leftDrawerOpen"
       class="q-py-md"
-      :width="200"
-      show-if-above
       bordered
+      behavior="mobile"
     >
-      <q-list>
-        <q-item
-          to="/"
-          clickable
-          v-ripple
-          exact
-        >
-          <q-item-section avatar>
-            <q-icon name="eva-home-outline" />
-          </q-item-section>
-          <q-item-section> Home </q-item-section>
-        </q-item>
-
-        <q-item
-          to="/templates"
-          clickable
-          v-ripple
-        >
-          <q-item-section avatar>
-            <q-icon name="eva-file-text-outline" />
-          </q-item-section>
-          <q-item-section> Templates </q-item-section>
-        </q-item>
-      </q-list>
+      <NavigationDrawer :items="navigationItems" />
     </q-drawer>
 
-    <q-page-container>
-      <router-view />
+    <q-page-container class="page-container">
+      <q-page
+        class="shadow-1"
+        padding
+      >
+        <router-view />
+      </q-page>
+
+      <q-page-sticky
+        v-if="$q.screen.gt.sm"
+        position="left"
+        expand
+      >
+        <NavigationDrawer
+          class="fit q-py-xl q-px-sm"
+          :items="navigationItems"
+          is-mini-mode
+        />
+      </q-page-sticky>
     </q-page-container>
   </q-layout>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
+
 import UserDropdownMenu from 'src/components/UserDropdownMenu.vue'
+import NavigationDrawer from 'src/components/NavigationDrawer.vue'
 
 const leftDrawerOpen = ref(false)
+const navigationItems = ref([
+  {
+    icon: 'eva-file-text-outline',
+    label: 'Templates',
+    to: '/templates',
+  },
+  {
+    icon: 'eva-grid-outline',
+    label: 'Categories',
+    to: '/categories',
+  },
+])
 
 const toggleLeftDrawer = () => {
   leftDrawerOpen.value = !leftDrawerOpen.value
 }
 </script>
+
+<style lang="scss" scoped>
+@media (min-width: 1024px) {
+  .page-container {
+    padding-left: 115px;
+  }
+}
+</style>

@@ -39,7 +39,7 @@ export const useTemplatesStore = defineStore('templates', () => {
 
       templates.value = data
     } catch (error) {
-      handleError('TEMPLATES.LOAD_FAILED', error, { userId: userId.value })
+      handleError('TEMPLATES.LOAD_FAILED', error)
     } finally {
       isLoading.value = false
     }
@@ -73,7 +73,7 @@ export const useTemplatesStore = defineStore('templates', () => {
 
       return newTemplate
     } catch (error) {
-      handleError('TEMPLATES.CREATE_FAILED', error, { userId: userId.value })
+      handleError('TEMPLATES.CREATE_FAILED', error)
     } finally {
       isLoading.value = false
     }

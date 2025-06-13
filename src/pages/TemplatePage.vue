@@ -1,197 +1,194 @@
 <template>
-  <q-page class="template-page">
-    <div class="q-pa-lg">
-      <!-- Header with back button -->
-      <div class="row items-center q-mb-lg">
-        <q-btn
-          flat
-          round
-          icon="eva-arrow-back-outline"
-          @click="goBack"
-        />
-        <div class="text-h5 q-ml-md">
-          {{ isNewTemplate ? 'Create Template' : 'Edit Template' }}
-        </div>
-      </div>
-
-      <!-- Loading state -->
-      <div
-        v-if="isLoading"
-        class="text-center q-py-xl"
-      >
-        <q-spinner
-          color="primary"
-          size="3em"
-        />
-        <div class="text-body1 q-mt-md">Loading template...</div>
-      </div>
-
-      <!-- Template form -->
-      <div
-        v-else
-        class="row justify-center"
-      >
-        <div class="col-12 col-md-10 col-lg-6">
-          <q-form
-            ref="templateForm"
-            @submit="saveTemplate"
-          >
-            <!-- Template Name -->
-            <div class="q-mb-lg">
-              <q-input
-                v-model="form.name"
-                label="Template Name"
-                :rules="[(val) => !!val || 'Template name is required']"
-              />
-            </div>
-
-            <!-- Duration Selector -->
-            <div class="q-mb-lg">
-              <div class="text-subtitle2 q-mb-sm">Duration</div>
-              <q-btn-toggle
-                v-model="form.duration"
-                no-caps
-                unelevated
-                toggle-color="primary"
-                color="grey-3"
-                text-color="grey-8"
-                :options="durationOptions"
-              />
-            </div>
-
-            <!-- Categories Section -->
-            <div class="q-mb-lg">
-              <div class="row items-center justify-between q-mb-sm">
-                <div class="text-subtitle2">Categories</div>
-                <q-btn
-                  flat
-                  icon="eva-plus-outline"
-                  label="Add new category"
-                  color="primary"
-                  @click="addNewCategoryItem"
-                />
-              </div>
-
-              <!-- Categories List -->
-              <div v-if="categoryItems.length > 0">
-                <q-list>
-                  <q-item
-                    v-for="(item, index) in categoryItems"
-                    :key="index"
-                    dense
-                  >
-                    <q-item-section avatar>
-                      <div
-                        class="category-color-indicator"
-                        :style="{ backgroundColor: item.color }"
-                      ></div>
-                    </q-item-section>
-                    <q-item-section>
-                      <q-select
-                        v-model="item.categoryId"
-                        :options="getAvailableCategoriesForItem(index)"
-                        option-value="id"
-                        option-label="name"
-                        label="Select category"
-                        emit-value
-                        map-options
-                        :rules="[(val) => !!val || 'Category is required']"
-                        @update:model-value="(value) => updateCategorySelection(index, value)"
-                      >
-                        <template #selected>
-                          <span v-if="item.categoryId">{{ getCategoryName(item.categoryId) }}</span>
-                        </template>
-                        <template #option="{ opt, itemProps }">
-                          <q-item v-bind="itemProps">
-                            <q-item-section avatar>
-                              <div
-                                class="category-color-indicator"
-                                :style="{ backgroundColor: opt.color }"
-                              ></div>
-                            </q-item-section>
-                            <q-item-section>
-                              <q-item-label>{{ opt.name }}</q-item-label>
-                            </q-item-section>
-                          </q-item>
-                        </template>
-                      </q-select>
-                    </q-item-section>
-                    <q-item-section style="max-width: 150px">
-                      <q-input
-                        v-model.number="item.amount"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        prefix="$"
-                        label="Amount"
-                        :rules="[
-                          (val) => (val !== null && val !== undefined) || 'Amount is required',
-                          (val) => val > 0 || 'Amount must be greater than 0',
-                        ]"
-                      />
-                    </q-item-section>
-                    <q-item-section side>
-                      <q-btn
-                        flat
-                        round
-                        icon="eva-trash-2-outline"
-                        color="negative"
-                        @click="removeCategoryItem(index)"
-                      />
-                    </q-item-section>
-                  </q-item>
-                </q-list>
-              </div>
-
-              <!-- Empty state -->
-              <div
-                v-else
-                class="text-center q-py-lg"
-              >
-                <q-icon
-                  name="eva-grid-outline"
-                  size="3rem"
-                  class="q-mb-md text-grey-5"
-                />
-                <div class="text-body1 q-mb-sm">No categories added yet</div>
-                <div class="text-body2 text-grey-6">
-                  Add categories with amounts to build your template
-                </div>
-              </div>
-            </div>
-
-            <!-- Total Amount -->
-            <div
-              v-if="categoryItems.length > 0"
-              class="q-mb-lg"
-            >
-              <q-separator class="q-mb-md" />
-              <div class="row justify-between items-center">
-                <div class="text-subtitle1">Total Amount</div>
-                <div class="text-h6 text-primary">${{ totalAmount }}</div>
-              </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="row q-gutter-md justify-end">
-              <q-btn
-                flat
-                label="Discard"
-                color="grey-8"
-                @click="goBack"
-              />
-              <q-btn
-                color="primary"
-                label="Save Template"
-                type="submit"
-                :loading="templatesStore.isLoading"
-              />
-            </div>
-          </q-form>
-        </div>
+  <div class="q-pa-sm">
+    <!-- Header with back button -->
+    <div class="row items-center q-mb-lg">
+      <q-btn
+        flat
+        round
+        icon="eva-arrow-back-outline"
+        @click="goBack"
+      />
+      <div class="text-h5 q-ml-md">
+        {{ isNewTemplate ? 'Create Template' : 'Edit Template' }}
       </div>
     </div>
-  </q-page>
+
+    <!-- Loading state -->
+    <div
+      v-if="isLoading"
+      class="text-center q-py-xl"
+    >
+      <q-spinner
+        color="primary"
+        size="3em"
+      />
+      <div class="text-body1 q-mt-md">Loading template...</div>
+    </div>
+
+    <!-- Template form -->
+    <div
+      v-else
+      class="row justify-center"
+    >
+      <div class="col-12 col-md-10 col-lg-6">
+        <q-form
+          ref="templateForm"
+          @submit="saveTemplate"
+        >
+          <!-- Template Name -->
+          <div class="q-mb-lg">
+            <q-input
+              v-model="form.name"
+              label="Template Name"
+              :rules="[(val) => !!val || 'Template name is required']"
+            />
+          </div>
+
+          <!-- Duration Selector -->
+          <div class="q-mb-lg">
+            <div class="text-subtitle2 q-mb-sm">Duration</div>
+            <q-btn-toggle
+              v-model="form.duration"
+              no-caps
+              unelevated
+              color="grey-3"
+              text-color="grey-8"
+              :options="durationOptions"
+            />
+          </div>
+
+          <!-- Categories Section -->
+          <div class="q-mb-lg">
+            <div class="row items-center justify-between q-mb-sm">
+              <div class="text-subtitle2">Categories</div>
+              <q-btn
+                flat
+                icon="eva-plus-outline"
+                label="Add new category"
+                color="primary"
+                @click="addNewCategoryItem"
+              />
+            </div>
+
+            <!-- Categories List -->
+            <div v-if="categoryItems.length > 0">
+              <q-list>
+                <q-item
+                  v-for="(item, index) in categoryItems"
+                  :key="index"
+                  dense
+                >
+                  <q-item-section avatar>
+                    <div
+                      class="category-color-indicator"
+                      :style="{ backgroundColor: item.color }"
+                    ></div>
+                  </q-item-section>
+                  <q-item-section>
+                    <q-select
+                      v-model="item.categoryId"
+                      :options="getAvailableCategoriesForItem(index)"
+                      option-value="id"
+                      option-label="name"
+                      label="Select category"
+                      emit-value
+                      map-options
+                      :rules="[(val) => !!val || 'Category is required']"
+                      @update:model-value="(value) => updateCategorySelection(index, value)"
+                    >
+                      <template #selected>
+                        <span v-if="item.categoryId">{{ getCategoryName(item.categoryId) }}</span>
+                      </template>
+                      <template #option="{ opt, itemProps }">
+                        <q-item v-bind="itemProps">
+                          <q-item-section avatar>
+                            <div
+                              class="category-color-indicator"
+                              :style="{ backgroundColor: opt.color }"
+                            ></div>
+                          </q-item-section>
+                          <q-item-section>
+                            <q-item-label>{{ opt.name }}</q-item-label>
+                          </q-item-section>
+                        </q-item>
+                      </template>
+                    </q-select>
+                  </q-item-section>
+                  <q-item-section style="max-width: 150px">
+                    <q-input
+                      v-model.number="item.amount"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      prefix="$"
+                      label="Amount"
+                      :rules="[
+                        (val) => (val !== null && val !== undefined) || 'Amount is required',
+                        (val) => val > 0 || 'Amount must be greater than 0',
+                      ]"
+                    />
+                  </q-item-section>
+                  <q-item-section side>
+                    <q-btn
+                      flat
+                      round
+                      icon="eva-trash-2-outline"
+                      color="negative"
+                      @click="removeCategoryItem(index)"
+                    />
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </div>
+
+            <!-- Empty state -->
+            <div
+              v-else
+              class="text-center q-py-lg"
+            >
+              <q-icon
+                name="eva-grid-outline"
+                size="3rem"
+                class="q-mb-md text-grey-5"
+              />
+              <div class="text-body1 q-mb-sm">No categories added yet</div>
+              <div class="text-body2 text-grey-6">
+                Add categories with amounts to build your template
+              </div>
+            </div>
+          </div>
+
+          <!-- Total Amount -->
+          <div
+            v-if="categoryItems.length > 0"
+            class="q-mb-lg"
+          >
+            <q-separator class="q-mb-md" />
+            <div class="row justify-between items-center">
+              <div class="text-subtitle1">Total Amount</div>
+              <div class="text-h6 text-primary">${{ totalAmount }}</div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="row q-gutter-md justify-end">
+            <q-btn
+              flat
+              label="Discard"
+              color="grey-8"
+              @click="goBack"
+            />
+            <q-btn
+              color="primary"
+              label="Save Template"
+              type="submit"
+              :loading="templatesStore.isLoading"
+            />
+          </div>
+        </q-form>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -384,10 +381,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.template-page {
-  min-height: 100vh;
-}
-
 .category-color-indicator {
   width: 16px;
   height: 16px;
