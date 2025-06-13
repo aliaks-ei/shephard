@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { useAuthStore } from './auth'
+
+import { useAuthStore } from 'src/stores/auth'
 import {
   getUserPreferences,
   saveUserPreferences,

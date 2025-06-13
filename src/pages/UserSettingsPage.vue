@@ -126,14 +126,6 @@
             label="Joined On"
             :value="userStore.userProfile.formattedCreatedAt"
           />
-
-          <InfoItem
-            v-if="userStore.userProfile?.id"
-            icon="eva-keypad-outline"
-            label="User ID"
-            :value="userStore.userProfile.id"
-            full-width
-          />
         </div>
       </div>
 

@@ -1,48 +1,35 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          operationName?: string
-          query?: string
-          variables?: Json
-          extensions?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       categories: {
         Row: {
+          color: string
           created_at: string
           id: string
+          is_system: boolean
           name: string
+          owner_id: string | null
+          updated_at: string | null
         }
         Insert: {
+          color?: string
           created_at?: string
           id?: string
+          is_system?: boolean
           name: string
+          owner_id?: string | null
+          updated_at?: string | null
         }
         Update: {
+          color?: string
           created_at?: string
           id?: string
+          is_system?: boolean
           name?: string
+          owner_id?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -196,44 +183,76 @@ export type Database = {
         }
         Relationships: []
       }
-      template_items: {
+      template_categories: {
         Row: {
           amount: number
-          category_id: string | null
-          created_at: string
+          category_id: string
+          created_at: string | null
           id: string
-          name: string
-          tags: string[] | null
           template_id: string
+          updated_at: string | null
         }
         Insert: {
           amount: number
-          category_id?: string | null
-          created_at?: string
+          category_id: string
+          created_at?: string | null
           id?: string
-          name: string
-          tags?: string[] | null
           template_id: string
+          updated_at?: string | null
         }
         Update: {
           amount?: number
-          category_id?: string | null
-          created_at?: string
+          category_id?: string
+          created_at?: string | null
           id?: string
-          name?: string
-          tags?: string[] | null
           template_id?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: 'template_items_category_id_fkey'
+            foreignKeyName: 'template_categories_category_id_fkey'
             columns: ['category_id']
             isOneToOne: false
             referencedRelation: 'categories'
             referencedColumns: ['id']
           },
           {
-            foreignKeyName: 'template_items_template_id_fkey'
+            foreignKeyName: 'template_categories_template_id_fkey'
+            columns: ['template_id']
+            isOneToOne: false
+            referencedRelation: 'templates'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      template_shares: {
+        Row: {
+          created_at: string | null
+          id: string
+          permission_level: string
+          shared_by_user_id: string
+          shared_with_user_id: string
+          template_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          permission_level: string
+          shared_by_user_id: string
+          shared_with_user_id: string
+          template_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          permission_level?: string
+          shared_by_user_id?: string
+          shared_with_user_id?: string
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'template_shares_template_id_fkey'
             columns: ['template_id']
             isOneToOne: false
             referencedRelation: 'templates'
@@ -243,25 +262,34 @@ export type Database = {
       }
       templates: {
         Row: {
-          created_at: string
+          created_at: string | null
+          currency: string | null
+          duration: string
           id: string
           name: string
+          owner_id: string
+          total: number | null
           updated_at: string | null
-          user_id: string
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
+          currency?: string | null
+          duration: string
           id?: string
           name: string
+          owner_id: string
+          total?: number | null
           updated_at?: string | null
-          user_id: string
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
+          currency?: string | null
+          duration?: string
           id?: string
           name?: string
+          owner_id?: string
+          total?: number | null
           updated_at?: string | null
-          user_id?: string
         }
         Relationships: []
       }
@@ -385,19 +413,17 @@ export type TablesUpdate<
     : never
 
 export type Enums<
-  SchemaOptions extends { schema: keyof Database },
-  EnumName extends keyof Database[SchemaOptions['schema']]['Enums'] = never,
-> = Database[SchemaOptions['schema']]['Enums'][EnumName]
+  DefaultSchemaEnumNameOrOptions extends { schema: keyof Database },
+  EnumName extends keyof Database[DefaultSchemaEnumNameOrOptions['schema']]['Enums'],
+> = Database[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
 
 export type CompositeTypes<
-  SchemaOptions extends { schema: keyof Database },
-  TypeName extends keyof Database[SchemaOptions['schema']]['CompositeTypes'] = never,
-> = Database[SchemaOptions['schema']]['CompositeTypes'][TypeName]
+  PublicCompositeTypeNameOrOptions extends { schema: keyof Database },
+  CompositeTypeName extends
+    keyof Database[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'],
+> = Database[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },

@@ -28,14 +28,10 @@
 
     <q-drawer
       v-model="leftDrawerOpen"
-      :mini="miniState"
       class="q-py-md"
+      :width="200"
       show-if-above
       bordered
-      @mouseenter="miniState = false"
-      @mouseleave="miniState = true"
-      @focusin="miniState = false"
-      @focusout="miniState = true"
     >
       <q-list>
         <q-item
@@ -74,7 +70,6 @@ import { ref } from 'vue'
 import UserDropdownMenu from 'src/components/UserDropdownMenu.vue'
 
 const leftDrawerOpen = ref(false)
-const miniState = ref(true)
 
 const toggleLeftDrawer = () => {
   leftDrawerOpen.value = !leftDrawerOpen.value

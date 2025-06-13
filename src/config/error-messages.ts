@@ -13,6 +13,19 @@ export type ErrorMessageKey =
   | 'USER.CREATE_FAILED'
   | 'USER.INIT_FAILED'
   | 'USER.EMAIL_RESET_FAILED'
+  | 'TEMPLATES.LOAD_FAILED'
+  | 'TEMPLATES.LOAD_TEMPLATE_FAILED'
+  | 'TEMPLATES.CREATE_FAILED'
+  | 'TEMPLATES.UPDATE_FAILED'
+  | 'TEMPLATES.DELETE_FAILED'
+  | 'CATEGORIES.LOAD_FAILED'
+  | 'CATEGORIES.CREATE_FAILED'
+  | 'CATEGORIES.UPDATE_FAILED'
+  | 'CATEGORIES.DELETE_FAILED'
+  | 'TEMPLATE_CATEGORIES.LOAD_FAILED'
+  | 'TEMPLATE_CATEGORIES.CREATE_FAILED'
+  | 'TEMPLATE_CATEGORIES.UPDATE_FAILED'
+  | 'TEMPLATE_CATEGORIES.DELETE_FAILED'
   | 'UNKNOWN'
 
 interface ErrorMessageConfig {
@@ -101,6 +114,78 @@ export const ERROR_MESSAGES: Record<ErrorMessageKey, ErrorMessageConfig> = {
   },
   'USER.EMAIL_RESET_FAILED': {
     message: 'Something went wrong while resetting your email settings. Please try again.',
+    notify: true,
+    log: true,
+  },
+
+  // Templates errors
+  'TEMPLATES.LOAD_FAILED': {
+    message: "We couldn't load your templates. Please refresh or try again later.",
+    notify: true,
+    log: true,
+  },
+  'TEMPLATES.LOAD_TEMPLATE_FAILED': {
+    message: "We couldn't load that template. Please try again or check if it still exists.",
+    notify: true,
+    log: true,
+  },
+  'TEMPLATES.CREATE_FAILED': {
+    message: "We couldn't create your template. Please check your details and try again.",
+    notify: true,
+    log: true,
+  },
+  'TEMPLATES.UPDATE_FAILED': {
+    message: "We couldn't save your template changes. Please try again.",
+    notify: true,
+    log: true,
+  },
+  'TEMPLATES.DELETE_FAILED': {
+    message: "We couldn't delete that template. Please try again.",
+    notify: true,
+    log: true,
+  },
+
+  // Categories errors
+  'CATEGORIES.LOAD_FAILED': {
+    message: "We couldn't load your categories. Please refresh or try again later.",
+    notify: true,
+    log: true,
+  },
+  'CATEGORIES.CREATE_FAILED': {
+    message: "We couldn't create your category. Please check your details and try again.",
+    notify: true,
+    log: true,
+  },
+  'CATEGORIES.UPDATE_FAILED': {
+    message: "We couldn't save your category changes. Please try again.",
+    notify: true,
+    log: true,
+  },
+  'CATEGORIES.DELETE_FAILED': {
+    message: "We couldn't delete that category. Please try again.",
+    notify: true,
+    log: true,
+  },
+
+  // Template Categories errors
+  'TEMPLATE_CATEGORIES.LOAD_FAILED': {
+    message: "We couldn't load the template categories. Please refresh or try again later.",
+    notify: true,
+    log: true,
+  },
+  'TEMPLATE_CATEGORIES.CREATE_FAILED': {
+    message:
+      "We couldn't add that category to your template. This category might already be added.",
+    notify: true,
+    log: true,
+  },
+  'TEMPLATE_CATEGORIES.UPDATE_FAILED': {
+    message: "We couldn't save your changes. The category might already be used in this template.",
+    notify: true,
+    log: true,
+  },
+  'TEMPLATE_CATEGORIES.DELETE_FAILED': {
+    message: "We couldn't remove that category from your template. Please try again.",
     notify: true,
     log: true,
   },
