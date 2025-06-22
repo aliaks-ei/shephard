@@ -1,6 +1,6 @@
 <template>
-  <div class="row justify-center">
-    <div class="col-12 col-md-8 col-lg-6 q-pt-xl">
+  <div class="row justify-center q-pa-md">
+    <div class="col-12 col-md-8 col-lg-6">
       <div class="q-mb-md">
         <div class="row items-center">
           <div class="col-auto q-mr-lg">

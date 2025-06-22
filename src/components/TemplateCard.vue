@@ -5,56 +5,137 @@
     bordered
     @click="editTemplate"
   >
-    <q-card-section>
-      <div class="row items-center justify-between q-mb-sm">
-        <div class="text-h6 text-primary">{{ template.name }}</div>
-        <q-btn
-          flat
-          round
-          size="sm"
-          icon="eva-more-vertical-outline"
-          @click.stop
-        >
-          <q-menu>
-            <q-list>
-              <q-item
-                clickable
-                @click="editTemplate"
-              >
-                <q-item-section avatar>
-                  <q-icon name="eva-edit-outline" />
-                </q-item-section>
-                <q-item-section>Edit</q-item-section>
-              </q-item>
-              <q-separator />
-              <q-item
-                clickable
-                class="text-negative"
-                @click="deleteTemplate"
-              >
-                <q-item-section avatar>
-                  <q-icon name="eva-trash-2-outline" />
-                </q-item-section>
-                <q-item-section>Delete</q-item-section>
-              </q-item>
-            </q-list>
-          </q-menu>
-        </q-btn>
-      </div>
-    </q-card-section>
+    <!-- Grid View Layout -->
+    <template v-if="viewMode === 'grid'">
+      <q-card-section class="q-pb-sm">
+        <div class="row items-start justify-between q-mb-sm">
+          <div class="col-10">
+            <div class="text-h5 text-primary text-weight-medium q-mb-xs">
+              {{ template.name }}
+            </div>
+            <div class="text-body2 text-grey-6 q-mt-xs">
+              <q-icon
+                name="eva-clock-outline"
+                size="16px"
+                class="q-mr-xs"
+              />
+              {{ template.duration }}
+            </div>
+          </div>
+          <div class="col-2 text-right">
+            <q-btn
+              flat
+              round
+              size="sm"
+              icon="eva-more-vertical-outline"
+              class="template-card__menu-btn"
+              @click.stop
+            >
+              <q-menu auto-close>
+                <q-list style="min-width: 120px">
+                  <q-item
+                    clickable
+                    @click="editTemplate"
+                  >
+                    <q-item-section avatar>
+                      <q-icon
+                        name="eva-edit-outline"
+                        color="primary"
+                      />
+                    </q-item-section>
+                    <q-item-section>Edit</q-item-section>
+                  </q-item>
+                  <q-separator />
+                  <q-item
+                    clickable
+                    class="text-negative"
+                    @click="deleteTemplate"
+                  >
+                    <q-item-section avatar>
+                      <q-icon name="eva-trash-2-outline" />
+                    </q-item-section>
+                    <q-item-section>Delete</q-item-section>
+                  </q-item>
+                </q-list>
+              </q-menu>
+            </q-btn>
+          </div>
+        </div>
+      </q-card-section>
 
-    <q-card-section class="q-pt-none">
-      <div class="text-caption text-capitalize text-grey-6 q-mb-sm">
-        {{ template.duration }}
-      </div>
-    </q-card-section>
+      <q-separator />
 
-    <q-separator />
+      <q-card-section class="q-py-md">
+        <div class="text-caption text-grey-6">Total Amount</div>
+        <div class="text-h5 text-weight-medium text-positive">
+          ${{ formatAmount(template.total) }}
+        </div>
+      </q-card-section>
+    </template>
 
-    <q-card-section>
-      <span class="text-subtitle2">Total: </span>
-      <span class="q-ml-xs">${{ template.total }}</span>
-    </q-card-section>
+    <!-- List View Layout -->
+    <template v-else>
+      <q-card-section class="row items-center q-py-md">
+        <div class="col-6">
+          <div class="text-subtitle1 text-weight-medium text-primary">
+            {{ template.name }}
+          </div>
+          <div class="text-caption text-grey-6 q-mt-xs">
+            <q-icon
+              name="eva-clock-outline"
+              size="14px"
+              class="q-mr-xs"
+            />
+            {{ template.duration }}
+          </div>
+        </div>
+
+        <div class="col-4">
+          <div class="text-caption text-grey-6">Total Amount</div>
+          <div class="text-subtitle1 text-weight-medium text-positive">
+            ${{ formatAmount(template.total) }}
+          </div>
+        </div>
+
+        <div class="col-2 text-right">
+          <q-btn
+            flat
+            round
+            size="sm"
+            icon="eva-more-vertical-outline"
+            @click.stop
+          >
+            <q-menu auto-close>
+              <q-list style="min-width: 120px">
+                <q-item
+                  clickable
+                  @click="editTemplate"
+                >
+                  <q-item-section avatar>
+                    <q-icon
+                      name="eva-edit-outline"
+                      color="primary"
+                    />
+                  </q-item-section>
+                  <q-item-section>Edit</q-item-section>
+                </q-item>
+                <q-separator />
+                <q-item
+                  clickable
+                  class="text-negative"
+                  @click="deleteTemplate"
+                >
+                  <q-item-section avatar>
+                    <q-icon name="eva-trash-2-outline" />
+                  </q-item-section>
+                  <q-item-section>Delete</q-item-section>
+                </q-item>
+              </q-list>
+            </q-menu>
+          </q-btn>
+        </div>
+      </q-card-section>
+    </template>
   </q-card>
 </template>
 
@@ -66,9 +147,15 @@ const emit = defineEmits<{
   (e: 'delete', template: Template): void
 }>()
 
-const props = defineProps<{
-  template: Template
-}>()
+const props = withDefaults(
+  defineProps<{
+    template: Template
+    viewMode?: 'grid' | 'list'
+  }>(),
+  {
+    viewMode: 'grid',
+  },
+)
 
 function editTemplate(): void {
   emit('edit', props.template.id)
@@ -76,5 +163,14 @@ function editTemplate(): void {
 
 function deleteTemplate(): void {
   emit('delete', props.template)
+}
+
+function formatAmount(amount: number | null | undefined): string {
+  if (!amount) return '0.00'
+
+  return amount.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
 }
 </script>
