@@ -263,7 +263,7 @@ export type Database = {
       templates: {
         Row: {
           created_at: string | null
-          currency: string | null
+          currency: string
           duration: string
           id: string
           name: string

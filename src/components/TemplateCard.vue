@@ -68,7 +68,7 @@
       <q-card-section class="q-py-md">
         <div class="text-caption text-grey-6">Total Amount</div>
         <div class="text-h5 text-weight-medium text-positive">
-          ${{ formatAmount(template.total) }}
+          {{ formatAmount(template.total) }}
         </div>
       </q-card-section>
     </template>
@@ -93,7 +93,7 @@
         <div class="col-4">
           <div class="text-caption text-grey-6">Total Amount</div>
           <div class="text-subtitle1 text-weight-medium text-positive">
-            ${{ formatAmount(template.total) }}
+            {{ formatAmount(template.total) }}
           </div>
         </div>
 
@@ -140,6 +140,7 @@
 </template>
 
 <script setup lang="ts">
+import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import type { Template } from 'src/api'
 
 const emit = defineEmits<{
@@ -166,11 +167,7 @@ function deleteTemplate(): void {
 }
 
 function formatAmount(amount: number | null | undefined): string {
-  if (!amount) return '0.00'
-
-  return amount.toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })
+  const currency = props.template.currency as CurrencyCode
+  return formatCurrency(amount, currency)
 }
 </script>

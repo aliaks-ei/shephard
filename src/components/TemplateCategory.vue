@@ -61,7 +61,7 @@
         type="number"
         min="0"
         step="0.01"
-        prefix="$"
+        :prefix="currencySymbol"
         label="Amount"
         outlined
         hide-bottom-space
@@ -97,6 +97,7 @@
 
 <script setup lang="ts">
 import { useCategoriesStore } from 'src/stores/categories'
+import { getCurrencySymbol, type CurrencyCode } from 'src/utils/currency'
 import type { TemplateCategoryItem, Category } from 'src/api'
 
 const emit = defineEmits<{
@@ -107,9 +108,11 @@ const emit = defineEmits<{
 const props = defineProps<{
   modelValue: TemplateCategoryItem
   categoryOptions: Category[]
+  currency: CurrencyCode
 }>()
 
 const categoriesStore = useCategoriesStore()
+const currencySymbol = getCurrencySymbol(props.currency)
 
 function getCategoryName(categoryId: string): string {
   const category = categoriesStore.getCategoryById(categoryId)

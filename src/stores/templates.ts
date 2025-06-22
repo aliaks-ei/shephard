@@ -16,6 +16,7 @@ import {
 } from 'src/api'
 import { useError } from 'src/composables/useError'
 import { useUserStore } from 'src/stores/user'
+import type { CurrencyCode } from 'src/utils/currency'
 
 export const useTemplatesStore = defineStore('templates', () => {
   const { handleError } = useError()
@@ -60,15 +61,19 @@ export const useTemplatesStore = defineStore('templates', () => {
     }
   }
 
-  async function addTemplate(templateData: Omit<TemplateInsert, 'owner_id'>) {
+  async function addTemplate(templateData: Omit<TemplateInsert, 'owner_id' | 'currency'>) {
     if (!userId.value) return
 
     isLoading.value = true
 
     try {
+      // Get user's preferred currency for new templates
+      const userCurrency = userStore.preferences.currency as CurrencyCode
+
       const newTemplate = await createTemplate({
         ...templateData,
         owner_id: userId.value,
+        currency: userCurrency,
       })
 
       return newTemplate

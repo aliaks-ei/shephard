@@ -170,6 +170,7 @@
                     :key="item.id"
                     :model-value="item"
                     :category-options="getAvailableCategoriesForItem(item.id)"
+                    :currency="templateCurrency"
                     @update:model-value="(updatedItem) => updateCategoryItem(item.id, updatedItem)"
                     @remove="removeCategoryItem(item.id)"
                   />
@@ -217,7 +218,7 @@
                   />
                   Total Amount
                 </div>
-                <div class="text-h4 text-primary text-weight-bold">${{ totalAmount }}</div>
+                <div class="text-h4 text-primary text-weight-bold">{{ formattedTotalAmount }}</div>
               </div>
               <div class="text-body2 text-grey-6 q-mt-sm">
                 Total across {{ categoryItems.length }}
@@ -261,13 +262,16 @@ import type { QForm } from 'quasar'
 import TemplateCategory from 'src/components/TemplateCategory.vue'
 import { useTemplatesStore } from 'src/stores/templates'
 import { useCategoriesStore } from 'src/stores/categories'
+import { useUserStore } from 'src/stores/user'
 import { useTemplateCategoryItems } from 'src/composables/useTemplateCategoryItems'
+import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import type { TemplateWithCategories, TemplateCategoryItem } from 'src/api'
 
 const route = useRoute()
 const router = useRouter()
 const templatesStore = useTemplatesStore()
 const categoriesStore = useCategoriesStore()
+const userStore = useUserStore()
 const {
   categoryItems,
   totalAmount,
@@ -291,6 +295,19 @@ const form = ref({
 const isNewTemplate = computed(() => route.name === 'new-template')
 const routeTemplateId = computed(() =>
   typeof route.params.id === 'string' ? route.params.id : null,
+)
+
+// Get currency for the template - user preference for new, stored value for existing
+const templateCurrency = computed((): CurrencyCode => {
+  if (isNewTemplate.value) {
+    return userStore.preferences.currency as CurrencyCode
+  }
+
+  return currentTemplate.value?.currency as CurrencyCode
+})
+
+const formattedTotalAmount = computed(() =>
+  formatCurrency(totalAmount.value, templateCurrency.value),
 )
 
 const durationOptions = [
