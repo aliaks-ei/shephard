@@ -1,6 +1,6 @@
 <template>
   <q-layout view="lHh Lpr fff">
-    <q-header>
+    <q-header elevated>
       <q-toolbar>
         <q-btn
           v-if="!$q.screen.gt.sm"

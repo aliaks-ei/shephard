@@ -20,6 +20,13 @@ export type TemplateSharedUser = {
   shared_at: string
 }
 
+export type TemplateCategoryItem = {
+  id: string
+  categoryId: string
+  amount: number
+  color: string
+}
+
 export async function getTemplates(userId: string): Promise<Template[]> {
   // Get shared template IDs first
   const { data: sharedTemplateIds, error: shareError } = await supabase

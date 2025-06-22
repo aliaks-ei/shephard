@@ -49,11 +49,8 @@
             <div class="text-subtitle2 q-mb-sm">Duration</div>
             <q-btn-toggle
               v-model="form.duration"
-              no-caps
-              unelevated
-              color="grey-3"
-              text-color="grey-8"
               :options="durationOptions"
+              no-caps
             />
           </div>
 
@@ -66,80 +63,21 @@
                 icon="eva-plus-outline"
                 label="Add new category"
                 color="primary"
-                @click="addNewCategoryItem"
+                @click="addCategoryItem"
               />
             </div>
 
             <!-- Categories List -->
-            <div v-if="categoryItems.length > 0">
-              <q-list>
-                <q-item
-                  v-for="(item, index) in categoryItems"
-                  :key="index"
-                  dense
-                >
-                  <q-item-section avatar>
-                    <div
-                      class="category-color-indicator"
-                      :style="{ backgroundColor: item.color }"
-                    ></div>
-                  </q-item-section>
-                  <q-item-section>
-                    <q-select
-                      v-model="item.categoryId"
-                      :options="getAvailableCategoriesForItem(index)"
-                      option-value="id"
-                      option-label="name"
-                      label="Select category"
-                      emit-value
-                      map-options
-                      :rules="[(val) => !!val || 'Category is required']"
-                      @update:model-value="(value) => updateCategorySelection(index, value)"
-                    >
-                      <template #selected>
-                        <span v-if="item.categoryId">{{ getCategoryName(item.categoryId) }}</span>
-                      </template>
-                      <template #option="{ opt, itemProps }">
-                        <q-item v-bind="itemProps">
-                          <q-item-section avatar>
-                            <div
-                              class="category-color-indicator"
-                              :style="{ backgroundColor: opt.color }"
-                            ></div>
-                          </q-item-section>
-                          <q-item-section>
-                            <q-item-label>{{ opt.name }}</q-item-label>
-                          </q-item-section>
-                        </q-item>
-                      </template>
-                    </q-select>
-                  </q-item-section>
-                  <q-item-section style="max-width: 150px">
-                    <q-input
-                      v-model.number="item.amount"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      prefix="$"
-                      label="Amount"
-                      :rules="[
-                        (val) => (val !== null && val !== undefined) || 'Amount is required',
-                        (val) => val > 0 || 'Amount must be greater than 0',
-                      ]"
-                    />
-                  </q-item-section>
-                  <q-item-section side>
-                    <q-btn
-                      flat
-                      round
-                      icon="eva-trash-2-outline"
-                      color="negative"
-                      @click="removeCategoryItem(index)"
-                    />
-                  </q-item-section>
-                </q-item>
-              </q-list>
-            </div>
+            <q-list v-if="categoryItems.length > 0">
+              <TemplateCategory
+                v-for="item in categoryItems"
+                :key="item.id"
+                :model-value="item"
+                :category-options="getAvailableCategoriesForItem(item.id)"
+                @update:model-value="(updatedItem) => updateCategoryItem(item.id, updatedItem)"
+                @remove="removeCategoryItem(item.id)"
+              />
+            </q-list>
 
             <!-- Empty state -->
             <div
@@ -196,14 +134,27 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { QForm } from 'quasar'
 
+import TemplateCategory from 'src/components/TemplateCategory.vue'
 import { useTemplatesStore } from 'src/stores/templates'
 import { useCategoriesStore } from 'src/stores/categories'
-import type { TemplateWithCategories } from 'src/api'
+import { useTemplateCategoryItems } from 'src/composables/useTemplateCategoryItems'
+import type { TemplateWithCategories, TemplateCategoryItem } from 'src/api'
 
 const route = useRoute()
 const router = useRouter()
 const templatesStore = useTemplatesStore()
 const categoriesStore = useCategoriesStore()
+const {
+  categoryItems,
+  totalAmount,
+  addCategoryItem,
+  updateCategoryItem,
+  removeCategoryItem,
+  getAvailableCategoriesForItem,
+  validateCategoryItems,
+  loadCategoryItems,
+  getCategoryItemsForSave,
+} = useTemplateCategoryItems()
 
 const templateForm = ref<QForm | null>(null)
 const isLoading = ref(false)
@@ -212,14 +163,6 @@ const form = ref({
   name: '',
   duration: 'monthly' as string,
 })
-
-interface CategoryItem {
-  categoryId: string
-  amount: number
-  color: string
-}
-
-const categoryItems = ref<CategoryItem[]>([])
 
 const isNewTemplate = computed(() => route.name === 'new-template')
 const routeTemplateId = computed(() =>
@@ -232,49 +175,8 @@ const durationOptions = [
   { label: 'Yearly', value: 'yearly' },
 ]
 
-const totalAmount = computed(() =>
-  categoryItems.value.reduce((total, item) => total + item.amount, 0),
-)
-
-const getAvailableCategoriesForItem = (currentIndex: number) => {
-  const currentItemCategoryId = categoryItems.value[currentIndex]?.categoryId
-  const otherUsedCategoryIds = categoryItems.value
-    .filter((_, index) => index !== currentIndex)
-    .map((item) => item.categoryId)
-
-  return categoriesStore.categories.filter(
-    (category) =>
-      !otherUsedCategoryIds.includes(category.id) || category.id === currentItemCategoryId,
-  )
-}
-
-function getCategoryName(categoryId: string): string {
-  const category = categoriesStore.getCategoryById(categoryId)
-  return category?.name || 'Unknown Category'
-}
-
-function updateCategorySelection(index: number, categoryId: string): void {
-  const category = categoriesStore.getCategoryById(categoryId)
-  if (category && categoryItems.value[index]) {
-    categoryItems.value[index].categoryId = categoryId
-    categoryItems.value[index].color = category.color
-  }
-}
-
 function goBack(): void {
   router.push({ name: 'templates' })
-}
-
-function addNewCategoryItem(): void {
-  categoryItems.value.unshift({
-    categoryId: '',
-    amount: 0,
-    color: '#6B7280',
-  })
-}
-
-function removeCategoryItem(index: number): void {
-  categoryItems.value.splice(index, 1)
 }
 
 async function createNewTemplateWithItems(): Promise<void> {
@@ -286,11 +188,9 @@ async function createNewTemplateWithItems(): Promise<void> {
 
   if (!template) return
 
-  const newTemplateId = template.id
-  const items = categoryItems.value.map((item) => ({
-    category_id: item.categoryId,
-    amount: item.amount,
-    template_id: newTemplateId,
+  const items = getCategoryItemsForSave().map((item) => ({
+    ...item,
+    template_id: template.id,
   }))
 
   await templatesStore.addCategoriesToTemplate(items)
@@ -310,13 +210,10 @@ async function updateExistingTemplateWithItems(): Promise<void> {
   const existingItemIds = currentTemplate.value.template_categories.map((item) => item.id)
   await templatesStore.removeCategoriesFromTemplate(existingItemIds)
 
-  const items = categoryItems.value
-    .filter((item) => item.categoryId && item.amount > 0)
-    .map((item) => ({
-      category_id: item.categoryId,
-      amount: item.amount,
-      template_id: template.id,
-    }))
+  const items = getCategoryItemsForSave().map((item) => ({
+    ...item,
+    template_id: template.id,
+  }))
 
   if (items.length > 0) {
     await templatesStore.addCategoriesToTemplate(items)
@@ -327,12 +224,7 @@ async function saveTemplate(): Promise<void> {
   const isValid = await templateForm.value?.validate()
 
   if (!isValid) return
-  if (categoryItems.value.length === 0) return
-
-  // Check if all categories are selected and have valid amounts
-  const hasValidCategories = categoryItems.value.every((item) => item.categoryId && item.amount > 0)
-
-  if (!hasValidCategories) return
+  if (!validateCategoryItems()) return
 
   if (isNewTemplate.value) {
     await createNewTemplateWithItems()
@@ -353,11 +245,12 @@ async function loadTemplate(): Promise<void> {
   form.value.name = currentTemplate.value.name
   form.value.duration = currentTemplate.value.duration
 
-  categoryItems.value = currentTemplate.value.template_categories.reduce((acc, item) => {
+  const items = currentTemplate.value.template_categories.reduce((acc, item) => {
     const category = categoriesStore.getCategoryById(item.category_id)
 
     if (category) {
       acc.push({
+        id: item.id,
         categoryId: item.category_id,
         amount: item.amount,
         color: category.color,
@@ -365,7 +258,9 @@ async function loadTemplate(): Promise<void> {
     }
 
     return acc
-  }, [] as CategoryItem[])
+  }, [] as TemplateCategoryItem[])
+
+  loadCategoryItems(items)
 }
 
 onMounted(async () => {
@@ -379,12 +274,3 @@ onMounted(async () => {
   }
 })
 </script>
-
-<style scoped>
-.category-color-indicator {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-}
-</style>

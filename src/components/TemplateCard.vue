@@ -41,10 +41,19 @@
           </q-menu>
         </q-btn>
       </div>
+    </q-card-section>
 
+    <q-card-section class="q-pt-none">
       <div class="text-caption text-capitalize text-grey-6 q-mb-sm">
         {{ template.duration }}
       </div>
+    </q-card-section>
+
+    <q-separator />
+
+    <q-card-section>
+      <span class="text-subtitle2">Total: </span>
+      <span class="q-ml-xs">${{ template.total }}</span>
     </q-card-section>
   </q-card>
 </template>
