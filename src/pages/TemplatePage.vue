@@ -2,7 +2,7 @@
   <div class="q-pa-md">
     <div class="row justify-center">
       <div class="col-12 col-md-10 col-lg-8 col-xl-6">
-        <!-- Enhanced Header with Toolbar -->
+        <!-- Toolbar -->
         <q-toolbar class="q-mb-lg q-px-none">
           <q-btn
             flat
@@ -192,7 +192,7 @@
               <!-- Total Amount Section -->
               <div
                 v-if="categoryItems.length > 0"
-                class="q-mb-xl"
+                class="q-mb-lg"
               >
                 <q-separator class="q-mb-lg" />
                 <div class="row items-center justify-between">
