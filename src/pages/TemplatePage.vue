@@ -1,257 +1,255 @@
 <template>
-  <q-page class="q-pa-md">
-    <!-- Enhanced Header with Toolbar -->
-    <q-toolbar class="q-mb-lg q-pl-none">
-      <q-btn
-        flat
-        round
-        icon="eva-arrow-back-outline"
-        @click="goBack"
-      />
-
-      <q-toolbar-title>
-        <div class="row items-center">
-          <q-icon
-            :name="isNewTemplate ? 'eva-plus-circle-outline' : 'eva-edit-outline'"
-            size="sm"
-            class="q-mr-sm"
-          />
-          {{ isNewTemplate ? 'Create Template' : 'Edit Template' }}
-        </div>
-      </q-toolbar-title>
-
-      <q-chip
-        v-if="!isNewTemplate"
-        :label="form.duration"
-        color="primary"
-        text-color="white"
-        icon="eva-calendar-outline"
-        class="text-capitalize"
-      />
-    </q-toolbar>
-
-    <!-- Breadcrumb Navigation -->
-    <q-breadcrumbs
-      class="q-mb-lg text-grey-6"
-      active-color="primary"
-    >
-      <q-breadcrumbs-el
-        label="Templates"
-        icon="eva-grid-outline"
-        to="/templates"
-      />
-      <q-breadcrumbs-el
-        :label="isNewTemplate ? 'New Template' : 'Edit Template'"
-        :icon="isNewTemplate ? 'eva-plus-outline' : 'eva-edit-outline'"
-      />
-    </q-breadcrumbs>
-
-    <!-- Loading State -->
-    <div
-      v-if="isLoading"
-      class="row justify-center"
-    >
-      <div class="col-12 col-md-10 col-lg-8">
-        <div class="q-pa-lg">
-          <q-skeleton
-            type="text"
-            width="40%"
-            class="q-mb-md"
-          />
-          <q-skeleton
-            type="QInput"
-            class="q-mb-lg"
-          />
-          <q-skeleton
-            type="text"
-            width="30%"
-            class="q-mb-md"
-          />
-          <q-skeleton
-            type="rect"
-            height="50px"
-            class="q-mb-lg"
-          />
-          <q-skeleton
-            type="text"
-            width="35%"
-            class="q-mb-md"
-          />
-          <q-skeleton
-            type="rect"
-            height="200px"
-          />
-        </div>
-      </div>
-    </div>
-
-    <!-- Enhanced Template Form -->
-    <div
-      v-else
-      class="row justify-center"
-    >
-      <div class="col-12 col-md-10 col-lg-8">
-        <q-form
-          ref="templateForm"
-          @submit="saveTemplate"
-        >
-          <!-- Single Unified Card -->
-          <q-card
+  <div class="q-pa-md">
+    <div class="row justify-center">
+      <div class="col-12 col-md-10 col-lg-8 col-xl-6">
+        <!-- Enhanced Header with Toolbar -->
+        <q-toolbar class="q-mb-lg q-pl-none">
+          <q-btn
             flat
-            bordered
-            class="q-pa-lg"
+            round
+            icon="eva-arrow-back-outline"
+            @click="goBack"
+          />
+
+          <q-toolbar-title>
+            <div class="row items-center">
+              <q-icon
+                :name="isNewTemplate ? 'eva-plus-circle-outline' : 'eva-edit-outline'"
+                size="sm"
+                class="q-mr-sm"
+              />
+              {{ isNewTemplate ? 'Create Template' : 'Edit Template' }}
+            </div>
+          </q-toolbar-title>
+
+          <q-chip
+            v-if="!isNewTemplate"
+            :label="form.duration"
+            color="primary"
+            text-color="white"
+            icon="eva-calendar-outline"
+            class="text-capitalize"
+          />
+        </q-toolbar>
+
+        <!-- Breadcrumb Navigation -->
+        <q-breadcrumbs
+          class="q-mb-lg text-grey-6"
+          active-color="primary"
+        >
+          <q-breadcrumbs-el
+            label="Templates"
+            icon="eva-grid-outline"
+            to="/templates"
+          />
+          <q-breadcrumbs-el
+            :label="isNewTemplate ? 'New Template' : 'Edit Template'"
+            :icon="isNewTemplate ? 'eva-plus-outline' : 'eva-edit-outline'"
+          />
+        </q-breadcrumbs>
+
+        <!-- Loading State -->
+        <div v-if="isLoading">
+          <div class="q-pa-lg">
+            <q-skeleton
+              type="text"
+              width="40%"
+              class="q-mb-md"
+            />
+            <q-skeleton
+              type="QInput"
+              class="q-mb-lg"
+            />
+            <q-skeleton
+              type="text"
+              width="30%"
+              class="q-mb-md"
+            />
+            <q-skeleton
+              type="rect"
+              height="50px"
+              class="q-mb-lg"
+            />
+            <q-skeleton
+              type="text"
+              width="35%"
+              class="q-mb-md"
+            />
+            <q-skeleton
+              type="rect"
+              height="200px"
+            />
+          </div>
+        </div>
+
+        <!-- Enhanced Template Form -->
+        <div v-else>
+          <q-form
+            ref="templateForm"
+            @submit="saveTemplate"
           >
-            <!-- Basic Information Section -->
-            <div class="q-mb-xl">
-              <div class="text-h6 q-mb-md">
-                <q-icon
-                  name="eva-info-outline"
-                  class="q-mr-sm"
+            <!-- Single Unified Card -->
+            <q-card
+              flat
+              bordered
+              class="q-pa-lg"
+            >
+              <!-- Basic Information Section -->
+              <div class="q-mb-xl">
+                <div class="text-h6 q-mb-md">
+                  <q-icon
+                    name="eva-info-outline"
+                    class="q-mr-sm"
+                  />
+                  Basic Information
+                </div>
+
+                <q-input
+                  v-model="form.name"
+                  label="Template Name"
+                  outlined
+                  :rules="[(val) => !!val || 'Template name is required']"
+                  class="q-mb-md"
                 />
-                Basic Information
+
+                <div class="text-subtitle2 q-mb-sm">Duration</div>
+                <q-option-group
+                  v-model="form.duration"
+                  :options="durationOptions"
+                  color="primary"
+                  inline
+                  class="q-mb-md"
+                />
               </div>
 
-              <q-input
-                v-model="form.name"
-                label="Template Name"
-                outlined
-                :rules="[(val) => !!val || 'Template name is required']"
-                class="q-mb-md"
-              />
+              <q-separator class="q-mb-xl" />
 
-              <div class="text-subtitle2 q-mb-sm">Duration</div>
-              <q-option-group
-                v-model="form.duration"
-                :options="durationOptions"
-                color="primary"
-                inline
-                class="q-mb-md"
-              />
-            </div>
+              <!-- Categories Section -->
+              <div class="q-mb-xl">
+                <div class="row items-center justify-between q-mb-md">
+                  <div class="text-h6">
+                    <q-icon
+                      name="eva-grid-outline"
+                      class="q-mr-sm"
+                    />
+                    Categories
+                    <q-chip
+                      v-if="categoryItems.length > 0"
+                      :label="categoryItems.length"
+                      color="primary"
+                      text-color="white"
+                      size="sm"
+                      class="q-ml-sm"
+                    />
+                  </div>
+                  <q-btn
+                    color="primary"
+                    icon="eva-plus-outline"
+                    label="Add Category"
+                    unelevated
+                    @click="addCategoryItem"
+                  />
+                </div>
 
-            <q-separator class="q-mb-xl" />
+                <!-- Categories List -->
+                <div v-if="categoryItems.length > 0">
+                  <q-list
+                    bordered
+                    separator
+                    class="rounded-borders"
+                  >
+                    <TemplateCategory
+                      v-for="item in categoryItems"
+                      :key="item.id"
+                      :model-value="item"
+                      :category-options="getAvailableCategoriesForItem(item.id)"
+                      :currency="templateCurrency"
+                      @update:model-value="
+                        (updatedItem) => updateCategoryItem(item.id, updatedItem)
+                      "
+                      @remove="removeCategoryItem(item.id)"
+                    />
+                  </q-list>
+                </div>
 
-            <!-- Categories Section -->
-            <div class="q-mb-xl">
-              <div class="row items-center justify-between q-mb-md">
-                <div class="text-h6">
+                <!-- Enhanced Empty State -->
+                <div
+                  v-else
+                  class="text-center q-py-xl"
+                >
                   <q-icon
                     name="eva-grid-outline"
-                    class="q-mr-sm"
+                    size="4rem"
+                    class="text-grey-4 q-mb-md"
                   />
-                  Categories
-                  <q-chip
-                    v-if="categoryItems.length > 0"
-                    :label="categoryItems.length"
+                  <div class="text-h6 q-mb-sm text-grey-6">No categories yet</div>
+                  <div class="text-body2 text-grey-5 q-mb-lg">
+                    Start building your template by adding expense categories with amounts
+                  </div>
+                  <q-btn
                     color="primary"
-                    text-color="white"
-                    size="sm"
-                    class="q-ml-sm"
+                    icon="eva-plus-outline"
+                    label="Add Your First Category"
+                    unelevated
+                    @click="addCategoryItem"
                   />
                 </div>
-                <q-btn
-                  color="primary"
-                  icon="eva-plus-outline"
-                  label="Add Category"
-                  unelevated
-                  @click="addCategoryItem"
-                />
               </div>
 
-              <!-- Categories List -->
-              <div v-if="categoryItems.length > 0">
-                <q-list
-                  bordered
-                  separator
-                  class="rounded-borders"
-                >
-                  <TemplateCategory
-                    v-for="item in categoryItems"
-                    :key="item.id"
-                    :model-value="item"
-                    :category-options="getAvailableCategoriesForItem(item.id)"
-                    :currency="templateCurrency"
-                    @update:model-value="(updatedItem) => updateCategoryItem(item.id, updatedItem)"
-                    @remove="removeCategoryItem(item.id)"
-                  />
-                </q-list>
-              </div>
-
-              <!-- Enhanced Empty State -->
+              <!-- Total Amount Section -->
               <div
-                v-else
-                class="text-center q-py-xl"
+                v-if="categoryItems.length > 0"
+                class="q-mb-xl"
               >
-                <q-icon
-                  name="eva-grid-outline"
-                  size="4rem"
-                  class="text-grey-4 q-mb-md"
-                />
-                <div class="text-h6 q-mb-sm text-grey-6">No categories yet</div>
-                <div class="text-body2 text-grey-5 q-mb-lg">
-                  Start building your template by adding expense categories with amounts
+                <q-separator class="q-mb-lg" />
+                <div class="row items-center justify-between">
+                  <div
+                    class="text-h6"
+                    style="display: flex; align-items: center"
+                  >
+                    <q-icon
+                      name="eva-credit-card-outline"
+                      class="q-mr-sm"
+                    />
+                    Total Amount
+                  </div>
+                  <div class="text-h4 text-primary text-weight-bold">
+                    {{ formattedTotalAmount }}
+                  </div>
                 </div>
+                <div class="text-body2 text-grey-6 q-mt-sm">
+                  Total across {{ categoryItems.length }}
+                  {{ categoryItems.length === 1 ? 'category' : 'categories' }}
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <q-separator class="q-mb-lg" />
+              <div class="row q-gutter-md justify-end">
+                <q-btn
+                  flat
+                  label="Discard"
+                  color="grey-8"
+                  @click="goBack"
+                />
                 <q-btn
                   color="primary"
-                  icon="eva-plus-outline"
-                  label="Add Your First Category"
+                  label="Save Template"
+                  type="submit"
                   unelevated
-                  @click="addCategoryItem"
-                />
-              </div>
-            </div>
-
-            <!-- Total Amount Section -->
-            <div
-              v-if="categoryItems.length > 0"
-              class="q-mb-xl"
-            >
-              <q-separator class="q-mb-lg" />
-              <div class="row items-center justify-between">
-                <div
-                  class="text-h6"
-                  style="display: flex; align-items: center"
+                  :loading="templatesStore.isLoading"
                 >
-                  <q-icon
-                    name="eva-credit-card-outline"
-                    class="q-mr-sm"
-                  />
-                  Total Amount
-                </div>
-                <div class="text-h4 text-primary text-weight-bold">{{ formattedTotalAmount }}</div>
+                  <template #loading>
+                    <q-spinner-hourglass />
+                  </template>
+                </q-btn>
               </div>
-              <div class="text-body2 text-grey-6 q-mt-sm">
-                Total across {{ categoryItems.length }}
-                {{ categoryItems.length === 1 ? 'category' : 'categories' }}
-              </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <q-separator class="q-mb-lg" />
-            <div class="row q-gutter-md justify-end">
-              <q-btn
-                flat
-                label="Discard"
-                color="grey-8"
-                @click="goBack"
-              />
-              <q-btn
-                color="primary"
-                label="Save Template"
-                type="submit"
-                unelevated
-                :loading="templatesStore.isLoading"
-              >
-                <template #loading>
-                  <q-spinner-hourglass />
-                </template>
-              </q-btn>
-            </div>
-          </q-card>
-        </q-form>
+            </q-card>
+          </q-form>
+        </div>
       </div>
     </div>
-  </q-page>
+  </div>
 </template>
 
 <script setup lang="ts">

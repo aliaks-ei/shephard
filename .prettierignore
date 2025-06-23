@@ -1,0 +1,12 @@
+# Capacitor generated files
+src-capacitor/
+
+# Build outputs
+dist/
+.quasar/
+
+# Dependencies
+node_modules/
+
+# Generated files
+*.generated.* 
