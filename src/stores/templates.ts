@@ -4,15 +4,22 @@ import { defineStore } from 'pinia'
 import {
   getTemplates,
   getTemplateWithCategories,
+  getTemplateSharedUsers,
   createTemplate,
   updateTemplate,
   deleteTemplate,
+  shareTemplate,
+  unshareTemplate,
+  updateSharePermission,
   createTemplateCategories,
   deleteTemplateCategories,
+  searchUsersByEmail,
   type TemplateInsert,
   type TemplateUpdate,
   type Template,
   type TemplateCategoryInsert,
+  type TemplateSharedUser,
+  type UserSearchResult,
 } from 'src/api'
 import { useError } from 'src/composables/useError'
 import { useUserStore } from 'src/stores/user'
@@ -24,6 +31,10 @@ export const useTemplatesStore = defineStore('templates', () => {
 
   const templates = ref<Template[]>([])
   const isLoading = ref(false)
+  const isSharing = ref(false)
+  const sharedUsers = ref<TemplateSharedUser[]>([])
+  const userSearchResults = ref<UserSearchResult[]>([])
+  const isSearchingUsers = ref(false)
 
   const userId = computed(() => userStore.userProfile?.id)
   const templatesCount = computed(() => templates.value.length)
@@ -130,14 +141,117 @@ export const useTemplatesStore = defineStore('templates', () => {
     }
   }
 
+  async function loadTemplateShares(templateId: string) {
+    isSharing.value = true
+
+    try {
+      const data = await getTemplateSharedUsers(templateId)
+      sharedUsers.value = data
+      return data
+    } catch (error) {
+      handleError('TEMPLATES.LOAD_SHARES_FAILED', error, { templateId })
+    } finally {
+      isSharing.value = false
+    }
+  }
+
+  async function shareTemplateWithUser(
+    templateId: string,
+    userEmail: string,
+    permission: 'view' | 'edit',
+  ) {
+    if (!userId.value) return
+
+    isSharing.value = true
+
+    try {
+      await shareTemplate(templateId, userEmail, permission, userId.value)
+
+      // Reload shares to update the UI
+      await loadTemplateShares(templateId)
+    } catch (error) {
+      handleError('TEMPLATES.SHARE_FAILED', error, { templateId, userEmail })
+    } finally {
+      isSharing.value = false
+    }
+  }
+
+  async function unshareTemplateWithUser(templateId: string, targetUserId: string) {
+    isSharing.value = true
+
+    try {
+      await unshareTemplate(templateId, targetUserId)
+
+      // Remove from local state
+      sharedUsers.value = sharedUsers.value.filter((user) => user.user_id !== targetUserId)
+    } catch (error) {
+      handleError('TEMPLATES.UNSHARE_FAILED', error, { templateId, targetUserId })
+    } finally {
+      isSharing.value = false
+    }
+  }
+
+  async function updateUserPermission(
+    templateId: string,
+    targetUserId: string,
+    permission: 'view' | 'edit',
+  ) {
+    isSharing.value = true
+
+    try {
+      await updateSharePermission(templateId, targetUserId, permission)
+
+      const userIndex = sharedUsers.value.findIndex((user) => user.user_id === targetUserId)
+      if (userIndex === -1 || !sharedUsers.value[userIndex]) return
+
+      sharedUsers.value[userIndex].permission_level = permission
+    } catch (error) {
+      handleError('TEMPLATES.UPDATE_PERMISSION_FAILED', error, { templateId, targetUserId })
+    } finally {
+      isSharing.value = false
+    }
+  }
+
+  async function searchUsers(query: string) {
+    if (!query.trim()) {
+      userSearchResults.value = []
+      return []
+    }
+
+    isSearchingUsers.value = true
+
+    try {
+      const results = await searchUsersByEmail(query)
+      userSearchResults.value = results
+      return results
+    } catch (error) {
+      handleError('USERS.SEARCH_FAILED', error, { query })
+      return []
+    } finally {
+      isSearchingUsers.value = false
+    }
+  }
+
+  function clearUserSearch() {
+    userSearchResults.value = []
+  }
+
   function reset() {
     templates.value = []
+    sharedUsers.value = []
+    userSearchResults.value = []
     isLoading.value = false
+    isSharing.value = false
+    isSearchingUsers.value = false
   }
 
   return {
     isLoading,
+    isSharing,
+    isSearchingUsers,
     templates,
+    sharedUsers,
+    userSearchResults,
     templatesCount,
     ownedTemplates,
     sharedTemplates,
@@ -149,6 +263,13 @@ export const useTemplatesStore = defineStore('templates', () => {
     removeTemplate,
     addCategoriesToTemplate,
     removeCategoriesFromTemplate,
+    loadTemplateShares,
+    shareTemplateWithUser,
+    unshareTemplateWithUser,
+    updateUserPermission,
+    searchUsers,
+    clearUserSearch,
+
     reset,
   }
 })

@@ -37,14 +37,19 @@ export async function getTemplates(userId: string): Promise<Template[]> {
   if (shareError) throw shareError
 
   const sharedIds = (sharedTemplateIds || []).map((s) => s.template_id)
-  const sharedIdsQuery = sharedIds.length > 0 ? `,id.in.(${sharedIds.join(',')})` : ''
 
-  // Get all templates (owned + shared) in a single query
-  const { data, error } = await supabase
-    .from('templates')
-    .select('*')
-    .or(`owner_id.eq.${userId}${sharedIdsQuery}`)
-    .order('created_at', { ascending: false })
+  // Build the query conditions
+  let query = supabase.from('templates').select('*')
+
+  if (sharedIds.length > 0) {
+    // If there are shared templates, get both owned and shared
+    query = query.or(`owner_id.eq.${userId},id.in.(${sharedIds.join(',')})`)
+  } else {
+    // If no shared templates, just get owned templates
+    query = query.eq('owner_id', userId)
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false })
 
   if (error) throw error
   return data || []
@@ -206,6 +211,72 @@ export async function createTemplateCategories(
 
 export async function deleteTemplateCategories(ids: string[]): Promise<void> {
   const { error } = await supabase.from('template_categories').delete().in('id', ids)
+
+  if (error) throw error
+}
+
+export async function shareTemplate(
+  templateId: string,
+  userEmail: string,
+  permission: 'view' | 'edit',
+  sharedByUserId: string,
+): Promise<void> {
+  // Get user ID from email
+  const { data: users, error: usersError } = await supabase
+    .from('users')
+    .select('id, email')
+    .eq('email', userEmail)
+    .maybeSingle()
+
+  if (usersError) throw usersError
+  if (!users) {
+    throw new Error(`User not found: ${userEmail}`)
+  }
+
+  // Check if already shared
+  const { data: existingShare, error: shareCheckError } = await supabase
+    .from('template_shares')
+    .select('id')
+    .eq('template_id', templateId)
+    .eq('shared_with_user_id', users.id)
+    .maybeSingle()
+
+  if (shareCheckError) throw shareCheckError
+  if (existingShare) {
+    throw new Error(`Template is already shared with ${userEmail}`)
+  }
+
+  // Create new share
+  const { error: insertError } = await supabase.from('template_shares').insert({
+    template_id: templateId,
+    shared_with_user_id: users.id,
+    shared_by_user_id: sharedByUserId,
+    permission_level: permission,
+  })
+
+  if (insertError) throw insertError
+}
+
+export async function unshareTemplate(templateId: string, userId: string): Promise<void> {
+  const { error } = await supabase
+    .from('template_shares')
+    .delete()
+    .eq('template_id', templateId)
+    .eq('shared_with_user_id', userId)
+
+  if (error) throw error
+}
+
+export async function updateSharePermission(
+  templateId: string,
+  userId: string,
+  permission: 'view' | 'edit',
+): Promise<void> {
+  const { error } = await supabase
+    .from('template_shares')
+    .update({ permission_level: permission })
+    .eq('template_id', templateId)
+    .eq('shared_with_user_id', userId)
 
   if (error) throw error
 }

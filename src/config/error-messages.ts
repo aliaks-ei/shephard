@@ -13,11 +13,16 @@ export type ErrorMessageKey =
   | 'USER.CREATE_FAILED'
   | 'USER.INIT_FAILED'
   | 'USER.EMAIL_RESET_FAILED'
+  | 'USERS.SEARCH_FAILED'
   | 'TEMPLATES.LOAD_FAILED'
   | 'TEMPLATES.LOAD_TEMPLATE_FAILED'
   | 'TEMPLATES.CREATE_FAILED'
   | 'TEMPLATES.UPDATE_FAILED'
   | 'TEMPLATES.DELETE_FAILED'
+  | 'TEMPLATES.LOAD_SHARES_FAILED'
+  | 'TEMPLATES.SHARE_FAILED'
+  | 'TEMPLATES.UNSHARE_FAILED'
+  | 'TEMPLATES.UPDATE_PERMISSION_FAILED'
   | 'CATEGORIES.LOAD_FAILED'
   | 'CATEGORIES.CREATE_FAILED'
   | 'CATEGORIES.UPDATE_FAILED'
@@ -117,6 +122,11 @@ export const ERROR_MESSAGES: Record<ErrorMessageKey, ErrorMessageConfig> = {
     notify: true,
     log: true,
   },
+  'USERS.SEARCH_FAILED': {
+    message: "We couldn't search for users. Please try again later.",
+    notify: true,
+    log: true,
+  },
 
   // Templates errors
   'TEMPLATES.LOAD_FAILED': {
@@ -141,6 +151,26 @@ export const ERROR_MESSAGES: Record<ErrorMessageKey, ErrorMessageConfig> = {
   },
   'TEMPLATES.DELETE_FAILED': {
     message: "We couldn't delete that template. Please try again.",
+    notify: true,
+    log: true,
+  },
+  'TEMPLATES.LOAD_SHARES_FAILED': {
+    message: "We couldn't load the sharing information. Please refresh or try again later.",
+    notify: true,
+    log: true,
+  },
+  'TEMPLATES.SHARE_FAILED': {
+    message: "We couldn't share that template. Please check the email address and try again.",
+    notify: true,
+    log: true,
+  },
+  'TEMPLATES.UNSHARE_FAILED': {
+    message: "We couldn't remove access to that template. Please try again.",
+    notify: true,
+    log: true,
+  },
+  'TEMPLATES.UPDATE_PERMISSION_FAILED': {
+    message: "We couldn't update the access permissions. Please try again.",
     notify: true,
     log: true,
   },

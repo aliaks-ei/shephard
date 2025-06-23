@@ -90,21 +90,83 @@
         </div>
       </div>
 
-      <!-- Templates Grid -->
+      <!-- Templates Sections -->
       <div
-        v-else-if="filteredAndSortedTemplates.length > 0"
-        class="row q-col-gutter-md"
+        v-else-if="
+          filteredAndSortedOwnedTemplates.length > 0 || filteredAndSortedSharedTemplates.length > 0
+        "
       >
+        <!-- Owned Templates Section -->
         <div
-          v-for="template in filteredAndSortedTemplates"
-          :key="template.id"
-          class="col-12 col-sm-6 col-lg-4 col-xl-3"
+          v-if="filteredAndSortedOwnedTemplates.length > 0"
+          class="q-mb-xl"
         >
-          <TemplateCard
-            :template="template"
-            @edit="viewTemplate"
-            @delete="deleteTemplate"
-          />
+          <div class="row items-center justify-between q-mb-md">
+            <div class="text-h6 text-weight-medium">
+              <q-icon
+                name="eva-person-outline"
+                class="q-mr-sm"
+              />
+              My Templates
+              <q-chip
+                :label="filteredAndSortedOwnedTemplates.length"
+                color="primary"
+                text-color="white"
+                size="sm"
+                class="q-ml-sm"
+              />
+            </div>
+          </div>
+
+          <div class="row q-col-gutter-md">
+            <div
+              v-for="template in filteredAndSortedOwnedTemplates"
+              :key="template.id"
+              class="col-12 col-sm-6 col-lg-4 col-xl-3"
+            >
+              <TemplateCard
+                :template="template"
+                @edit="viewTemplate"
+                @delete="deleteTemplate"
+                @share="openShareDialog"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Shared Templates Section -->
+        <div v-if="filteredAndSortedSharedTemplates.length > 0">
+          <div class="row items-center justify-between q-mb-md">
+            <div class="text-h6 text-weight-medium">
+              <q-icon
+                name="eva-people-outline"
+                class="q-mr-sm"
+              />
+              Shared with Me
+              <q-chip
+                :label="filteredAndSortedSharedTemplates.length"
+                color="secondary"
+                text-color="white"
+                size="sm"
+                class="q-ml-sm"
+              />
+            </div>
+          </div>
+
+          <div class="row q-col-gutter-md">
+            <div
+              v-for="template in filteredAndSortedSharedTemplates"
+              :key="template.id"
+              class="col-12 col-sm-6 col-lg-4 col-xl-3"
+            >
+              <TemplateCard
+                :template="template"
+                @edit="viewTemplate"
+                @delete="deleteTemplate"
+                @share="openShareDialog"
+              />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -154,6 +216,14 @@
         </q-card-section>
       </q-card>
     </div>
+
+    <!-- Share Template Dialog -->
+    <ShareTemplateDialog
+      v-if="shareTemplateId"
+      v-model="isShareDialogOpen"
+      :template-id="shareTemplateId"
+      @shared="onTemplateShared"
+    />
   </div>
 </template>
 
@@ -165,6 +235,7 @@ import { useQuasar } from 'quasar'
 import { useTemplatesStore } from 'src/stores/templates'
 import { useNotificationStore } from 'src/stores/notification'
 import TemplateCard from 'src/components/TemplateCard.vue'
+import ShareTemplateDialog from 'src/components/ShareTemplateDialog.vue'
 import type { Template } from 'src/api'
 
 const router = useRouter()
@@ -174,6 +245,8 @@ const notificationsStore = useNotificationStore()
 
 const searchQuery = ref('')
 const sortBy = ref('name')
+const isShareDialogOpen = ref(false)
+const shareTemplateId = ref<string | null>(null)
 
 const sortOptions = [
   { label: 'Name', value: 'name' },
@@ -183,8 +256,10 @@ const sortOptions = [
 ]
 
 const isLoading = computed(() => templatesStore.isLoading && templatesStore.templates.length === 0)
-const filteredAndSortedTemplates = computed(() => {
-  let filtered = templatesStore.templates
+
+// Helper function to filter and sort templates
+function filterAndSortTemplates(templates: Template[]) {
+  let filtered = templates
 
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
@@ -207,6 +282,14 @@ const filteredAndSortedTemplates = computed(() => {
         return a.name.localeCompare(b.name)
     }
   })
+}
+
+const filteredAndSortedOwnedTemplates = computed(() => {
+  return filterAndSortTemplates(templatesStore.ownedTemplates)
+})
+
+const filteredAndSortedSharedTemplates = computed(() => {
+  return filterAndSortTemplates(templatesStore.sharedTemplates)
 })
 
 function goToNewTemplate(): void {
@@ -235,6 +318,17 @@ function deleteTemplate(template: Template): void {
     templatesStore.removeTemplate(template.id)
     notificationsStore.showSuccess('Template deleted successfully')
   })
+}
+
+function openShareDialog(templateId: string): void {
+  shareTemplateId.value = templateId
+  isShareDialogOpen.value = true
+}
+
+function onTemplateShared(): void {
+  // Optional: Add any logic after successful sharing
+  // For example, show a success message
+  notificationsStore.showSuccess('Template shared successfully')
 }
 
 onMounted(async () => {

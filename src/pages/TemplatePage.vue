@@ -225,6 +225,14 @@
                   @click="goBack"
                 />
                 <q-btn
+                  v-if="!isNewTemplate && isOwner"
+                  flat
+                  label="Share"
+                  color="primary"
+                  icon="eva-share-outline"
+                  @click="openShareDialog"
+                />
+                <q-btn
                   color="primary"
                   label="Save Template"
                   type="submit"
@@ -241,6 +249,14 @@
         </div>
       </div>
     </div>
+
+    <!-- Share Template Dialog -->
+    <ShareTemplateDialog
+      v-if="routeTemplateId"
+      v-model="isShareDialogOpen"
+      :template-id="routeTemplateId"
+      @shared="onTemplateShared"
+    />
   </div>
 </template>
 
@@ -250,6 +266,7 @@ import { useRoute, useRouter } from 'vue-router'
 import type { QForm } from 'quasar'
 
 import TemplateCategory from 'src/components/TemplateCategory.vue'
+import ShareTemplateDialog from 'src/components/ShareTemplateDialog.vue'
 import { useTemplatesStore } from 'src/stores/templates'
 import { useCategoriesStore } from 'src/stores/categories'
 import { useUserStore } from 'src/stores/user'
@@ -277,6 +294,7 @@ const {
 const templateForm = ref<QForm | null>(null)
 const isLoading = ref(false)
 const currentTemplate = ref<TemplateWithCategories | null>(null)
+const isShareDialogOpen = ref(false)
 const form = ref({
   name: '',
   duration: 'monthly' as string,
@@ -286,6 +304,10 @@ const isNewTemplate = computed(() => route.name === 'new-template')
 const routeTemplateId = computed(() =>
   typeof route.params.id === 'string' ? route.params.id : null,
 )
+const isOwner = computed(() => {
+  if (!currentTemplate.value || !userStore.userProfile) return false
+  return currentTemplate.value.owner_id === userStore.userProfile.id
+})
 
 // Get currency for the template - user preference for new, stored value for existing
 const templateCurrency = computed((): CurrencyCode => {
@@ -401,6 +423,15 @@ async function loadTemplate(): Promise<void> {
   }, [] as TemplateCategoryItem[])
 
   loadCategoryItems(items)
+}
+
+function openShareDialog(): void {
+  isShareDialogOpen.value = true
+}
+
+function onTemplateShared(): void {
+  // Optional: Add any logic after successful sharing
+  // For example, show a success message or reload template shares
 }
 
 onMounted(async () => {

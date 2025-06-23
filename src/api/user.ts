@@ -18,6 +18,12 @@ export const DEFAULT_PREFERENCES: CompleteUserPreferences = {
   currency: 'EUR',
 } as const
 
+export type UserSearchResult = {
+  id: string
+  name: string | null
+  email: string
+}
+
 async function getUserById(userId: string): Promise<Tables<'users'> | null> {
   const { data, error } = await supabase.from('users').select('*').eq('id', userId).maybeSingle()
 
@@ -45,4 +51,18 @@ export async function saveUserPreferences(
   const { error } = await supabase.from('users').update(updateData).eq('id', userId)
 
   if (error) throw error
+}
+
+export async function searchUsersByEmail(query: string): Promise<UserSearchResult[]> {
+  if (!query.trim()) return []
+
+  const { data, error } = await supabase
+    .from('users')
+    .select('id, name, email')
+    .ilike('email', `%${query.trim()}%`)
+    .limit(10)
+    .order('email')
+
+  if (error) throw error
+  return data || []
 }

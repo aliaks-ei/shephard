@@ -24,6 +24,16 @@
               >
                 {{ template.duration }}
               </q-chip>
+              <q-chip
+                v-if="!isOwner"
+                outline
+                color="secondary"
+                size="sm"
+                icon="eva-people-outline"
+                class="q-px-sm"
+              >
+                Shared
+              </q-chip>
             </div>
           </div>
           <div class="col-2 text-right">
@@ -57,6 +67,22 @@
                     </q-item-section>
                   </q-item>
                   <q-item
+                    v-if="isOwner"
+                    clickable
+                    @click="shareTemplate"
+                  >
+                    <q-item-section side>
+                      <q-icon
+                        name="eva-share-outline"
+                        size="18px"
+                      />
+                    </q-item-section>
+                    <q-item-section>
+                      <q-item-label>Share Template</q-item-label>
+                    </q-item-section>
+                  </q-item>
+                  <q-item
+                    v-if="isOwner"
                     clickable
                     class="text-negative q-px-md"
                     @click="deleteTemplate"
@@ -101,17 +127,24 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
+import { useUserStore } from 'src/stores/user'
 import type { Template } from 'src/api'
 
 const emit = defineEmits<{
   (e: 'edit', id: string): void
   (e: 'delete', template: Template): void
+  (e: 'share', id: string): void
 }>()
 
 const props = defineProps<{
   template: Template
 }>()
+
+const userStore = useUserStore()
+
+const isOwner = computed(() => props.template.owner_id === userStore.userProfile?.id)
 
 function editTemplate(): void {
   emit('edit', props.template.id)
@@ -119,6 +152,10 @@ function editTemplate(): void {
 
 function deleteTemplate(): void {
   emit('delete', props.template)
+}
+
+function shareTemplate(): void {
+  emit('share', props.template.id)
 }
 
 function formatAmount(amount: number | null | undefined): string {
