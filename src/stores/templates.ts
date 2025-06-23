@@ -16,7 +16,7 @@ import {
   searchUsersByEmail,
   type TemplateInsert,
   type TemplateUpdate,
-  type Template,
+  type TemplateWithPermission,
   type TemplateCategoryInsert,
   type TemplateSharedUser,
   type UserSearchResult,
@@ -29,7 +29,7 @@ export const useTemplatesStore = defineStore('templates', () => {
   const { handleError } = useError()
   const userStore = useUserStore()
 
-  const templates = ref<Template[]>([])
+  const templates = ref<TemplateWithPermission[]>([])
   const isLoading = ref(false)
   const isSharing = ref(false)
   const sharedUsers = ref<TemplateSharedUser[]>([])

@@ -236,7 +236,7 @@ import { useTemplatesStore } from 'src/stores/templates'
 import { useNotificationStore } from 'src/stores/notification'
 import TemplateCard from 'src/components/TemplateCard.vue'
 import ShareTemplateDialog from 'src/components/ShareTemplateDialog.vue'
-import type { Template } from 'src/api'
+import type { TemplateWithPermission } from 'src/api'
 
 const router = useRouter()
 const $q = useQuasar()
@@ -258,7 +258,7 @@ const sortOptions = [
 const isLoading = computed(() => templatesStore.isLoading && templatesStore.templates.length === 0)
 
 // Helper function to filter and sort templates
-function filterAndSortTemplates(templates: Template[]) {
+function filterAndSortTemplates(templates: TemplateWithPermission[]) {
   let filtered = templates
 
   if (searchQuery.value) {
@@ -300,7 +300,7 @@ function viewTemplate(id: string): void {
   router.push({ name: 'template', params: { id } })
 }
 
-function deleteTemplate(template: Template): void {
+function deleteTemplate(template: TemplateWithPermission): void {
   $q.dialog({
     title: 'Delete Template',
     message: `Are you sure you want to delete "${template.name}"? This action cannot be undone.`,

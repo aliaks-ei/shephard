@@ -14,7 +14,7 @@
             <div class="text-h6 text-weight-bold q-mb-xs">
               {{ template.name }}
             </div>
-            <div class="row items-center q-gutter-sm">
+            <div class="row items-center q-gutter-xs">
               <q-chip
                 outline
                 color="primary"
@@ -32,7 +32,17 @@
                 icon="eva-people-outline"
                 class="q-px-sm"
               >
-                Shared
+                shared
+              </q-chip>
+              <q-chip
+                v-if="!isOwner && template.permission_level"
+                outline
+                :color="getPermissionColor(template.permission_level)"
+                size="sm"
+                :icon="getPermissionIcon(template.permission_level)"
+                class="q-px-sm"
+              >
+                {{ getPermissionText(template.permission_level) }}
               </q-chip>
             </div>
           </div>
@@ -130,16 +140,16 @@
 import { computed } from 'vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import { useUserStore } from 'src/stores/user'
-import type { Template } from 'src/api'
+import type { TemplateWithPermission } from 'src/api'
 
 const emit = defineEmits<{
   (e: 'edit', id: string): void
-  (e: 'delete', template: Template): void
+  (e: 'delete', template: TemplateWithPermission): void
   (e: 'share', id: string): void
 }>()
 
 const props = defineProps<{
-  template: Template
+  template: TemplateWithPermission
 }>()
 
 const userStore = useUserStore()
@@ -161,5 +171,38 @@ function shareTemplate(): void {
 function formatAmount(amount: number | null | undefined): string {
   const currency = props.template.currency as CurrencyCode
   return formatCurrency(amount, currency)
+}
+
+function getPermissionText(permission: string): string {
+  switch (permission) {
+    case 'view':
+      return 'view only'
+    case 'edit':
+      return 'can edit'
+    default:
+      return 'unknown'
+  }
+}
+
+function getPermissionColor(permission: string): string {
+  switch (permission) {
+    case 'view':
+      return 'warning'
+    case 'edit':
+      return 'positive'
+    default:
+      return 'grey'
+  }
+}
+
+function getPermissionIcon(permission: string): string {
+  switch (permission) {
+    case 'view':
+      return 'eva-eye-outline'
+    case 'edit':
+      return 'eva-edit-outline'
+    default:
+      return 'eva-question-mark-outline'
+  }
 }
 </script>

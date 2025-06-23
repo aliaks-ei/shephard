@@ -12,6 +12,10 @@ export type TemplateWithCategories = Template & {
   template_categories: Tables<'template_categories'>[]
 }
 
+export type TemplateWithPermission = Template & {
+  permission_level?: string
+}
+
 export type TemplateSharedUser = {
   user_id: string
   user_name: string
@@ -27,32 +31,40 @@ export type TemplateCategoryItem = {
   color: string
 }
 
-export async function getTemplates(userId: string): Promise<Template[]> {
-  // Get shared template IDs first
-  const { data: sharedTemplateIds, error: shareError } = await supabase
+export async function getTemplates(userId: string): Promise<TemplateWithPermission[]> {
+  const { data: ownedTemplates, error: ownedError } = await supabase
+    .from('templates')
+    .select('*')
+    .eq('owner_id', userId)
+    .order('created_at', { ascending: false })
+
+  if (ownedError) throw ownedError
+
+  const { data: sharedTemplatesData, error: sharedError } = await supabase
     .from('template_shares')
-    .select('template_id')
+    .select(
+      `
+      permission_level,
+      templates (*)
+    `,
+    )
     .eq('shared_with_user_id', userId)
 
-  if (shareError) throw shareError
+  if (sharedError) throw sharedError
 
-  const sharedIds = (sharedTemplateIds || []).map((s) => s.template_id)
+  const sharedTemplates = (sharedTemplatesData || []).map((share) => ({
+    ...share.templates,
+    permission_level: share.permission_level,
+  })) as TemplateWithPermission[]
 
-  // Build the query conditions
-  let query = supabase.from('templates').select('*')
+  const allTemplates = [
+    ...(ownedTemplates || []).map((template) => ({ ...template }) as TemplateWithPermission),
+    ...sharedTemplates,
+  ]
 
-  if (sharedIds.length > 0) {
-    // If there are shared templates, get both owned and shared
-    query = query.or(`owner_id.eq.${userId},id.in.(${sharedIds.join(',')})`)
-  } else {
-    // If no shared templates, just get owned templates
-    query = query.eq('owner_id', userId)
-  }
-
-  const { data, error } = await query.order('created_at', { ascending: false })
-
-  if (error) throw error
-  return data || []
+  return allTemplates.sort(
+    (a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime(),
+  )
 }
 
 export async function createTemplate(template: TemplateInsert): Promise<Template> {
