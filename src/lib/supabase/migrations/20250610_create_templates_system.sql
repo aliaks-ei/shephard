@@ -88,8 +88,14 @@ FOR SELECT USING (
   )
 );
 
-CREATE POLICY "Users can modify owned templates" ON templates
-FOR ALL USING (owner_id = auth.uid());
+CREATE POLICY "Users can modify owned templates and shared templates with edit permission" ON templates
+FOR ALL USING (
+  owner_id = auth.uid() OR
+  id IN (
+    SELECT template_id FROM template_shares 
+    WHERE shared_with_user_id = auth.uid() AND permission_level = 'edit'
+  )
+);
 
 -- RLS Policies for categories
 CREATE POLICY "Users can view their categories and system categories" ON categories
