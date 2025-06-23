@@ -1,9 +1,6 @@
 <template>
   <q-item class="items-center">
-    <q-item-section
-      avatar
-      top
-    >
+    <q-item-section thumbnail>
       <q-avatar
         size="md"
         :style="{ backgroundColor: modelValue.color }"
@@ -20,16 +17,14 @@
         option-value="id"
         option-label="name"
         label="Select category"
+        class="q-px-none"
         outlined
         emit-value
         map-options
-        hide-bottom-space
+        item-aligned
         :rules="[(val) => !!val || 'Category is required']"
         @update:model-value="updateCategorySelection($event)"
       >
-        <template #prepend>
-          <q-icon name="eva-grid-outline" />
-        </template>
         <template #selected>
           <span>{{ getCategoryName(modelValue.categoryId) }}</span>
         </template>
@@ -52,19 +47,17 @@
       </q-select>
     </q-item-section>
 
-    <q-item-section
-      style="max-width: 180px"
-      top
-    >
+    <q-item-section style="max-width: 180px">
       <q-input
         :model-value="modelValue.amount"
         type="number"
         min="0"
-        step="0.01"
+        step="1"
         :prefix="currencySymbol"
         label="Amount"
+        class="q-pr-none"
+        item-aligned
         outlined
-        hide-bottom-space
         :rules="[
           (val) => (val !== null && val !== undefined) || 'Amount is required',
           (val) => val > 0 || 'Amount must be greater than 0',
@@ -77,16 +70,12 @@
       </q-input>
     </q-item-section>
 
-    <q-item-section
-      side
-      top
-    >
+    <q-item-section thumbnail>
       <q-btn
         flat
         round
         icon="eva-trash-2-outline"
         color="negative"
-        size="sm"
         @click="emit('remove')"
       >
         <q-tooltip>Remove category</q-tooltip>

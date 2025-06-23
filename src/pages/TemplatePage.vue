@@ -3,7 +3,7 @@
     <div class="row justify-center">
       <div class="col-12 col-md-10 col-lg-8 col-xl-6">
         <!-- Enhanced Header with Toolbar -->
-        <q-toolbar class="q-mb-lg q-pl-none">
+        <q-toolbar class="q-mb-lg q-px-none">
           <q-btn
             flat
             round
@@ -22,13 +22,19 @@
             </div>
           </q-toolbar-title>
 
-          <q-chip
-            v-if="!isNewTemplate"
-            :label="form.duration"
-            color="primary"
-            text-color="white"
-            icon="eva-calendar-outline"
-            class="text-capitalize"
+          <q-skeleton
+            v-if="isLoading"
+            type="QBtn"
+            width="260px"
+          />
+
+          <q-btn-toggle
+            v-else
+            v-model="form.duration"
+            :options="durationToggleOptions"
+            color="grey-4"
+            text-color="grey-8"
+            unelevated
           />
         </q-toolbar>
 
@@ -95,7 +101,7 @@
               class="q-pa-lg"
             >
               <!-- Basic Information Section -->
-              <div class="q-mb-xl">
+              <div class="q-mb-lg">
                 <div class="text-h6 q-mb-md">
                   <q-icon
                     name="eva-info-outline"
@@ -111,21 +117,12 @@
                   :rules="[(val) => !!val || 'Template name is required']"
                   class="q-mb-md"
                 />
-
-                <div class="text-subtitle2 q-mb-sm">Duration</div>
-                <q-option-group
-                  v-model="form.duration"
-                  :options="durationOptions"
-                  color="primary"
-                  inline
-                  class="q-mb-md"
-                />
               </div>
 
-              <q-separator class="q-mb-xl" />
+              <q-separator class="q-mb-lg" />
 
               <!-- Categories Section -->
-              <div class="q-mb-xl">
+              <div class="q-mb-lg">
                 <div class="row items-center justify-between q-mb-md">
                   <div class="text-h6">
                     <q-icon
@@ -153,11 +150,7 @@
 
                 <!-- Categories List -->
                 <div v-if="categoryItems.length > 0">
-                  <q-list
-                    bordered
-                    separator
-                    class="rounded-borders"
-                  >
+                  <q-list>
                     <TemplateCategory
                       v-for="item in categoryItems"
                       :key="item.id"
@@ -217,14 +210,13 @@
                     {{ formattedTotalAmount }}
                   </div>
                 </div>
-                <div class="text-body2 text-grey-6 q-mt-sm">
+                <div class="text-body2 text-grey-6">
                   Total across {{ categoryItems.length }}
                   {{ categoryItems.length === 1 ? 'category' : 'categories' }}
                 </div>
               </div>
 
               <!-- Action Buttons -->
-              <q-separator class="q-mb-lg" />
               <div class="row q-gutter-md justify-end">
                 <q-btn
                   flat
@@ -308,21 +300,18 @@ const formattedTotalAmount = computed(() =>
   formatCurrency(totalAmount.value, templateCurrency.value),
 )
 
-const durationOptions = [
+const durationToggleOptions = [
   {
     label: 'Weekly',
     value: 'weekly',
-    icon: 'eva-calendar-outline',
   },
   {
     label: 'Monthly',
     value: 'monthly',
-    icon: 'eva-calendar-outline',
   },
   {
     label: 'Yearly',
     value: 'yearly',
-    icon: 'eva-calendar-outline',
   },
 ]
 

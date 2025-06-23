@@ -29,7 +29,7 @@
         >
           <q-card-section>
             <div class="row items-center q-col-gutter-lg">
-              <div class="col-12 col-sm-7">
+              <div class="col-12 col-sm-9">
                 <q-input
                   v-model="searchQuery"
                   outlined
@@ -42,22 +42,10 @@
                   </template>
                 </q-input>
               </div>
-              <div class="col-6 col-sm-3">
-                <q-btn-toggle
-                  v-model="viewMode"
-                  toggle-color="primary"
-                  flat
-                  :options="[
-                    { label: 'Grid', value: 'grid', icon: 'eva-grid-outline' },
-                    { label: 'List', value: 'list', icon: 'eva-list-outline' },
-                  ]"
-                />
-              </div>
-              <div class="col-6 col-sm-2">
+              <div class="col-12 col-sm-3">
                 <q-select
                   v-model="sortBy"
                   outlined
-                  dense
                   :options="sortOptions"
                   label="Sort by"
                   style="min-width: 120px"
@@ -69,11 +57,7 @@
 
         <!-- Loading State with Skeletons -->
         <div v-if="isLoading">
-          <!-- Grid Skeleton -->
-          <div
-            v-if="viewMode === 'grid'"
-            class="row q-col-gutter-lg"
-          >
+          <div class="row q-col-gutter-lg">
             <div
               v-for="n in 6"
               :key="n"
@@ -105,72 +89,20 @@
               </q-card>
             </div>
           </div>
-
-          <!-- List Skeleton -->
-          <div
-            v-else
-            class="column q-gutter-md"
-          >
-            <q-card
-              v-for="n in 6"
-              :key="n"
-              flat
-              bordered
-            >
-              <q-card-section>
-                <q-skeleton
-                  type="text"
-                  width="60%"
-                  height="24px"
-                  class="q-mb-sm"
-                />
-                <q-skeleton
-                  type="text"
-                  width="40%"
-                  height="16px"
-                  class="q-mb-md"
-                />
-                <q-skeleton
-                  type="text"
-                  width="80%"
-                  height="16px"
-                />
-              </q-card-section>
-            </q-card>
-          </div>
         </div>
 
-        <!-- Templates Grid/List -->
-        <div v-else-if="filteredAndSortedTemplates.length > 0">
-          <!-- Grid View -->
+        <!-- Templates Grid -->
+        <div
+          v-else-if="filteredAndSortedTemplates.length > 0"
+          class="row q-col-gutter-lg"
+        >
           <div
-            v-if="viewMode === 'grid'"
-            class="row q-col-gutter-lg"
-          >
-            <div
-              v-for="template in filteredAndSortedTemplates"
-              :key="template.id"
-              class="col-12 col-sm-6 col-lg-4 col-xl-3"
-            >
-              <TemplateCard
-                :template="template"
-                :view-mode="viewMode"
-                @edit="viewTemplate"
-                @delete="deleteTemplate"
-              />
-            </div>
-          </div>
-
-          <!-- List View -->
-          <div
-            v-else
-            class="column q-gutter-md"
+            v-for="template in filteredAndSortedTemplates"
+            :key="template.id"
+            class="col-12 col-sm-6 col-lg-4 col-xl-3"
           >
             <TemplateCard
-              v-for="template in filteredAndSortedTemplates"
-              :key="template.id"
               :template="template"
-              :view-mode="viewMode"
               @edit="viewTemplate"
               @delete="deleteTemplate"
             />
@@ -257,7 +189,6 @@ const templatesStore = useTemplatesStore()
 const notificationsStore = useNotificationStore()
 
 const searchQuery = ref('')
-const viewMode = ref<'grid' | 'list'>('grid')
 const sortBy = ref('name')
 
 const sortOptions = [
