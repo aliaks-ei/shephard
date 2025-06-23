@@ -1,74 +1,102 @@
 <template>
   <q-card
-    class="cursor-pointer"
     flat
     bordered
-    @click="editTemplate"
   >
-    <q-card-section class="q-pb-sm">
-      <div class="row items-start justify-between q-mb-sm">
-        <div class="col-10">
-          <div class="text-h5 text-primary text-weight-medium q-mb-xs">
-            {{ template.name }}
+    <q-item
+      clickable
+      class="q-pa-md"
+      @click="editTemplate"
+    >
+      <q-item-section>
+        <div class="row items-start justify-between">
+          <div class="col-10">
+            <div class="text-h6 text-weight-bold q-mb-xs">
+              {{ template.name }}
+            </div>
+            <div class="row items-center q-gutter-sm">
+              <q-chip
+                outline
+                color="primary"
+                size="sm"
+                icon="eva-clock-outline"
+                class="q-px-sm"
+              >
+                {{ template.duration }}
+              </q-chip>
+            </div>
           </div>
-          <div class="text-body2 text-grey-6 q-mt-xs">
-            <q-icon
-              name="eva-clock-outline"
-              size="16px"
-              class="q-mr-xs"
-            />
-            {{ template.duration }}
+          <div class="col-2 text-right">
+            <q-btn
+              flat
+              round
+              size="sm"
+              icon="eva-more-vertical-outline"
+              class="text-grey-6"
+              @click.stop
+            >
+              <q-menu
+                auto-close
+                anchor="bottom right"
+                self="top right"
+                :offset="[0, 8]"
+              >
+                <q-list separator>
+                  <q-item
+                    clickable
+                    @click="editTemplate"
+                  >
+                    <q-item-section side>
+                      <q-icon
+                        name="eva-edit-outline"
+                        size="18px"
+                      />
+                    </q-item-section>
+                    <q-item-section>
+                      <q-item-label>Edit Template</q-item-label>
+                    </q-item-section>
+                  </q-item>
+                  <q-item
+                    clickable
+                    class="text-negative q-px-md"
+                    @click="deleteTemplate"
+                  >
+                    <q-item-section side>
+                      <q-icon
+                        name="eva-trash-2-outline"
+                        color="negative"
+                        size="18px"
+                      />
+                    </q-item-section>
+                    <q-item-section>
+                      <q-item-label>Delete Template</q-item-label>
+                    </q-item-section>
+                  </q-item>
+                </q-list>
+              </q-menu>
+            </q-btn>
           </div>
         </div>
-        <div class="col-2 text-right">
-          <q-btn
-            flat
-            round
-            size="sm"
-            icon="eva-more-vertical-outline"
-            class="template-card__menu-btn"
-            @click.stop
-          >
-            <q-menu auto-close>
-              <q-list style="min-width: 120px">
-                <q-item
-                  clickable
-                  @click="editTemplate"
-                >
-                  <q-item-section avatar>
-                    <q-icon
-                      name="eva-edit-outline"
-                      color="primary"
-                    />
-                  </q-item-section>
-                  <q-item-section>Edit</q-item-section>
-                </q-item>
-                <q-separator />
-                <q-item
-                  clickable
-                  class="text-negative"
-                  @click="deleteTemplate"
-                >
-                  <q-item-section avatar>
-                    <q-icon name="eva-trash-2-outline" />
-                  </q-item-section>
-                  <q-item-section>Delete</q-item-section>
-                </q-item>
-              </q-list>
-            </q-menu>
-          </q-btn>
+
+        <div class="q-mt-md">
+          <div class="row items-end justify-between">
+            <div class="col">
+              <div class="text-caption text-grey-6 q-mb-xs">Total Amount</div>
+              <div class="text-h5 text-weight-bold text-primary">
+                {{ formatAmount(template.total) }}
+              </div>
+            </div>
+            <div class="col-auto">
+              <q-icon
+                name="eva-arrow-forward-outline"
+                size="20px"
+                color="grey-5"
+              />
+            </div>
+          </div>
         </div>
-      </div>
-    </q-card-section>
-
-    <q-separator />
-
-    <q-card-section class="q-py-md">
-      <div class="text-caption text-grey-6">Total Amount</div>
-      <div class="text-h5 text-weight-medium text-positive">
-        {{ formatAmount(template.total) }}
-      </div>
-    </q-card-section>
+      </q-item-section>
+    </q-item>
   </q-card>
 </template>
 
