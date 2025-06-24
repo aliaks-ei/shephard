@@ -58,10 +58,12 @@ export const useTemplatesStore = defineStore('templates', () => {
   }
 
   async function loadTemplateWithItems(templateId: string) {
+    if (!userId.value) return null
+
     isLoading.value = true
 
     try {
-      const data = await getTemplateWithCategories(templateId)
+      const data = await getTemplateWithCategories(templateId, userId.value)
 
       return data
     } catch (error) {

@@ -14,11 +14,11 @@
           <q-toolbar-title>
             <div class="row items-center">
               <q-icon
-                :name="isNewTemplate ? 'eva-plus-circle-outline' : 'eva-edit-outline'"
+                :name="pageIcon"
                 size="sm"
                 class="q-mr-sm"
               />
-              {{ isNewTemplate ? 'Create Template' : 'Edit Template' }}
+              {{ pageTitle }}
             </div>
           </q-toolbar-title>
 
@@ -29,12 +29,22 @@
           />
 
           <q-btn-toggle
-            v-else
+            v-else-if="canEdit"
             v-model="form.duration"
             :options="durationToggleOptions"
             color="grey-4"
             text-color="grey-8"
             unelevated
+          />
+
+          <q-chip
+            v-else
+            :label="form.duration"
+            color="grey-4"
+            text-color="grey-8"
+            class="text-capitalize"
+            :ripple="false"
+            square
           />
         </q-toolbar>
 
@@ -49,10 +59,22 @@
             to="/templates"
           />
           <q-breadcrumbs-el
-            :label="isNewTemplate ? 'New Template' : 'Edit Template'"
-            :icon="isNewTemplate ? 'eva-plus-outline' : 'eva-edit-outline'"
+            :label="breadcrumbLabel"
+            :icon="breadcrumbIcon"
           />
         </q-breadcrumbs>
+
+        <!-- Read-Only Mode Banner -->
+        <q-banner
+          v-if="isReadOnlyMode"
+          class="bg-orange-1 text-orange-8 q-mb-lg"
+          rounded
+        >
+          <template #avatar>
+            <q-icon name="eva-eye-outline" />
+          </template>
+          You're viewing this template in read-only mode. Contact the owner for edit access.
+        </q-banner>
 
         <!-- Loading State -->
         <div v-if="isLoading">
@@ -91,6 +113,7 @@
         <!-- Enhanced Template Form -->
         <div v-else>
           <q-form
+            v-if="canEdit"
             ref="templateForm"
             @submit="saveTemplate"
           >
@@ -246,6 +269,112 @@
               </div>
             </q-card>
           </q-form>
+
+          <!-- Read-Only View -->
+          <q-card
+            v-else
+            flat
+            bordered
+            class="q-pa-lg"
+          >
+            <!-- Basic Information Section -->
+            <div class="q-mb-lg">
+              <div class="text-h6 q-mb-md">
+                <q-icon
+                  name="eva-info-outline"
+                  class="q-mr-sm"
+                />
+                Basic Information
+              </div>
+
+              <q-input
+                v-model="form.name"
+                label="Template Name"
+                outlined
+                readonly
+                class="q-mb-md"
+              />
+            </div>
+
+            <q-separator class="q-mb-lg" />
+
+            <!-- Categories Section -->
+            <div class="q-mb-lg">
+              <div class="row items-center justify-between q-mb-md">
+                <div class="text-h6">
+                  <q-icon
+                    name="eva-grid-outline"
+                    class="q-mr-sm"
+                  />
+                  Categories
+                  <q-chip
+                    v-if="categoryItems.length > 0"
+                    :label="categoryItems.length"
+                    color="primary"
+                    text-color="white"
+                    size="sm"
+                    class="q-ml-sm"
+                  />
+                </div>
+              </div>
+
+              <!-- Categories List -->
+              <div v-if="categoryItems.length > 0">
+                <q-list>
+                  <TemplateCategory
+                    v-for="item in categoryItems"
+                    :key="item.id"
+                    :model-value="item"
+                    :category-options="getAvailableCategoriesForItem(item.id)"
+                    :currency="templateCurrency"
+                    :readonly="true"
+                    @update:model-value="(updatedItem) => updateCategoryItem(item.id, updatedItem)"
+                    @remove="removeCategoryItem(item.id)"
+                  />
+                </q-list>
+              </div>
+
+              <!-- Enhanced Empty State -->
+              <div
+                v-else
+                class="text-center q-py-xl"
+              >
+                <q-icon
+                  name="eva-grid-outline"
+                  size="4rem"
+                  class="text-grey-4 q-mb-md"
+                />
+                <div class="text-h6 q-mb-sm text-grey-6">No categories</div>
+                <div class="text-body2 text-grey-5 q-mb-lg">
+                  This template doesn't have any expense categories yet
+                </div>
+              </div>
+            </div>
+
+            <!-- Total Amount Section -->
+            <div v-if="categoryItems.length > 0">
+              <q-separator class="q-mb-lg" />
+              <div class="row items-center justify-between">
+                <div
+                  class="text-h6"
+                  style="display: flex; align-items: center"
+                >
+                  <q-icon
+                    name="eva-credit-card-outline"
+                    class="q-mr-sm"
+                  />
+                  Total Amount
+                </div>
+                <div class="text-h4 text-primary text-weight-bold">
+                  {{ formattedTotalAmount }}
+                </div>
+              </div>
+              <div class="text-body2 text-grey-6">
+                Total across {{ categoryItems.length }}
+                {{ categoryItems.length === 1 ? 'category' : 'categories' }}
+              </div>
+            </div>
+          </q-card>
         </div>
       </div>
     </div>
@@ -293,7 +422,7 @@ const {
 
 const templateForm = ref<QForm | null>(null)
 const isLoading = ref(false)
-const currentTemplate = ref<TemplateWithCategories | null>(null)
+const currentTemplate = ref<(TemplateWithCategories & { permission_level?: string }) | null>(null)
 const isShareDialogOpen = ref(false)
 const form = ref({
   name: '',
@@ -307,6 +436,18 @@ const routeTemplateId = computed(() =>
 const isOwner = computed(() => {
   if (!currentTemplate.value || !userStore.userProfile) return false
   return currentTemplate.value.owner_id === userStore.userProfile.id
+})
+
+const isReadOnlyMode = computed(() => {
+  if (isNewTemplate.value) return false
+  if (isOwner.value) return false
+  return currentTemplate.value?.permission_level === 'view'
+})
+
+const canEdit = computed(() => {
+  if (isNewTemplate.value) return true
+  if (isOwner.value) return true
+  return currentTemplate.value?.permission_level === 'edit'
 })
 
 // Get currency for the template - user preference for new, stored value for existing
@@ -336,6 +477,30 @@ const durationToggleOptions = [
     value: 'yearly',
   },
 ]
+
+const pageTitle = computed(() => {
+  if (isNewTemplate.value) return 'Create Template'
+  if (isReadOnlyMode.value) return 'View Template'
+  return 'Edit Template'
+})
+
+const pageIcon = computed(() => {
+  if (isNewTemplate.value) return 'eva-plus-circle-outline'
+  if (isReadOnlyMode.value) return 'eva-eye-outline'
+  return 'eva-edit-outline'
+})
+
+const breadcrumbLabel = computed(() => {
+  if (isNewTemplate.value) return 'New Template'
+  if (isReadOnlyMode.value) return 'View Template'
+  return 'Edit Template'
+})
+
+const breadcrumbIcon = computed(() => {
+  if (isNewTemplate.value) return 'eva-plus-outline'
+  if (isReadOnlyMode.value) return 'eva-eye-outline'
+  return 'eva-edit-outline'
+})
 
 function goBack(): void {
   router.push({ name: 'templates' })

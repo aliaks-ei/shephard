@@ -94,8 +94,9 @@ export async function deleteTemplate(id: string): Promise<void> {
 
 export async function getTemplateWithCategories(
   templateId: string,
-): Promise<TemplateWithCategories | null> {
-  const { data, error } = await supabase
+  userId: string,
+): Promise<(TemplateWithCategories & { permission_level?: string }) | null> {
+  const { data: template, error } = await supabase
     .from('templates')
     .select(
       `
@@ -107,7 +108,32 @@ export async function getTemplateWithCategories(
     .maybeSingle()
 
   if (error) throw error
-  return data
+  if (!template) return null
+
+  // If user is the owner, no need to check permissions
+  if (template.owner_id === userId) {
+    return template
+  }
+
+  // Check if template is shared with this user and get permission level
+  const { data: share, error: shareError } = await supabase
+    .from('template_shares')
+    .select('permission_level')
+    .eq('template_id', templateId)
+    .eq('shared_with_user_id', userId)
+    .maybeSingle()
+
+  if (shareError) throw shareError
+
+  // If not shared with user, they shouldn't have access
+  if (!share) {
+    throw new Error('Template not found or access denied')
+  }
+
+  return {
+    ...template,
+    permission_level: share.permission_level,
+  }
 }
 
 export async function getTemplateSharedUsers(templateId: string): Promise<TemplateSharedUser[]> {

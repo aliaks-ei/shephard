@@ -22,7 +22,8 @@
         emit-value
         map-options
         item-aligned
-        :rules="[(val) => !!val || 'Category is required']"
+        :readonly="readonly"
+        :rules="readonly ? [] : [(val) => !!val || 'Category is required']"
         @update:model-value="updateCategorySelection($event)"
       >
         <template #selected>
@@ -58,10 +59,15 @@
         class="q-pr-none"
         item-aligned
         outlined
-        :rules="[
-          (val) => (val !== null && val !== undefined) || 'Amount is required',
-          (val) => val > 0 || 'Amount must be greater than 0',
-        ]"
+        :readonly="readonly"
+        :rules="
+          readonly
+            ? []
+            : [
+                (val) => (val !== null && val !== undefined) || 'Amount is required',
+                (val) => val > 0 || 'Amount must be greater than 0',
+              ]
+        "
         @update:model-value="updateAmount($event)"
       >
         <template #prepend>
@@ -70,7 +76,10 @@
       </q-input>
     </q-item-section>
 
-    <q-item-section thumbnail>
+    <q-item-section
+      v-if="!readonly"
+      thumbnail
+    >
       <q-btn
         flat
         round
@@ -98,6 +107,7 @@ const props = defineProps<{
   modelValue: TemplateCategoryItem
   categoryOptions: Category[]
   currency: CurrencyCode
+  readonly?: boolean
 }>()
 
 const categoriesStore = useCategoriesStore()
@@ -109,6 +119,8 @@ function getCategoryName(categoryId: string): string {
 }
 
 function updateCategorySelection(categoryId: string): void {
+  if (props.readonly) return
+
   const category = categoriesStore.getCategoryById(categoryId)
   const updatedItem: TemplateCategoryItem = {
     ...props.modelValue,
@@ -119,6 +131,8 @@ function updateCategorySelection(categoryId: string): void {
 }
 
 function updateAmount(amount: string | number | null): void {
+  if (props.readonly) return
+
   const updatedItem: TemplateCategoryItem = {
     ...props.modelValue,
     amount: Number(amount) || 0,

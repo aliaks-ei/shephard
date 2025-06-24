@@ -68,12 +68,12 @@
                   >
                     <q-item-section side>
                       <q-icon
-                        name="eva-edit-outline"
+                        :name="getMenuActionIcon()"
                         size="18px"
                       />
                     </q-item-section>
                     <q-item-section>
-                      <q-item-label>Edit Template</q-item-label>
+                      <q-item-label>{{ getMenuActionText() }}</q-item-label>
                     </q-item-section>
                   </q-item>
                   <q-item
@@ -204,5 +204,17 @@ function getPermissionIcon(permission: string): string {
     default:
       return 'eva-question-mark-outline'
   }
+}
+
+function getMenuActionText(): string {
+  if (isOwner.value) return 'Edit Template'
+  if (props.template.permission_level === 'edit') return 'Edit Template'
+  return 'View Template'
+}
+
+function getMenuActionIcon(): string {
+  if (isOwner.value) return 'eva-edit-outline'
+  if (props.template.permission_level === 'edit') return 'eva-edit-outline'
+  return 'eva-eye-outline'
 }
 </script>
