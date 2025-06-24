@@ -25,6 +25,16 @@
                 {{ template.duration }}
               </q-chip>
               <q-chip
+                v-if="isOwner && hasShares"
+                outline
+                color="positive"
+                size="sm"
+                icon="eva-people-outline"
+                class="q-px-sm"
+              >
+                {{ shareText }}
+              </q-chip>
+              <q-chip
                 v-if="!isOwner"
                 outline
                 color="secondary"
@@ -155,6 +165,16 @@ const props = defineProps<{
 const userStore = useUserStore()
 
 const isOwner = computed(() => props.template.owner_id === userStore.userProfile?.id)
+
+const hasShares = computed(() => {
+  return isOwner.value && (props.template.share_count ?? 0) > 0
+})
+
+const shareText = computed(() => {
+  const count = props.template.share_count ?? 0
+  if (count === 1) return 'shared with 1 person'
+  return `shared with ${count} people`
+})
 
 function editTemplate(): void {
   emit('edit', props.template.id)

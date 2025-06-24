@@ -595,8 +595,8 @@ function openShareDialog(): void {
 }
 
 function onTemplateShared(): void {
-  // Optional: Add any logic after successful sharing
-  // For example, show a success message or reload template shares
+  // Refresh templates to show updated share counts
+  templatesStore.loadTemplates()
 }
 
 onMounted(async () => {

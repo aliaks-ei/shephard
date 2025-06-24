@@ -169,8 +169,7 @@ export const useTemplatesStore = defineStore('templates', () => {
     try {
       await shareTemplate(templateId, userEmail, permission, userId.value)
 
-      // Reload shares to update the UI
-      await loadTemplateShares(templateId)
+      await Promise.all([loadTemplateShares(templateId), loadTemplates()])
     } catch (error) {
       handleError('TEMPLATES.SHARE_FAILED', error, { templateId, userEmail })
     } finally {
@@ -186,6 +185,9 @@ export const useTemplatesStore = defineStore('templates', () => {
 
       // Remove from local state
       sharedUsers.value = sharedUsers.value.filter((user) => user.user_id !== targetUserId)
+
+      // Refresh templates to update share counts
+      await loadTemplates()
     } catch (error) {
       handleError('TEMPLATES.UNSHARE_FAILED', error, { templateId, targetUserId })
     } finally {

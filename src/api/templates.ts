@@ -14,6 +14,7 @@ export type TemplateWithCategories = Template & {
 
 export type TemplateWithPermission = Template & {
   permission_level?: string
+  share_count?: number
 }
 
 export type TemplateSharedUser = {
@@ -31,6 +32,16 @@ export type TemplateCategoryItem = {
   color: string
 }
 
+export async function getTemplateShareCount(templateId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('template_shares')
+    .select('*', { count: 'exact', head: true })
+    .eq('template_id', templateId)
+
+  if (error) throw error
+  return count || 0
+}
+
 export async function getTemplates(userId: string): Promise<TemplateWithPermission[]> {
   const { data: ownedTemplates, error: ownedError } = await supabase
     .from('templates')
@@ -39,6 +50,23 @@ export async function getTemplates(userId: string): Promise<TemplateWithPermissi
     .order('created_at', { ascending: false })
 
   if (ownedError) throw ownedError
+
+  // Get share counts for owned templates efficiently
+  const ownedTemplatesWithShares = await Promise.all(
+    (ownedTemplates || []).map(async (template) => {
+      const { count, error: countError } = await supabase
+        .from('template_shares')
+        .select('*', { count: 'exact', head: true })
+        .eq('template_id', template.id)
+
+      if (countError) {
+        console.warn('Failed to get share count for template:', template.id, countError)
+        return { ...template, share_count: 0 } as TemplateWithPermission
+      }
+
+      return { ...template, share_count: count || 0 } as TemplateWithPermission
+    }),
+  )
 
   const { data: sharedTemplatesData, error: sharedError } = await supabase
     .from('template_shares')
@@ -57,10 +85,7 @@ export async function getTemplates(userId: string): Promise<TemplateWithPermissi
     permission_level: share.permission_level,
   })) as TemplateWithPermission[]
 
-  const allTemplates = [
-    ...(ownedTemplates || []).map((template) => ({ ...template }) as TemplateWithPermission),
-    ...sharedTemplates,
-  ]
+  const allTemplates = [...ownedTemplatesWithShares, ...sharedTemplates]
 
   return allTemplates.sort(
     (a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime(),

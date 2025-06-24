@@ -33,178 +33,261 @@
 
       <!-- Content -->
       <q-card-section class="q-pt-md">
-        <!-- User Search Section -->
+        <!-- Current Shares Section - Moved to top -->
         <div class="q-mb-lg">
-          <div class="text-subtitle2 q-mb-sm">Add people</div>
+          <div class="text-subtitle2 q-mb-sm">
+            <q-icon
+              name="eva-people-outline"
+              class="q-mr-xs"
+            />
+            People with access
+            <q-chip
+              v-if="!isLoadingShares && templatesStore.sharedUsers.length > 0"
+              color="primary"
+              text-color="white"
+              size="sm"
+              class="q-ml-sm"
+            >
+              {{ templatesStore.sharedUsers.length }}
+            </q-chip>
+          </div>
 
-          <!-- Search Input -->
-          <q-input
-            :model-value="searchQuery"
-            label="Search by email address"
-            outlined
-            :loading="templatesStore.isSearchingUsers"
-            @update:model-value="searchUsers"
-          >
-            <template #prepend>
-              <q-icon name="eva-search-outline" />
-            </template>
-          </q-input>
-
-          <!-- Search Results -->
-          <div
-            v-if="filteredSearchResults.length > 0"
-            class="q-mt-sm"
-          >
+          <!-- Loading State -->
+          <div v-if="isLoadingShares">
             <q-list
               bordered
               class="rounded-borders"
             >
               <q-item
-                v-for="user in filteredSearchResults"
-                :key="user.id"
-                clickable
-                @click="selectUser(user)"
+                v-for="n in 2"
+                :key="n"
+                class="q-pa-sm"
               >
+                <q-item-section avatar>
+                  <q-skeleton
+                    type="QAvatar"
+                    size="32px"
+                  />
+                </q-item-section>
+                <q-item-section>
+                  <q-skeleton
+                    type="text"
+                    width="60%"
+                    class="q-mb-xs"
+                  />
+                  <q-skeleton
+                    type="text"
+                    width="80%"
+                    class="q-mb-xs"
+                  />
+                  <q-skeleton
+                    type="text"
+                    width="40%"
+                  />
+                </q-item-section>
+                <q-item-section side>
+                  <div class="row items-center q-gutter-sm">
+                    <q-skeleton
+                      type="QBtn"
+                      width="100px"
+                      height="32px"
+                    />
+                    <q-skeleton
+                      type="QBtn"
+                      width="32px"
+                      height="32px"
+                    />
+                  </div>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </div>
+
+          <!-- Actual Content -->
+          <div v-else-if="templatesStore.sharedUsers.length > 0">
+            <q-list
+              bordered
+              class="rounded-borders"
+            >
+              <q-item
+                v-for="user in templatesStore.sharedUsers"
+                :key="user.user_id"
+                class="q-pa-sm"
+              >
+                <q-item-section avatar>
+                  <q-avatar
+                    color="secondary"
+                    text-color="white"
+                    size="32px"
+                  >
+                    {{ getUserInitial(user.user_email) }}
+                  </q-avatar>
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>{{
+                    user.user_name || getUserDisplayName(user.user_email)
+                  }}</q-item-label>
+                  <q-item-label caption>{{ user.user_email }}</q-item-label>
+                  <q-item-label caption> Shared {{ formatDate(user.shared_at) }} </q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <div class="row items-center q-gutter-sm">
+                    <q-select
+                      :model-value="user.permission_level"
+                      :options="permissionSelectOptions"
+                      outlined
+                      dense
+                      emit-value
+                      map-options
+                      style="min-width: 100px"
+                      @update:model-value="(value) => updateUserPermission(user.user_id, value)"
+                    />
+                    <q-btn
+                      icon="eva-trash-2-outline"
+                      flat
+                      round
+                      size="sm"
+                      color="negative"
+                      @click="confirmRemoveUser(user)"
+                    >
+                      <q-tooltip>Remove access</q-tooltip>
+                    </q-btn>
+                  </div>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </div>
+
+          <!-- Empty State -->
+          <div
+            v-else
+            class="text-center q-py-md text-grey-6"
+          >
+            <q-icon
+              name="eva-people-outline"
+              size="2rem"
+              class="q-mb-sm"
+            />
+            <div>This template is not shared with anyone yet</div>
+          </div>
+        </div>
+
+        <!-- Add People Section -->
+        <div class="q-mb-lg">
+          <div class="text-subtitle2 q-mb-sm">
+            <q-icon
+              name="eva-person-add-outline"
+              class="q-mr-xs"
+            />
+            Add people
+          </div>
+
+          <!-- User Search with QSelect -->
+          <q-select
+            v-model="selectedUsers"
+            :options="searchOptions"
+            use-input
+            use-chips
+            multiple
+            input-debounce="300"
+            label="Search by email address"
+            outlined
+            :loading="templatesStore.isSearchingUsers"
+            @filter="filterUsers"
+          >
+            <template #prepend>
+              <q-icon name="eva-search-outline" />
+            </template>
+
+            <template #option="scope">
+              <q-item v-bind="scope.itemProps">
                 <q-item-section avatar>
                   <q-avatar
                     color="primary"
                     text-color="white"
                     size="32px"
                   >
-                    {{ getUserInitial(user.email) }}
+                    {{ getUserInitial(scope.opt.email) }}
                   </q-avatar>
                 </q-item-section>
                 <q-item-section>
-                  <q-item-label>{{ user.name || getUserDisplayName(user.email) }}</q-item-label>
-                  <q-item-label caption>{{ user.email }}</q-item-label>
-                </q-item-section>
-                <q-item-section side>
-                  <q-btn
-                    icon="eva-plus-outline"
-                    flat
-                    round
-                    size="sm"
-                    color="primary"
-                  />
+                  <q-item-label>{{
+                    scope.opt.name || getUserDisplayName(scope.opt.email)
+                  }}</q-item-label>
+                  <q-item-label caption>{{ scope.opt.email }}</q-item-label>
                 </q-item-section>
               </q-item>
-            </q-list>
-          </div>
+            </template>
 
-          <!-- No Results Message -->
-          <div
-            v-else-if="searchQuery && !templatesStore.isSearchingUsers"
-            class="text-center q-mt-md q-py-md text-grey-6"
-          >
-            <q-icon
-              name="eva-search-outline"
-              size="2rem"
-              class="q-mb-sm"
-            />
-            <div>No users found with that email address</div>
-          </div>
-        </div>
-
-        <!-- Selected Users Section -->
-        <div
-          v-if="selectedUsers.length > 0"
-          class="q-mb-lg"
-        >
-          <div class="text-subtitle2 q-mb-sm">Selected users</div>
-          <q-list
-            bordered
-            class="rounded-borders"
-          >
-            <q-item
-              v-for="user in selectedUsers"
-              :key="user.id"
-            >
-              <q-item-section avatar>
+            <template #selected-item="scope">
+              <q-chip
+                removable
+                dense
+                :tabindex="scope.tabindex"
+                color="primary"
+                text-color="white"
+                @remove="scope.removeAtIndex(scope.index)"
+              >
                 <q-avatar
                   color="primary"
                   text-color="white"
-                  size="32px"
+                  size="20px"
+                  class="q-mr-xs"
                 >
-                  {{ getUserInitial(user.email) }}
+                  {{ getUserInitial(scope.opt.email) }}
                 </q-avatar>
-              </q-item-section>
-              <q-item-section>
-                <q-item-label>{{ user.name || getUserDisplayName(user.email) }}</q-item-label>
-                <q-item-label caption>{{ user.email }}</q-item-label>
-              </q-item-section>
-              <q-item-section side>
-                <q-btn
-                  icon="eva-close-outline"
-                  flat
-                  round
-                  size="sm"
-                  @click="deselectUser(user.id)"
-                />
-              </q-item-section>
-            </q-item>
-          </q-list>
+                {{ scope.opt.name || getUserDisplayName(scope.opt.email) }}
+              </q-chip>
+            </template>
+
+            <template #no-option>
+              <q-item>
+                <q-item-section class="text-center">
+                  <div v-if="templatesStore.isSearchingUsers">
+                    <q-spinner-dots />
+                    <div class="text-grey-6">Searching...</div>
+                  </div>
+                  <div v-else-if="currentSearchQuery && currentSearchQuery.trim()">
+                    <q-icon
+                      name="eva-search-outline"
+                      size="2rem"
+                      class="text-grey-5 q-mb-sm"
+                    />
+                    <div class="text-grey-7">No users found for "{{ currentSearchQuery }}"</div>
+                    <div class="text-caption text-grey-5 q-mt-xs">
+                      Try a different email address
+                    </div>
+                  </div>
+                  <div v-else>
+                    <div class="text-grey-6">Type an email address to search for users</div>
+                  </div>
+                </q-item-section>
+              </q-item>
+            </template>
+          </q-select>
+
+          <!-- Help text -->
+          <div class="text-caption text-grey-6 q-mt-sm">
+            Search for existing users to share this template with
+          </div>
         </div>
 
         <!-- Permission Selection -->
-        <div class="q-mb-lg">
-          <div class="text-subtitle2 q-mb-sm">Access level</div>
+        <div v-if="selectedUsers.length > 0">
+          <div class="text-subtitle2 q-mb-sm">
+            <q-icon
+              name="eva-shield-outline"
+              class="q-mr-xs"
+            />
+            Access level for selected users
+          </div>
           <q-option-group
             v-model="selectedPermission"
             :options="permissionOptions"
             color="primary"
             inline
-            class="q-mt-sm"
+            class="q-mb-lg"
           />
-        </div>
-
-        <!-- Current Shares Section -->
-        <div v-if="templatesStore.sharedUsers.length > 0">
-          <div class="text-subtitle2 q-mb-sm">People with access</div>
-          <q-list
-            bordered
-            class="rounded-borders"
-          >
-            <q-item
-              v-for="user in templatesStore.sharedUsers"
-              :key="user.user_id"
-            >
-              <q-item-section avatar>
-                <q-avatar
-                  color="secondary"
-                  text-color="white"
-                  size="32px"
-                >
-                  {{ getUserInitial(user.user_email) }}
-                </q-avatar>
-              </q-item-section>
-              <q-item-section>
-                <q-item-label>{{
-                  user.user_name || getUserDisplayName(user.user_email)
-                }}</q-item-label>
-                <q-item-label caption>{{ user.user_email }}</q-item-label>
-              </q-item-section>
-              <q-item-section side>
-                <div class="column items-end q-gutter-sm">
-                  <q-option-group
-                    :model-value="user.permission_level"
-                    :options="permissionSelectOptions"
-                    color="primary"
-                    inline
-                    dense
-                    @update:model-value="(value) => updateUserPermission(user.user_id, value)"
-                  />
-                  <q-btn
-                    icon="eva-trash-2-outline"
-                    flat
-                    round
-                    size="sm"
-                    color="negative"
-                    @click="removeUserAccess(user.user_id)"
-                  />
-                </div>
-              </q-item-section>
-            </q-item>
-          </q-list>
         </div>
       </q-card-section>
 
@@ -233,11 +316,12 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
+import { useQuasar, date } from 'quasar'
 import { useTemplatesStore } from 'src/stores/templates'
 import { useUserStore } from 'src/stores/user'
 import { getUserInitial } from 'src/utils/name'
 import { useDebounceFn } from '@vueuse/core'
-import type { UserSearchResult } from 'src/api'
+import type { UserSearchResult, TemplateSharedUser } from 'src/api'
 
 const props = defineProps<{
   templateId: string
@@ -249,17 +333,30 @@ const emit = defineEmits<{
   (e: 'shared'): void
 }>()
 
+const $q = useQuasar()
 const templatesStore = useTemplatesStore()
 const userStore = useUserStore()
 
 // Local state
 const selectedPermission = ref<'view' | 'edit'>('view')
-const searchQuery = ref('')
 const selectedUsers = ref<UserSearchResult[]>([])
 const isLoading = ref(false)
+const currentSearchQuery = ref('')
+const isLoadingShares = ref(false)
 
 // Computed properties
 const currentUserId = computed(() => userStore.userProfile?.id)
+
+// Search options for QSelect
+const searchOptions = computed(() => {
+  return templatesStore.userSearchResults.filter((user) => {
+    const isAlreadyShared = templatesStore.sharedUsers.some((u) => u.user_id === user.id)
+    const isCurrentUser = user.id === currentUserId.value
+    const isAlreadySelected = selectedUsers.value.some((u) => u.id === user.id)
+
+    return !isAlreadyShared && !isCurrentUser && !isAlreadySelected
+  })
+})
 
 // Debounced search
 const debouncedSearch = useDebounceFn(async (query: string) => {
@@ -275,13 +372,35 @@ watch(
   () => props.modelValue,
   async (isOpen) => {
     if (isOpen && props.templateId) {
-      await templatesStore.loadTemplateShares(props.templateId)
+      isLoadingShares.value = true
+      try {
+        await templatesStore.loadTemplateShares(props.templateId)
+      } finally {
+        isLoadingShares.value = false
+      }
     } else {
       // Reset state when closing
       selectedPermission.value = 'view'
-      searchQuery.value = ''
       selectedUsers.value = []
+      currentSearchQuery.value = ''
+      isLoadingShares.value = false
       templatesStore.clearUserSearch()
+    }
+  },
+  { immediate: true },
+)
+
+// Watch for templateId changes while dialog is open
+watch(
+  () => props.templateId,
+  async (newTemplateId) => {
+    if (props.modelValue && newTemplateId) {
+      isLoadingShares.value = true
+      try {
+        await templatesStore.loadTemplateShares(newTemplateId)
+      } finally {
+        isLoadingShares.value = false
+      }
     }
   },
 )
@@ -296,45 +415,43 @@ const permissionSelectOptions = [
   { label: 'Can edit', value: 'edit' },
 ]
 
-// Filtered search results
-const filteredSearchResults = computed(() => {
-  return templatesStore.userSearchResults.filter((user) => {
-    const isAlreadyShared = templatesStore.sharedUsers.some((u) => u.user_id === user.id)
-    const isCurrentUser = user.id === currentUserId.value
-    const isAlreadySelected = selectedUsers.value.some((u) => u.id === user.id)
-
-    return !isAlreadyShared && !isCurrentUser && !isAlreadySelected
-  })
-})
-
 function getUserDisplayName(email: string): string {
   const atIndex = email.indexOf('@')
   return atIndex > 0 ? email.substring(0, atIndex) : email
+}
+
+function formatDate(dateString: string): string {
+  return date.formatDate(dateString, 'MMM D, YYYY')
 }
 
 function closeDialog() {
   emit('update:modelValue', false)
 }
 
-async function searchUsers(query: string | number | null) {
-  if (!query) return
-
-  searchQuery.value = query.toString()
-  await debouncedSearch(query.toString())
+function filterUsers(val: string, update: (fn: () => void) => void) {
+  currentSearchQuery.value = val
+  update(() => {
+    debouncedSearch(val)
+  })
 }
 
-function selectUser(user: UserSearchResult) {
-  const isAlreadySelected = selectedUsers.value.some((u) => u.id === user.id)
-  const isAlreadyShared = templatesStore.sharedUsers.some((u) => u.user_id === user.id)
-  const isCurrentUser = user.id === currentUserId.value
-
-  if (!isAlreadySelected && !isAlreadyShared && !isCurrentUser) {
-    selectedUsers.value.push(user)
-  }
-}
-
-function deselectUser(userId: string) {
-  selectedUsers.value = selectedUsers.value.filter((u) => u.id !== userId)
+function confirmRemoveUser(user: TemplateSharedUser) {
+  $q.dialog({
+    title: 'Remove Access',
+    message: `Are you sure you want to remove access for ${user.user_name || user.user_email}?`,
+    persistent: true,
+    ok: {
+      label: 'Remove',
+      color: 'negative',
+      unelevated: true,
+    },
+    cancel: {
+      label: 'Cancel',
+      flat: true,
+    },
+  }).onOk(() => {
+    removeUserAccess(user.user_id)
+  })
 }
 
 async function handleShare() {
@@ -342,18 +459,29 @@ async function handleShare() {
 
   isLoading.value = true
   try {
-    const promises = selectedUsers.value.map((user) =>
+    const sharePromises = selectedUsers.value.map((user) =>
       templatesStore.shareTemplateWithUser(props.templateId, user.email, selectedPermission.value),
     )
 
-    await Promise.all(promises)
+    await Promise.all(sharePromises)
+
+    // Show success message
+    const userCount = selectedUsers.value.length
+    const userText = userCount === 1 ? 'user' : 'users'
+    $q.notify({
+      type: 'positive',
+      message: `Template shared with ${userCount} ${userText} successfully`,
+      position: 'top',
+    })
 
     // Clear selection after successful sharing
     selectedUsers.value = []
-    searchQuery.value = ''
     templatesStore.clearUserSearch()
 
     emit('shared')
+  } catch (error) {
+    // Error is already handled by the store, but we can add additional UX feedback here
+    console.error('Failed to share template:', error)
   } finally {
     isLoading.value = false
   }
