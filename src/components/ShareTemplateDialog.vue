@@ -465,15 +465,6 @@ async function handleShare() {
 
     await Promise.all(sharePromises)
 
-    // Show success message
-    const userCount = selectedUsers.value.length
-    const userText = userCount === 1 ? 'user' : 'users'
-    $q.notify({
-      type: 'positive',
-      message: `Template shared with ${userCount} ${userText} successfully`,
-      position: 'top',
-    })
-
     // Clear selection after successful sharing
     selectedUsers.value = []
     templatesStore.clearUserSearch()
