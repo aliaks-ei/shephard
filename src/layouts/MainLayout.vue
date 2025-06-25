@@ -44,6 +44,7 @@
       <q-page-sticky
         v-if="$q.screen.gt.sm"
         position="left"
+        class="bg-white"
         expand
       >
         <NavigationDrawer

@@ -5,55 +5,55 @@
   >
     <q-item
       clickable
-      class="q-pa-md"
+      class="full-height q-pa-md"
       @click="editTemplate"
     >
-      <q-item-section>
+      <q-item-section class="justify-between">
         <div class="row items-start justify-between">
           <div class="col-10">
             <div class="text-h6 text-weight-bold q-mb-xs">
               {{ template.name }}
             </div>
             <div class="row items-center q-gutter-xs">
-              <q-chip
-                outline
-                color="primary"
-                size="sm"
-                icon="eva-clock-outline"
-                class="q-px-sm"
-              >
-                {{ template.duration }}
-              </q-chip>
-              <q-chip
+              <q-badge
                 v-if="isOwner && hasShares"
                 outline
                 color="positive"
-                size="sm"
-                icon="eva-people-outline"
-                class="q-px-sm"
+                class="q-px-sm q-py-xs"
               >
+                <q-icon
+                  name="eva-people-outline"
+                  size="12px"
+                  class="q-mr-xs"
+                />
                 {{ shareText }}
-              </q-chip>
-              <q-chip
+              </q-badge>
+              <q-badge
                 v-if="!isOwner"
                 outline
                 color="secondary"
-                size="sm"
-                icon="eva-people-outline"
-                class="q-px-sm"
+                class="q-px-sm q-py-xs"
               >
+                <q-icon
+                  name="eva-people-outline"
+                  size="12px"
+                  class="q-mr-xs"
+                />
                 shared
-              </q-chip>
-              <q-chip
+              </q-badge>
+              <q-badge
                 v-if="!isOwner && template.permission_level"
                 outline
                 :color="getPermissionColor(template.permission_level)"
-                size="sm"
-                :icon="getPermissionIcon(template.permission_level)"
-                class="q-px-sm"
+                class="q-px-sm q-py-xs"
               >
+                <q-icon
+                  :name="getPermissionIcon(template.permission_level)"
+                  size="12px"
+                  class="q-mr-xs"
+                />
                 {{ getPermissionText(template.permission_level) }}
-              </q-chip>
+              </q-badge>
             </div>
           </div>
           <div class="col-2 text-right">
@@ -61,8 +61,9 @@
               flat
               round
               size="sm"
+              dense
               icon="eva-more-vertical-outline"
-              class="text-grey-6"
+              class="text-grey-7"
               @click.stop
             >
               <q-menu
@@ -133,11 +134,18 @@
               </div>
             </div>
             <div class="col-auto">
-              <q-icon
-                name="eva-arrow-forward-outline"
-                size="20px"
-                color="grey-5"
-              />
+              <q-badge
+                color="primary"
+                text-color="white"
+                class="q-px-sm q-py-xs"
+              >
+                <q-icon
+                  name="eva-clock-outline"
+                  size="14px"
+                  class="q-mr-xs"
+                />
+                {{ template.duration }}
+              </q-badge>
             </div>
           </div>
         </div>

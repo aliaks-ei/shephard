@@ -27,7 +27,7 @@
         class="q-mb-md"
       >
         <q-card-section>
-          <div class="row items-center q-col-gutter-lg">
+          <div class="row items-center q-col-gutter-md">
             <div class="col-12 col-sm-9">
               <q-input
                 v-model="searchQuery"
@@ -102,7 +102,7 @@
           class="q-mb-xl"
         >
           <div class="row items-center justify-between q-mb-md">
-            <div class="text-h6 text-weight-medium">
+            <div class="row items-center text-h6 text-weight-medium">
               <q-icon
                 name="eva-person-outline"
                 class="q-mr-sm"
@@ -125,6 +125,7 @@
               class="col-12 col-sm-6 col-lg-4 col-xl-3"
             >
               <TemplateCard
+                class="full-height"
                 :template="template"
                 @edit="viewTemplate"
                 @delete="deleteTemplate"
@@ -137,7 +138,7 @@
         <!-- Shared Templates Section -->
         <div v-if="filteredAndSortedSharedTemplates.length > 0">
           <div class="row items-center justify-between q-mb-md">
-            <div class="text-h6 text-weight-medium">
+            <div class="row items-center text-h6 text-weight-medium">
               <q-icon
                 name="eva-people-outline"
                 class="q-mr-sm"

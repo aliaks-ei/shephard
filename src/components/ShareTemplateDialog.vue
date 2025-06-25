@@ -58,11 +58,7 @@
               bordered
               class="rounded-borders"
             >
-              <q-item
-                v-for="n in 2"
-                :key="n"
-                class="q-pa-sm"
-              >
+              <q-item class="q-py-xs q-px-sm">
                 <q-item-section avatar>
                   <q-skeleton
                     type="QAvatar"
@@ -73,12 +69,10 @@
                   <q-skeleton
                     type="text"
                     width="60%"
-                    class="q-mb-xs"
                   />
                   <q-skeleton
                     type="text"
                     width="80%"
-                    class="q-mb-xs"
                   />
                   <q-skeleton
                     type="text"
@@ -124,9 +118,9 @@
                   </q-avatar>
                 </q-item-section>
                 <q-item-section>
-                  <q-item-label>{{
-                    user.user_name || getUserDisplayName(user.user_email)
-                  }}</q-item-label>
+                  <q-item-label>
+                    {{ user.user_name || getUserDisplayName(user.user_email) }}
+                  </q-item-label>
                   <q-item-label caption>{{ user.user_email }}</q-item-label>
                   <q-item-label caption> Shared {{ formatDate(user.shared_at) }} </q-item-label>
                 </q-item-section>
