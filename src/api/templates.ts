@@ -1,3 +1,4 @@
+import type { PostgrestError } from '@supabase/supabase-js'
 import { supabase } from 'src/lib/supabase/client'
 import type { Tables, TablesInsert, TablesUpdate } from 'src/lib/supabase/types'
 
@@ -31,6 +32,11 @@ export type TemplateCategoryItem = {
   amount: number
   color: string
 }
+
+const isDuplicateNameError = (error: PostgrestError) =>
+  (error.code === '23505' && error.message.includes('unique_template_name_per_user')) ||
+  (error.message && error.message.includes('unique_template_name_per_user')) ||
+  (error.message && error.message.includes('duplicate key value violates unique constraint'))
 
 export async function getTemplateShareCount(templateId: string): Promise<number> {
   const { count, error } = await supabase
@@ -95,7 +101,16 @@ export async function getTemplates(userId: string): Promise<TemplateWithPermissi
 export async function createTemplate(template: TemplateInsert): Promise<Template> {
   const { data, error } = await supabase.from('templates').insert(template).select().single()
 
-  if (error) throw error
+  if (error) {
+    if (isDuplicateNameError(error)) {
+      const duplicateError = new Error('DUPLICATE_TEMPLATE_NAME')
+      duplicateError.name = 'DUPLICATE_TEMPLATE_NAME'
+      throw duplicateError
+    }
+
+    throw error
+  }
+
   return data
 }
 
@@ -107,7 +122,16 @@ export async function updateTemplate(id: string, updates: TemplateUpdate): Promi
     .select()
     .single()
 
-  if (error) throw error
+  if (error) {
+    if (isDuplicateNameError(error)) {
+      const duplicateError = new Error('DUPLICATE_TEMPLATE_NAME')
+      duplicateError.name = 'DUPLICATE_TEMPLATE_NAME'
+      throw duplicateError
+    }
+
+    throw error
+  }
+
   return data
 }
 

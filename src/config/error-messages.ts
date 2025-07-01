@@ -23,6 +23,8 @@ export type ErrorMessageKey =
   | 'TEMPLATES.SHARE_FAILED'
   | 'TEMPLATES.UNSHARE_FAILED'
   | 'TEMPLATES.UPDATE_PERMISSION_FAILED'
+  | 'TEMPLATES.DUPLICATE_NAME'
+  | 'TEMPLATES.NAME_VALIDATION_FAILED'
   | 'CATEGORIES.LOAD_FAILED'
   | 'CATEGORIES.CREATE_FAILED'
   | 'CATEGORIES.UPDATE_FAILED'
@@ -31,6 +33,7 @@ export type ErrorMessageKey =
   | 'TEMPLATE_CATEGORIES.CREATE_FAILED'
   | 'TEMPLATE_CATEGORIES.UPDATE_FAILED'
   | 'TEMPLATE_CATEGORIES.DELETE_FAILED'
+  | 'TEMPLATE_CATEGORIES.VALIDATION_FAILED'
   | 'UNKNOWN'
 
 interface ErrorMessageConfig {
@@ -154,6 +157,16 @@ export const ERROR_MESSAGES: Record<ErrorMessageKey, ErrorMessageConfig> = {
     notify: true,
     log: true,
   },
+  'TEMPLATES.DUPLICATE_NAME': {
+    message: 'You already have a template with this name. Please choose a different name.',
+    notify: true,
+    log: true,
+  },
+  'TEMPLATES.NAME_VALIDATION_FAILED': {
+    message: 'Template name validation failed. Please check your input and try again.',
+    notify: true,
+    log: true,
+  },
   'TEMPLATES.LOAD_SHARES_FAILED': {
     message: "We couldn't load the sharing information. Please refresh or try again later.",
     notify: true,
@@ -218,6 +231,11 @@ export const ERROR_MESSAGES: Record<ErrorMessageKey, ErrorMessageConfig> = {
     message: "We couldn't remove that category from your template. Please try again.",
     notify: true,
     log: true,
+  },
+  'TEMPLATE_CATEGORIES.VALIDATION_FAILED': {
+    message: 'Please add at least one category with a valid amount to create your template.',
+    notify: true,
+    log: false,
   },
 
   // Default error

@@ -400,6 +400,7 @@ import { useTemplatesStore } from 'src/stores/templates'
 import { useCategoriesStore } from 'src/stores/categories'
 import { useUserStore } from 'src/stores/user'
 import { useTemplateCategoryItems } from 'src/composables/useTemplateCategoryItems'
+import { useError } from 'src/composables/useError'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import type { TemplateWithCategories, TemplateCategoryItem } from 'src/api'
 
@@ -408,6 +409,7 @@ const router = useRouter()
 const templatesStore = useTemplatesStore()
 const categoriesStore = useCategoriesStore()
 const userStore = useUserStore()
+const { handleError } = useError()
 const {
   categoryItems,
   totalAmount,
@@ -506,14 +508,14 @@ function goBack(): void {
   router.push({ name: 'templates' })
 }
 
-async function createNewTemplateWithItems(): Promise<void> {
+async function createNewTemplateWithItems(): Promise<boolean> {
   const template = await templatesStore.addTemplate({
     name: form.value.name,
     duration: form.value.duration,
     total: totalAmount.value,
   })
 
-  if (!template) return
+  if (!template) return false
 
   const items = getCategoryItemsForSave().map((item) => ({
     ...item,
@@ -521,10 +523,11 @@ async function createNewTemplateWithItems(): Promise<void> {
   }))
 
   await templatesStore.addCategoriesToTemplate(items)
+  return true
 }
 
-async function updateExistingTemplateWithItems(): Promise<void> {
-  if (!routeTemplateId.value || !currentTemplate.value) return
+async function updateExistingTemplateWithItems(): Promise<boolean> {
+  if (!routeTemplateId.value || !currentTemplate.value) return false
 
   const template = await templatesStore.editTemplate(routeTemplateId.value, {
     name: form.value.name,
@@ -532,7 +535,7 @@ async function updateExistingTemplateWithItems(): Promise<void> {
     total: totalAmount.value,
   })
 
-  if (!template) return
+  if (!template) return false
 
   const existingItemIds = currentTemplate.value.template_categories.map((item) => item.id)
   await templatesStore.removeCategoriesFromTemplate(existingItemIds)
@@ -545,21 +548,32 @@ async function updateExistingTemplateWithItems(): Promise<void> {
   if (items.length > 0) {
     await templatesStore.addCategoriesToTemplate(items)
   }
+
+  return true
 }
 
 async function saveTemplate(): Promise<void> {
   const isValid = await templateForm.value?.validate()
 
   if (!isValid) return
-  if (!validateCategoryItems()) return
 
-  if (isNewTemplate.value) {
-    await createNewTemplateWithItems()
-  } else {
-    await updateExistingTemplateWithItems()
+  if (!validateCategoryItems()) {
+    handleError('TEMPLATE_CATEGORIES.VALIDATION_FAILED', new Error('No valid categories'))
+    return
   }
 
-  goBack()
+  let success = false
+
+  if (isNewTemplate.value) {
+    success = await createNewTemplateWithItems()
+  } else {
+    success = await updateExistingTemplateWithItems()
+  }
+
+  // Only redirect if the save was successful
+  if (success) {
+    goBack()
+  }
 }
 
 async function loadTemplate(): Promise<void> {

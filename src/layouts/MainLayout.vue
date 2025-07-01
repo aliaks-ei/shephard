@@ -44,7 +44,7 @@
       <q-page-sticky
         v-if="$q.screen.gt.sm"
         position="left"
-        class="bg-white"
+        class="navigation-sticky-bg"
         expand
       >
         <NavigationDrawer
@@ -83,6 +83,10 @@ const toggleLeftDrawer = () => {
 </script>
 
 <style lang="scss" scoped>
+.navigation-sticky-bg {
+  background-color: var(--bg-color);
+}
+
 @media (min-width: 1024px) {
   .page-container {
     padding-left: 115px;

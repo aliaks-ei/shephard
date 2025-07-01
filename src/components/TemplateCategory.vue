@@ -27,7 +27,7 @@
         @update:model-value="updateCategorySelection($event)"
       >
         <template #selected>
-          <span>{{ getCategoryName(modelValue.categoryId) }}</span>
+          <span v-if="modelValue.categoryId">{{ getCategoryName(modelValue.categoryId) }}</span>
         </template>
         <template #option="{ opt, itemProps }">
           <q-item v-bind="itemProps">

@@ -91,7 +91,12 @@ export const useTemplatesStore = defineStore('templates', () => {
 
       return newTemplate
     } catch (error) {
-      handleError('TEMPLATES.CREATE_FAILED', error)
+      // Handle specific duplicate name error
+      if (error instanceof Error && error.name === 'DUPLICATE_TEMPLATE_NAME') {
+        handleError('TEMPLATES.DUPLICATE_NAME', error)
+      } else {
+        handleError('TEMPLATES.CREATE_FAILED', error)
+      }
     } finally {
       isLoading.value = false
     }
@@ -105,7 +110,12 @@ export const useTemplatesStore = defineStore('templates', () => {
 
       return updatedTemplate
     } catch (error) {
-      handleError('TEMPLATES.UPDATE_FAILED', error, { templateId })
+      // Handle specific duplicate name error
+      if (error instanceof Error && error.name === 'DUPLICATE_TEMPLATE_NAME') {
+        handleError('TEMPLATES.DUPLICATE_NAME', error, { templateId })
+      } else {
+        handleError('TEMPLATES.UPDATE_FAILED', error, { templateId })
+      }
     } finally {
       isLoading.value = false
     }
