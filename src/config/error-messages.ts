@@ -34,6 +34,8 @@ export type ErrorMessageKey =
   | 'TEMPLATE_CATEGORIES.UPDATE_FAILED'
   | 'TEMPLATE_CATEGORIES.DELETE_FAILED'
   | 'TEMPLATE_CATEGORIES.VALIDATION_FAILED'
+  | 'TEMPLATE_CATEGORIES.DUPLICATE_NAME_CATEGORY'
+  | 'TEMPLATE_CATEGORIES.NAME_REQUIRED'
   | 'UNKNOWN'
 
 interface ErrorMessageConfig {
@@ -217,23 +219,34 @@ export const ERROR_MESSAGES: Record<ErrorMessageKey, ErrorMessageConfig> = {
     log: true,
   },
   'TEMPLATE_CATEGORIES.CREATE_FAILED': {
-    message:
-      "We couldn't add that category to your template. This category might already be added.",
+    message: "We couldn't add that category item to your template. Please try again.",
     notify: true,
     log: true,
   },
   'TEMPLATE_CATEGORIES.UPDATE_FAILED': {
-    message: "We couldn't save your changes. The category might already be used in this template.",
+    message: "We couldn't save your category item changes. Please try again.",
     notify: true,
     log: true,
   },
   'TEMPLATE_CATEGORIES.DELETE_FAILED': {
-    message: "We couldn't remove that category from your template. Please try again.",
+    message: "We couldn't remove that category item from your template. Please try again.",
     notify: true,
     log: true,
   },
   'TEMPLATE_CATEGORIES.VALIDATION_FAILED': {
-    message: 'Please add at least one category with a valid amount to create your template.',
+    message:
+      'Please add at least one category item with a name, category, and valid amount to create your template.',
+    notify: true,
+    log: false,
+  },
+  'TEMPLATE_CATEGORIES.DUPLICATE_NAME_CATEGORY': {
+    message: 'You already have an item with this name. Please choose a different name.',
+    notify: true,
+    log: true,
+  },
+  'TEMPLATE_CATEGORIES.NAME_REQUIRED': {
+    message:
+      'Please add at least one category item with a name, category, and valid amount to create your template.',
     notify: true,
     log: false,
   },

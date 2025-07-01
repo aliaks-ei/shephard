@@ -189,6 +189,7 @@ export type Database = {
           category_id: string
           created_at: string | null
           id: string
+          name: string
           template_id: string
           updated_at: string | null
         }
@@ -197,6 +198,7 @@ export type Database = {
           category_id: string
           created_at?: string | null
           id?: string
+          name: string
           template_id: string
           updated_at?: string | null
         }
@@ -205,6 +207,7 @@ export type Database = {
           category_id?: string
           created_at?: string | null
           id?: string
+          name?: string
           template_id?: string
           updated_at?: string | null
         }

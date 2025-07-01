@@ -165,27 +165,41 @@
                   <q-btn
                     color="primary"
                     icon="eva-plus-outline"
-                    label="Add Category"
+                    label="Add Category Group"
                     unelevated
-                    @click="addCategoryItem"
+                    @click="showCategoryDialog = true"
                   />
                 </div>
 
-                <!-- Categories List -->
+                <!-- Duplicate Items Warning -->
+                <q-banner
+                  v-if="categoryItems.length > 0 && hasDuplicateItems"
+                  class="bg-orange-1 text-orange-8 q-mb-md"
+                  rounded
+                >
+                  <template #avatar>
+                    <q-icon name="eva-alert-triangle-outline" />
+                  </template>
+                  You have duplicate item names within the same category. Please use unique names
+                  for each item.
+                </q-banner>
+
+                <!-- Categories List - Grouped Display Only -->
                 <div v-if="categoryItems.length > 0">
-                  <q-list>
-                    <TemplateCategory
-                      v-for="item in categoryItems"
-                      :key="item.id"
-                      :model-value="item"
-                      :category-options="getAvailableCategoriesForItem(item.id)"
-                      :currency="templateCurrency"
-                      @update:model-value="
-                        (updatedItem) => updateCategoryItem(item.id, updatedItem)
-                      "
-                      @remove="removeCategoryItem(item.id)"
-                    />
-                  </q-list>
+                  <TemplateCategoryGroup
+                    v-for="group in enrichedCategoryGroups"
+                    :key="group.categoryId"
+                    :category-id="group.categoryId"
+                    :category-name="group.categoryName"
+                    :category-color="group.categoryColor"
+                    :items="group.items"
+                    :subtotal="group.subtotal"
+                    :currency="templateCurrency"
+                    :readonly="false"
+                    @update-item="updateCategoryItem"
+                    @remove-item="removeCategoryItem"
+                    @add-item="addItemToGroup"
+                  />
                 </div>
 
                 <!-- Enhanced Empty State -->
@@ -200,14 +214,15 @@
                   />
                   <div class="text-h6 q-mb-sm text-grey-6">No categories yet</div>
                   <div class="text-body2 text-grey-5 q-mb-lg">
-                    Start building your template by adding expense categories with amounts
+                    Start building your template by adding named expense items with categories and
+                    amounts
                   </div>
                   <q-btn
                     color="primary"
                     icon="eva-plus-outline"
-                    label="Add Your First Category"
+                    label="Add Your First Category Group"
                     unelevated
-                    @click="addCategoryItem"
+                    @click="showCategoryDialog = true"
                   />
                 </div>
               </div>
@@ -318,20 +333,21 @@
                 </div>
               </div>
 
-              <!-- Categories List -->
+              <!-- Categories List - Read-only Grouped Display -->
               <div v-if="categoryItems.length > 0">
-                <q-list>
-                  <TemplateCategory
-                    v-for="item in categoryItems"
-                    :key="item.id"
-                    :model-value="item"
-                    :category-options="getAvailableCategoriesForItem(item.id)"
-                    :currency="templateCurrency"
-                    :readonly="true"
-                    @update:model-value="(updatedItem) => updateCategoryItem(item.id, updatedItem)"
-                    @remove="removeCategoryItem(item.id)"
-                  />
-                </q-list>
+                <TemplateCategoryGroup
+                  v-for="group in enrichedCategoryGroups"
+                  :key="group.categoryId"
+                  :category-id="group.categoryId"
+                  :category-name="group.categoryName"
+                  :category-color="group.categoryColor"
+                  :items="group.items"
+                  :subtotal="group.subtotal"
+                  :currency="templateCurrency"
+                  :readonly="true"
+                  @update-item="updateCategoryItem"
+                  @remove-item="removeCategoryItem"
+                />
               </div>
 
               <!-- Enhanced Empty State -->
@@ -346,7 +362,7 @@
                 />
                 <div class="text-h6 q-mb-sm text-grey-6">No categories</div>
                 <div class="text-body2 text-grey-5 q-mb-lg">
-                  This template doesn't have any expense categories yet
+                  This template doesn't have any expense items yet
                 </div>
               </div>
             </div>
@@ -379,6 +395,13 @@
       </div>
     </div>
 
+    <!-- Category Selection Dialog -->
+    <CategorySelectionDialog
+      v-model="showCategoryDialog"
+      :used-category-ids="getUsedCategoryIds()"
+      @category-selected="onCategorySelected"
+    />
+
     <!-- Share Template Dialog -->
     <ShareTemplateDialog
       v-if="routeTemplateId"
@@ -394,7 +417,8 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { QForm } from 'quasar'
 
-import TemplateCategory from 'src/components/TemplateCategory.vue'
+import TemplateCategoryGroup from 'src/components/TemplateCategoryGroup.vue'
+import CategorySelectionDialog from 'src/components/CategorySelectionDialog.vue'
 import ShareTemplateDialog from 'src/components/ShareTemplateDialog.vue'
 import { useTemplatesStore } from 'src/stores/templates'
 import { useCategoriesStore } from 'src/stores/categories'
@@ -402,7 +426,7 @@ import { useUserStore } from 'src/stores/user'
 import { useTemplateCategoryItems } from 'src/composables/useTemplateCategoryItems'
 import { useError } from 'src/composables/useError'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
-import type { TemplateWithCategories, TemplateCategoryItem } from 'src/api'
+import type { TemplateWithCategories, TemplateCategoryItem, Category } from 'src/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -413,19 +437,24 @@ const { handleError } = useError()
 const {
   categoryItems,
   totalAmount,
-  addCategoryItem,
+  hasValidItems,
+  hasDuplicateItems,
+  isValidForSave,
+  categoryGroups,
+  addCategoryGroup,
+  addItemToGroup,
   updateCategoryItem,
   removeCategoryItem,
-  getAvailableCategoriesForItem,
-  validateCategoryItems,
   loadCategoryItems,
   getCategoryItemsForSave,
+  getUsedCategoryIds,
 } = useTemplateCategoryItems()
 
 const templateForm = ref<QForm | null>(null)
 const isLoading = ref(false)
 const currentTemplate = ref<(TemplateWithCategories & { permission_level?: string }) | null>(null)
 const isShareDialogOpen = ref(false)
+const showCategoryDialog = ref(false)
 const form = ref({
   name: '',
   duration: 'monthly' as string,
@@ -504,6 +533,29 @@ const breadcrumbIcon = computed(() => {
   return 'eva-edit-outline'
 })
 
+// Enrich category groups with category names from the store
+const enrichedCategoryGroups = computed(() => {
+  return categoryGroups.value.reduce(
+    (acc, group) => {
+      const category = categoriesStore.getCategoryById(group.categoryId)
+      if (category) {
+        acc.push({
+          ...group,
+          categoryName: category.name,
+          categoryColor: category.color,
+        })
+      }
+      return acc
+    },
+    [] as Array<(typeof categoryGroups.value)[0] & { categoryName: string; categoryColor: string }>,
+  )
+})
+
+// Category selection and management
+function onCategorySelected(category: Category): void {
+  addCategoryGroup(category.id, category.color)
+}
+
 function goBack(): void {
   router.push({ name: 'templates' })
 }
@@ -556,9 +608,15 @@ async function saveTemplate(): Promise<void> {
   const isValid = await templateForm.value?.validate()
 
   if (!isValid) return
-
-  if (!validateCategoryItems()) {
-    handleError('TEMPLATE_CATEGORIES.VALIDATION_FAILED', new Error('No valid categories'))
+  if (!isValidForSave.value) {
+    if (!hasValidItems.value) {
+      handleError('TEMPLATE_CATEGORIES.VALIDATION_FAILED', new Error('No valid categories'))
+    } else if (hasDuplicateItems.value) {
+      handleError(
+        'TEMPLATE_CATEGORIES.DUPLICATE_NAME_CATEGORY',
+        new Error('Duplicate name and category combination'),
+      )
+    }
     return
   }
 
@@ -592,6 +650,7 @@ async function loadTemplate(): Promise<void> {
     if (category) {
       acc.push({
         id: item.id,
+        name: item.name || '',
         categoryId: item.category_id,
         amount: item.amount,
         color: category.color,
@@ -608,8 +667,9 @@ function openShareDialog(): void {
   isShareDialogOpen.value = true
 }
 
+// This function is now handled by the composable
+
 function onTemplateShared(): void {
-  // Refresh templates to show updated share counts
   templatesStore.loadTemplates()
 }
 

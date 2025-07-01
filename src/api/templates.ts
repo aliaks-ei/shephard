@@ -28,6 +28,7 @@ export type TemplateSharedUser = {
 
 export type TemplateCategoryItem = {
   id: string
+  name: string
   categoryId: string
   amount: number
   color: string
