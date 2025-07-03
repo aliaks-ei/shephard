@@ -5,7 +5,7 @@
   >
     <q-card style="min-width: 400px">
       <q-card-section>
-        <div class="text-h6">Add Category Group</div>
+        <div class="text-h6">Add Expense Category</div>
         <div class="text-body2 text-grey-6">Select an existing category or create a new one</div>
       </q-card-section>
 

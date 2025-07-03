@@ -1,13 +1,13 @@
 import { supabase } from 'src/lib/supabase/client'
 import type { Tables, TablesInsert, TablesUpdate } from 'src/lib/supabase/types'
 
-export type Category = Tables<'categories'>
-export type CategoryInsert = TablesInsert<'categories'>
-export type CategoryUpdate = TablesUpdate<'categories'>
+export type ExpenseCategory = Tables<'expense_categories'>
+export type ExpenseCategoryInsert = TablesInsert<'expense_categories'>
+export type ExpenseCategoryUpdate = TablesUpdate<'expense_categories'>
 
-export async function getCategories(userId: string): Promise<Category[]> {
+export async function getExpenseCategories(userId: string): Promise<ExpenseCategory[]> {
   const { data, error } = await supabase
-    .from('categories')
+    .from('expense_categories')
     .select('*')
     .or(`owner_id.eq.${userId},is_system.eq.true`)
     .order('is_system', { ascending: false })
@@ -17,16 +17,25 @@ export async function getCategories(userId: string): Promise<Category[]> {
   return data
 }
 
-export async function createCategory(category: CategoryInsert): Promise<Category> {
-  const { data, error } = await supabase.from('categories').insert(category).select().single()
+export async function createExpenseCategory(
+  category: ExpenseCategoryInsert,
+): Promise<ExpenseCategory> {
+  const { data, error } = await supabase
+    .from('expense_categories')
+    .insert(category)
+    .select()
+    .single()
 
   if (error) throw error
   return data
 }
 
-export async function updateCategory(id: string, updates: CategoryUpdate): Promise<Category> {
+export async function updateExpenseCategory(
+  id: string,
+  updates: ExpenseCategoryUpdate,
+): Promise<ExpenseCategory> {
   const { data, error } = await supabase
-    .from('categories')
+    .from('expense_categories')
     .update(updates)
     .eq('id', id)
     .select()
@@ -36,8 +45,17 @@ export async function updateCategory(id: string, updates: CategoryUpdate): Promi
   return data
 }
 
-export async function deleteCategory(id: string): Promise<void> {
-  const { error } = await supabase.from('categories').delete().eq('id', id)
+export async function deleteExpenseCategory(id: string): Promise<void> {
+  const { error } = await supabase.from('expense_categories').delete().eq('id', id)
 
   if (error) throw error
 }
+
+// Backward compatibility exports (to be removed after all references are updated)
+export type Category = ExpenseCategory
+export type CategoryInsert = ExpenseCategoryInsert
+export type CategoryUpdate = ExpenseCategoryUpdate
+export const getCategories = getExpenseCategories
+export const createCategory = createExpenseCategory
+export const updateCategory = updateExpenseCategory
+export const deleteCategory = deleteExpenseCategory

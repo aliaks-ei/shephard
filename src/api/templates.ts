@@ -2,18 +2,18 @@ import type { PostgrestError } from '@supabase/supabase-js'
 import { supabase } from 'src/lib/supabase/client'
 import type { Tables, TablesInsert, TablesUpdate } from 'src/lib/supabase/types'
 
-export type Template = Tables<'templates'>
-export type TemplateInsert = TablesInsert<'templates'>
-export type TemplateUpdate = TablesUpdate<'templates'>
+export type ExpenseTemplate = Tables<'expense_templates'>
+export type ExpenseTemplateInsert = TablesInsert<'expense_templates'>
+export type ExpenseTemplateUpdate = TablesUpdate<'expense_templates'>
 export type TemplateShare = Tables<'template_shares'>
 export type TemplateShareInsert = TablesInsert<'template_shares'>
-export type TemplateCategory = Tables<'template_categories'>
-export type TemplateCategoryInsert = TablesInsert<'template_categories'>
-export type TemplateWithCategories = Template & {
-  template_categories: Tables<'template_categories'>[]
+export type ExpenseTemplateItem = Tables<'expense_template_items'>
+export type ExpenseTemplateItemInsert = TablesInsert<'expense_template_items'>
+export type ExpenseTemplateWithItems = ExpenseTemplate & {
+  expense_template_items: Tables<'expense_template_items'>[]
 }
 
-export type TemplateWithPermission = Template & {
+export type ExpenseTemplateWithPermission = ExpenseTemplate & {
   permission_level?: string
   share_count?: number
 }
@@ -26,7 +26,7 @@ export type TemplateSharedUser = {
   shared_at: string
 }
 
-export type TemplateCategoryItem = {
+export type ExpenseTemplateItemUI = {
   id: string
   name: string
   categoryId: string
@@ -49,9 +49,11 @@ export async function getTemplateShareCount(templateId: string): Promise<number>
   return count || 0
 }
 
-export async function getTemplates(userId: string): Promise<TemplateWithPermission[]> {
+export async function getExpenseTemplates(
+  userId: string,
+): Promise<ExpenseTemplateWithPermission[]> {
   const { data: ownedTemplates, error: ownedError } = await supabase
-    .from('templates')
+    .from('expense_templates')
     .select('*')
     .eq('owner_id', userId)
     .order('created_at', { ascending: false })
@@ -68,10 +70,10 @@ export async function getTemplates(userId: string): Promise<TemplateWithPermissi
 
       if (countError) {
         console.warn('Failed to get share count for template:', template.id, countError)
-        return { ...template, share_count: 0 } as TemplateWithPermission
+        return { ...template, share_count: 0 } as ExpenseTemplateWithPermission
       }
 
-      return { ...template, share_count: count || 0 } as TemplateWithPermission
+      return { ...template, share_count: count || 0 } as ExpenseTemplateWithPermission
     }),
   )
 
@@ -80,7 +82,7 @@ export async function getTemplates(userId: string): Promise<TemplateWithPermissi
     .select(
       `
       permission_level,
-      templates (*)
+      expense_templates (*)
     `,
     )
     .eq('shared_with_user_id', userId)
@@ -88,9 +90,9 @@ export async function getTemplates(userId: string): Promise<TemplateWithPermissi
   if (sharedError) throw sharedError
 
   const sharedTemplates = (sharedTemplatesData || []).map((share) => ({
-    ...share.templates,
+    ...share.expense_templates,
     permission_level: share.permission_level,
-  })) as TemplateWithPermission[]
+  })) as ExpenseTemplateWithPermission[]
 
   const allTemplates = [...ownedTemplatesWithShares, ...sharedTemplates]
 
@@ -99,8 +101,14 @@ export async function getTemplates(userId: string): Promise<TemplateWithPermissi
   )
 }
 
-export async function createTemplate(template: TemplateInsert): Promise<Template> {
-  const { data, error } = await supabase.from('templates').insert(template).select().single()
+export async function createExpenseTemplate(
+  template: ExpenseTemplateInsert,
+): Promise<ExpenseTemplate> {
+  const { data, error } = await supabase
+    .from('expense_templates')
+    .insert(template)
+    .select()
+    .single()
 
   if (error) {
     if (isDuplicateNameError(error)) {
@@ -115,9 +123,12 @@ export async function createTemplate(template: TemplateInsert): Promise<Template
   return data
 }
 
-export async function updateTemplate(id: string, updates: TemplateUpdate): Promise<Template> {
+export async function updateExpenseTemplate(
+  id: string,
+  updates: ExpenseTemplateUpdate,
+): Promise<ExpenseTemplate> {
   const { data, error } = await supabase
-    .from('templates')
+    .from('expense_templates')
     .update(updates)
     .eq('id', id)
     .select()
@@ -136,22 +147,22 @@ export async function updateTemplate(id: string, updates: TemplateUpdate): Promi
   return data
 }
 
-export async function deleteTemplate(id: string): Promise<void> {
-  const { error } = await supabase.from('templates').delete().eq('id', id)
+export async function deleteExpenseTemplate(id: string): Promise<void> {
+  const { error } = await supabase.from('expense_templates').delete().eq('id', id)
 
   if (error) throw error
 }
 
-export async function getTemplateWithCategories(
+export async function getExpenseTemplateWithItems(
   templateId: string,
   userId: string,
-): Promise<(TemplateWithCategories & { permission_level?: string }) | null> {
+): Promise<(ExpenseTemplateWithItems & { permission_level?: string }) | null> {
   const { data: template, error } = await supabase
-    .from('templates')
+    .from('expense_templates')
     .select(
       `
       *,
-      template_categories (*)
+      expense_template_items!expense_template_items_template_id_fkey (*)
     `,
     )
     .eq('id', templateId)
@@ -288,17 +299,17 @@ export async function updateTemplateSharing(
   }
 }
 
-export async function createTemplateCategories(
-  categories: TemplateCategoryInsert[],
-): Promise<TemplateCategory[]> {
-  const { data, error } = await supabase.from('template_categories').insert(categories).select()
+export async function createExpenseTemplateItems(
+  items: ExpenseTemplateItemInsert[],
+): Promise<ExpenseTemplateItem[]> {
+  const { data, error } = await supabase.from('expense_template_items').insert(items).select()
 
   if (error) throw error
   return data
 }
 
-export async function deleteTemplateCategories(ids: string[]): Promise<void> {
-  const { error } = await supabase.from('template_categories').delete().in('id', ids)
+export async function deleteExpenseTemplateItems(ids: string[]): Promise<void> {
+  const { error } = await supabase.from('expense_template_items').delete().in('id', ids)
 
   if (error) throw error
 }

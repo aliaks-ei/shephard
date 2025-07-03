@@ -1,5 +1,5 @@
 <template>
-  <q-item class="q-py-sm">
+  <q-item class="q-py-sm q-px-none">
     <q-item-section>
       <q-input
         class="q-px-none"
@@ -57,16 +57,16 @@
 
 <script setup lang="ts">
 import { getCurrencySymbol, type CurrencyCode } from 'src/utils/currency'
-import type { TemplateCategoryItem } from 'src/api'
+import type { ExpenseTemplateItemUI } from 'src/api'
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', item: TemplateCategoryItem): void
+  (e: 'update:modelValue', item: ExpenseTemplateItemUI): void
   (e: 'remove'): void
 }>()
 
 const props = withDefaults(
   defineProps<{
-    modelValue: TemplateCategoryItem
+    modelValue: ExpenseTemplateItemUI
     currency: CurrencyCode
     readonly?: boolean
   }>(),
@@ -80,7 +80,7 @@ const currencySymbol = getCurrencySymbol(props.currency)
 function updateName(name: string | number | null): void {
   if (props.readonly || typeof name !== 'string') return
 
-  const updatedItem: TemplateCategoryItem = {
+  const updatedItem: ExpenseTemplateItemUI = {
     ...props.modelValue,
     name,
   }
@@ -90,7 +90,7 @@ function updateName(name: string | number | null): void {
 function updateAmount(amount: string | number | null): void {
   if (props.readonly) return
 
-  const updatedItem: TemplateCategoryItem = {
+  const updatedItem: ExpenseTemplateItemUI = {
     ...props.modelValue,
     amount: Number(amount) || 0,
   }

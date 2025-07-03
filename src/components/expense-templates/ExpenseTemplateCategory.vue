@@ -9,7 +9,6 @@
       icon="eva-pricetags-outline"
       :label="categoryName"
       :caption="groupCaption"
-      header-class="text-weight-medium"
       expand-icon="eva-chevron-down-outline"
       expanded-icon="eva-chevron-up-outline"
     >
@@ -41,7 +40,7 @@
 
       <q-card-section class="q-pt-none">
         <q-list>
-          <TemplateCategoryItem
+          <ExpenseTemplateItem
             v-for="item in items"
             :key="item.id"
             :model-value="item"
@@ -54,14 +53,14 @@
 
         <div
           v-if="!readonly"
-          class="q-pt-md"
+          class="q-pt-sm"
         >
           <q-btn
             flat
             color="primary"
             icon="eva-plus-outline"
             label="Add Item"
-            @click="$emit('add-item', categoryId)"
+            @click="$emit('add-item', categoryId, categoryColor)"
           />
         </div>
       </q-card-section>
@@ -71,21 +70,21 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import TemplateCategoryItem from './TemplateCategoryItem.vue'
+import ExpenseTemplateItem from './ExpenseTemplateItem.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
-import type { TemplateCategoryItem as TemplateCategoryItemType } from 'src/api'
+import type { ExpenseTemplateItemUI } from 'src/api'
 
 const emit = defineEmits<{
-  (e: 'update-item', itemId: string, item: TemplateCategoryItemType): void
+  (e: 'update-item', itemId: string, item: ExpenseTemplateItemUI): void
   (e: 'remove-item', itemId: string): void
-  (e: 'add-item', categoryId: string): void
+  (e: 'add-item', categoryId: string, categoryColor: string): void
 }>()
 
 interface Props {
   categoryId: string
   categoryName: string
   categoryColor: string
-  items: TemplateCategoryItemType[]
+  items: ExpenseTemplateItemUI[]
   subtotal: number
   currency: CurrencyCode
   readonly?: boolean
@@ -108,7 +107,7 @@ const groupCaption = computed(() => {
   return `${count} ${count === 1 ? 'item' : 'items'} • ${formattedSubtotal.value}`
 })
 
-function handleUpdateItem(itemId: string, updatedItem: TemplateCategoryItemType): void {
+function handleUpdateItem(itemId: string, updatedItem: ExpenseTemplateItemUI): void {
   emit('update-item', itemId, updatedItem)
 }
 </script>

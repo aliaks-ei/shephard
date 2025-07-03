@@ -124,7 +124,7 @@
               :key="template.id"
               class="col-12 col-sm-6 col-lg-4 col-xl-3"
             >
-              <TemplateCard
+              <ExpenseTemplateCard
                 class="full-height"
                 :template="template"
                 @edit="viewTemplate"
@@ -160,7 +160,7 @@
               :key="template.id"
               class="col-12 col-sm-6 col-lg-4 col-xl-3"
             >
-              <TemplateCard
+              <ExpenseTemplateCard
                 :template="template"
                 @edit="viewTemplate"
                 @delete="deleteTemplate"
@@ -219,7 +219,7 @@
     </div>
 
     <!-- Share Template Dialog -->
-    <ShareTemplateDialog
+    <ShareExpenseTemplateDialog
       v-if="shareTemplateId"
       v-model="isShareDialogOpen"
       :template-id="shareTemplateId"
@@ -235,9 +235,9 @@ import { useQuasar } from 'quasar'
 
 import { useTemplatesStore } from 'src/stores/templates'
 import { useNotificationStore } from 'src/stores/notification'
-import TemplateCard from 'src/components/TemplateCard.vue'
-import ShareTemplateDialog from 'src/components/ShareTemplateDialog.vue'
-import type { TemplateWithPermission } from 'src/api'
+import ExpenseTemplateCard from 'src/components/expense-templates/ExpenseTemplateCard.vue'
+import ShareExpenseTemplateDialog from 'src/components/expense-templates/ShareExpenseTemplateDialog.vue'
+import type { ExpenseTemplateWithPermission } from 'src/api'
 
 const router = useRouter()
 const $q = useQuasar()
@@ -259,7 +259,7 @@ const sortOptions = [
 const isLoading = computed(() => templatesStore.isLoading && templatesStore.templates.length === 0)
 
 // Helper function to filter and sort templates
-function filterAndSortTemplates(templates: TemplateWithPermission[]) {
+function filterAndSortTemplates(templates: ExpenseTemplateWithPermission[]) {
   let filtered = templates
 
   if (searchQuery.value) {
@@ -280,7 +280,7 @@ function filterAndSortTemplates(templates: TemplateWithPermission[]) {
       case 'created_at':
         return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
       default:
-        return a.name.localeCompare(b.name)
+        return (a.name ?? '').localeCompare(b.name ?? '')
     }
   })
 }
@@ -301,7 +301,7 @@ function viewTemplate(id: string): void {
   router.push({ name: 'template', params: { id } })
 }
 
-function deleteTemplate(template: TemplateWithPermission): void {
+function deleteTemplate(template: ExpenseTemplateWithPermission): void {
   $q.dialog({
     title: 'Delete Template',
     message: `Are you sure you want to delete "${template.name}"? This action cannot be undone.`,

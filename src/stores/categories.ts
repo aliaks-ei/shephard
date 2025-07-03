@@ -2,12 +2,12 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 
 import {
-  getCategories,
-  createCategory,
-  updateCategory,
-  deleteCategory,
-  type Category,
-  type CategoryUpdate,
+  getExpenseCategories,
+  createExpenseCategory,
+  updateExpenseCategory,
+  deleteExpenseCategory,
+  type ExpenseCategory,
+  type ExpenseCategoryUpdate,
 } from 'src/api'
 import { useError } from 'src/composables/useError'
 import { useUserStore } from 'src/stores/user'
@@ -16,7 +16,7 @@ export const useCategoriesStore = defineStore('categories', () => {
   const { handleError } = useError()
   const userStore = useUserStore()
 
-  const categories = ref<Category[]>([])
+  const categories = ref<ExpenseCategory[]>([])
   const isLoading = ref(false)
 
   const userId = computed(() => userStore.userProfile?.id)
@@ -25,7 +25,7 @@ export const useCategoriesStore = defineStore('categories', () => {
     categories.value.reduce((acc, category) => {
       acc.set(category.id, category)
       return acc
-    }, new Map<string, Category>()),
+    }, new Map<string, ExpenseCategory>()),
   )
 
   async function loadCategories() {
@@ -34,7 +34,7 @@ export const useCategoriesStore = defineStore('categories', () => {
     isLoading.value = true
 
     try {
-      const data = await getCategories(userId.value)
+      const data = await getExpenseCategories(userId.value)
       categories.value = data
     } catch (error) {
       handleError('CATEGORIES.LOAD_FAILED', error)
@@ -49,7 +49,7 @@ export const useCategoriesStore = defineStore('categories', () => {
     isLoading.value = true
 
     try {
-      const newCategory = await createCategory({
+      const newCategory = await createExpenseCategory({
         name: payload.name,
         color: payload.color,
         owner_id: userId.value,
@@ -65,11 +65,11 @@ export const useCategoriesStore = defineStore('categories', () => {
     }
   }
 
-  async function editCategory(categoryId: string, updates: CategoryUpdate) {
+  async function editCategory(categoryId: string, updates: ExpenseCategoryUpdate) {
     isLoading.value = true
 
     try {
-      const updatedCategory = await updateCategory(categoryId, updates)
+      const updatedCategory = await updateExpenseCategory(categoryId, updates)
 
       const index = categories.value.findIndex((c) => c.id === categoryId)
       if (index !== -1) {
@@ -88,7 +88,7 @@ export const useCategoriesStore = defineStore('categories', () => {
     isLoading.value = true
 
     try {
-      await deleteCategory(categoryId)
+      await deleteExpenseCategory(categoryId)
 
       categories.value = categories.value.filter((c) => c.id !== categoryId)
     } catch (error) {
@@ -98,7 +98,7 @@ export const useCategoriesStore = defineStore('categories', () => {
     }
   }
 
-  function getCategoryById(categoryId: string): Category | undefined {
+  function getCategoryById(categoryId: string): ExpenseCategory | undefined {
     return categoriesMap.value.get(categoryId)
   }
 

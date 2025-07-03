@@ -3,7 +3,7 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
-      categories: {
+      expense_categories: {
         Row: {
           color: string
           created_at: string
@@ -33,157 +33,7 @@ export type Database = {
         }
         Relationships: []
       }
-      goals: {
-        Row: {
-          amount: number | null
-          created_at: string
-          deadline_at: string
-          id: string
-          status: string | null
-          user_id: string
-        }
-        Insert: {
-          amount?: number | null
-          created_at?: string
-          deadline_at?: string
-          id?: string
-          status?: string | null
-          user_id: string
-        }
-        Update: {
-          amount?: number | null
-          created_at?: string
-          deadline_at?: string
-          id?: string
-          status?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      plan_items: {
-        Row: {
-          amount: number
-          category_id: string | null
-          created_at: string
-          id: string
-          name: string
-          plan_id: string
-          tags: string[] | null
-        }
-        Insert: {
-          amount: number
-          category_id?: string | null
-          created_at?: string
-          id?: string
-          name: string
-          plan_id: string
-          tags?: string[] | null
-        }
-        Update: {
-          amount?: number
-          category_id?: string | null
-          created_at?: string
-          id?: string
-          name?: string
-          plan_id?: string
-          tags?: string[] | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'plan_items_category_id_fkey'
-            columns: ['category_id']
-            isOneToOne: false
-            referencedRelation: 'categories'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'plan_items_plan_id_fkey'
-            columns: ['plan_id']
-            isOneToOne: false
-            referencedRelation: 'plans'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      plans: {
-        Row: {
-          created_at: string
-          end_date: string
-          id: string
-          name: string
-          start_date: string
-          total_income: number
-          total_spent: number
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          end_date: string
-          id?: string
-          name: string
-          start_date: string
-          total_income: number
-          total_spent: number
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          end_date?: string
-          id?: string
-          name?: string
-          start_date?: string
-          total_income?: number
-          total_spent?: number
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      reports: {
-        Row: {
-          content: string | null
-          created_at: string
-          id: string
-          user_id: string
-        }
-        Insert: {
-          content?: string | null
-          created_at?: string
-          id?: string
-          user_id: string
-        }
-        Update: {
-          content?: string | null
-          created_at?: string
-          id?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      tags: {
-        Row: {
-          created_at: string
-          id: string
-          name: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          name: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          name?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      template_categories: {
+      expense_template_items: {
         Row: {
           amount: number
           category_id: string
@@ -213,20 +63,53 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'template_categories_category_id_fkey'
+            foreignKeyName: 'expense_template_items_category_id_fkey'
             columns: ['category_id']
             isOneToOne: false
-            referencedRelation: 'categories'
+            referencedRelation: 'expense_categories'
             referencedColumns: ['id']
           },
           {
-            foreignKeyName: 'template_categories_template_id_fkey'
+            foreignKeyName: 'expense_template_items_template_id_fkey'
             columns: ['template_id']
             isOneToOne: false
-            referencedRelation: 'templates'
+            referencedRelation: 'expense_templates'
             referencedColumns: ['id']
           },
         ]
+      }
+      expense_templates: {
+        Row: {
+          created_at: string | null
+          currency: string | null
+          duration: string
+          id: string
+          name: string
+          owner_id: string
+          total: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          currency?: string | null
+          duration: string
+          id?: string
+          name: string
+          owner_id: string
+          total?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          currency?: string | null
+          duration?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          total?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       template_shares: {
         Row: {
@@ -258,43 +141,10 @@ export type Database = {
             foreignKeyName: 'template_shares_template_id_fkey'
             columns: ['template_id']
             isOneToOne: false
-            referencedRelation: 'templates'
+            referencedRelation: 'expense_templates'
             referencedColumns: ['id']
           },
         ]
-      }
-      templates: {
-        Row: {
-          created_at: string | null
-          currency: string
-          duration: string
-          id: string
-          name: string
-          owner_id: string
-          total: number | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          currency?: string | null
-          duration: string
-          id?: string
-          name: string
-          owner_id: string
-          total?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          currency?: string | null
-          duration?: string
-          id?: string
-          name?: string
-          owner_id?: string
-          total?: number | null
-          updated_at?: string | null
-        }
-        Relationships: []
       }
       users: {
         Row: {
@@ -331,7 +181,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      can_access_template: {
+        Args: { template_id: string; user_id: string }
+        Returns: boolean
+      }
+      can_edit_template: {
+        Args: { template_id: string; user_id: string }
+        Returns: boolean
+      }
+      is_template_owner: {
+        Args: { template_id: string; user_id: string }
+        Returns: boolean
+      }
+      user_has_template_access: {
+        Args: { template_id: string; user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

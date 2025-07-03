@@ -154,8 +154,8 @@
                     />
                     Categories
                     <q-chip
-                      v-if="categoryItems.length > 0"
-                      :label="categoryItems.length"
+                      v-if="expenseTemplateItems.length > 0"
+                      :label="expenseTemplateItems.length"
                       color="primary"
                       text-color="white"
                       size="sm"
@@ -165,7 +165,7 @@
                   <q-btn
                     color="primary"
                     icon="eva-plus-outline"
-                    label="Add Category Group"
+                    label="Add Expense Category"
                     unelevated
                     @click="showCategoryDialog = true"
                   />
@@ -173,7 +173,7 @@
 
                 <!-- Duplicate Items Warning -->
                 <q-banner
-                  v-if="categoryItems.length > 0 && hasDuplicateItems"
+                  v-if="expenseTemplateItems.length > 0 && hasDuplicateItems"
                   class="bg-orange-1 text-orange-8 q-mb-md"
                   rounded
                 >
@@ -185,9 +185,9 @@
                 </q-banner>
 
                 <!-- Categories List - Grouped Display Only -->
-                <div v-if="categoryItems.length > 0">
-                  <TemplateCategoryGroup
-                    v-for="group in enrichedCategoryGroups"
+                <div v-if="expenseTemplateItems.length > 0">
+                  <ExpenseTemplateCategory
+                    v-for="group in enrichedExpenseCategories"
                     :key="group.categoryId"
                     :category-id="group.categoryId"
                     :category-name="group.categoryName"
@@ -196,9 +196,9 @@
                     :subtotal="group.subtotal"
                     :currency="templateCurrency"
                     :readonly="false"
-                    @update-item="updateCategoryItem"
-                    @remove-item="removeCategoryItem"
-                    @add-item="addItemToGroup"
+                    @update-item="updateExpenseTemplateItem"
+                    @remove-item="removeExpenseTemplateItem"
+                    @add-item="addExpenseTemplateItem"
                   />
                 </div>
 
@@ -220,7 +220,7 @@
                   <q-btn
                     color="primary"
                     icon="eva-plus-outline"
-                    label="Add Your First Category Group"
+                    label="Add Your First Expense Category"
                     unelevated
                     @click="showCategoryDialog = true"
                   />
@@ -229,7 +229,7 @@
 
               <!-- Total Amount Section -->
               <div
-                v-if="categoryItems.length > 0"
+                v-if="expenseTemplateItems.length > 0"
                 class="q-mb-lg"
               >
                 <q-separator class="q-mb-lg" />
@@ -249,8 +249,8 @@
                   </div>
                 </div>
                 <div class="text-body2 text-grey-6">
-                  Total across {{ categoryItems.length }}
-                  {{ categoryItems.length === 1 ? 'category' : 'categories' }}
+                  Total across {{ expenseTemplateItems.length }}
+                  {{ expenseTemplateItems.length === 1 ? 'category' : 'categories' }}
                 </div>
               </div>
 
@@ -323,8 +323,8 @@
                   />
                   Categories
                   <q-chip
-                    v-if="categoryItems.length > 0"
-                    :label="categoryItems.length"
+                    v-if="expenseTemplateItems.length > 0"
+                    :label="expenseTemplateItems.length"
                     color="primary"
                     text-color="white"
                     size="sm"
@@ -334,9 +334,9 @@
               </div>
 
               <!-- Categories List - Read-only Grouped Display -->
-              <div v-if="categoryItems.length > 0">
-                <TemplateCategoryGroup
-                  v-for="group in enrichedCategoryGroups"
+              <div v-if="expenseTemplateItems.length > 0">
+                <ExpenseTemplateCategory
+                  v-for="group in enrichedExpenseCategories"
                   :key="group.categoryId"
                   :category-id="group.categoryId"
                   :category-name="group.categoryName"
@@ -345,8 +345,8 @@
                   :subtotal="group.subtotal"
                   :currency="templateCurrency"
                   :readonly="true"
-                  @update-item="updateCategoryItem"
-                  @remove-item="removeCategoryItem"
+                  @update-item="updateExpenseTemplateItem"
+                  @remove-item="removeExpenseTemplateItem"
                 />
               </div>
 
@@ -368,7 +368,7 @@
             </div>
 
             <!-- Total Amount Section -->
-            <div v-if="categoryItems.length > 0">
+            <div v-if="expenseTemplateItems.length > 0">
               <q-separator class="q-mb-lg" />
               <div class="row items-center justify-between">
                 <div
@@ -386,8 +386,8 @@
                 </div>
               </div>
               <div class="text-body2 text-grey-6">
-                Total across {{ categoryItems.length }}
-                {{ categoryItems.length === 1 ? 'category' : 'categories' }}
+                Total across {{ expenseTemplateItems.length }}
+                {{ expenseTemplateItems.length === 1 ? 'category' : 'categories' }}
               </div>
             </div>
           </q-card>
@@ -396,14 +396,14 @@
     </div>
 
     <!-- Category Selection Dialog -->
-    <CategorySelectionDialog
+    <ExpenseCategorySelectionDialog
       v-model="showCategoryDialog"
       :used-category-ids="getUsedCategoryIds()"
       @category-selected="onCategorySelected"
     />
 
     <!-- Share Template Dialog -->
-    <ShareTemplateDialog
+    <ShareExpenseTemplateDialog
       v-if="routeTemplateId"
       v-model="isShareDialogOpen"
       :template-id="routeTemplateId"
@@ -417,16 +417,21 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { QForm } from 'quasar'
 
-import TemplateCategoryGroup from 'src/components/TemplateCategoryGroup.vue'
-import CategorySelectionDialog from 'src/components/CategorySelectionDialog.vue'
-import ShareTemplateDialog from 'src/components/ShareTemplateDialog.vue'
+import ExpenseTemplateCategory from 'src/components/expense-templates/ExpenseTemplateCategory.vue'
+import ExpenseCategorySelectionDialog from 'src/components/expense-categories/ExpenseCategorySelectionDialog.vue'
+import ShareExpenseTemplateDialog from 'src/components/expense-templates/ShareExpenseTemplateDialog.vue'
 import { useTemplatesStore } from 'src/stores/templates'
 import { useCategoriesStore } from 'src/stores/categories'
 import { useUserStore } from 'src/stores/user'
-import { useTemplateCategoryItems } from 'src/composables/useTemplateCategoryItems'
+import { useExpenseTemplateItems } from 'src/composables/useExpenseTemplateItems'
 import { useError } from 'src/composables/useError'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
-import type { TemplateWithCategories, TemplateCategoryItem, Category } from 'src/api'
+import type {
+  ExpenseTemplateWithItems,
+  ExpenseTemplateItemUI,
+  ExpenseCategory,
+  ExpenseTemplateCategoryUI,
+} from 'src/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -435,24 +440,23 @@ const categoriesStore = useCategoriesStore()
 const userStore = useUserStore()
 const { handleError } = useError()
 const {
-  categoryItems,
+  expenseTemplateItems,
   totalAmount,
   hasValidItems,
   hasDuplicateItems,
   isValidForSave,
-  categoryGroups,
-  addCategoryGroup,
-  addItemToGroup,
-  updateCategoryItem,
-  removeCategoryItem,
-  loadCategoryItems,
-  getCategoryItemsForSave,
+  expenseCategoryGroups,
+  addExpenseTemplateItem,
+  updateExpenseTemplateItem,
+  removeExpenseTemplateItem,
+  loadExpenseTemplateItems,
+  getExpenseTemplateItemsForSave,
   getUsedCategoryIds,
-} = useTemplateCategoryItems()
+} = useExpenseTemplateItems()
 
 const templateForm = ref<QForm | null>(null)
 const isLoading = ref(false)
-const currentTemplate = ref<(TemplateWithCategories & { permission_level?: string }) | null>(null)
+const currentTemplate = ref<(ExpenseTemplateWithItems & { permission_level?: string }) | null>(null)
 const isShareDialogOpen = ref(false)
 const showCategoryDialog = ref(false)
 const form = ref({
@@ -533,27 +537,24 @@ const breadcrumbIcon = computed(() => {
   return 'eva-edit-outline'
 })
 
-// Enrich category groups with category names from the store
-const enrichedCategoryGroups = computed(() => {
-  return categoryGroups.value.reduce(
-    (acc, group) => {
-      const category = categoriesStore.getCategoryById(group.categoryId)
-      if (category) {
-        acc.push({
-          ...group,
-          categoryName: category.name,
-          categoryColor: category.color,
-        })
-      }
-      return acc
-    },
-    [] as Array<(typeof categoryGroups.value)[0] & { categoryName: string; categoryColor: string }>,
-  )
+// Enrich expense categories with category names from the store
+const enrichedExpenseCategories = computed(() => {
+  return expenseCategoryGroups.value.reduce((acc, group) => {
+    const category = categoriesStore.getCategoryById(group.categoryId)
+    if (category) {
+      acc.push({
+        ...group,
+        categoryName: category.name,
+        categoryColor: category.color,
+      })
+    }
+    return acc
+  }, [] as ExpenseTemplateCategoryUI[])
 })
 
 // Category selection and management
-function onCategorySelected(category: Category): void {
-  addCategoryGroup(category.id, category.color)
+function onCategorySelected(category: ExpenseCategory): void {
+  addExpenseTemplateItem(category.id, category.color)
 }
 
 function goBack(): void {
@@ -569,12 +570,12 @@ async function createNewTemplateWithItems(): Promise<boolean> {
 
   if (!template) return false
 
-  const items = getCategoryItemsForSave().map((item) => ({
+  const items = getExpenseTemplateItemsForSave().map((item) => ({
     ...item,
     template_id: template.id,
   }))
 
-  await templatesStore.addCategoriesToTemplate(items)
+  await templatesStore.addItemsToTemplate(items)
   return true
 }
 
@@ -589,16 +590,16 @@ async function updateExistingTemplateWithItems(): Promise<boolean> {
 
   if (!template) return false
 
-  const existingItemIds = currentTemplate.value.template_categories.map((item) => item.id)
-  await templatesStore.removeCategoriesFromTemplate(existingItemIds)
+  const existingItemIds = currentTemplate.value.expense_template_items.map((item) => item.id)
+  await templatesStore.removeItemsFromTemplate(existingItemIds)
 
-  const items = getCategoryItemsForSave().map((item) => ({
+  const items = getExpenseTemplateItemsForSave().map((item) => ({
     ...item,
     template_id: template.id,
   }))
 
   if (items.length > 0) {
-    await templatesStore.addCategoriesToTemplate(items)
+    await templatesStore.addItemsToTemplate(items)
   }
 
   return true
@@ -610,10 +611,10 @@ async function saveTemplate(): Promise<void> {
   if (!isValid) return
   if (!isValidForSave.value) {
     if (!hasValidItems.value) {
-      handleError('TEMPLATE_CATEGORIES.VALIDATION_FAILED', new Error('No valid categories'))
+      handleError('TEMPLATE_ITEMS.VALIDATION_FAILED', new Error('No valid items'))
     } else if (hasDuplicateItems.value) {
       handleError(
-        'TEMPLATE_CATEGORIES.DUPLICATE_NAME_CATEGORY',
+        'TEMPLATE_ITEMS.DUPLICATE_NAME_CATEGORY',
         new Error('Duplicate name and category combination'),
       )
     }
@@ -644,7 +645,7 @@ async function loadTemplate(): Promise<void> {
   form.value.name = currentTemplate.value.name
   form.value.duration = currentTemplate.value.duration
 
-  const items = currentTemplate.value.template_categories.reduce((acc, item) => {
+  const items = currentTemplate.value.expense_template_items.reduce((acc, item) => {
     const category = categoriesStore.getCategoryById(item.category_id)
 
     if (category) {
@@ -658,16 +659,14 @@ async function loadTemplate(): Promise<void> {
     }
 
     return acc
-  }, [] as TemplateCategoryItem[])
+  }, [] as ExpenseTemplateItemUI[])
 
-  loadCategoryItems(items)
+  loadExpenseTemplateItems(items)
 }
 
 function openShareDialog(): void {
   isShareDialogOpen.value = true
 }
-
-// This function is now handled by the composable
 
 function onTemplateShared(): void {
   templatesStore.loadTemplates()

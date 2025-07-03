@@ -158,16 +158,16 @@
 import { computed } from 'vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import { useUserStore } from 'src/stores/user'
-import type { TemplateWithPermission } from 'src/api'
+import type { ExpenseTemplateWithPermission } from 'src/api'
 
 const emit = defineEmits<{
   (e: 'edit', id: string): void
-  (e: 'delete', template: TemplateWithPermission): void
+  (e: 'delete', template: ExpenseTemplateWithPermission): void
   (e: 'share', id: string): void
 }>()
 
 const props = defineProps<{
-  template: TemplateWithPermission
+  template: ExpenseTemplateWithPermission
 }>()
 
 const userStore = useUserStore()

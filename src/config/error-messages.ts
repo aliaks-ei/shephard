@@ -29,13 +29,13 @@ export type ErrorMessageKey =
   | 'CATEGORIES.CREATE_FAILED'
   | 'CATEGORIES.UPDATE_FAILED'
   | 'CATEGORIES.DELETE_FAILED'
-  | 'TEMPLATE_CATEGORIES.LOAD_FAILED'
-  | 'TEMPLATE_CATEGORIES.CREATE_FAILED'
-  | 'TEMPLATE_CATEGORIES.UPDATE_FAILED'
-  | 'TEMPLATE_CATEGORIES.DELETE_FAILED'
-  | 'TEMPLATE_CATEGORIES.VALIDATION_FAILED'
-  | 'TEMPLATE_CATEGORIES.DUPLICATE_NAME_CATEGORY'
-  | 'TEMPLATE_CATEGORIES.NAME_REQUIRED'
+  | 'TEMPLATE_ITEMS.LOAD_FAILED'
+  | 'TEMPLATE_ITEMS.CREATE_FAILED'
+  | 'TEMPLATE_ITEMS.UPDATE_FAILED'
+  | 'TEMPLATE_ITEMS.DELETE_FAILED'
+  | 'TEMPLATE_ITEMS.VALIDATION_FAILED'
+  | 'TEMPLATE_ITEMS.DUPLICATE_NAME_CATEGORY'
+  | 'TEMPLATE_ITEMS.NAME_REQUIRED'
   | 'UNKNOWN'
 
 interface ErrorMessageConfig {
@@ -212,41 +212,42 @@ export const ERROR_MESSAGES: Record<ErrorMessageKey, ErrorMessageConfig> = {
     log: true,
   },
 
-  // Template Categories errors
-  'TEMPLATE_CATEGORIES.LOAD_FAILED': {
-    message: "We couldn't load the template categories. Please refresh or try again later.",
+  // Template Items errors
+  'TEMPLATE_ITEMS.LOAD_FAILED': {
+    message: "We couldn't load the template items. Please refresh or try again later.",
     notify: true,
     log: true,
   },
-  'TEMPLATE_CATEGORIES.CREATE_FAILED': {
-    message: "We couldn't add that category item to your template. Please try again.",
+  'TEMPLATE_ITEMS.CREATE_FAILED': {
+    message: "We couldn't add that item to your template. Please try again.",
     notify: true,
     log: true,
   },
-  'TEMPLATE_CATEGORIES.UPDATE_FAILED': {
-    message: "We couldn't save your category item changes. Please try again.",
+  'TEMPLATE_ITEMS.UPDATE_FAILED': {
+    message: "We couldn't save your item changes. Please try again.",
     notify: true,
     log: true,
   },
-  'TEMPLATE_CATEGORIES.DELETE_FAILED': {
-    message: "We couldn't remove that category item from your template. Please try again.",
+  'TEMPLATE_ITEMS.DELETE_FAILED': {
+    message: "We couldn't remove that item from your template. Please try again.",
     notify: true,
     log: true,
   },
-  'TEMPLATE_CATEGORIES.VALIDATION_FAILED': {
+  'TEMPLATE_ITEMS.VALIDATION_FAILED': {
     message:
-      'Please add at least one category item with a name, category, and valid amount to create your template.',
+      'Please add at least one item with a name, category, and valid amount to create your template.',
     notify: true,
     log: false,
   },
-  'TEMPLATE_CATEGORIES.DUPLICATE_NAME_CATEGORY': {
-    message: 'You already have an item with this name. Please choose a different name.',
+  'TEMPLATE_ITEMS.DUPLICATE_NAME_CATEGORY': {
+    message:
+      'You already have an item with this name in this category. Please choose a different name.',
     notify: true,
     log: true,
   },
-  'TEMPLATE_CATEGORIES.NAME_REQUIRED': {
+  'TEMPLATE_ITEMS.NAME_REQUIRED': {
     message:
-      'Please add at least one category item with a name, category, and valid amount to create your template.',
+      'Please add at least one item with a name, category, and valid amount to create your template.',
     notify: true,
     log: false,
   },
