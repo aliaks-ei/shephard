@@ -34,6 +34,14 @@ export type ExpenseTemplateItemUI = {
   color: string
 }
 
+export type ExpenseTemplateCategoryUI = {
+  categoryId: string
+  categoryName: string
+  categoryColor: string
+  items: ExpenseTemplateItemUI[]
+  subtotal: number
+}
+
 const isDuplicateNameError = (error: PostgrestError) =>
   (error.code === '23505' && error.message.includes('unique_template_name_per_user')) ||
   (error.message && error.message.includes('unique_template_name_per_user')) ||
