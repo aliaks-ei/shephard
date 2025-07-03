@@ -15,7 +15,7 @@ export type ExpenseTemplateWithItems = ExpenseTemplate & {
 
 export type ExpenseTemplateWithPermission = ExpenseTemplate & {
   permission_level?: string
-  share_count?: number
+  is_shared?: boolean
 }
 
 export type TemplateSharedUser = {
@@ -47,43 +47,29 @@ const isDuplicateNameError = (error: PostgrestError) =>
   (error.message && error.message.includes('unique_template_name_per_user')) ||
   (error.message && error.message.includes('duplicate key value violates unique constraint'))
 
-export async function getTemplateShareCount(templateId: string): Promise<number> {
-  const { count, error } = await supabase
-    .from('template_shares')
-    .select('*', { count: 'exact', head: true })
-    .eq('template_id', templateId)
-
-  if (error) throw error
-  return count || 0
-}
-
 export async function getExpenseTemplates(
   userId: string,
 ): Promise<ExpenseTemplateWithPermission[]> {
+  // Get owned templates with sharing status in a single query
   const { data: ownedTemplates, error: ownedError } = await supabase
     .from('expense_templates')
-    .select('*')
+    .select(
+      `
+      *,
+      template_shares!left(id)
+    `,
+    )
     .eq('owner_id', userId)
     .order('created_at', { ascending: false })
 
   if (ownedError) throw ownedError
 
-  // Get share counts for owned templates efficiently
-  const ownedTemplatesWithShares = await Promise.all(
-    (ownedTemplates || []).map(async (template) => {
-      const { count, error: countError } = await supabase
-        .from('template_shares')
-        .select('*', { count: 'exact', head: true })
-        .eq('template_id', template.id)
-
-      if (countError) {
-        console.warn('Failed to get share count for template:', template.id, countError)
-        return { ...template, share_count: 0 } as ExpenseTemplateWithPermission
-      }
-
-      return { ...template, share_count: count || 0 } as ExpenseTemplateWithPermission
-    }),
-  )
+  // Transform owned templates to include is_shared flag
+  const ownedTemplatesWithShares = (ownedTemplates || []).map((template) => ({
+    ...template,
+    is_shared: template.template_shares && template.template_shares.length > 0,
+    template_shares: undefined, // Remove the join data from final result
+  })) as ExpenseTemplateWithPermission[]
 
   const { data: sharedTemplatesData, error: sharedError } = await supabase
     .from('template_shares')

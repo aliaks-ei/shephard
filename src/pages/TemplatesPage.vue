@@ -125,7 +125,6 @@
               class="col-12 col-sm-6 col-lg-4 col-xl-3"
             >
               <ExpenseTemplateCard
-                class="full-height"
                 :template="template"
                 @edit="viewTemplate"
                 @delete="deleteTemplate"
@@ -162,6 +161,7 @@
             >
               <ExpenseTemplateCard
                 :template="template"
+                hide-shared-badge
                 @edit="viewTemplate"
                 @delete="deleteTemplate"
                 @share="openShareDialog"

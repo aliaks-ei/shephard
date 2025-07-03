@@ -1,5 +1,6 @@
 <template>
   <q-card
+    class="full-height"
     flat
     bordered
   >
@@ -16,22 +17,9 @@
             </div>
             <div class="row items-center q-gutter-xs">
               <q-badge
-                v-if="isOwner && hasShares"
+                v-if="isOwner && hasShares && !hideSharedBadge"
                 outline
-                color="positive"
-                class="q-px-sm q-py-xs"
-              >
-                <q-icon
-                  name="eva-people-outline"
-                  size="12px"
-                  class="q-mr-xs"
-                />
-                {{ shareText }}
-              </q-badge>
-              <q-badge
-                v-if="!isOwner"
-                outline
-                color="secondary"
+                color="info"
                 class="q-px-sm q-py-xs"
               >
                 <q-icon
@@ -166,23 +154,21 @@ const emit = defineEmits<{
   (e: 'share', id: string): void
 }>()
 
-const props = defineProps<{
-  template: ExpenseTemplateWithPermission
-}>()
+const props = withDefaults(
+  defineProps<{
+    template: ExpenseTemplateWithPermission
+    hideSharedBadge?: boolean
+  }>(),
+  {
+    hideSharedBadge: false,
+  },
+)
 
 const userStore = useUserStore()
 
 const isOwner = computed(() => props.template.owner_id === userStore.userProfile?.id)
 
-const hasShares = computed(() => {
-  return isOwner.value && (props.template.share_count ?? 0) > 0
-})
-
-const shareText = computed(() => {
-  const count = props.template.share_count ?? 0
-  if (count === 1) return 'shared with 1 person'
-  return `shared with ${count} people`
-})
+const hasShares = computed(() => isOwner.value && !!props.template.is_shared)
 
 function editTemplate(): void {
   emit('edit', props.template.id)
