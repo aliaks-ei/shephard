@@ -2,7 +2,6 @@
   <div class="q-pa-md">
     <div class="row justify-center">
       <div class="col-12 col-md-10 col-lg-8 col-xl-6">
-        <!-- Toolbar -->
         <q-toolbar class="q-mb-lg q-px-none">
           <q-btn
             flat
@@ -399,6 +398,7 @@
     <ExpenseCategorySelectionDialog
       v-model="showCategoryDialog"
       :used-category-ids="getUsedCategoryIds()"
+      :categories="categoriesStore.categories"
       @category-selected="onCategorySelected"
     />
 

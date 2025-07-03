@@ -327,9 +327,7 @@ function openShareDialog(templateId: string): void {
 }
 
 function onTemplateShared(): void {
-  // Refresh templates to show updated share counts
   templatesStore.loadTemplates()
-  // Show success message
   notificationsStore.showSuccess('Template shared successfully')
 }
 

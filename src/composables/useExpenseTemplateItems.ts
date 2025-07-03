@@ -29,9 +29,12 @@ export function useExpenseTemplateItems() {
     const seen = new Set<string>()
     return expenseTemplateItems.value.some((item) => {
       if (!item.name.trim() || !item.categoryId) return false
+
       const key = `${item.categoryId}-${item.name.trim().toLowerCase()}`
       if (seen.has(key)) return true
+
       seen.add(key)
+
       return false
     })
   })
@@ -89,10 +92,10 @@ export function useExpenseTemplateItems() {
 
     expenseTemplateItems.value[itemIndex] = {
       id: currentItem.id,
-      name: updates.name || currentItem.name,
-      categoryId: updates.categoryId || currentItem.categoryId,
-      amount: updates.amount || currentItem.amount,
-      color: updates.color || currentItem.color,
+      name: updates.name ?? currentItem.name,
+      categoryId: updates.categoryId ?? currentItem.categoryId,
+      amount: updates.amount ?? currentItem.amount,
+      color: updates.color ?? currentItem.color,
     }
   }
 

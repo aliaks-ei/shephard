@@ -2,13 +2,13 @@
   <q-item class="q-py-sm q-px-none">
     <q-item-section>
       <q-input
-        class="q-px-none"
         :model-value="modelValue.name"
+        :readonly="readonly"
+        :rules="nameRules"
+        class="q-px-none"
         label="Item name"
         outlined
         item-aligned
-        :readonly="readonly"
-        :rules="readonly ? [] : [(val) => !!val?.trim() || 'Item name is required']"
         @update:model-value="updateName"
       />
     </q-item-section>
@@ -16,23 +16,16 @@
     <q-item-section style="max-width: 140px">
       <q-input
         :model-value="modelValue.amount"
+        :readonly="readonly"
+        :rules="amountRules"
+        :prefix="currencySymbol"
         type="number"
         min="0"
         step="1"
-        :prefix="currencySymbol"
         label="Amount"
         class="q-px-none"
         outlined
         item-aligned
-        :readonly="readonly"
-        :rules="
-          readonly
-            ? []
-            : [
-                (val) => (val !== null && val !== undefined) || 'Amount is required',
-                (val) => val > 0 || 'Amount must be greater than 0',
-              ]
-        "
         @update:model-value="updateAmount"
       />
     </q-item-section>
@@ -56,6 +49,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { getCurrencySymbol, type CurrencyCode } from 'src/utils/currency'
 import type { ExpenseTemplateItemUI } from 'src/api'
 
@@ -77,6 +71,21 @@ const props = withDefaults(
 
 const currencySymbol = getCurrencySymbol(props.currency)
 
+const nameRules = computed(() =>
+  props.readonly
+    ? []
+    : [(val: string | null | undefined) => !!val?.trim() || 'Item name is required'],
+)
+const amountRules = computed(() =>
+  props.readonly
+    ? []
+    : [
+        (val: number | null | undefined) =>
+          (val !== null && val !== undefined) || 'Amount is required',
+        (val: number | null | undefined) => (val && val > 0) || 'Amount must be greater than 0',
+      ],
+)
+
 function updateName(name: string | number | null): void {
   if (props.readonly || typeof name !== 'string') return
 
@@ -84,6 +93,7 @@ function updateName(name: string | number | null): void {
     ...props.modelValue,
     name,
   }
+
   emit('update:modelValue', updatedItem)
 }
 

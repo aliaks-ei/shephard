@@ -5,16 +5,16 @@
     bordered
   >
     <q-item
-      clickable
       class="full-height q-pa-md"
+      clickable
       @click="editTemplate"
     >
       <q-item-section class="justify-between">
         <div class="row items-start justify-between">
           <div class="col-10">
-            <div class="text-h6 text-weight-bold q-mb-xs">
+            <h3 class="text-h6 text-weight-bold q-mt-none q-mb-xs">
               {{ template.name }}
-            </div>
+            </h3>
             <div class="row items-center q-gutter-xs">
               <q-badge
                 v-if="isOwner && hasShares && !hideSharedBadge"
@@ -167,7 +167,6 @@ const props = withDefaults(
 const userStore = useUserStore()
 
 const isOwner = computed(() => props.template.owner_id === userStore.userProfile?.id)
-
 const hasShares = computed(() => isOwner.value && !!props.template.is_shared)
 
 function editTemplate(): void {

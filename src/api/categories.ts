@@ -50,12 +50,3 @@ export async function deleteExpenseCategory(id: string): Promise<void> {
 
   if (error) throw error
 }
-
-// Backward compatibility exports (to be removed after all references are updated)
-export type Category = ExpenseCategory
-export type CategoryInsert = ExpenseCategoryInsert
-export type CategoryUpdate = ExpenseCategoryUpdate
-export const getCategories = getExpenseCategories
-export const createCategory = createExpenseCategory
-export const updateCategory = updateExpenseCategory
-export const deleteCategory = deleteExpenseCategory

@@ -12,13 +12,13 @@
     >
       <!-- Header -->
       <q-card-section class="row items-center q-pb-none">
-        <div class="text-h6">
+        <h2 class="text-h6 q-my-none">
           <q-icon
             name="eva-share-outline"
             class="q-mr-sm"
           />
           Share Template
-        </div>
+        </h2>
         <q-space />
         <q-btn
           icon="eva-close-outline"
@@ -100,8 +100,8 @@
           <!-- Actual Content -->
           <div v-else-if="templatesStore.sharedUsers.length > 0">
             <q-list
-              bordered
               class="rounded-borders"
+              bordered
             >
               <q-item
                 v-for="user in templatesStore.sharedUsers"
@@ -128,7 +128,7 @@
                   <div class="row items-center q-gutter-sm">
                     <q-select
                       :model-value="user.permission_level"
-                      :options="permissionSelectOptions"
+                      :options="permissionOptions"
                       outlined
                       dense
                       emit-value
@@ -205,10 +205,12 @@
                   </q-avatar>
                 </q-item-section>
                 <q-item-section>
-                  <q-item-label>{{
-                    scope.opt.name || getUserDisplayName(scope.opt.email)
-                  }}</q-item-label>
-                  <q-item-label caption>{{ scope.opt.email }}</q-item-label>
+                  <q-item-label>
+                    {{ scope.opt.name || getUserDisplayName(scope.opt.email) }}
+                  </q-item-label>
+                  <q-item-label caption>
+                    {{ scope.opt.email }}
+                  </q-item-label>
                 </q-item-section>
               </q-item>
             </template>
@@ -331,28 +333,28 @@ const $q = useQuasar()
 const templatesStore = useTemplatesStore()
 const userStore = useUserStore()
 
-// Local state
+const permissionOptions = [
+  { label: 'Can view', value: 'view' },
+  { label: 'Can edit', value: 'edit' },
+]
+
 const selectedPermission = ref<'view' | 'edit'>('view')
 const selectedUsers = ref<UserSearchResult[]>([])
 const isLoading = ref(false)
 const currentSearchQuery = ref('')
 const isLoadingShares = ref(false)
 
-// Computed properties
 const currentUserId = computed(() => userStore.userProfile?.id)
-
-// Search options for QSelect
-const searchOptions = computed(() => {
-  return templatesStore.userSearchResults.filter((user) => {
+const searchOptions = computed(() =>
+  templatesStore.userSearchResults.filter((user) => {
     const isAlreadyShared = templatesStore.sharedUsers.some((u) => u.user_id === user.id)
     const isCurrentUser = user.id === currentUserId.value
     const isAlreadySelected = selectedUsers.value.some((u) => u.id === user.id)
 
     return !isAlreadyShared && !isCurrentUser && !isAlreadySelected
-  })
-})
+  }),
+)
 
-// Debounced search
 const debouncedSearch = useDebounceFn(async (query: string) => {
   if (!query.trim()) {
     templatesStore.clearUserSearch()
@@ -360,54 +362,6 @@ const debouncedSearch = useDebounceFn(async (query: string) => {
   }
   await templatesStore.searchUsers(query)
 }, 300)
-
-// Watch for dialog open to load shares
-watch(
-  () => props.modelValue,
-  async (isOpen) => {
-    if (isOpen && props.templateId) {
-      isLoadingShares.value = true
-      try {
-        await templatesStore.loadTemplateShares(props.templateId)
-      } finally {
-        isLoadingShares.value = false
-      }
-    } else {
-      // Reset state when closing
-      selectedPermission.value = 'view'
-      selectedUsers.value = []
-      currentSearchQuery.value = ''
-      isLoadingShares.value = false
-      templatesStore.clearUserSearch()
-    }
-  },
-  { immediate: true },
-)
-
-// Watch for templateId changes while dialog is open
-watch(
-  () => props.templateId,
-  async (newTemplateId) => {
-    if (props.modelValue && newTemplateId) {
-      isLoadingShares.value = true
-      try {
-        await templatesStore.loadTemplateShares(newTemplateId)
-      } finally {
-        isLoadingShares.value = false
-      }
-    }
-  },
-)
-
-const permissionOptions = [
-  { label: 'Can view', value: 'view' },
-  { label: 'Can edit', value: 'edit' },
-]
-
-const permissionSelectOptions = [
-  { label: 'Can view', value: 'view' },
-  { label: 'Can edit', value: 'edit' },
-]
 
 function getUserDisplayName(email: string): string {
   const atIndex = email.indexOf('@')
@@ -459,14 +413,10 @@ async function handleShare() {
 
     await Promise.all(sharePromises)
 
-    // Clear selection after successful sharing
     selectedUsers.value = []
     templatesStore.clearUserSearch()
 
     emit('shared')
-  } catch (error) {
-    // Error is already handled by the store, but we can add additional UX feedback here
-    console.error('Failed to share template:', error)
   } finally {
     isLoading.value = false
   }
@@ -479,4 +429,40 @@ async function updateUserPermission(userId: string, permission: 'view' | 'edit')
 async function removeUserAccess(userId: string) {
   await templatesStore.unshareTemplateWithUser(props.templateId, userId)
 }
+
+watch(
+  () => props.modelValue,
+  async (isOpen) => {
+    if (isOpen && props.templateId) {
+      isLoadingShares.value = true
+      try {
+        await templatesStore.loadTemplateShares(props.templateId)
+      } finally {
+        isLoadingShares.value = false
+      }
+    } else {
+      // Reset state when closing
+      selectedPermission.value = 'view'
+      selectedUsers.value = []
+      currentSearchQuery.value = ''
+      isLoadingShares.value = false
+      templatesStore.clearUserSearch()
+    }
+  },
+  { immediate: true },
+)
+
+watch(
+  () => props.templateId,
+  async (newTemplateId) => {
+    if (props.modelValue && newTemplateId) {
+      isLoadingShares.value = true
+      try {
+        await templatesStore.loadTemplateShares(newTemplateId)
+      } finally {
+        isLoadingShares.value = false
+      }
+    }
+  },
+)
 </script>
