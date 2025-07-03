@@ -20,31 +20,6 @@
               {{ pageTitle }}
             </div>
           </q-toolbar-title>
-
-          <q-skeleton
-            v-if="isLoading"
-            type="QBtn"
-            width="260px"
-          />
-
-          <q-btn-toggle
-            v-else-if="canEdit"
-            v-model="form.duration"
-            :options="durationToggleOptions"
-            color="grey-4"
-            text-color="grey-8"
-            unelevated
-          />
-
-          <q-chip
-            v-else
-            :label="form.duration"
-            color="grey-4"
-            text-color="grey-8"
-            class="text-capitalize"
-            :ripple="false"
-            square
-          />
         </q-toolbar>
 
         <!-- Breadcrumb Navigation -->
@@ -138,6 +113,30 @@
                   outlined
                   :rules="[(val) => !!val || 'Template name is required']"
                   class="q-mb-md"
+                />
+              </div>
+
+              <q-separator class="q-mb-lg" />
+
+              <!-- Duration Section -->
+              <div class="q-mb-lg">
+                <div class="text-h6 q-mb-md">
+                  <q-icon
+                    name="eva-calendar-outline"
+                    class="q-mr-sm"
+                  />
+                  Duration
+                </div>
+
+                <q-btn-toggle
+                  v-model="form.duration"
+                  :options="durationToggleOptions"
+                  class="duration-toggle"
+                  no-caps
+                  unelevated
+                  spread
+                  toggle-color="primary"
+                  text-color="primary"
                 />
               </div>
 
@@ -307,6 +306,28 @@
                 outlined
                 readonly
                 class="q-mb-md"
+              />
+            </div>
+
+            <q-separator class="q-mb-lg" />
+
+            <!-- Duration Section -->
+            <div class="q-mb-lg">
+              <div class="text-h6 q-mb-md">
+                <q-icon
+                  name="eva-calendar-outline"
+                  class="q-mr-sm"
+                />
+                Duration
+              </div>
+
+              <q-chip
+                :label="form.duration"
+                color="primary"
+                text-color="primary"
+                class="text-capitalize"
+                :ripple="false"
+                outline
               />
             </div>
 
@@ -683,3 +704,9 @@ onMounted(async () => {
   }
 })
 </script>
+
+<style lang="scss" scoped>
+.duration-toggle {
+  border: 1px solid $primary;
+}
+</style>
