@@ -22,7 +22,6 @@
           </q-toolbar-title>
         </q-toolbar>
 
-        <!-- Breadcrumb Navigation -->
         <q-breadcrumbs
           class="q-mb-lg text-grey-6"
           active-color="primary"
@@ -38,7 +37,6 @@
           />
         </q-breadcrumbs>
 
-        <!-- Read-Only Mode Banner -->
         <q-banner
           v-if="isReadOnlyMode"
           class="bg-orange-1 text-orange-8 q-mb-lg"
@@ -50,8 +48,7 @@
           You're viewing this template in read-only mode. Contact the owner for edit access.
         </q-banner>
 
-        <!-- Loading State -->
-        <div v-if="isLoading">
+        <div v-if="isTemplateLoading">
           <div class="q-pa-lg">
             <q-skeleton
               type="text"
@@ -84,20 +81,17 @@
           </div>
         </div>
 
-        <!-- Enhanced Template Form -->
         <div v-else>
           <q-form
-            v-if="canEdit"
+            v-if="isEditMode"
             ref="templateForm"
             @submit="saveTemplate"
           >
-            <!-- Single Unified Card -->
             <q-card
               flat
               bordered
               class="q-pa-lg"
             >
-              <!-- Basic Information Section -->
               <div class="q-mb-lg">
                 <div class="text-h6 q-mb-md">
                   <q-icon
@@ -118,7 +112,6 @@
 
               <q-separator class="q-mb-lg" />
 
-              <!-- Duration Section -->
               <div class="q-mb-lg">
                 <div class="text-h6 q-mb-md">
                   <q-icon
@@ -142,7 +135,6 @@
 
               <q-separator class="q-mb-lg" />
 
-              <!-- Categories Section -->
               <div class="q-mb-lg">
                 <div class="row items-center justify-between q-mb-md">
                   <div class="text-h6">
@@ -169,7 +161,6 @@
                   />
                 </div>
 
-                <!-- Duplicate Items Warning -->
                 <q-banner
                   v-if="expenseTemplateItems.length > 0 && hasDuplicateItems"
                   class="bg-orange-1 text-orange-8 q-mb-md"
@@ -182,7 +173,6 @@
                   for each item.
                 </q-banner>
 
-                <!-- Categories List - Grouped Display Only -->
                 <div v-if="expenseTemplateItems.length > 0">
                   <ExpenseTemplateCategory
                     v-for="group in enrichedExpenseCategories"
@@ -200,7 +190,6 @@
                   />
                 </div>
 
-                <!-- Enhanced Empty State -->
                 <div
                   v-else
                   class="text-center q-py-xl"
@@ -225,7 +214,6 @@
                 </div>
               </div>
 
-              <!-- Total Amount Section -->
               <div
                 v-if="expenseTemplateItems.length > 0"
                 class="q-mb-lg"
@@ -252,7 +240,6 @@
                 </div>
               </div>
 
-              <!-- Action Buttons -->
               <div class="row q-gutter-md justify-end">
                 <q-btn
                   flat
@@ -283,14 +270,12 @@
             </q-card>
           </q-form>
 
-          <!-- Read-Only View -->
           <q-card
             v-else
             flat
             bordered
             class="q-pa-lg"
           >
-            <!-- Basic Information Section -->
             <div class="q-mb-lg">
               <div class="text-h6 q-mb-md">
                 <q-icon
@@ -311,7 +296,6 @@
 
             <q-separator class="q-mb-lg" />
 
-            <!-- Duration Section -->
             <div class="q-mb-lg">
               <div class="text-h6 q-mb-md">
                 <q-icon
@@ -333,7 +317,6 @@
 
             <q-separator class="q-mb-lg" />
 
-            <!-- Categories Section -->
             <div class="q-mb-lg">
               <div class="row items-center justify-between q-mb-md">
                 <div class="text-h6">
@@ -353,7 +336,6 @@
                 </div>
               </div>
 
-              <!-- Categories List - Read-only Grouped Display -->
               <div v-if="expenseTemplateItems.length > 0">
                 <ExpenseTemplateCategory
                   v-for="group in enrichedExpenseCategories"
@@ -370,7 +352,6 @@
                 />
               </div>
 
-              <!-- Enhanced Empty State -->
               <div
                 v-else
                 class="text-center q-py-xl"
@@ -387,7 +368,6 @@
               </div>
             </div>
 
-            <!-- Total Amount Section -->
             <div v-if="expenseTemplateItems.length > 0">
               <q-separator class="q-mb-lg" />
               <div class="row items-center justify-between">
@@ -415,7 +395,6 @@
       </div>
     </div>
 
-    <!-- Category Selection Dialog -->
     <ExpenseCategorySelectionDialog
       v-model="showCategoryDialog"
       :used-category-ids="getUsedCategoryIds()"
@@ -423,7 +402,6 @@
       @category-selected="onCategorySelected"
     />
 
-    <!-- Share Template Dialog -->
     <ShareExpenseTemplateDialog
       v-if="routeTemplateId"
       v-model="isShareDialogOpen"
@@ -435,7 +413,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import type { QForm } from 'quasar'
 
 import ExpenseTemplateCategory from 'src/components/expense-templates/ExpenseTemplateCategory.vue'
@@ -443,23 +421,28 @@ import ExpenseCategorySelectionDialog from 'src/components/expense-categories/Ex
 import ShareExpenseTemplateDialog from 'src/components/expense-templates/ShareExpenseTemplateDialog.vue'
 import { useTemplatesStore } from 'src/stores/templates'
 import { useCategoriesStore } from 'src/stores/categories'
-import { useUserStore } from 'src/stores/user'
 import { useExpenseTemplateItems } from 'src/composables/useExpenseTemplateItems'
 import { useError } from 'src/composables/useError'
-import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
-import type {
-  ExpenseTemplateWithItems,
-  ExpenseTemplateItemUI,
-  ExpenseCategory,
-  ExpenseTemplateCategoryUI,
-} from 'src/api'
+import { formatCurrency } from 'src/utils/currency'
+import { useExpenseTemplate } from 'src/composables/useExpenseTemplate'
+import type { ExpenseCategory, ExpenseTemplateCategoryUI } from 'src/api'
 
-const route = useRoute()
 const router = useRouter()
 const templatesStore = useTemplatesStore()
 const categoriesStore = useCategoriesStore()
-const userStore = useUserStore()
 const { handleError } = useError()
+const {
+  isTemplateLoading,
+  isNewTemplate,
+  routeTemplateId,
+  isOwner,
+  isReadOnlyMode,
+  isEditMode,
+  templateCurrency,
+  createNewTemplateWithItems,
+  updateExistingTemplateWithItems,
+  loadTemplate,
+} = useExpenseTemplate()
 const {
   expenseTemplateItems,
   totalAmount,
@@ -476,8 +459,6 @@ const {
 } = useExpenseTemplateItems()
 
 const templateForm = ref<QForm | null>(null)
-const isLoading = ref(false)
-const currentTemplate = ref<(ExpenseTemplateWithItems & { permission_level?: string }) | null>(null)
 const isShareDialogOpen = ref(false)
 const showCategoryDialog = ref(false)
 const form = ref({
@@ -485,41 +466,11 @@ const form = ref({
   duration: 'monthly' as string,
 })
 
-const isNewTemplate = computed(() => route.name === 'new-template')
-const routeTemplateId = computed(() =>
-  typeof route.params.id === 'string' ? route.params.id : null,
-)
-const isOwner = computed(() => {
-  if (!currentTemplate.value || !userStore.userProfile) return false
-  return currentTemplate.value.owner_id === userStore.userProfile.id
-})
-
-const isReadOnlyMode = computed(() => {
-  if (isNewTemplate.value) return false
-  if (isOwner.value) return false
-  return currentTemplate.value?.permission_level === 'view'
-})
-
-const canEdit = computed(() => {
-  if (isNewTemplate.value) return true
-  if (isOwner.value) return true
-  return currentTemplate.value?.permission_level === 'edit'
-})
-
-// Get currency for the template - user preference for new, stored value for existing
-const templateCurrency = computed((): CurrencyCode => {
-  if (isNewTemplate.value) {
-    return userStore.preferences.currency as CurrencyCode
-  }
-
-  return currentTemplate.value?.currency as CurrencyCode
-})
-
 const formattedTotalAmount = computed(() =>
   formatCurrency(totalAmount.value, templateCurrency.value),
 )
 
-const durationToggleOptions = [
+const durationToggleOptions = computed(() => [
   {
     label: 'Weekly',
     value: 'weekly',
@@ -532,7 +483,7 @@ const durationToggleOptions = [
     label: 'Yearly',
     value: 'yearly',
   },
-]
+])
 
 const pageTitle = computed(() => {
   if (isNewTemplate.value) return 'Create Template'
@@ -558,7 +509,6 @@ const breadcrumbIcon = computed(() => {
   return 'eva-edit-outline'
 })
 
-// Enrich expense categories with category names from the store
 const enrichedExpenseCategories = computed(() => {
   return expenseCategoryGroups.value.reduce((acc, group) => {
     const category = categoriesStore.getCategoryById(group.categoryId)
@@ -573,57 +523,12 @@ const enrichedExpenseCategories = computed(() => {
   }, [] as ExpenseTemplateCategoryUI[])
 })
 
-// Category selection and management
 function onCategorySelected(category: ExpenseCategory): void {
   addExpenseTemplateItem(category.id, category.color)
 }
 
 function goBack(): void {
   router.push({ name: 'templates' })
-}
-
-async function createNewTemplateWithItems(): Promise<boolean> {
-  const template = await templatesStore.addTemplate({
-    name: form.value.name,
-    duration: form.value.duration,
-    total: totalAmount.value,
-  })
-
-  if (!template) return false
-
-  const items = getExpenseTemplateItemsForSave().map((item) => ({
-    ...item,
-    template_id: template.id,
-  }))
-
-  await templatesStore.addItemsToTemplate(items)
-  return true
-}
-
-async function updateExistingTemplateWithItems(): Promise<boolean> {
-  if (!routeTemplateId.value || !currentTemplate.value) return false
-
-  const template = await templatesStore.editTemplate(routeTemplateId.value, {
-    name: form.value.name,
-    duration: form.value.duration,
-    total: totalAmount.value,
-  })
-
-  if (!template) return false
-
-  const existingItemIds = currentTemplate.value.expense_template_items.map((item) => item.id)
-  await templatesStore.removeItemsFromTemplate(existingItemIds)
-
-  const items = getExpenseTemplateItemsForSave().map((item) => ({
-    ...item,
-    template_id: template.id,
-  }))
-
-  if (items.length > 0) {
-    await templatesStore.addItemsToTemplate(items)
-  }
-
-  return true
 }
 
 async function saveTemplate(): Promise<void> {
@@ -643,46 +548,38 @@ async function saveTemplate(): Promise<void> {
   }
 
   let success = false
+  const templateItems = getExpenseTemplateItemsForSave()
 
   if (isNewTemplate.value) {
-    success = await createNewTemplateWithItems()
+    success = await createNewTemplateWithItems(
+      form.value.name,
+      form.value.duration,
+      totalAmount.value,
+      templateItems,
+    )
   } else {
-    success = await updateExistingTemplateWithItems()
+    success = await updateExistingTemplateWithItems(
+      form.value.name,
+      form.value.duration,
+      totalAmount.value,
+      templateItems,
+    )
   }
 
-  // Only redirect if the save was successful
   if (success) {
     goBack()
   }
 }
 
-async function loadTemplate(): Promise<void> {
-  if (isNewTemplate.value || !routeTemplateId.value) return
+async function loadCurrentTemplate(): Promise<void> {
+  const template = await loadTemplate()
 
-  currentTemplate.value = await templatesStore.loadTemplateWithItems(routeTemplateId.value)
+  if (!template) return
 
-  if (!currentTemplate.value) return
+  form.value.name = template.name
+  form.value.duration = template.duration
 
-  form.value.name = currentTemplate.value.name
-  form.value.duration = currentTemplate.value.duration
-
-  const items = currentTemplate.value.expense_template_items.reduce((acc, item) => {
-    const category = categoriesStore.getCategoryById(item.category_id)
-
-    if (category) {
-      acc.push({
-        id: item.id,
-        name: item.name || '',
-        categoryId: item.category_id,
-        amount: item.amount,
-        color: category.color,
-      })
-    }
-
-    return acc
-  }, [] as ExpenseTemplateItemUI[])
-
-  loadExpenseTemplateItems(items)
+  loadExpenseTemplateItems(template)
 }
 
 function openShareDialog(): void {
@@ -694,13 +591,13 @@ function onTemplateShared(): void {
 }
 
 onMounted(async () => {
-  isLoading.value = true
+  isTemplateLoading.value = true
 
   try {
     await categoriesStore.loadCategories()
-    await loadTemplate()
+    await loadCurrentTemplate()
   } finally {
-    isLoading.value = false
+    isTemplateLoading.value = false
   }
 })
 </script>

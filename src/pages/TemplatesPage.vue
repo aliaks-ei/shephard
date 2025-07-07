@@ -169,7 +169,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 import ShareExpenseTemplateDialog from 'src/components/expense-templates/ShareExpenseTemplateDialog.vue'
 import ExpenseTemplatesGroup from 'src/components/expense-templates/ExpenseTemplatesGroup.vue'
@@ -194,12 +194,12 @@ const {
 const isShareDialogOpen = ref(false)
 const shareTemplateId = ref<string | null>(null)
 
-const sortOptions = [
+const sortOptions = computed(() => [
   { label: 'Name', value: 'name' },
   { label: 'Total Amount', value: 'total' },
   { label: 'Duration', value: 'duration' },
   { label: 'Created Date', value: 'created_at' },
-]
+])
 
 function openShareDialog(templateId: string): void {
   shareTemplateId.value = templateId

@@ -1,5 +1,7 @@
 import { ref, computed } from 'vue'
-import type { ExpenseTemplateItemUI } from 'src/api'
+
+import { useCategoriesStore } from 'src/stores/categories'
+import type { ExpenseTemplateItemUI, ExpenseTemplateWithItems } from 'src/api'
 
 export type ExpenseCategoryGroup = {
   categoryId: string
@@ -10,6 +12,8 @@ export type ExpenseCategoryGroup = {
 }
 
 export function useExpenseTemplateItems() {
+  const categoriesStore = useCategoriesStore()
+
   const expenseTemplateItems = ref<ExpenseTemplateItemUI[]>([])
 
   const totalAmount = computed(() =>
@@ -103,7 +107,23 @@ export function useExpenseTemplateItems() {
     expenseTemplateItems.value = expenseTemplateItems.value.filter((item) => item.id !== itemId)
   }
 
-  function loadExpenseTemplateItems(items: ExpenseTemplateItemUI[]): void {
+  function loadExpenseTemplateItems(template: ExpenseTemplateWithItems): void {
+    const items = template.expense_template_items.reduce((acc, item) => {
+      const category = categoriesStore.getCategoryById(item.category_id)
+
+      if (category) {
+        acc.push({
+          id: item.id,
+          name: item.name || '',
+          categoryId: item.category_id,
+          amount: item.amount,
+          color: category.color,
+        })
+      }
+
+      return acc
+    }, [] as ExpenseTemplateItemUI[])
+
     expenseTemplateItems.value = [...items]
   }
 
