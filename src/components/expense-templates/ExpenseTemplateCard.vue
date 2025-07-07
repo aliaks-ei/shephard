@@ -7,7 +7,7 @@
     <q-item
       class="full-height q-pa-md"
       clickable
-      @click="editTemplate"
+      @click="emit('edit', template.id)"
     >
       <q-item-section class="justify-between">
         <div class="row items-start justify-between">
@@ -17,30 +17,18 @@
             </h3>
             <div class="row items-center q-gutter-xs">
               <q-badge
-                v-if="isOwner && hasShares && !hideSharedBadge"
-                outline
-                color="info"
+                v-for="badge in templateBadges"
+                :key="badge.text"
+                :color="badge.color"
                 class="q-px-sm q-py-xs"
+                outline
               >
                 <q-icon
-                  name="eva-people-outline"
-                  size="12px"
+                  :name="badge.icon"
                   class="q-mr-xs"
-                />
-                shared
-              </q-badge>
-              <q-badge
-                v-if="!isOwner && template.permission_level"
-                outline
-                :color="getPermissionColor(template.permission_level)"
-                class="q-px-sm q-py-xs"
-              >
-                <q-icon
-                  :name="getPermissionIcon(template.permission_level)"
                   size="12px"
-                  class="q-mr-xs"
                 />
-                {{ getPermissionText(template.permission_level) }}
+                {{ badge.text }}
               </q-badge>
             </div>
           </div>
@@ -54,61 +42,13 @@
               class="text-grey-7"
               @click.stop
             >
-              <q-menu
-                auto-close
-                anchor="bottom right"
-                self="top right"
-                :offset="[0, 8]"
-              >
-                <q-list separator>
-                  <q-item
-                    clickable
-                    @click="editTemplate"
-                  >
-                    <q-item-section side>
-                      <q-icon
-                        :name="getMenuActionIcon()"
-                        size="18px"
-                      />
-                    </q-item-section>
-                    <q-item-section>
-                      <q-item-label>{{ getMenuActionText() }}</q-item-label>
-                    </q-item-section>
-                  </q-item>
-                  <q-item
-                    v-if="isOwner"
-                    clickable
-                    @click="shareTemplate"
-                  >
-                    <q-item-section side>
-                      <q-icon
-                        name="eva-share-outline"
-                        size="18px"
-                      />
-                    </q-item-section>
-                    <q-item-section>
-                      <q-item-label>Share Template</q-item-label>
-                    </q-item-section>
-                  </q-item>
-                  <q-item
-                    v-if="isOwner"
-                    clickable
-                    class="text-negative q-px-md"
-                    @click="deleteTemplate"
-                  >
-                    <q-item-section side>
-                      <q-icon
-                        name="eva-trash-2-outline"
-                        color="negative"
-                        size="18px"
-                      />
-                    </q-item-section>
-                    <q-item-section>
-                      <q-item-label>Delete Template</q-item-label>
-                    </q-item-section>
-                  </q-item>
-                </q-list>
-              </q-menu>
+              <ExpenseTemplateCardMenu
+                :is-owner="isOwner"
+                :permission-level="template.permission_level"
+                @edit="emit('edit', template.id)"
+                @share="emit('share', template.id)"
+                @delete="emit('delete', template)"
+              />
             </q-btn>
           </div>
         </div>
@@ -144,14 +84,21 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+
+import ExpenseTemplateCardMenu from './ExpenseTemplateCardMenu.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import { useUserStore } from 'src/stores/user'
+import {
+  getPermissionText,
+  getPermissionColor,
+  getPermissionIcon,
+} from 'src/utils/expense-template'
 import type { ExpenseTemplateWithPermission } from 'src/api'
 
 const emit = defineEmits<{
   (e: 'edit', id: string): void
-  (e: 'delete', template: ExpenseTemplateWithPermission): void
   (e: 'share', id: string): void
+  (e: 'delete', template: ExpenseTemplateWithPermission): void
 }>()
 
 const props = withDefaults(
@@ -168,66 +115,34 @@ const userStore = useUserStore()
 
 const isOwner = computed(() => props.template.owner_id === userStore.userProfile?.id)
 const hasShares = computed(() => isOwner.value && !!props.template.is_shared)
+const templateBadges = computed(() => {
+  const badges: {
+    text: string
+    color: string
+    icon: string
+  }[] = []
 
-function editTemplate(): void {
-  emit('edit', props.template.id)
-}
+  if (isOwner.value && hasShares.value && !props.hideSharedBadge) {
+    badges.push({
+      text: 'shared',
+      color: 'info',
+      icon: 'eva-people-outline',
+    })
+  }
 
-function deleteTemplate(): void {
-  emit('delete', props.template)
-}
+  if (props.template.permission_level) {
+    badges.push({
+      text: getPermissionText(props.template.permission_level),
+      color: getPermissionColor(props.template.permission_level),
+      icon: getPermissionIcon(props.template.permission_level),
+    })
+  }
 
-function shareTemplate(): void {
-  emit('share', props.template.id)
-}
+  return badges
+})
 
 function formatAmount(amount: number | null | undefined): string {
   const currency = props.template.currency as CurrencyCode
   return formatCurrency(amount, currency)
-}
-
-function getPermissionText(permission: string): string {
-  switch (permission) {
-    case 'view':
-      return 'view only'
-    case 'edit':
-      return 'can edit'
-    default:
-      return 'unknown'
-  }
-}
-
-function getPermissionColor(permission: string): string {
-  switch (permission) {
-    case 'view':
-      return 'warning'
-    case 'edit':
-      return 'positive'
-    default:
-      return 'grey'
-  }
-}
-
-function getPermissionIcon(permission: string): string {
-  switch (permission) {
-    case 'view':
-      return 'eva-eye-outline'
-    case 'edit':
-      return 'eva-edit-outline'
-    default:
-      return 'eva-question-mark-outline'
-  }
-}
-
-function getMenuActionText(): string {
-  if (isOwner.value) return 'Edit Template'
-  if (props.template.permission_level === 'edit') return 'Edit Template'
-  return 'View Template'
-}
-
-function getMenuActionIcon(): string {
-  if (isOwner.value) return 'eva-edit-outline'
-  if (props.template.permission_level === 'edit') return 'eva-edit-outline'
-  return 'eva-eye-outline'
 }
 </script>
