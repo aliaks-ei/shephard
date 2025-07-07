@@ -84,7 +84,6 @@
         <div v-else>
           <q-form
             v-if="isEditMode"
-            ref="templateForm"
             @submit="saveTemplate"
           >
             <q-card
@@ -458,7 +457,6 @@ const {
   getUsedCategoryIds,
 } = useExpenseTemplateItems()
 
-const templateForm = ref<QForm | null>(null)
 const isShareDialogOpen = ref(false)
 const showCategoryDialog = ref(false)
 const form = ref({
@@ -532,9 +530,6 @@ function goBack(): void {
 }
 
 async function saveTemplate(): Promise<void> {
-  const isValid = await templateForm.value?.validate()
-
-  if (!isValid) return
   if (!isValidForSave.value) {
     if (!hasValidItems.value) {
       handleError('TEMPLATE_ITEMS.VALIDATION_FAILED', new Error('No valid items'))
