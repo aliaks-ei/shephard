@@ -13,7 +13,7 @@
       />
     </q-item-section>
 
-    <q-item-section style="max-width: 140px">
+    <q-item-section style="max-width: 150px">
       <q-input
         :model-value="modelValue.amount"
         :readonly="readonly"
@@ -69,8 +69,7 @@ const props = withDefaults(
   },
 )
 
-const currencySymbol = getCurrencySymbol(props.currency)
-
+const currencySymbol = computed(() => getCurrencySymbol(props.currency))
 const nameRules = computed(() =>
   props.readonly
     ? []
