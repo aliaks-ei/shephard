@@ -103,10 +103,6 @@ export function useExpenseTemplateItems() {
     expenseTemplateItems.value = expenseTemplateItems.value.filter((item) => item.id !== itemId)
   }
 
-  function resetExpenseTemplateItems(): void {
-    expenseTemplateItems.value = []
-  }
-
   function loadExpenseTemplateItems(items: ExpenseTemplateItemUI[]): void {
     expenseTemplateItems.value = [...items]
   }
@@ -121,18 +117,6 @@ export function useExpenseTemplateItems() {
       }))
   }
 
-  function isDuplicateNameCategory(name: string, categoryId: string, excludeId?: string): boolean {
-    if (!name.trim() || !categoryId) return false
-
-    return expenseTemplateItems.value.some((item) => {
-      if (excludeId && item.id === excludeId) return false
-      return (
-        item.categoryId === categoryId &&
-        item.name.trim().toLowerCase() === name.trim().toLowerCase()
-      )
-    })
-  }
-
   return {
     expenseTemplateItems,
     totalAmount,
@@ -143,10 +127,8 @@ export function useExpenseTemplateItems() {
     addExpenseTemplateItem,
     updateExpenseTemplateItem,
     removeExpenseTemplateItem,
-    resetExpenseTemplateItems,
     loadExpenseTemplateItems,
     getExpenseTemplateItemsForSave,
-    isDuplicateNameCategory,
     getUsedCategoryIds,
   }
 }

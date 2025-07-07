@@ -283,7 +283,6 @@ export const useTemplatesStore = defineStore('templates', () => {
     updateUserPermission,
     searchUsers,
     clearUserSearch,
-
     reset,
   }
 })
