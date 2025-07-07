@@ -92,7 +92,7 @@ import {
   getPermissionText,
   getPermissionColor,
   getPermissionIcon,
-} from 'src/utils/expense-template'
+} from 'src/utils/expense-templates'
 import type { ExpenseTemplateWithPermission } from 'src/api'
 
 const emit = defineEmits<{
