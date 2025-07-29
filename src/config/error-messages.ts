@@ -29,6 +29,7 @@ export type ErrorMessageKey =
   | 'CATEGORIES.CREATE_FAILED'
   | 'CATEGORIES.UPDATE_FAILED'
   | 'CATEGORIES.DELETE_FAILED'
+  | 'CATEGORIES.DUPLICATE_NAME'
   | 'TEMPLATE_ITEMS.LOAD_FAILED'
   | 'TEMPLATE_ITEMS.CREATE_FAILED'
   | 'TEMPLATE_ITEMS.UPDATE_FAILED'
@@ -208,6 +209,11 @@ export const ERROR_MESSAGES: Record<ErrorMessageKey, ErrorMessageConfig> = {
   },
   'CATEGORIES.DELETE_FAILED': {
     message: "We couldn't delete that category. Please try again.",
+    notify: true,
+    log: true,
+  },
+  'CATEGORIES.DUPLICATE_NAME': {
+    message: 'You already have a category with this name. Please choose a different name.',
     notify: true,
     log: true,
   },

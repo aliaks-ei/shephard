@@ -28,6 +28,10 @@ export const useCategoriesStore = defineStore('categories', () => {
     }, new Map<string, ExpenseCategory>()),
   )
 
+  const sortedCategories = computed(() => {
+    return categories.value.sort((a, b) => a.name.localeCompare(b.name))
+  })
+
   async function loadCategories() {
     if (!userId.value) return
 
@@ -43,8 +47,8 @@ export const useCategoriesStore = defineStore('categories', () => {
     }
   }
 
-  async function addCategory(payload: { name: string; color: string }) {
-    if (!userId.value) return
+  async function addCategory(payload: { name: string; color: string }): Promise<boolean> {
+    if (!userId.value) return false
 
     isLoading.value = true
 
@@ -53,19 +57,27 @@ export const useCategoriesStore = defineStore('categories', () => {
         name: payload.name,
         color: payload.color,
         owner_id: userId.value,
-        is_system: false,
       })
 
       categories.value.push(newCategory)
-      return newCategory
+      return true
     } catch (error) {
-      handleError('CATEGORIES.CREATE_FAILED', error)
+      // Handle specific duplicate name error
+      if (error instanceof Error && error.name === 'DUPLICATE_CATEGORY_NAME') {
+        handleError('CATEGORIES.DUPLICATE_NAME', error)
+      } else {
+        handleError('CATEGORIES.CREATE_FAILED', error)
+      }
+      return false
     } finally {
       isLoading.value = false
     }
   }
 
-  async function editCategory(categoryId: string, updates: ExpenseCategoryUpdate) {
+  async function editCategory(
+    categoryId: string,
+    updates: ExpenseCategoryUpdate,
+  ): Promise<boolean> {
     isLoading.value = true
 
     try {
@@ -76,9 +88,15 @@ export const useCategoriesStore = defineStore('categories', () => {
         categories.value[index] = updatedCategory
       }
 
-      return updatedCategory
+      return true
     } catch (error) {
-      handleError('CATEGORIES.UPDATE_FAILED', error, { categoryId })
+      // Handle specific duplicate name error
+      if (error instanceof Error && error.name === 'DUPLICATE_CATEGORY_NAME') {
+        handleError('CATEGORIES.DUPLICATE_NAME', error, { categoryId })
+      } else {
+        handleError('CATEGORIES.UPDATE_FAILED', error, { categoryId })
+      }
+      return false
     } finally {
       isLoading.value = false
     }
@@ -112,7 +130,7 @@ export const useCategoriesStore = defineStore('categories', () => {
     isLoading,
     categoryCount,
     categoriesMap,
-
+    sortedCategories,
     loadCategories,
     addCategory,
     editCategory,
