@@ -127,7 +127,7 @@ describe('User Store', () => {
         preferences: mockPreferences,
       })
 
-      expect(nameUtils.getUserDisplayName).toHaveBeenCalledWith(mockUser)
+      expect(nameUtils.getUserDisplayName).toHaveBeenCalledWith(undefined, 'test@example.com')
       expect(nameUtils.getUserInitial).toHaveBeenCalledWith('test@example.com')
     })
   })
