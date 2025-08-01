@@ -6,7 +6,23 @@ const routes: RouteRecordRaw[] = [
     component: () => import('layouts/MainLayout.vue'),
     children: [
       { path: '', component: () => import('pages/IndexPage.vue') },
-      { path: 'settings', component: () => import('pages/UserSettingsPage.vue') },
+      { path: 'settings', component: () => import('pages/UserSettingsPage.vue'), name: 'settings' },
+      { path: 'templates', component: () => import('pages/TemplatesPage.vue'), name: 'templates' },
+      {
+        path: 'templates/new',
+        component: () => import('pages/TemplatePage.vue'),
+        name: 'new-template',
+      },
+      {
+        path: 'templates/:id',
+        component: () => import('pages/TemplatePage.vue'),
+        name: 'template',
+      },
+      {
+        path: 'categories',
+        component: () => import('pages/CategoriesPage.vue'),
+        name: 'categories',
+      },
     ],
     meta: {
       requiresAuth: true,
@@ -15,6 +31,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/auth',
     component: () => import('pages/AuthPage.vue'),
+    name: 'auth',
     meta: {
       requiresAuth: false,
     },
@@ -22,6 +39,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/auth/callback',
     component: () => import('pages/AuthCallbackPage.vue'),
+    name: 'auth-callback',
     meta: {
       requiresAuth: false,
     },

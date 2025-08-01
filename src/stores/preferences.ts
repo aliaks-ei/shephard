@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { useAuthStore } from './auth'
+
+import { useAuthStore } from 'src/stores/auth'
 import {
   getUserPreferences,
   saveUserPreferences,
@@ -20,6 +21,7 @@ export const usePreferencesStore = defineStore('preferences', () => {
 
   const isDark = computed(() => preferences.value.darkMode)
   const arePushNotificationsEnabled = computed(() => preferences.value.pushNotificationsEnabled)
+  const currency = computed(() => preferences.value.currency)
 
   const { systemDarkMode } = useTheme(isDark, {
     onSystemDarkModeChange: (isSystemDark: boolean) => {
@@ -55,6 +57,7 @@ export const usePreferencesStore = defineStore('preferences', () => {
         darkMode: userPreferences.darkMode ?? DEFAULT_PREFERENCES.darkMode,
         pushNotificationsEnabled:
           userPreferences.pushNotificationsEnabled ?? DEFAULT_PREFERENCES.pushNotificationsEnabled,
+        currency: userPreferences.currency ?? DEFAULT_PREFERENCES.currency,
       }
     } catch (err) {
       handleError('USER.PREFERENCES_LOAD_FAILED', err, { userId: authStore.user?.id })
@@ -89,6 +92,7 @@ export const usePreferencesStore = defineStore('preferences', () => {
     isLoading,
     isDark,
     arePushNotificationsEnabled,
+    currency,
     loadPreferences,
     updatePreferences,
     initializeWithDefaults,

@@ -11,6 +11,7 @@ Before writing tests, create a plan for what exactly to test and check it with m
 
 - Use `Vitest` as the test runner.
 - Use `@vue/test-utils` v2+ for Vue component testing.
+- Run tests using `npm run test:unit:ci` command
 
 ## File Structure
 

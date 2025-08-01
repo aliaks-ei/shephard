@@ -1,0 +1,830 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { createTestingPinia } from '@pinia/testing'
+
+import { useTemplatesStore } from './templates'
+import { useUserStore } from './user'
+import { useError } from 'src/composables/useError'
+import * as templatesApi from 'src/api/templates'
+import * as userApi from 'src/api/user'
+import type {
+  ExpenseTemplate,
+  ExpenseTemplateWithPermission,
+  ExpenseTemplateWithItems,
+  ExpenseTemplateInsert,
+  ExpenseTemplateUpdate,
+  ExpenseTemplateItemInsert,
+  TemplateSharedUser,
+} from 'src/api/templates'
+import type { UserSearchResult } from 'src/api/user'
+
+vi.mock('src/composables/useError', () => ({
+  useError: vi.fn(),
+}))
+
+vi.mock('src/api/templates', () => ({
+  getExpenseTemplates: vi.fn(),
+  getExpenseTemplateWithItems: vi.fn(),
+  getTemplateSharedUsers: vi.fn(),
+  createExpenseTemplate: vi.fn(),
+  updateExpenseTemplate: vi.fn(),
+  deleteExpenseTemplate: vi.fn(),
+  shareTemplate: vi.fn(),
+  unshareTemplate: vi.fn(),
+  updateSharePermission: vi.fn(),
+  createExpenseTemplateItems: vi.fn(),
+  deleteExpenseTemplateItems: vi.fn(),
+}))
+
+vi.mock('src/api/user', () => ({
+  searchUsersByEmail: vi.fn(),
+}))
+
+vi.mock('./user', () => ({
+  useUserStore: vi.fn(),
+}))
+
+vi.mock('./auth', () => ({
+  useAuthStore: vi.fn(),
+}))
+
+vi.mock('./preferences', () => ({
+  usePreferencesStore: vi.fn(),
+}))
+
+describe('Templates Store', () => {
+  const mockHandleError = vi.fn()
+  const mockUserStore = {
+    userProfile: {
+      id: 'user-123',
+      email: 'test@example.com',
+      name: 'Test User',
+    },
+    preferences: {
+      currency: 'USD',
+    },
+  }
+
+  let templatesStore: ReturnType<typeof useTemplatesStore>
+
+  const mockTemplates: ExpenseTemplateWithPermission[] = [
+    {
+      id: 'template-1',
+      name: 'Grocery Shopping',
+      duration: '1 week',
+      currency: 'USD',
+      owner_id: 'user-123',
+      total: 100,
+      created_at: '2023-01-01T00:00:00Z',
+      updated_at: '2023-01-01T00:00:00Z',
+      permission_level: 'owner',
+      is_shared: false,
+    },
+    {
+      id: 'template-2',
+      name: 'Shared Template',
+      duration: '1 month',
+      currency: 'USD',
+      owner_id: 'user-456',
+      total: 200,
+      created_at: '2023-01-02T00:00:00Z',
+      updated_at: '2023-01-02T00:00:00Z',
+      permission_level: 'edit',
+      is_shared: true,
+    },
+  ]
+
+  const mockTemplateWithItems: ExpenseTemplateWithItems = {
+    id: 'template-1',
+    name: 'Grocery Shopping',
+    duration: '1 week',
+    currency: 'USD',
+    owner_id: 'user-123',
+    total: 100,
+    created_at: '2023-01-01T00:00:00Z',
+    updated_at: '2023-01-01T00:00:00Z',
+    expense_template_items: [
+      {
+        id: 'item-1',
+        template_id: 'template-1',
+        name: 'Milk',
+        category_id: 'cat-1',
+        amount: 5.99,
+        created_at: '2023-01-01T00:00:00Z',
+        updated_at: '2023-01-01T00:00:00Z',
+      },
+    ],
+  }
+
+  const mockSharedUsers: TemplateSharedUser[] = [
+    {
+      user_id: 'user-456',
+      user_name: 'John Doe',
+      user_email: 'john@example.com',
+      permission_level: 'edit',
+      shared_at: '2023-01-01T00:00:00Z',
+    },
+  ]
+
+  const mockUserSearchResults: UserSearchResult[] = [
+    {
+      id: 'user-789',
+      email: 'jane@example.com',
+      name: 'Jane Smith',
+    },
+  ]
+
+  const mockTemplateItems: ExpenseTemplateItemInsert[] = [
+    {
+      template_id: 'template-1',
+      name: 'Bread',
+      category_id: 'cat-1',
+      amount: 3.5,
+    },
+  ]
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+
+    vi.mocked(useError).mockReturnValue({
+      handleError: mockHandleError,
+    })
+
+    vi.mocked(useUserStore).mockReturnValue(
+      mockUserStore as unknown as ReturnType<typeof useUserStore>,
+    )
+
+    createTestingPinia({
+      createSpy: vi.fn,
+      stubActions: false,
+    })
+
+    templatesStore = useTemplatesStore()
+  })
+
+  describe('State Management', () => {
+    it('should initialize with empty state', () => {
+      expect(templatesStore.templates).toEqual([])
+      expect(templatesStore.sharedUsers).toEqual([])
+      expect(templatesStore.userSearchResults).toEqual([])
+      expect(templatesStore.isLoading).toBe(false)
+      expect(templatesStore.isSharing).toBe(false)
+      expect(templatesStore.isSearchingUsers).toBe(false)
+    })
+
+    it('should calculate templatesCount correctly', () => {
+      templatesStore.templates = mockTemplates
+      expect(templatesStore.templatesCount).toBe(2)
+    })
+
+    it('should filter ownedTemplates correctly', () => {
+      templatesStore.templates = mockTemplates
+      expect(templatesStore.ownedTemplates).toHaveLength(1)
+      expect(templatesStore.ownedTemplates[0]?.id).toBe('template-1')
+    })
+
+    it('should filter sharedTemplates correctly', () => {
+      templatesStore.templates = mockTemplates
+      expect(templatesStore.sharedTemplates).toHaveLength(1)
+      expect(templatesStore.sharedTemplates[0]?.id).toBe('template-2')
+    })
+  })
+
+  describe('loadTemplates', () => {
+    it('should load templates successfully', async () => {
+      vi.mocked(templatesApi.getExpenseTemplates).mockResolvedValue(mockTemplates)
+
+      await templatesStore.loadTemplates()
+
+      expect(templatesApi.getExpenseTemplates).toHaveBeenCalledWith('user-123')
+      expect(templatesStore.templates).toEqual(mockTemplates)
+      expect(templatesStore.isLoading).toBe(false)
+    })
+
+    it('should handle errors when loading templates', async () => {
+      const error = new Error('Failed to load')
+      vi.mocked(templatesApi.getExpenseTemplates).mockRejectedValue(error)
+
+      await templatesStore.loadTemplates()
+
+      expect(mockHandleError).toHaveBeenCalledWith('TEMPLATES.LOAD_FAILED', error)
+      expect(templatesStore.isLoading).toBe(false)
+    })
+
+    it('should not load templates if user is not authenticated', async () => {
+      // Create a new Pinia instance and store with null user
+      createTestingPinia({
+        createSpy: vi.fn,
+        stubActions: false,
+      })
+
+      vi.mocked(useUserStore).mockReturnValue({
+        ...mockUserStore,
+        userProfile: null,
+      } as unknown as ReturnType<typeof useUserStore>)
+
+      templatesStore = useTemplatesStore()
+
+      await templatesStore.loadTemplates()
+
+      expect(templatesApi.getExpenseTemplates).not.toHaveBeenCalled()
+    })
+
+    it('should set loading state correctly', async () => {
+      vi.mocked(templatesApi.getExpenseTemplates).mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            expect(templatesStore.isLoading).toBe(true)
+            resolve(mockTemplates)
+          }),
+      )
+
+      await templatesStore.loadTemplates()
+
+      expect(templatesStore.isLoading).toBe(false)
+    })
+  })
+
+  describe('loadTemplateWithItems', () => {
+    it('should load template with items successfully', async () => {
+      vi.mocked(templatesApi.getExpenseTemplateWithItems).mockResolvedValue(mockTemplateWithItems)
+
+      const result = await templatesStore.loadTemplateWithItems('template-1')
+
+      expect(templatesApi.getExpenseTemplateWithItems).toHaveBeenCalledWith(
+        'template-1',
+        'user-123',
+      )
+      expect(result).toEqual(mockTemplateWithItems)
+      expect(templatesStore.isLoading).toBe(false)
+    })
+
+    it('should handle errors when loading template with items', async () => {
+      const error = new Error('Failed to load template')
+      vi.mocked(templatesApi.getExpenseTemplateWithItems).mockRejectedValue(error)
+
+      const result = await templatesStore.loadTemplateWithItems('template-1')
+
+      expect(mockHandleError).toHaveBeenCalledWith('TEMPLATES.LOAD_TEMPLATE_FAILED', error, {
+        templateId: 'template-1',
+      })
+      expect(result).toBeNull()
+      expect(templatesStore.isLoading).toBe(false)
+    })
+
+    it('should return null if user is not authenticated', async () => {
+      // Create a new Pinia instance and store with null user
+      createTestingPinia({
+        createSpy: vi.fn,
+        stubActions: false,
+      })
+
+      vi.mocked(useUserStore).mockReturnValue({
+        ...mockUserStore,
+        userProfile: null,
+      } as unknown as ReturnType<typeof useUserStore>)
+
+      templatesStore = useTemplatesStore()
+
+      const result = await templatesStore.loadTemplateWithItems('template-1')
+
+      expect(templatesApi.getExpenseTemplateWithItems).not.toHaveBeenCalled()
+      expect(result).toBeNull()
+    })
+  })
+
+  describe('addTemplate', () => {
+    const templateData: Omit<ExpenseTemplateInsert, 'owner_id' | 'currency'> = {
+      name: 'New Template',
+      duration: '1 week',
+    }
+
+    it('should create template successfully', async () => {
+      const newTemplate = { ...mockTemplates[0], id: 'new-template' } as ExpenseTemplate
+      vi.mocked(templatesApi.createExpenseTemplate).mockResolvedValue(newTemplate)
+
+      const result = await templatesStore.addTemplate(templateData)
+
+      expect(templatesApi.createExpenseTemplate).toHaveBeenCalledWith({
+        ...templateData,
+        owner_id: 'user-123',
+        currency: 'USD',
+      })
+      expect(result).toEqual(newTemplate)
+      expect(templatesStore.isLoading).toBe(false)
+    })
+
+    it('should handle duplicate name errors', async () => {
+      const error = new Error('Duplicate name')
+      error.name = 'DUPLICATE_TEMPLATE_NAME'
+      vi.mocked(templatesApi.createExpenseTemplate).mockRejectedValue(error)
+
+      await templatesStore.addTemplate(templateData)
+
+      expect(mockHandleError).toHaveBeenCalledWith('TEMPLATES.DUPLICATE_NAME', error)
+      expect(templatesStore.isLoading).toBe(false)
+    })
+
+    it('should handle general errors', async () => {
+      const error = new Error('General error')
+      vi.mocked(templatesApi.createExpenseTemplate).mockRejectedValue(error)
+
+      await templatesStore.addTemplate(templateData)
+
+      expect(mockHandleError).toHaveBeenCalledWith('TEMPLATES.CREATE_FAILED', error)
+      expect(templatesStore.isLoading).toBe(false)
+    })
+
+    it('should not create template if user is not authenticated', async () => {
+      // Create a new Pinia instance and store with null user
+      createTestingPinia({
+        createSpy: vi.fn,
+        stubActions: false,
+      })
+
+      vi.mocked(useUserStore).mockReturnValue({
+        ...mockUserStore,
+        userProfile: null,
+      } as unknown as ReturnType<typeof useUserStore>)
+
+      templatesStore = useTemplatesStore()
+
+      await templatesStore.addTemplate(templateData)
+
+      expect(templatesApi.createExpenseTemplate).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('editTemplate', () => {
+    const updates: ExpenseTemplateUpdate = {
+      name: 'Updated Template',
+      duration: '2 weeks',
+    }
+
+    it('should update template successfully', async () => {
+      const updatedTemplate = { ...mockTemplates[0], ...updates } as ExpenseTemplate
+      vi.mocked(templatesApi.updateExpenseTemplate).mockResolvedValue(updatedTemplate)
+
+      const result = await templatesStore.editTemplate('template-1', updates)
+
+      expect(templatesApi.updateExpenseTemplate).toHaveBeenCalledWith('template-1', updates)
+      expect(result).toEqual(updatedTemplate)
+      expect(templatesStore.isLoading).toBe(false)
+    })
+
+    it('should handle duplicate name errors', async () => {
+      const error = new Error('Duplicate name')
+      error.name = 'DUPLICATE_TEMPLATE_NAME'
+      vi.mocked(templatesApi.updateExpenseTemplate).mockRejectedValue(error)
+
+      await templatesStore.editTemplate('template-1', updates)
+
+      expect(mockHandleError).toHaveBeenCalledWith('TEMPLATES.DUPLICATE_NAME', error, {
+        templateId: 'template-1',
+      })
+      expect(templatesStore.isLoading).toBe(false)
+    })
+
+    it('should handle general errors', async () => {
+      const error = new Error('General error')
+      vi.mocked(templatesApi.updateExpenseTemplate).mockRejectedValue(error)
+
+      await templatesStore.editTemplate('template-1', updates)
+
+      expect(mockHandleError).toHaveBeenCalledWith('TEMPLATES.UPDATE_FAILED', error, {
+        templateId: 'template-1',
+      })
+      expect(templatesStore.isLoading).toBe(false)
+    })
+  })
+
+  describe('removeTemplate', () => {
+    beforeEach(() => {
+      templatesStore.templates = [...mockTemplates]
+    })
+
+    it('should delete template successfully', async () => {
+      vi.mocked(templatesApi.deleteExpenseTemplate).mockResolvedValue()
+
+      await templatesStore.removeTemplate('template-1')
+
+      expect(templatesApi.deleteExpenseTemplate).toHaveBeenCalledWith('template-1')
+      expect(templatesStore.templates).toHaveLength(1)
+      expect(templatesStore.templates.find((t) => t.id === 'template-1')).toBeUndefined()
+      expect(templatesStore.isLoading).toBe(false)
+    })
+
+    it('should handle errors when deleting template', async () => {
+      const error = new Error('Failed to delete')
+      vi.mocked(templatesApi.deleteExpenseTemplate).mockRejectedValue(error)
+
+      await templatesStore.removeTemplate('template-1')
+
+      expect(mockHandleError).toHaveBeenCalledWith('TEMPLATES.DELETE_FAILED', error, {
+        templateId: 'template-1',
+      })
+      expect(templatesStore.templates).toHaveLength(2)
+      expect(templatesStore.isLoading).toBe(false)
+    })
+  })
+
+  describe('addItemsToTemplate', () => {
+    it('should create template items successfully', async () => {
+      const newItems = [
+        {
+          id: 'item-new',
+          template_id: 'template-1',
+          name: 'Bread',
+          category_id: 'cat-1',
+          amount: 3.5,
+          created_at: '2023-01-01T00:00:00Z',
+          updated_at: '2023-01-01T00:00:00Z',
+        },
+      ]
+      vi.mocked(templatesApi.createExpenseTemplateItems).mockResolvedValue(newItems)
+
+      const result = await templatesStore.addItemsToTemplate(mockTemplateItems)
+
+      expect(templatesApi.createExpenseTemplateItems).toHaveBeenCalledWith(mockTemplateItems)
+      expect(result).toEqual(newItems)
+    })
+
+    it('should handle errors when creating template items', async () => {
+      const error = new Error('Failed to create items')
+      vi.mocked(templatesApi.createExpenseTemplateItems).mockRejectedValue(error)
+
+      await templatesStore.addItemsToTemplate(mockTemplateItems)
+
+      expect(mockHandleError).toHaveBeenCalledWith('TEMPLATE_ITEMS.CREATE_FAILED', error)
+    })
+  })
+
+  describe('removeItemsFromTemplate', () => {
+    it('should delete template items successfully', async () => {
+      vi.mocked(templatesApi.deleteExpenseTemplateItems).mockResolvedValue()
+
+      await templatesStore.removeItemsFromTemplate(['item-1', 'item-2'])
+
+      expect(templatesApi.deleteExpenseTemplateItems).toHaveBeenCalledWith(['item-1', 'item-2'])
+    })
+
+    it('should handle errors when deleting template items', async () => {
+      const error = new Error('Failed to delete items')
+      vi.mocked(templatesApi.deleteExpenseTemplateItems).mockRejectedValue(error)
+
+      await templatesStore.removeItemsFromTemplate(['item-1', 'item-2'])
+
+      expect(mockHandleError).toHaveBeenCalledWith('TEMPLATE_ITEMS.DELETE_FAILED', error)
+    })
+  })
+
+  describe('loadTemplateShares', () => {
+    it('should load template shares successfully', async () => {
+      vi.mocked(templatesApi.getTemplateSharedUsers).mockResolvedValue(mockSharedUsers)
+
+      const result = await templatesStore.loadTemplateShares('template-1')
+
+      expect(templatesApi.getTemplateSharedUsers).toHaveBeenCalledWith('template-1')
+      expect(templatesStore.sharedUsers).toEqual(mockSharedUsers)
+      expect(result).toEqual(mockSharedUsers)
+      expect(templatesStore.isSharing).toBe(false)
+    })
+
+    it('should handle errors when loading template shares', async () => {
+      const error = new Error('Failed to load shares')
+      vi.mocked(templatesApi.getTemplateSharedUsers).mockRejectedValue(error)
+
+      await templatesStore.loadTemplateShares('template-1')
+
+      expect(mockHandleError).toHaveBeenCalledWith('TEMPLATES.LOAD_SHARES_FAILED', error, {
+        templateId: 'template-1',
+      })
+      expect(templatesStore.isSharing).toBe(false)
+    })
+
+    it('should set sharing state correctly', async () => {
+      vi.mocked(templatesApi.getTemplateSharedUsers).mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            expect(templatesStore.isSharing).toBe(true)
+            resolve(mockSharedUsers)
+          }),
+      )
+
+      await templatesStore.loadTemplateShares('template-1')
+
+      expect(templatesStore.isSharing).toBe(false)
+    })
+  })
+
+  describe('shareTemplateWithUser', () => {
+    beforeEach(() => {
+      vi.mocked(templatesApi.shareTemplate).mockResolvedValue()
+      vi.mocked(templatesApi.getTemplateSharedUsers).mockResolvedValue(mockSharedUsers)
+      vi.mocked(templatesApi.getExpenseTemplates).mockResolvedValue(mockTemplates)
+    })
+
+    it('should share template successfully', async () => {
+      await templatesStore.shareTemplateWithUser('template-1', 'user@example.com', 'edit')
+
+      expect(templatesApi.shareTemplate).toHaveBeenCalledWith(
+        'template-1',
+        'user@example.com',
+        'edit',
+        'user-123',
+      )
+      expect(templatesApi.getTemplateSharedUsers).toHaveBeenCalledWith('template-1')
+      expect(templatesApi.getExpenseTemplates).toHaveBeenCalledWith('user-123')
+      expect(templatesStore.isSharing).toBe(false)
+    })
+
+    it('should handle errors when sharing template', async () => {
+      const error = new Error('Failed to share')
+      vi.mocked(templatesApi.shareTemplate).mockRejectedValue(error)
+
+      await templatesStore.shareTemplateWithUser('template-1', 'user@example.com', 'edit')
+
+      expect(mockHandleError).toHaveBeenCalledWith('TEMPLATES.SHARE_FAILED', error, {
+        templateId: 'template-1',
+        userEmail: 'user@example.com',
+      })
+      expect(templatesStore.isSharing).toBe(false)
+    })
+
+    it('should not share template if user is not authenticated', async () => {
+      // Create a new Pinia instance and store with null user
+      createTestingPinia({
+        createSpy: vi.fn,
+        stubActions: false,
+      })
+
+      vi.mocked(useUserStore).mockReturnValue({
+        ...mockUserStore,
+        userProfile: null,
+      } as unknown as ReturnType<typeof useUserStore>)
+
+      templatesStore = useTemplatesStore()
+
+      await templatesStore.shareTemplateWithUser('template-1', 'user@example.com', 'edit')
+
+      expect(templatesApi.shareTemplate).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('unshareTemplateWithUser', () => {
+    beforeEach(() => {
+      templatesStore.sharedUsers = [...mockSharedUsers]
+      vi.mocked(templatesApi.unshareTemplate).mockResolvedValue()
+      vi.mocked(templatesApi.getExpenseTemplates).mockResolvedValue(mockTemplates)
+    })
+
+    it('should unshare template successfully', async () => {
+      await templatesStore.unshareTemplateWithUser('template-1', 'user-456')
+
+      expect(templatesApi.unshareTemplate).toHaveBeenCalledWith('template-1', 'user-456')
+      expect(templatesStore.sharedUsers).toHaveLength(0)
+      expect(templatesApi.getExpenseTemplates).toHaveBeenCalledWith('user-123')
+      expect(templatesStore.isSharing).toBe(false)
+    })
+
+    it('should handle errors when unsharing template', async () => {
+      const error = new Error('Failed to unshare')
+      vi.mocked(templatesApi.unshareTemplate).mockRejectedValue(error)
+
+      await templatesStore.unshareTemplateWithUser('template-1', 'user-456')
+
+      expect(mockHandleError).toHaveBeenCalledWith('TEMPLATES.UNSHARE_FAILED', error, {
+        templateId: 'template-1',
+        targetUserId: 'user-456',
+      })
+      expect(templatesStore.sharedUsers).toHaveLength(1)
+      expect(templatesStore.isSharing).toBe(false)
+    })
+  })
+
+  describe('updateUserPermission', () => {
+    beforeEach(() => {
+      templatesStore.sharedUsers = [...mockSharedUsers]
+      vi.mocked(templatesApi.updateSharePermission).mockResolvedValue()
+    })
+
+    it('should update user permission successfully', async () => {
+      await templatesStore.updateUserPermission('template-1', 'user-456', 'view')
+
+      expect(templatesApi.updateSharePermission).toHaveBeenCalledWith(
+        'template-1',
+        'user-456',
+        'view',
+      )
+      expect(templatesStore.sharedUsers[0]?.permission_level).toBe('view')
+      expect(templatesStore.isSharing).toBe(false)
+    })
+
+    it('should handle errors when updating user permission', async () => {
+      const error = new Error('Failed to update permission')
+      vi.mocked(templatesApi.updateSharePermission).mockRejectedValue(error)
+
+      // Store the original permission level
+      const originalPermission = templatesStore.sharedUsers[0]?.permission_level
+
+      await templatesStore.updateUserPermission('template-1', 'user-456', 'view')
+
+      expect(mockHandleError).toHaveBeenCalledWith('TEMPLATES.UPDATE_PERMISSION_FAILED', error, {
+        templateId: 'template-1',
+        targetUserId: 'user-456',
+      })
+      expect(templatesStore.sharedUsers[0]?.permission_level).toBe(originalPermission)
+      expect(templatesStore.isSharing).toBe(false)
+    })
+
+    it('should handle case when user is not found', async () => {
+      // Store the original permission level
+      const originalPermission = templatesStore.sharedUsers[0]?.permission_level
+
+      await templatesStore.updateUserPermission('template-1', 'non-existent-user', 'view')
+
+      expect(templatesApi.updateSharePermission).toHaveBeenCalledWith(
+        'template-1',
+        'non-existent-user',
+        'view',
+      )
+      expect(templatesStore.sharedUsers[0]?.permission_level).toBe(originalPermission)
+    })
+  })
+
+  describe('searchUsers', () => {
+    it('should search users successfully', async () => {
+      vi.mocked(userApi.searchUsersByEmail).mockResolvedValue(mockUserSearchResults)
+
+      const result = await templatesStore.searchUsers('jane@example.com')
+
+      expect(userApi.searchUsersByEmail).toHaveBeenCalledWith('jane@example.com')
+      expect(templatesStore.userSearchResults).toEqual(mockUserSearchResults)
+      expect(result).toEqual(mockUserSearchResults)
+      expect(templatesStore.isSearchingUsers).toBe(false)
+    })
+
+    it('should handle errors when searching users', async () => {
+      const error = new Error('Failed to search')
+      vi.mocked(userApi.searchUsersByEmail).mockRejectedValue(error)
+
+      const result = await templatesStore.searchUsers('jane@example.com')
+
+      expect(mockHandleError).toHaveBeenCalledWith('USERS.SEARCH_FAILED', error, {
+        query: 'jane@example.com',
+      })
+      expect(result).toEqual([])
+      expect(templatesStore.isSearchingUsers).toBe(false)
+    })
+
+    it('should clear results for empty query', async () => {
+      templatesStore.userSearchResults = [...mockUserSearchResults]
+
+      const result = await templatesStore.searchUsers('')
+
+      expect(userApi.searchUsersByEmail).not.toHaveBeenCalled()
+      expect(templatesStore.userSearchResults).toEqual([])
+      expect(result).toEqual([])
+    })
+
+    it('should clear results for whitespace-only query', async () => {
+      templatesStore.userSearchResults = [...mockUserSearchResults]
+
+      const result = await templatesStore.searchUsers('   ')
+
+      expect(userApi.searchUsersByEmail).not.toHaveBeenCalled()
+      expect(templatesStore.userSearchResults).toEqual([])
+      expect(result).toEqual([])
+    })
+
+    it('should set searching state correctly', async () => {
+      vi.mocked(userApi.searchUsersByEmail).mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            expect(templatesStore.isSearchingUsers).toBe(true)
+            resolve(mockUserSearchResults)
+          }),
+      )
+
+      await templatesStore.searchUsers('jane@example.com')
+
+      expect(templatesStore.isSearchingUsers).toBe(false)
+    })
+  })
+
+  describe('clearUserSearch', () => {
+    it('should clear user search results', () => {
+      templatesStore.userSearchResults = [...mockUserSearchResults]
+
+      templatesStore.clearUserSearch()
+
+      expect(templatesStore.userSearchResults).toEqual([])
+    })
+  })
+
+  describe('reset', () => {
+    beforeEach(() => {
+      templatesStore.templates = [...mockTemplates]
+      templatesStore.sharedUsers = [...mockSharedUsers]
+      templatesStore.userSearchResults = [...mockUserSearchResults]
+      templatesStore.isLoading = true
+      templatesStore.isSharing = true
+      templatesStore.isSearchingUsers = true
+    })
+
+    it('should reset all state to initial values', () => {
+      templatesStore.reset()
+
+      expect(templatesStore.templates).toEqual([])
+      expect(templatesStore.sharedUsers).toEqual([])
+      expect(templatesStore.userSearchResults).toEqual([])
+      expect(templatesStore.isLoading).toBe(false)
+      expect(templatesStore.isSharing).toBe(false)
+      expect(templatesStore.isSearchingUsers).toBe(false)
+    })
+  })
+
+  describe('Loading States', () => {
+    it('should manage isLoading state during template operations', async () => {
+      let resolvePromise: (value: ExpenseTemplateWithPermission[]) => void
+      const promise = new Promise<ExpenseTemplateWithPermission[]>((resolve) => {
+        resolvePromise = resolve
+      })
+
+      vi.mocked(templatesApi.getExpenseTemplates).mockReturnValue(promise)
+
+      const loadPromise = templatesStore.loadTemplates()
+      expect(templatesStore.isLoading).toBe(true)
+
+      resolvePromise!(mockTemplates)
+      await loadPromise
+
+      expect(templatesStore.isLoading).toBe(false)
+    })
+
+    it('should manage isSharing state during sharing operations', async () => {
+      let resolvePromise: (value: TemplateSharedUser[]) => void
+      const promise = new Promise<TemplateSharedUser[]>((resolve) => {
+        resolvePromise = resolve
+      })
+
+      vi.mocked(templatesApi.getTemplateSharedUsers).mockReturnValue(promise)
+
+      const loadPromise = templatesStore.loadTemplateShares('template-1')
+      expect(templatesStore.isSharing).toBe(true)
+
+      resolvePromise!(mockSharedUsers)
+      await loadPromise
+
+      expect(templatesStore.isSharing).toBe(false)
+    })
+
+    it('should manage isSearchingUsers state during user search', async () => {
+      let resolvePromise: (value: UserSearchResult[]) => void
+      const promise = new Promise<UserSearchResult[]>((resolve) => {
+        resolvePromise = resolve
+      })
+
+      vi.mocked(userApi.searchUsersByEmail).mockReturnValue(promise)
+
+      const searchPromise = templatesStore.searchUsers('jane@example.com')
+      expect(templatesStore.isSearchingUsers).toBe(true)
+
+      resolvePromise!(mockUserSearchResults)
+      await searchPromise
+
+      expect(templatesStore.isSearchingUsers).toBe(false)
+    })
+  })
+
+  describe('Error Handling', () => {
+    it('should always reset loading state after errors', async () => {
+      const error = new Error('Test error')
+      vi.mocked(templatesApi.getExpenseTemplates).mockRejectedValue(error)
+
+      await templatesStore.loadTemplates()
+
+      expect(templatesStore.isLoading).toBe(false)
+      expect(mockHandleError).toHaveBeenCalled()
+    })
+
+    it('should always reset sharing state after errors', async () => {
+      const error = new Error('Test error')
+      vi.mocked(templatesApi.getTemplateSharedUsers).mockRejectedValue(error)
+
+      await templatesStore.loadTemplateShares('template-1')
+
+      expect(templatesStore.isSharing).toBe(false)
+      expect(mockHandleError).toHaveBeenCalled()
+    })
+
+    it('should always reset searching state after errors', async () => {
+      const error = new Error('Test error')
+      vi.mocked(userApi.searchUsersByEmail).mockRejectedValue(error)
+
+      await templatesStore.searchUsers('jane@example.com')
+
+      expect(templatesStore.isSearchingUsers).toBe(false)
+      expect(mockHandleError).toHaveBeenCalled()
+    })
+  })
+})

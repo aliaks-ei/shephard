@@ -4,7 +4,7 @@ import { useDateFormat } from '@vueuse/core'
 
 import { useAuthStore } from './auth'
 import { usePreferencesStore } from './preferences'
-import { getUserInitial, getDisplayName } from 'src/utils/name'
+import { getUserInitial, getUserDisplayName } from 'src/utils/name'
 import type { UserPreferences } from 'src/api/user'
 
 export type UserProfile = {
@@ -37,7 +37,10 @@ export const useUserStore = defineStore('user', () => {
     return {
       id: authStore.user.id,
       email: authStore.user.email,
-      displayName: getDisplayName(authStore.user),
+      displayName: getUserDisplayName(
+        authStore.user.user_metadata?.full_name || authStore.user.user_metadata?.name,
+        authStore.user.email,
+      ),
       avatarUrl: authStore.user.user_metadata?.avatar_url,
       nameInitial: getUserInitial(authStore.user.email),
       authProvider: authStore.user.app_metadata?.provider,
@@ -52,7 +55,6 @@ export const useUserStore = defineStore('user', () => {
 
   async function initUser() {
     await authStore.init()
-
     if (authStore.isAuthenticated) {
       await preferencesStore.loadPreferences()
     }

@@ -36,7 +36,6 @@
       <p class="text-body2 q-mb-sm">Preparing secure authentication...</p>
       <q-btn
         flat
-        dense
         color="primary"
         label="Refresh"
         icon="eva-refresh-outline"

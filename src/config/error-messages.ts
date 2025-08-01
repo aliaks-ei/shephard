@@ -13,6 +13,30 @@ export type ErrorMessageKey =
   | 'USER.CREATE_FAILED'
   | 'USER.INIT_FAILED'
   | 'USER.EMAIL_RESET_FAILED'
+  | 'USERS.SEARCH_FAILED'
+  | 'TEMPLATES.LOAD_FAILED'
+  | 'TEMPLATES.LOAD_TEMPLATE_FAILED'
+  | 'TEMPLATES.CREATE_FAILED'
+  | 'TEMPLATES.UPDATE_FAILED'
+  | 'TEMPLATES.DELETE_FAILED'
+  | 'TEMPLATES.LOAD_SHARES_FAILED'
+  | 'TEMPLATES.SHARE_FAILED'
+  | 'TEMPLATES.UNSHARE_FAILED'
+  | 'TEMPLATES.UPDATE_PERMISSION_FAILED'
+  | 'TEMPLATES.DUPLICATE_NAME'
+  | 'TEMPLATES.NAME_VALIDATION_FAILED'
+  | 'CATEGORIES.LOAD_FAILED'
+  | 'CATEGORIES.CREATE_FAILED'
+  | 'CATEGORIES.UPDATE_FAILED'
+  | 'CATEGORIES.DELETE_FAILED'
+  | 'CATEGORIES.DUPLICATE_NAME'
+  | 'TEMPLATE_ITEMS.LOAD_FAILED'
+  | 'TEMPLATE_ITEMS.CREATE_FAILED'
+  | 'TEMPLATE_ITEMS.UPDATE_FAILED'
+  | 'TEMPLATE_ITEMS.DELETE_FAILED'
+  | 'TEMPLATE_ITEMS.VALIDATION_FAILED'
+  | 'TEMPLATE_ITEMS.DUPLICATE_NAME_CATEGORY'
+  | 'TEMPLATE_ITEMS.NAME_REQUIRED'
   | 'UNKNOWN'
 
 interface ErrorMessageConfig {
@@ -103,6 +127,135 @@ export const ERROR_MESSAGES: Record<ErrorMessageKey, ErrorMessageConfig> = {
     message: 'Something went wrong while resetting your email settings. Please try again.',
     notify: true,
     log: true,
+  },
+  'USERS.SEARCH_FAILED': {
+    message: "We couldn't search for users. Please try again later.",
+    notify: true,
+    log: true,
+  },
+
+  // Templates errors
+  'TEMPLATES.LOAD_FAILED': {
+    message: "We couldn't load your templates. Please refresh or try again later.",
+    notify: true,
+    log: true,
+  },
+  'TEMPLATES.LOAD_TEMPLATE_FAILED': {
+    message: "We couldn't load that template. Please try again or check if it still exists.",
+    notify: true,
+    log: true,
+  },
+  'TEMPLATES.CREATE_FAILED': {
+    message: "We couldn't create your template. Please check your details and try again.",
+    notify: true,
+    log: true,
+  },
+  'TEMPLATES.UPDATE_FAILED': {
+    message: "We couldn't save your template changes. Please try again.",
+    notify: true,
+    log: true,
+  },
+  'TEMPLATES.DELETE_FAILED': {
+    message: "We couldn't delete that template. Please try again.",
+    notify: true,
+    log: true,
+  },
+  'TEMPLATES.DUPLICATE_NAME': {
+    message: 'You already have a template with this name. Please choose a different name.',
+    notify: true,
+    log: true,
+  },
+  'TEMPLATES.NAME_VALIDATION_FAILED': {
+    message: 'Template name validation failed. Please check your input and try again.',
+    notify: true,
+    log: true,
+  },
+  'TEMPLATES.LOAD_SHARES_FAILED': {
+    message: "We couldn't load the sharing information. Please refresh or try again later.",
+    notify: true,
+    log: true,
+  },
+  'TEMPLATES.SHARE_FAILED': {
+    message: "We couldn't share that template. Please check the email address and try again.",
+    notify: true,
+    log: true,
+  },
+  'TEMPLATES.UNSHARE_FAILED': {
+    message: "We couldn't remove access to that template. Please try again.",
+    notify: true,
+    log: true,
+  },
+  'TEMPLATES.UPDATE_PERMISSION_FAILED': {
+    message: "We couldn't update the access permissions. Please try again.",
+    notify: true,
+    log: true,
+  },
+
+  // Categories errors
+  'CATEGORIES.LOAD_FAILED': {
+    message: "We couldn't load your categories. Please refresh or try again later.",
+    notify: true,
+    log: true,
+  },
+  'CATEGORIES.CREATE_FAILED': {
+    message: "We couldn't create your category. Please check your details and try again.",
+    notify: true,
+    log: true,
+  },
+  'CATEGORIES.UPDATE_FAILED': {
+    message: "We couldn't save your category changes. Please try again.",
+    notify: true,
+    log: true,
+  },
+  'CATEGORIES.DELETE_FAILED': {
+    message: "We couldn't delete that category. Please try again.",
+    notify: true,
+    log: true,
+  },
+  'CATEGORIES.DUPLICATE_NAME': {
+    message: 'You already have a category with this name. Please choose a different name.',
+    notify: true,
+    log: true,
+  },
+
+  // Template Items errors
+  'TEMPLATE_ITEMS.LOAD_FAILED': {
+    message: "We couldn't load the template items. Please refresh or try again later.",
+    notify: true,
+    log: true,
+  },
+  'TEMPLATE_ITEMS.CREATE_FAILED': {
+    message: "We couldn't add that item to your template. Please try again.",
+    notify: true,
+    log: true,
+  },
+  'TEMPLATE_ITEMS.UPDATE_FAILED': {
+    message: "We couldn't save your item changes. Please try again.",
+    notify: true,
+    log: true,
+  },
+  'TEMPLATE_ITEMS.DELETE_FAILED': {
+    message: "We couldn't remove that item from your template. Please try again.",
+    notify: true,
+    log: true,
+  },
+  'TEMPLATE_ITEMS.VALIDATION_FAILED': {
+    message:
+      'Please add at least one item with a name, category, and valid amount to create your template.',
+    notify: true,
+    log: false,
+  },
+  'TEMPLATE_ITEMS.DUPLICATE_NAME_CATEGORY': {
+    message:
+      'You already have an item with this name in this category. Please choose a different name.',
+    notify: true,
+    log: true,
+  },
+  'TEMPLATE_ITEMS.NAME_REQUIRED': {
+    message:
+      'Please add at least one item with a name, category, and valid amount to create your template.',
+    notify: true,
+    log: false,
   },
 
   // Default error

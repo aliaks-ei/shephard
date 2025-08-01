@@ -17,7 +17,7 @@ vi.mock('./preferences', () => ({
 
 vi.mock('src/utils/name', () => ({
   getUserInitial: vi.fn(),
-  getDisplayName: vi.fn(),
+  getUserDisplayName: vi.fn(),
 }))
 
 vi.mock('@vueuse/core', () => ({
@@ -45,7 +45,7 @@ describe('User Store', () => {
     vi.clearAllMocks()
 
     vi.mocked(nameUtils.getUserInitial).mockReturnValue('T')
-    vi.mocked(nameUtils.getDisplayName).mockReturnValue('Test User')
+    vi.mocked(nameUtils.getUserDisplayName).mockReturnValue('Test User')
 
     createTestingPinia({
       createSpy: vi.fn,
@@ -127,7 +127,7 @@ describe('User Store', () => {
         preferences: mockPreferences,
       })
 
-      expect(nameUtils.getDisplayName).toHaveBeenCalledWith(mockUser)
+      expect(nameUtils.getUserDisplayName).toHaveBeenCalledWith(undefined, 'test@example.com')
       expect(nameUtils.getUserInitial).toHaveBeenCalledWith('test@example.com')
     })
   })

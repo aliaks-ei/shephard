@@ -1,20 +1,15 @@
-import type { User } from 'src/api/user'
-
 /**
  * Returns the display name for a user
  * @param user - The user object
  * @returns The display name
  */
-export const getDisplayName = (user: User): string => {
-  if (!user) return ''
+export const getUserDisplayName = (
+  name: string | null | undefined,
+  email: string | null | undefined,
+): string => {
+  if (name) return name
+  if (!email) return ''
 
-  const fullName = user.user_metadata?.full_name || user.user_metadata?.name
-
-  if (fullName) {
-    return fullName
-  }
-
-  const email = user.email || ''
   const atIndex = email.indexOf('@')
 
   return atIndex > 0 ? email.substring(0, atIndex) : email

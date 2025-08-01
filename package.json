@@ -8,7 +8,7 @@
   "private": true,
   "scripts": {
     "lint": "eslint -c ./eslint.config.js \"./src*/**/*.{ts,js,cjs,mjs,vue}\"",
-    "format": "prettier --write \"**/*.{js,ts,vue,scss,html,md,json}\" --ignore-path .gitignore",
+    "format": "prettier --write \"**/*.{js,ts,vue,scss,html,md,json}\"",
     "dev": "quasar dev",
     "build": "quasar build",
     "postinstall": "quasar prepare",
@@ -17,7 +17,7 @@
     "prepare": "husky"
   },
   "lint-staged": {
-    "*.{js,ts,vue,scss,html,md,json}": "prettier --write \"**/*.{js,ts,vue,scss,html,md,json}\" --ignore-path .gitignore"
+    "*.{js,ts,vue,scss,html,md,json}": "prettier --write \"**/*.{js,ts,vue,scss,html,md,json}\""
   },
   "dependencies": {
     "@quasar/extras": "^1.16.4",

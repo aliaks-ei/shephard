@@ -69,8 +69,8 @@ it('should have proper layout structure', () => {
   const wrapper = createWrapper()
 
   expect(wrapper.find('.auth-page').exists()).toBe(true)
-  expect(wrapper.find('.auth-page').classes()).toContain('flex')
-  expect(wrapper.find('.auth-page').classes()).toContain('flex-center')
+  expect(wrapper.find('.auth-page').classes()).toContain('q-pa-md')
+  expect(wrapper.find('.row.justify-center.items-center.full-height').exists()).toBe(true)
   expect(wrapper.find('.q-card').exists()).toBe(true)
   expect(wrapper.find('.q-separator').exists()).toBe(true)
 })

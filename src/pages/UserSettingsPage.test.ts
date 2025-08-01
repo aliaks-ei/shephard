@@ -49,6 +49,7 @@ function createWrapper() {
                 preferences: {
                   darkMode: false,
                   pushNotificationsEnabled: true,
+                  currency: 'EUR',
                 },
               },
             },
@@ -115,6 +116,7 @@ it('does not render info items when profile data is missing', async () => {
     preferences: {
       darkMode: false,
       pushNotificationsEnabled: true,
+      currency: 'EUR',
     },
   }
 
@@ -163,6 +165,21 @@ it('updates dark mode preference when toggle is clicked', async () => {
 
   expect(userStore.updateUserPreferences).toHaveBeenCalledWith({
     preferences: { darkMode: true },
+  })
+})
+
+it('updates currency preference when a new value is selected', async () => {
+  const { wrapper, userStore } = createWrapper()
+
+  userStore.updateUserPreferences = vi.fn()
+
+  const currencySelect = wrapper.findComponent({ name: 'QSelect' })
+  expect(currencySelect.exists()).toBe(true)
+
+  await currencySelect.vm.$emit('update:model-value', 'USD')
+
+  expect(userStore.updateUserPreferences).toHaveBeenCalledWith({
+    preferences: { currency: 'USD' },
   })
 })
 

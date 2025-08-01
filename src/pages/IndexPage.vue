@@ -1,43 +1,44 @@
 <template>
-  <q-page class="row items-center justify-evenly">
-    <div class="column items-center">
-      <h2 class="q-mb-md">Welcome to Shephard</h2>
-      <p class="text-subtitle1 text-center q-mb-xl">Your smart expenses wallet</p>
+  <div class="q-pa-md">
+    <div class="row justify-center">
+      <div class="col-12 col-md-10 col-lg-8 col-xl-6">
+        <div class="column items-center">
+          <h2 class="q-mb-md">Welcome to Shephard</h2>
+          <p class="text-subtitle1 text-center q-mb-xl">Your smart expenses wallet</p>
 
-      <q-card
-        class="shadow-2"
-        style="width: 350px"
-      >
-        <q-card-section class="bg-primary text-white">
-          <h3 class="text-h6 q-my-none">Quick Actions</h3>
-        </q-card-section>
+          <q-card class="shadow-2 full-width">
+            <q-card-section class="bg-primary text-white">
+              <h3 class="text-h6 q-my-none">Quick Actions</h3>
+            </q-card-section>
 
-        <q-card-section>
-          <q-list>
-            <q-item
-              clickable
-              v-ripple
-              to="/settings"
-            >
-              <q-item-section avatar>
-                <q-icon
-                  name="eva-settings-2-outline"
-                  color="primary"
-                />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label>User Settings</q-item-label>
-                <q-item-label
-                  caption
-                  class="text-caption"
+            <q-card-section>
+              <q-list>
+                <q-item
+                  clickable
+                  v-ripple
+                  to="/settings"
                 >
-                  Manage your account settings
-                </q-item-label>
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-card-section>
-      </q-card>
+                  <q-item-section avatar>
+                    <q-icon
+                      name="eva-settings-2-outline"
+                      color="primary"
+                    />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>User Settings</q-item-label>
+                    <q-item-label
+                      caption
+                      class="text-caption"
+                    >
+                      Manage your account settings
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-card-section>
+          </q-card>
+        </div>
+      </div>
     </div>
-  </q-page>
+  </div>
 </template>

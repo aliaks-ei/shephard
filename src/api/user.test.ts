@@ -186,5 +186,6 @@ it('DEFAULT_PREFERENCES should have expected default values', () => {
   expect(DEFAULT_PREFERENCES).toEqual({
     darkMode: false,
     pushNotificationsEnabled: false,
+    currency: 'EUR',
   })
 })

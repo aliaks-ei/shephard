@@ -1,24 +1,30 @@
 <template>
-  <div class="auth-page flex flex-center column q-pa-md">
-    <h1 class="text-h4 text-primary q-mb-xl">Welcome to Shephard</h1>
-    <q-card class="auth-card shadow-5">
-      <q-card-section class="bg-primary text-white text-center">
-        <h2 class="text-h5">Sign In</h2>
-      </q-card-section>
+  <div class="auth-page q-pa-md">
+    <div class="row justify-center items-center full-height">
+      <div class="col-12 col-sm-8 col-md-6 col-lg-4 col-xl-3">
+        <div class="column items-center">
+          <h1 class="text-h4 text-primary q-mb-xl">Welcome to Shephard</h1>
+          <q-card class="shadow-5 full-width">
+            <q-card-section class="bg-primary text-white text-center">
+              <h2 class="text-h5">Sign In</h2>
+            </q-card-section>
 
-      <q-card-section class="q-pa-lg">
-        <p class="text-subtitle1 text-center q-mb-md">Please sign in to continue</p>
+            <q-card-section class="q-pa-lg">
+              <p class="text-subtitle1 text-center q-mb-md">Please sign in to continue</p>
 
-        <!-- Email OTP Authentication -->
-        <EmailOtpForm />
+              <!-- Email OTP Authentication -->
+              <EmailOtpForm />
 
-        <q-separator class="q-my-md" />
-        <p class="text-center q-mb-md">OR</p>
+              <q-separator class="q-my-md" />
+              <p class="text-center q-mb-md">OR</p>
 
-        <!-- Google Authentication -->
-        <GoogleAuthButton />
-      </q-card-section>
-    </q-card>
+              <!-- Google Authentication -->
+              <GoogleAuthButton />
+            </q-card-section>
+          </q-card>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
