@@ -6,7 +6,8 @@ import { ref } from 'vue'
 import TemplatePage from './TemplatePage.vue'
 import { useTemplatesStore } from 'src/stores/templates'
 import { useCategoriesStore } from 'src/stores/categories'
-import type { ExpenseCategory, ExpenseTemplateWithItems, ExpenseTemplateItemUI } from 'src/api'
+import type { ExpenseCategory, ExpenseTemplateWithItems } from 'src/api'
+import type { ExpenseTemplateItemUI } from 'src/types'
 import type { ExpenseCategoryGroup } from 'src/composables/useExpenseTemplateItems'
 
 installQuasarPlugin()

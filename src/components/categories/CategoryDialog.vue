@@ -144,7 +144,7 @@ async function onSubmit() {
 function onDialogShow() {
   if (isEditMode.value && props.category) {
     categoryName.value = props.category.name
-    categoryColor.value = props.category.color
+    categoryColor.value = props.category.color!
   } else {
     categoryName.value = ''
     categoryColor.value = generateRandomColor()
@@ -164,7 +164,7 @@ watch(
   (newCategory) => {
     if (newCategory) {
       categoryName.value = newCategory.name
-      categoryColor.value = newCategory.color
+      categoryColor.value = newCategory.color!
     }
   },
   { immediate: true },

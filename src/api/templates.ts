@@ -1,6 +1,6 @@
-import type { PostgrestError } from '@supabase/supabase-js'
 import { supabase } from 'src/lib/supabase/client'
 import type { Tables, TablesInsert, TablesUpdate } from 'src/lib/supabase/types'
+import { isDuplicateNameError, createDuplicateNameError } from 'src/utils/database'
 
 export type ExpenseTemplate = Tables<'expense_templates'>
 export type ExpenseTemplateInsert = TablesInsert<'expense_templates'>
@@ -25,27 +25,6 @@ export type TemplateSharedUser = {
   permission_level: string
   shared_at: string
 }
-
-export type ExpenseTemplateItemUI = {
-  id: string
-  name: string
-  categoryId: string
-  amount: number
-  color: string
-}
-
-export type ExpenseTemplateCategoryUI = {
-  categoryId: string
-  categoryName: string
-  categoryColor: string
-  items: ExpenseTemplateItemUI[]
-  subtotal: number
-}
-
-const isDuplicateNameError = (error: PostgrestError) =>
-  (error.code === '23505' && error.message.includes('unique_template_name_per_user')) ||
-  (error.message && error.message.includes('unique_template_name_per_user')) ||
-  (error.message && error.message.includes('duplicate key value violates unique constraint'))
 
 export async function getExpenseTemplates(
   userId: string,
@@ -105,10 +84,8 @@ export async function createExpenseTemplate(
     .single()
 
   if (error) {
-    if (isDuplicateNameError(error)) {
-      const duplicateError = new Error('DUPLICATE_TEMPLATE_NAME')
-      duplicateError.name = 'DUPLICATE_TEMPLATE_NAME'
-      throw duplicateError
+    if (isDuplicateNameError(error, 'unique_template_name_per_user')) {
+      throw createDuplicateNameError('TEMPLATE')
     }
 
     throw error
@@ -129,10 +106,8 @@ export async function updateExpenseTemplate(
     .single()
 
   if (error) {
-    if (isDuplicateNameError(error)) {
-      const duplicateError = new Error('DUPLICATE_TEMPLATE_NAME')
-      duplicateError.name = 'DUPLICATE_TEMPLATE_NAME'
-      throw duplicateError
+    if (isDuplicateNameError(error, 'unique_template_name_per_user')) {
+      throw createDuplicateNameError('TEMPLATE')
     }
 
     throw error

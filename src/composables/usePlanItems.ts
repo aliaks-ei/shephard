@@ -1,38 +1,36 @@
 import { ref, computed } from 'vue'
 
 import { useCategoriesStore } from 'src/stores/categories'
-import type { ExpenseTemplateWithItems } from 'src/api'
-import type { ExpenseTemplateItemUI } from 'src/types'
+import type { PlanWithItems } from 'src/api'
+import type { PlanItemUI } from 'src/types'
 
-export type ExpenseCategoryGroup = {
+export type PlanCategoryGroup = {
   categoryId: string
   categoryName: string
   categoryColor: string
-  items: ExpenseTemplateItemUI[]
+  items: PlanItemUI[]
   subtotal: number
 }
 
-export function useExpenseTemplateItems() {
+export function usePlanItems() {
   const categoriesStore = useCategoriesStore()
 
-  const expenseTemplateItems = ref<ExpenseTemplateItemUI[]>([])
+  const planItems = ref<PlanItemUI[]>([])
 
   const totalAmount = computed(() =>
-    expenseTemplateItems.value.reduce((total, item) => total + item.amount, 0),
+    planItems.value.reduce((total, item) => total + item.amount, 0),
   )
 
   const hasValidItems = computed(
     () =>
-      expenseTemplateItems.value.length > 0 &&
-      expenseTemplateItems.value.every(
-        (item) => item.name.trim() && item.categoryId && item.amount > 0,
-      ),
+      planItems.value.length > 0 &&
+      planItems.value.every((item) => item.name.trim() && item.categoryId && item.amount > 0),
   )
 
   // Check for duplicate name+category combinations
   const hasDuplicateItems = computed(() => {
     const seen = new Set<string>()
-    return expenseTemplateItems.value.some((item) => {
+    return planItems.value.some((item) => {
       if (!item.name.trim() || !item.categoryId) return false
 
       const key = `${item.categoryId}-${item.name.trim().toLowerCase()}`
@@ -47,10 +45,10 @@ export function useExpenseTemplateItems() {
   const isValidForSave = computed(() => hasValidItems.value && !hasDuplicateItems.value)
 
   // Group items by category for enhanced display
-  const expenseCategoryGroups = computed((): ExpenseCategoryGroup[] => {
-    const groups = new Map<string, ExpenseCategoryGroup>()
+  const planCategoryGroups = computed((): PlanCategoryGroup[] => {
+    const groups = new Map<string, PlanCategoryGroup>()
 
-    expenseTemplateItems.value.forEach((item) => {
+    planItems.value.forEach((item) => {
       if (!item.categoryId) return
 
       if (!groups.has(item.categoryId)) {
@@ -71,8 +69,8 @@ export function useExpenseTemplateItems() {
     return [...groups.values()]
   })
 
-  function addExpenseTemplateItem(categoryId: string, categoryColor: string): void {
-    expenseTemplateItems.value.push({
+  function addPlanItem(categoryId: string, categoryColor: string): void {
+    planItems.value.push({
       id: `temp_${crypto.randomUUID()}`,
       name: '',
       categoryId,
@@ -82,20 +80,17 @@ export function useExpenseTemplateItems() {
   }
 
   function getUsedCategoryIds(): string[] {
-    return [...new Set(expenseTemplateItems.value.map((item) => item.categoryId).filter(Boolean))]
+    return [...new Set(planItems.value.map((item) => item.categoryId).filter(Boolean))]
   }
 
-  function updateExpenseTemplateItem(
-    itemId: string,
-    updates: Partial<ExpenseTemplateItemUI> | ExpenseTemplateItemUI,
-  ): void {
-    const itemIndex = expenseTemplateItems.value.findIndex((item) => item.id === itemId)
+  function updatePlanItem(itemId: string, updates: Partial<PlanItemUI> | PlanItemUI): void {
+    const itemIndex = planItems.value.findIndex((item) => item.id === itemId)
     if (itemIndex === -1) return
 
-    const currentItem = expenseTemplateItems.value[itemIndex]
+    const currentItem = planItems.value[itemIndex]
     if (!currentItem) return
 
-    expenseTemplateItems.value[itemIndex] = {
+    planItems.value[itemIndex] = {
       id: currentItem.id,
       name: updates.name ?? currentItem.name,
       categoryId: updates.categoryId ?? currentItem.categoryId,
@@ -104,12 +99,12 @@ export function useExpenseTemplateItems() {
     }
   }
 
-  function removeExpenseTemplateItem(itemId: string): void {
-    expenseTemplateItems.value = expenseTemplateItems.value.filter((item) => item.id !== itemId)
+  function removePlanItem(itemId: string): void {
+    planItems.value = planItems.value.filter((item) => item.id !== itemId)
   }
 
-  function loadExpenseTemplateItems(template: ExpenseTemplateWithItems): void {
-    const items = template.expense_template_items.reduce((acc, item) => {
+  function loadPlanItems(plan: PlanWithItems): void {
+    const items = plan.plan_items.reduce((acc, item) => {
       const category = categoriesStore.getCategoryById(item.category_id)
 
       if (category) {
@@ -123,13 +118,35 @@ export function useExpenseTemplateItems() {
       }
 
       return acc
-    }, [] as ExpenseTemplateItemUI[])
+    }, [] as PlanItemUI[])
 
-    expenseTemplateItems.value = [...items]
+    planItems.value = [...items]
   }
 
-  function getExpenseTemplateItemsForSave() {
-    return expenseTemplateItems.value
+  function loadPlanItemsFromTemplate(
+    templateItems: { id: string; name: string; category_id: string; amount: number }[],
+  ): void {
+    const items = templateItems.reduce((acc, item) => {
+      const category = categoriesStore.getCategoryById(item.category_id)
+
+      if (category) {
+        acc.push({
+          id: `temp_${crypto.randomUUID()}`, // Generate new temp IDs for plan items
+          name: item.name || '',
+          categoryId: item.category_id,
+          amount: item.amount,
+          color: category.color || '',
+        })
+      }
+
+      return acc
+    }, [] as PlanItemUI[])
+
+    planItems.value = [...items]
+  }
+
+  function getPlanItemsForSave() {
+    return planItems.value
       .filter((item) => item.name.trim() && item.categoryId && item.amount > 0)
       .map((item) => ({
         name: item.name.trim(),
@@ -138,18 +155,24 @@ export function useExpenseTemplateItems() {
       }))
   }
 
+  function clearPlanItems(): void {
+    planItems.value = []
+  }
+
   return {
-    expenseTemplateItems,
+    planItems,
     totalAmount,
     hasValidItems,
     hasDuplicateItems,
     isValidForSave,
-    expenseCategoryGroups,
-    addExpenseTemplateItem,
-    updateExpenseTemplateItem,
-    removeExpenseTemplateItem,
-    loadExpenseTemplateItems,
-    getExpenseTemplateItemsForSave,
+    planCategoryGroups,
+    addPlanItem,
+    updatePlanItem,
+    removePlanItem,
+    loadPlanItems,
+    loadPlanItemsFromTemplate,
+    getPlanItemsForSave,
     getUsedCategoryIds,
+    clearPlanItems,
   }
 }

@@ -66,6 +66,11 @@ import NavigationDrawer from 'src/components/NavigationDrawer.vue'
 const leftDrawerOpen = ref(false)
 const navigationItems = ref([
   {
+    icon: 'eva-calendar-outline',
+    label: 'Plans',
+    to: '/plans',
+  },
+  {
     icon: 'eva-file-text-outline',
     label: 'Templates',
     to: '/templates',

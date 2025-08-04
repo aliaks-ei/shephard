@@ -4,7 +4,7 @@ import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { ComponentProps } from 'vue-component-type-helpers'
 
 import ExpenseTemplateCategory from './ExpenseTemplateCategory.vue'
-import type { ExpenseTemplateItemUI } from 'src/api'
+import type { ExpenseTemplateItemUI } from 'src/types'
 import type { CurrencyCode } from 'src/utils/currency'
 
 vi.mock('src/utils/currency', () => ({

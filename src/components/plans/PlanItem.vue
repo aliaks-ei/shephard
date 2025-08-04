@@ -51,16 +51,16 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { getCurrencySymbol, type CurrencyCode } from 'src/utils/currency'
-import type { ExpenseTemplateItemUI } from 'src/types'
+import type { PlanItemUI } from 'src/types'
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', item: ExpenseTemplateItemUI): void
+  (e: 'update:modelValue', item: PlanItemUI): void
   (e: 'remove'): void
 }>()
 
 const props = withDefaults(
   defineProps<{
-    modelValue: ExpenseTemplateItemUI
+    modelValue: PlanItemUI
     currency: CurrencyCode
     readonly?: boolean
   }>(),
@@ -88,7 +88,7 @@ const amountRules = computed(() =>
 function updateName(name: string | number | null): void {
   if (props.readonly || typeof name !== 'string') return
 
-  const updatedItem: ExpenseTemplateItemUI = {
+  const updatedItem: PlanItemUI = {
     ...props.modelValue,
     name,
   }
@@ -99,7 +99,7 @@ function updateName(name: string | number | null): void {
 function updateAmount(amount: string | number | null): void {
   if (props.readonly) return
 
-  const updatedItem: ExpenseTemplateItemUI = {
+  const updatedItem: PlanItemUI = {
     ...props.modelValue,
     amount: Number(amount) || 0,
   }

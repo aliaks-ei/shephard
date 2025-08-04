@@ -424,7 +424,8 @@ import { useExpenseTemplateItems } from 'src/composables/useExpenseTemplateItems
 import { useError } from 'src/composables/useError'
 import { formatCurrency } from 'src/utils/currency'
 import { useExpenseTemplate } from 'src/composables/useExpenseTemplate'
-import type { ExpenseCategory, ExpenseTemplateCategoryUI } from 'src/api'
+import type { ExpenseCategory } from 'src/api'
+import type { ExpenseTemplateCategoryUI } from 'src/types'
 
 const router = useRouter()
 const templatesStore = useTemplatesStore()
@@ -514,7 +515,7 @@ const enrichedExpenseCategories = computed(() => {
       acc.push({
         ...group,
         categoryName: category.name,
-        categoryColor: category.color,
+        categoryColor: category.color || '#1976d2',
       })
     }
     return acc
@@ -522,7 +523,7 @@ const enrichedExpenseCategories = computed(() => {
 })
 
 function onCategorySelected(category: ExpenseCategory): void {
-  addExpenseTemplateItem(category.id, category.color)
+  addExpenseTemplateItem(category.id, category.color || '#1976d2')
 }
 
 function goBack(): void {

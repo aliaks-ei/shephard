@@ -40,7 +40,7 @@
 
       <q-card-section class="q-pt-none">
         <q-list>
-          <ExpenseTemplateItem
+          <PlanItem
             v-for="item in items"
             :key="item.id"
             :model-value="item"
@@ -70,12 +70,12 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import ExpenseTemplateItem from './ExpenseTemplateItem.vue'
+import PlanItem from './PlanItem.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
-import type { ExpenseTemplateItemUI } from 'src/types'
+import type { PlanItemUI } from 'src/types'
 
 const emit = defineEmits<{
-  (e: 'update-item', itemId: string, item: ExpenseTemplateItemUI): void
+  (e: 'update-item', itemId: string, item: PlanItemUI): void
   (e: 'remove-item', itemId: string): void
   (e: 'add-item', categoryId: string, categoryColor: string): void
 }>()
@@ -84,8 +84,7 @@ interface Props {
   categoryId: string
   categoryName: string
   categoryColor: string
-  items: ExpenseTemplateItemUI[]
-  subtotal: number
+  items: PlanItemUI[]
   currency: CurrencyCode
   readonly?: boolean
   defaultExpanded?: boolean
@@ -99,13 +98,14 @@ const props = withDefaults(defineProps<Props>(), {
 const isExpanded = ref(props.defaultExpanded)
 
 const itemCount = computed(() => props.items.length)
-const formattedSubtotal = computed(() => formatCurrency(props.subtotal, props.currency))
+const subtotal = computed(() => props.items.reduce((sum, item) => sum + item.amount, 0))
+const formattedSubtotal = computed(() => formatCurrency(subtotal.value, props.currency))
 const groupCaption = computed(() => {
   const count = itemCount.value
   return `${count} ${count === 1 ? 'item' : 'items'} • ${formattedSubtotal.value}`
 })
 
-function handleUpdateItem(itemId: string, updatedItem: ExpenseTemplateItemUI): void {
+function handleUpdateItem(itemId: string, updatedItem: PlanItemUI): void {
   emit('update-item', itemId, updatedItem)
 }
 </script>
