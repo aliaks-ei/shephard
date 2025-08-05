@@ -36,6 +36,23 @@
         </q-item-section>
       </q-item>
       <q-item
+        v-if="isOwner && canCancel"
+        clickable
+        class="text-warning q-px-md"
+        @click="emit('cancel')"
+      >
+        <q-item-section side>
+          <q-icon
+            name="eva-stop-circle-outline"
+            color="warning"
+            size="18px"
+          />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label>Cancel Plan</q-item-label>
+        </q-item-section>
+      </q-item>
+      <q-item
         v-if="isOwner && canDelete"
         clickable
         class="text-negative q-px-md"
@@ -63,6 +80,7 @@ const emit = defineEmits<{
   (e: 'edit'): void
   (e: 'share'): void
   (e: 'delete'): void
+  (e: 'cancel'): void
 }>()
 
 const props = defineProps<{
@@ -73,6 +91,10 @@ const props = defineProps<{
 
 const canDelete = computed(() => {
   return props.planStatus === 'pending' || props.planStatus === 'cancelled'
+})
+
+const canCancel = computed(() => {
+  return props.planStatus === 'active'
 })
 
 function getMenuActionText(): string {

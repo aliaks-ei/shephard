@@ -4,18 +4,14 @@
     :title="title"
     icon="eva-file-text-outline"
     :chip-color="chipColor || 'primary'"
-    :hide-shared-badge="hideSharedBadge || false"
-    @edit="emit('edit', $event)"
-    @share="emit('share', $event)"
-    @delete="emit('delete', $event)"
   >
-    <template #item-card="{ item, hideSharedBadge, onEdit, onDelete, onShare }">
+    <template #item-card="{ item }">
       <ExpenseTemplateCard
         :template="item"
-        :hide-shared-badge="hideSharedBadge"
-        @edit="onEdit"
-        @delete="onDelete"
-        @share="onShare"
+        :hide-shared-badge="hideSharedBadge || false"
+        @edit="emit('edit', $event)"
+        @delete="emit('delete', $event)"
+        @share="emit('share', $event)"
       />
     </template>
   </ItemsGroup>

@@ -48,7 +48,8 @@
                 :plan-status="planStatus"
                 @edit="emit('edit', plan.id)"
                 @share="emit('share', plan.id)"
-                @delete="emit('delete', plan)"
+                @delete="showDeleteDialog"
+                @cancel="showCancelDialog"
               />
             </q-btn>
           </div>
@@ -85,11 +86,85 @@
         </div>
       </q-item-section>
     </q-item>
+
+    <!-- Delete Confirmation Dialog -->
+    <q-dialog
+      v-model="isDeleteDialogOpen"
+      persistent
+    >
+      <q-card class="q-pa-md">
+        <q-card-section>
+          <div class="text-h6 q-mb-md">Delete Plan</div>
+          <p class="q-mb-md">
+            Are you sure you want to delete "<strong>{{ plan.name }}</strong
+            >"?
+          </p>
+          <p class="text-caption text-grey-6 q-mb-none">
+            This action cannot be undone. All plan data will be permanently removed.
+          </p>
+        </q-card-section>
+
+        <q-card-actions
+          align="right"
+          class="q-pt-none"
+        >
+          <q-btn
+            flat
+            label="Cancel"
+            color="grey-7"
+            @click="isDeleteDialogOpen = false"
+          />
+          <q-btn
+            unelevated
+            label="Delete Plan"
+            color="negative"
+            @click="confirmDelete"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <!-- Cancel Confirmation Dialog -->
+    <q-dialog
+      v-model="isCancelDialogOpen"
+      persistent
+    >
+      <q-card class="q-pa-md">
+        <q-card-section>
+          <div class="text-h6 q-mb-md">Cancel Plan</div>
+          <p class="q-mb-md">
+            Are you sure you want to cancel "<strong>{{ plan.name }}</strong
+            >"?
+          </p>
+          <p class="text-caption text-grey-6 q-mb-none">
+            This will mark the plan as cancelled and stop any active tracking.
+          </p>
+        </q-card-section>
+
+        <q-card-actions
+          align="right"
+          class="q-pt-none"
+        >
+          <q-btn
+            flat
+            label="Keep Active"
+            color="grey-7"
+            @click="isCancelDialogOpen = false"
+          />
+          <q-btn
+            unelevated
+            label="Cancel Plan"
+            color="warning"
+            @click="confirmCancel"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-card>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import PlanCardMenu from './PlanCardMenu.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
@@ -112,6 +187,7 @@ const emit = defineEmits<{
   (e: 'edit', id: string): void
   (e: 'share', id: string): void
   (e: 'delete', plan: PlanWithPermission): void
+  (e: 'cancel', plan: PlanWithPermission): void
 }>()
 
 const props = withDefaults(
@@ -125,6 +201,9 @@ const props = withDefaults(
 )
 
 const userStore = useUserStore()
+
+const isDeleteDialogOpen = ref(false)
+const isCancelDialogOpen = ref(false)
 
 const isOwner = computed(() => props.plan.owner_id === userStore.userProfile?.id)
 const hasShares = computed(() => isOwner.value && !!props.plan.is_shared)
@@ -159,5 +238,23 @@ const planBadges = computed(() => {
 function formatAmount(amount: number | null | undefined): string {
   const currency = props.plan.currency as CurrencyCode
   return formatCurrency(amount, currency)
+}
+
+function showDeleteDialog(): void {
+  isDeleteDialogOpen.value = true
+}
+
+function showCancelDialog(): void {
+  isCancelDialogOpen.value = true
+}
+
+function confirmDelete(): void {
+  emit('delete', props.plan)
+  isDeleteDialogOpen.value = false
+}
+
+function confirmCancel(): void {
+  emit('cancel', props.plan)
+  isCancelDialogOpen.value = false
 }
 </script>

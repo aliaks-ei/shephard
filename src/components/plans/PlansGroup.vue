@@ -4,18 +4,15 @@
     :title="title"
     icon="eva-calendar-outline"
     :chip-color="chipColor || 'primary'"
-    :hide-shared-badge="hideSharedBadge || false"
-    @edit="emit('edit', $event)"
-    @share="emit('share', $event)"
-    @delete="emit('delete', $event)"
   >
-    <template #item-card="{ item, hideSharedBadge, onEdit, onDelete, onShare }">
+    <template #item-card="{ item }">
       <PlanCard
         :plan="item"
-        :hide-shared-badge="hideSharedBadge"
-        @edit="onEdit"
-        @delete="onDelete"
-        @share="onShare"
+        :hide-shared-badge="hideSharedBadge || false"
+        @edit="emit('edit', $event)"
+        @delete="emit('delete', $event)"
+        @share="emit('share', $event)"
+        @cancel="emit('cancel', $event)"
       />
     </template>
   </ItemsGroup>
@@ -30,6 +27,7 @@ const emit = defineEmits<{
   (e: 'edit', id: string): void
   (e: 'share', id: string): void
   (e: 'delete', plan: PlanWithPermission): void
+  (e: 'cancel', plan: PlanWithPermission): void
 }>()
 
 withDefaults(
