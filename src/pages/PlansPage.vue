@@ -255,7 +255,7 @@ async function deletePlan(plan: PlanWithPermission): Promise<void> {
   notificationsStore.showSuccess('Plan deleted successfully')
 }
 
-async function cancelPlan(plan: PlanWithPermission): Promise<void> k{
+async function cancelPlan(plan: PlanWithPermission): Promise<void> {
   await plansStore.cancelPlan(plan.id)
   notificationsStore.showSuccess('Plan cancelled successfully')
 }
