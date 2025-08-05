@@ -3,7 +3,7 @@ import { useRoute } from 'vue-router'
 
 import { useUserStore } from 'src/stores/user'
 import { usePlansStore } from 'src/stores/plans'
-import { canEditPlan, canEditStartDate } from 'src/utils/plans'
+import { canEditPlan } from 'src/utils/plans'
 import type { CurrencyCode, PlanWithItems } from 'src/api'
 
 export function usePlan() {
@@ -36,11 +36,6 @@ export function usePlan() {
   const canEditPlanData = computed(() => {
     if (!currentPlan.value) return false
     return canEditPlan(currentPlan.value, isOwner.value)
-  })
-
-  const canEditPlanStartDate = computed(() => {
-    if (!currentPlan.value) return false
-    return canEditStartDate(currentPlan.value)
   })
 
   const planCurrency = computed((): CurrencyCode => {
@@ -143,7 +138,6 @@ export function usePlan() {
     isReadOnlyMode,
     isEditMode,
     canEditPlanData,
-    canEditPlanStartDate,
     planCurrency,
     createNewPlanWithItems,
     updateExistingPlanWithItems,

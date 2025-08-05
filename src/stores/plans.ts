@@ -23,7 +23,6 @@ import {
 } from 'src/api'
 import { useError } from 'src/composables/useError'
 import { useUserStore } from 'src/stores/user'
-import { getPlanStatus } from 'src/utils/plans'
 import type { CurrencyCode } from 'src/utils/currency'
 
 export const usePlansStore = defineStore('plans', () => {
@@ -38,14 +37,8 @@ export const usePlansStore = defineStore('plans', () => {
   const isSearchingUsers = ref(false)
 
   const userId = computed(() => userStore.userProfile?.id)
-  const plansCount = computed(() => plans.value.length)
   const ownedPlans = computed(() => plans.value.filter((p) => p.owner_id === userId.value))
   const sharedPlans = computed(() => plans.value.filter((p) => p.owner_id !== userId.value))
-
-  const activePlans = computed(() => plans.value.filter((p) => getPlanStatus(p) === 'active'))
-  const pendingPlans = computed(() => plans.value.filter((p) => getPlanStatus(p) === 'pending'))
-  const completedPlans = computed(() => plans.value.filter((p) => getPlanStatus(p) === 'completed'))
-  const cancelledPlans = computed(() => plans.value.filter((p) => getPlanStatus(p) === 'cancelled'))
 
   async function loadPlans() {
     if (!userId.value) return
@@ -305,10 +298,6 @@ export const usePlansStore = defineStore('plans', () => {
     }
   }
 
-  function clearSharedUsers() {
-    sharedUsers.value = []
-  }
-
   function reset() {
     plans.value = []
     sharedUsers.value = []
@@ -319,7 +308,6 @@ export const usePlansStore = defineStore('plans', () => {
   }
 
   return {
-    // State
     plans,
     isLoading,
     isSharing,
@@ -327,13 +315,8 @@ export const usePlansStore = defineStore('plans', () => {
     userSearchResults,
     isSearchingUsers,
     userId,
-    plansCount,
     ownedPlans,
     sharedPlans,
-    activePlans,
-    pendingPlans,
-    completedPlans,
-    cancelledPlans,
     loadPlans,
     loadPlanWithItems,
     addPlan,
@@ -348,7 +331,6 @@ export const usePlansStore = defineStore('plans', () => {
     clearUserSearch,
     savePlanItems,
     removePlanItems,
-    clearSharedUsers,
     reset,
   }
 })

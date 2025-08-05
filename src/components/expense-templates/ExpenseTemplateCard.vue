@@ -6,8 +6,8 @@
   >
     <q-item
       class="full-height q-pa-md"
-      clickable
-      @click="emit('edit', template.id)"
+      :clickable="!readonly"
+      @click="!readonly && emit('edit', template.id)"
     >
       <q-item-section class="justify-between">
         <div class="row items-start justify-between">
@@ -15,7 +15,10 @@
             <h3 class="text-h6 text-weight-bold q-mt-none q-mb-xs">
               {{ template.name }}
             </h3>
-            <div class="row items-center q-gutter-xs">
+            <div
+              v-if="!readonly"
+              class="row items-center q-gutter-xs"
+            >
               <q-badge
                 v-for="badge in templateBadges"
                 :key="badge.text"
@@ -32,7 +35,10 @@
               </q-badge>
             </div>
           </div>
-          <div class="col-2 text-right">
+          <div
+            v-if="!readonly"
+            class="col-2 text-right"
+          >
             <q-btn
               flat
               round
@@ -105,9 +111,11 @@ const props = withDefaults(
   defineProps<{
     template: ExpenseTemplateWithPermission
     hideSharedBadge?: boolean
+    readonly?: boolean
   }>(),
   {
     hideSharedBadge: false,
+    readonly: false,
   },
 )
 

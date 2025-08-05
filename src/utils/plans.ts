@@ -67,15 +67,6 @@ export function canEditPlan(plan: Plan, isOwner: boolean): boolean {
 }
 
 /**
- * Check if plan start date can be modified
- */
-export function canEditStartDate(plan: Plan): boolean {
-  const status = getPlanStatus(plan)
-  // Can only edit start date if plan is still pending
-  return status === 'pending'
-}
-
-/**
  * Get days remaining for active plans
  */
 export function getDaysRemaining(plan: Plan): number | null {
