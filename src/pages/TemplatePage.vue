@@ -176,6 +176,7 @@
                   <ExpenseTemplateCategory
                     v-for="group in enrichedExpenseCategories"
                     :key="group.categoryId"
+                    :ref="(el) => setCategoryRef(el, group.categoryId)"
                     :category-id="group.categoryId"
                     :category-name="group.categoryName"
                     :category-color="group.categoryColor"
@@ -185,7 +186,7 @@
                     :readonly="false"
                     @update-item="updateExpenseTemplateItem"
                     @remove-item="removeExpenseTemplateItem"
-                    @add-item="addExpenseTemplateItem"
+                    @add-item="handleAddExpenseTemplateItem"
                   />
                 </div>
 
@@ -411,7 +412,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import type { QForm } from 'quasar'
 
@@ -460,6 +461,8 @@ const {
 
 const isShareDialogOpen = ref(false)
 const showCategoryDialog = ref(false)
+const categoryRefs = ref<Map<string, InstanceType<typeof ExpenseTemplateCategory>>>(new Map())
+const lastAddedCategoryId = ref<string | null>(null)
 const form = ref({
   name: '',
   duration: 'monthly' as string,
@@ -522,8 +525,41 @@ const enrichedExpenseCategories = computed(() => {
   }, [] as ExpenseTemplateCategoryUI[])
 })
 
-function onCategorySelected(category: ExpenseCategory): void {
+function setCategoryRef(el: unknown, categoryId: string): void {
+  if (el && typeof el === 'object' && 'focusLastItem' in el) {
+    const component = el as InstanceType<typeof ExpenseTemplateCategory>
+    if (typeof component.focusLastItem === 'function') {
+      categoryRefs.value.set(categoryId, component)
+    }
+  } else {
+    categoryRefs.value.delete(categoryId)
+  }
+}
+
+function focusLastItem(categoryId: string): void {
+  const categoryRef = categoryRefs.value.get(categoryId)
+
+  if (categoryRef) {
+    categoryRef.focusLastItem()
+  }
+}
+
+async function handleAddExpenseTemplateItem(
+  categoryId: string,
+  categoryColor: string,
+): Promise<void> {
+  addExpenseTemplateItem(categoryId, categoryColor)
+
+  await nextTick()
+  focusLastItem(categoryId)
+}
+
+async function onCategorySelected(category: ExpenseCategory): Promise<void> {
   addExpenseTemplateItem(category.id, category.color || '#1976d2')
+  lastAddedCategoryId.value = category.id
+
+  await nextTick()
+  focusLastItem(category.id)
 }
 
 function goBack(): void {
