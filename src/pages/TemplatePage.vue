@@ -91,45 +91,41 @@
               bordered
               class="q-pa-lg"
             >
-              <div class="q-mb-lg">
-                <div class="text-h6 q-mb-md">
-                  <q-icon
-                    name="eva-info-outline"
-                    class="q-mr-sm"
-                  />
-                  Basic Information
+              <div class="q-mb-md">
+                <div class="row q-gutter-md">
+                  <div class="col-12 col-sm-8">
+                    <div class="text-h6 q-mb-md">
+                      <q-icon
+                        name="eva-info-outline"
+                        class="q-mr-sm"
+                      />
+                      Basic Information
+                    </div>
+                    <q-input
+                      v-model="form.name"
+                      label="Template Name"
+                      outlined
+                      :rules="[(val) => !!val || 'Template name is required']"
+                    />
+                  </div>
+                  <div class="col-12 col-sm">
+                    <div class="text-h6 q-mb-md">
+                      <q-icon
+                        name="eva-calendar-outline"
+                        class="q-mr-sm"
+                      />
+                      Duration
+                    </div>
+                    <q-select
+                      v-model="form.duration"
+                      :options="durationSelectOptions"
+                      outlined
+                      emit-value
+                      map-options
+                      style="min-width: 120px"
+                    />
+                  </div>
                 </div>
-
-                <q-input
-                  v-model="form.name"
-                  label="Template Name"
-                  outlined
-                  :rules="[(val) => !!val || 'Template name is required']"
-                  class="q-mb-md"
-                />
-              </div>
-
-              <q-separator class="q-mb-lg" />
-
-              <div class="q-mb-lg">
-                <div class="text-h6 q-mb-md">
-                  <q-icon
-                    name="eva-calendar-outline"
-                    class="q-mr-sm"
-                  />
-                  Duration
-                </div>
-
-                <q-btn-toggle
-                  v-model="form.duration"
-                  :options="durationToggleOptions"
-                  class="duration-toggle"
-                  no-caps
-                  unelevated
-                  spread
-                  toggle-color="primary"
-                  text-color="primary"
-                />
               </div>
 
               <q-separator class="q-mb-lg" />
@@ -151,13 +147,23 @@
                       class="q-ml-sm"
                     />
                   </div>
-                  <q-btn
-                    color="primary"
-                    icon="eva-plus-outline"
-                    label="Add Expense Category"
-                    unelevated
-                    @click="showCategoryDialog = true"
-                  />
+
+                  <div class="row q-gutter-sm">
+                    <q-btn
+                      v-if="expenseTemplateItems.length > 1"
+                      flat
+                      :icon="allCategoriesExpanded ? 'eva-collapse-outline' : 'eva-expand-outline'"
+                      :label="allCategoriesExpanded ? 'Collapse All' : 'Expand All'"
+                      color="primary"
+                      @click="toggleAllCategories"
+                    />
+                    <q-btn
+                      icon="eva-plus-outline"
+                      label="Add Category"
+                      color="primary"
+                      @click="showCategoryDialog = true"
+                    />
+                  </div>
                 </div>
 
                 <q-banner
@@ -184,6 +190,7 @@
                     :subtotal="group.subtotal"
                     :currency="templateCurrency"
                     :readonly="false"
+                    :default-expanded="getCategoryExpanded(group.categoryId)"
                     @update-item="updateExpenseTemplateItem"
                     @remove-item="removeExpenseTemplateItem"
                     @add-item="handleAddExpenseTemplateItem"
@@ -214,10 +221,7 @@
                 </div>
               </div>
 
-              <div
-                v-if="expenseTemplateItems.length > 0"
-                class="q-mb-lg"
-              >
+              <div v-if="expenseTemplateItems.length > 0">
                 <q-separator class="q-mb-lg" />
                 <div class="row items-center justify-between">
                   <div
@@ -238,34 +242,6 @@
                   Total across {{ expenseTemplateItems.length }}
                   {{ expenseTemplateItems.length === 1 ? 'category' : 'categories' }}
                 </div>
-              </div>
-
-              <div class="row q-gutter-md justify-end">
-                <q-btn
-                  flat
-                  label="Discard"
-                  color="grey-8"
-                  @click="goBack"
-                />
-                <q-btn
-                  v-if="!isNewTemplate && isOwner"
-                  flat
-                  label="Share"
-                  color="primary"
-                  icon="eva-share-outline"
-                  @click="openShareDialog"
-                />
-                <q-btn
-                  color="primary"
-                  label="Save Template"
-                  type="submit"
-                  unelevated
-                  :loading="templatesStore.isLoading"
-                >
-                  <template #loading>
-                    <q-spinner-hourglass />
-                  </template>
-                </q-btn>
               </div>
             </q-card>
           </q-form>
@@ -408,6 +384,67 @@
       :template-id="routeTemplateId"
       @shared="onTemplateShared"
     />
+
+    <!-- Floating Action Button -->
+    <q-page-sticky
+      position="bottom-right"
+      :offset="[16, 16]"
+    >
+      <q-fab
+        v-if="isEditMode"
+        v-model="fabOpen"
+        icon="eva-arrow-ios-upward-outline"
+        active-icon="eva-close-outline"
+        direction="up"
+        color="primary"
+        class="fixed-bottom-right"
+        label="Actions"
+        label-position="left"
+        vertical-actions-align="right"
+      >
+        <q-fab-action
+          icon="eva-plus-outline"
+          external-label
+          label="Add Category"
+          label-position="left"
+          label-class="text-weight-medium"
+          color="primary"
+          @click="handleAddCategoryClick"
+        />
+
+        <q-fab-action
+          icon="eva-save-outline"
+          external-label
+          label="Save Template"
+          label-position="left"
+          label-class="text-weight-medium"
+          color="positive"
+          :loading="templatesStore.isLoading"
+          @click="handleSaveClick"
+        />
+
+        <q-fab-action
+          v-if="!isNewTemplate && isOwner"
+          icon="eva-share-outline"
+          external-label
+          label="Share"
+          label-position="left"
+          label-class="text-weight-medium"
+          color="info"
+          @click="handleShareClick"
+        />
+
+        <q-fab-action
+          icon="eva-trash-2-outline"
+          external-label
+          label="Discard"
+          label-position="left"
+          label-class="text-weight-medium"
+          color="negative"
+          @click="handleDiscardClick"
+        />
+      </q-fab>
+    </q-page-sticky>
   </div>
 </template>
 
@@ -463,6 +500,8 @@ const isShareDialogOpen = ref(false)
 const showCategoryDialog = ref(false)
 const categoryRefs = ref<Map<string, InstanceType<typeof ExpenseTemplateCategory>>>(new Map())
 const lastAddedCategoryId = ref<string | null>(null)
+const allCategoriesExpanded = ref(false)
+const fabOpen = ref(false)
 const form = ref({
   name: '',
   duration: 'monthly' as string,
@@ -472,7 +511,7 @@ const formattedTotalAmount = computed(() =>
   formatCurrency(totalAmount.value, templateCurrency.value),
 )
 
-const durationToggleOptions = computed(() => [
+const durationSelectOptions = computed(() => [
   {
     label: 'Weekly',
     value: 'weekly',
@@ -562,6 +601,41 @@ async function onCategorySelected(category: ExpenseCategory): Promise<void> {
   focusLastItem(category.id)
 }
 
+function getCategoryExpanded(categoryId: string): boolean {
+  // If global expand/collapse is active, use that state
+  // Otherwise, expand only if it's the last added category
+  return allCategoriesExpanded.value || categoryId === lastAddedCategoryId.value
+}
+
+function toggleAllCategories(): void {
+  allCategoriesExpanded.value = !allCategoriesExpanded.value
+  // Clear lastAddedCategoryId so it doesn't interfere with the global state
+  if (allCategoriesExpanded.value) {
+    lastAddedCategoryId.value = null
+  }
+}
+
+// FAB action handlers that close the FAB after action
+function handleAddCategoryClick(): void {
+  fabOpen.value = false
+  showCategoryDialog.value = true
+}
+
+function handleSaveClick(): void {
+  fabOpen.value = false
+  saveTemplate()
+}
+
+function handleShareClick(): void {
+  fabOpen.value = false
+  openShareDialog()
+}
+
+function handleDiscardClick(): void {
+  fabOpen.value = false
+  goBack()
+}
+
 function goBack(): void {
   router.push({ name: 'templates' })
 }
@@ -633,9 +707,3 @@ onMounted(async () => {
   }
 })
 </script>
-
-<style lang="scss" scoped>
-.duration-toggle {
-  border: 1px solid $primary;
-}
-</style>

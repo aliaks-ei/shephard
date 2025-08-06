@@ -46,7 +46,9 @@
             :model-value="item"
             :currency="currency"
             :readonly="!!readonly"
-            @update:model-value="(updatedItem) => handleUpdateItem(item.id, updatedItem)"
+            @update:model-value="
+              (updatedItem: PlanItemUI) => handleUpdateItem(item.id, updatedItem)
+            "
             @remove="$emit('remove-item', item.id)"
           />
         </q-list>
@@ -69,7 +71,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import PlanItem from './PlanItem.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import type { PlanItemUI } from 'src/types'
@@ -92,7 +94,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   readonly: false,
-  defaultExpanded: true,
+  defaultExpanded: false,
 })
 
 const isExpanded = ref(props.defaultExpanded)
@@ -108,4 +110,11 @@ const groupCaption = computed(() => {
 function handleUpdateItem(itemId: string, updatedItem: PlanItemUI): void {
   emit('update-item', itemId, updatedItem)
 }
+
+watch(
+  () => props.defaultExpanded,
+  (newValue) => {
+    isExpanded.value = newValue
+  },
+)
 </script>

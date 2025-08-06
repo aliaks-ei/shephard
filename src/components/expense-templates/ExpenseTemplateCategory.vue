@@ -96,7 +96,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   readonly: false,
-  defaultExpanded: true,
+  defaultExpanded: false,
 })
 
 const isExpanded = ref(props.defaultExpanded)
@@ -136,6 +136,13 @@ watch(
     if (newLength > oldLength) {
       focusLastItem()
     }
+  },
+)
+
+watch(
+  () => props.defaultExpanded,
+  (newValue) => {
+    isExpanded.value = newValue
   },
 )
 

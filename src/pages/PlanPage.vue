@@ -20,39 +20,6 @@
               {{ pageTitle }}
             </div>
           </q-toolbar-title>
-
-          <div class="row q-gutter-sm">
-            <q-btn
-              v-if="!isNewPlan && currentPlan && getPlanStatus(currentPlan) === 'active' && isOwner"
-              flat
-              icon="eva-close-circle-outline"
-              label="Cancel Plan"
-              color="negative"
-              @click="confirmCancelPlan"
-            />
-            <q-btn
-              v-if="
-                !isNewPlan &&
-                currentPlan &&
-                (getPlanStatus(currentPlan) === 'pending' ||
-                  getPlanStatus(currentPlan) === 'completed' ||
-                  getPlanStatus(currentPlan) === 'cancelled') &&
-                isOwner
-              "
-              flat
-              icon="eva-trash-2-outline"
-              label="Remove Plan"
-              color="negative"
-              @click="confirmRemovePlan"
-            />
-            <q-btn
-              v-if="!isNewPlan && isOwner && canEditPlanData"
-              flat
-              icon="eva-share-outline"
-              label="Share"
-              @click="openShareDialog"
-            />
-          </div>
         </q-toolbar>
 
         <q-breadcrumbs
@@ -310,9 +277,14 @@
                   />
                   Plan Items
                 </div>
-                <div class="text-h6 text-primary">
-                  {{ formattedTotalAmount }}
-                </div>
+                <q-btn
+                  v-if="planCategoryGroups.length > 1"
+                  flat
+                  :icon="allCategoriesExpanded ? 'eva-collapse-outline' : 'eva-expand-outline'"
+                  :label="allCategoriesExpanded ? 'Collapse All' : 'Expand All'"
+                  color="primary"
+                  @click="toggleAllCategories"
+                />
               </div>
 
               <div v-if="planCategoryGroups.length === 0">
@@ -333,10 +305,34 @@
                   :category-color="group.categoryColor"
                   :items="group.items"
                   :currency="planCurrency"
+                  :default-expanded="allCategoriesExpanded"
                   @update-item="handleUpdateItem"
                   @remove-item="handleRemoveItem"
                   @add-item="handleAddItem"
                 />
+              </div>
+
+              <div v-if="planCategoryGroups.length > 0">
+                <q-separator class="q-mb-lg" />
+                <div class="row items-center justify-between">
+                  <div
+                    class="text-h6"
+                    style="display: flex; align-items: center"
+                  >
+                    <q-icon
+                      name="eva-credit-card-outline"
+                      class="q-mr-sm"
+                    />
+                    Total Amount
+                  </div>
+                  <div class="text-h4 text-primary text-weight-bold">
+                    {{ formattedTotalAmount }}
+                  </div>
+                </div>
+                <div class="text-body2 text-grey-6">
+                  Total across {{ planCategoryGroups.length }}
+                  {{ planCategoryGroups.length === 1 ? 'category' : 'categories' }}
+                </div>
               </div>
 
               <div
@@ -353,26 +349,6 @@
                 </q-banner>
               </div>
             </q-card>
-
-            <!-- Action Buttons -->
-            <div class="row justify-end q-col-gutter-md">
-              <div class="col-auto">
-                <q-btn
-                  flat
-                  label="Cancel"
-                  @click="goBack"
-                />
-              </div>
-              <div class="col-auto">
-                <q-btn
-                  color="primary"
-                  :label="isNewPlan ? 'Create Plan' : 'Save Changes'"
-                  :loading="plansStore.isLoading"
-                  unelevated
-                  @click="handleSavePlan"
-                />
-              </div>
-            </div>
           </q-form>
 
           <!-- Read-only view -->
@@ -536,6 +512,75 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+
+    <!-- Floating Action Button -->
+    <q-page-sticky
+      position="bottom-right"
+      :offset="[16, 16]"
+    >
+      <q-fab
+        v-if="isEditMode && (isNewPlan || canEditPlanData)"
+        v-model="fabOpen"
+        icon="eva-arrow-ios-upward-outline"
+        active-icon="eva-close-outline"
+        direction="up"
+        color="primary"
+        label="Actions"
+        label-position="left"
+        label-class="text-weight-bold"
+        vertical-actions-align="right"
+      >
+        <q-fab-action
+          icon="eva-save-outline"
+          external-label
+          label="Save Plan"
+          label-position="left"
+          label-class="text-weight-medium"
+          color="positive"
+          @click="handleSavePlanClick"
+        />
+
+        <q-fab-action
+          v-if="!isNewPlan && isOwner"
+          icon="eva-share-outline"
+          external-label
+          label="Share"
+          label-position="left"
+          label-class="text-weight-medium"
+          color="info"
+          @click="handleSharePlanClick"
+        />
+
+        <q-fab-action
+          v-if="!isNewPlan && currentPlan && getPlanStatus(currentPlan) === 'active' && isOwner"
+          icon="eva-close-circle-outline"
+          external-label
+          label="Cancel Plan"
+          label-position="left"
+          label-class="text-weight-medium"
+          color="negative"
+          @click="handleCancelPlanClick"
+        />
+
+        <q-fab-action
+          v-if="
+            !isNewPlan &&
+            currentPlan &&
+            (getPlanStatus(currentPlan) === 'pending' ||
+              getPlanStatus(currentPlan) === 'completed' ||
+              getPlanStatus(currentPlan) === 'cancelled') &&
+            isOwner
+          "
+          icon="eva-trash-2-outline"
+          external-label
+          label="Remove Plan"
+          label-position="left"
+          label-class="text-weight-medium"
+          color="negative"
+          @click="handleRemovePlanClick"
+        />
+      </q-fab>
+    </q-page-sticky>
   </div>
 </template>
 
@@ -607,6 +652,8 @@ const selectedTemplateOption = ref<string | null>(null)
 const isShareDialogOpen = ref(false)
 const showCancelDialog = ref(false)
 const showRemoveDialog = ref(false)
+const allCategoriesExpanded = ref(false)
+const fabOpen = ref(false)
 
 const form = ref({
   name: '',
@@ -842,6 +889,31 @@ function openShareDialog(): void {
 
 function onPlanShared(): void {
   notificationsStore.showSuccess('Plan shared successfully')
+}
+
+function toggleAllCategories(): void {
+  allCategoriesExpanded.value = !allCategoriesExpanded.value
+}
+
+// FAB action handlers that close the FAB after action
+function handleSavePlanClick(): void {
+  fabOpen.value = false
+  handleSavePlan()
+}
+
+function handleSharePlanClick(): void {
+  fabOpen.value = false
+  openShareDialog()
+}
+
+function handleCancelPlanClick(): void {
+  fabOpen.value = false
+  confirmCancelPlan()
+}
+
+function handleRemovePlanClick(): void {
+  fabOpen.value = false
+  confirmRemovePlan()
 }
 
 function goBack(): void {
