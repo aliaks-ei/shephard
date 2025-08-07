@@ -585,7 +585,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import type { QForm } from 'quasar'
 
@@ -942,5 +942,10 @@ onMounted(async () => {
       isPlanLoading.value = false
     }
   }
+
+  await nextTick()
+  setTimeout(() => {
+    fabOpen.value = true
+  }, 300)
 })
 </script>

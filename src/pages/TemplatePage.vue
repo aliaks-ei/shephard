@@ -84,6 +84,7 @@
         <div v-else>
           <q-form
             v-if="isEditMode"
+            ref="formRef"
             @submit="saveTemplate"
           >
             <q-card
@@ -105,7 +106,7 @@
                       v-model="form.name"
                       label="Template Name"
                       outlined
-                      :rules="[(val) => !!val || 'Template name is required']"
+                      :rules="nameRules"
                     />
                   </div>
                   <div class="col-12 col-sm">
@@ -502,6 +503,7 @@ const categoryRefs = ref<Map<string, InstanceType<typeof ExpenseTemplateCategory
 const lastAddedCategoryId = ref<string | null>(null)
 const allCategoriesExpanded = ref(false)
 const fabOpen = ref(false)
+const formRef = ref<QForm>()
 const form = ref({
   name: '',
   duration: 'monthly' as string,
@@ -510,6 +512,18 @@ const form = ref({
 const formattedTotalAmount = computed(() =>
   formatCurrency(totalAmount.value, templateCurrency.value),
 )
+
+const nameRules = computed(() => [
+  (val: string) => {
+    if (!val || val.trim().length === 0) {
+      return 'Template name is required'
+    }
+    if (val.length > 100) {
+      return 'Template name must be 100 characters or less'
+    }
+    return true
+  },
+])
 
 const durationSelectOptions = computed(() => [
   {
@@ -641,6 +655,16 @@ function goBack(): void {
 }
 
 async function saveTemplate(): Promise<void> {
+  if (!form.value.name || form.value.name.trim().length === 0) {
+    handleError('TEMPLATES.NAME_VALIDATION_FAILED', new Error('Template name is required'))
+    return
+  }
+
+  if (formRef.value?.validate) {
+    const isFormValid = await formRef.value.validate()
+    if (!isFormValid) return
+  }
+
   if (!isValidForSave.value) {
     if (!hasValidItems.value) {
       handleError('TEMPLATE_ITEMS.VALIDATION_FAILED', new Error('No valid items'))
@@ -658,14 +682,14 @@ async function saveTemplate(): Promise<void> {
 
   if (isNewTemplate.value) {
     success = await createNewTemplateWithItems(
-      form.value.name,
+      form.value.name.trim(),
       form.value.duration,
       totalAmount.value,
       templateItems,
     )
   } else {
     success = await updateExistingTemplateWithItems(
-      form.value.name,
+      form.value.name.trim(),
       form.value.duration,
       totalAmount.value,
       templateItems,
@@ -705,5 +729,10 @@ onMounted(async () => {
   } finally {
     isTemplateLoading.value = false
   }
+
+  await nextTick()
+  setTimeout(() => {
+    fabOpen.value = true
+  }, 300)
 })
 </script>
