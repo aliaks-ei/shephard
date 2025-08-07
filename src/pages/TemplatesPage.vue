@@ -67,7 +67,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 
-import ListPageLayout from 'src/components/shared/ListPageLayout.vue'
+import ListPageLayout from 'src/layouts/ListPageLayout.vue'
 import SearchAndSort from 'src/components/shared/SearchAndSort.vue'
 import ListPageSkeleton from 'src/components/shared/ListPageSkeleton.vue'
 import EmptyState from 'src/components/shared/EmptyState.vue'
