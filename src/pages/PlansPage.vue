@@ -1,166 +1,61 @@
 <template>
-  <div class="row justify-center q-pa-md">
-    <div class="col-12 col-md-10 col-lg-8 col-xl-6">
-      <div class="row items-center justify-between wrap q-col-gutter-md q-mb-lg">
-        <div class="col-auto">
-          <h1 class="text-h4 text-weight-medium q-mb-sm q-mt-none">Plans</h1>
-          <p class="text-body2 text-grey-6 q-mb-none">
-            Manage your financial plans and track your progress
-          </p>
-        </div>
-        <div class="col-auto">
-          <q-btn
-            color="primary"
-            icon="eva-plus-outline"
-            label="Create Plan"
-            unelevated
-            @click="goToNewPlan"
-          />
-        </div>
+  <ListPageLayout
+    title="Plans"
+    description="Manage your financial plans and track your progress"
+    create-button-label="Create Plan"
+    @create="goToNew"
+  >
+    <SearchAndSort
+      v-model:search-query="searchQuery"
+      v-model:sort-by="sortBy"
+      search-placeholder="Search plans..."
+      :sort-options="sortOptions"
+    />
+
+    <ListPageSkeleton v-if="areItemsLoading" />
+
+    <div
+      v-else-if="hasItems"
+      class="column q-col-gutter-xl"
+    >
+      <div v-if="filteredAndSortedOwnedItems.length > 0">
+        <PlansGroup
+          title="My Plans"
+          :plans="filteredAndSortedOwnedItems"
+          @edit="viewItem"
+          @delete="handleDeletePlan"
+          @share="openShareDialog"
+          @cancel="cancelPlan"
+        />
       </div>
 
-      <q-card
-        class="q-mb-lg"
-        flat
-        bordered
-      >
-        <q-card-section>
-          <div class="row items-center q-col-gutter-md">
-            <div class="col-12 col-sm-9">
-              <q-input
-                v-model="searchQuery"
-                placeholder="Search plans..."
-                debounce="300"
-                outlined
-                clearable
-              >
-                <template #prepend>
-                  <q-icon name="eva-search-outline" />
-                </template>
-              </q-input>
-            </div>
-            <div class="col-12 col-sm-3">
-              <q-select
-                v-model="sortBy"
-                :options="sortOptions"
-                label="Sort by"
-                outlined
-                emit-value
-              />
-            </div>
-          </div>
-        </q-card-section>
-      </q-card>
-
-      <div v-if="arePlansLoading">
-        <div class="row q-col-gutter-lg">
-          <div
-            v-for="n in 6"
-            :key="n"
-            class="col-12 col-sm-6 col-lg-4 col-xl-3"
-          >
-            <q-card
-              flat
-              bordered
-            >
-              <q-card-section>
-                <q-skeleton
-                  type="text"
-                  width="60%"
-                  height="24px"
-                  class="q-mb-sm"
-                />
-                <q-skeleton
-                  type="text"
-                  width="40%"
-                  height="16px"
-                  class="q-mb-md"
-                />
-                <q-skeleton
-                  type="text"
-                  width="80%"
-                  height="16px"
-                />
-              </q-card-section>
-            </q-card>
-          </div>
-        </div>
+      <div v-if="filteredAndSortedSharedItems.length > 0">
+        <PlansGroup
+          title="Shared with Me"
+          :plans="filteredAndSortedSharedItems"
+          chip-color="secondary"
+          hide-shared-badge
+          @edit="viewItem"
+          @delete="handleDeletePlan"
+          @share="openShareDialog"
+          @cancel="cancelPlan"
+        />
       </div>
-
-      <div
-        v-else-if="hasPlans"
-        class="column q-col-gutter-xl"
-      >
-        <div v-if="filteredAndSortedOwnedPlans.length > 0">
-          <PlansGroup
-            title="My Plans"
-            :plans="filteredAndSortedOwnedPlans"
-            @edit="viewPlan"
-            @delete="deletePlan"
-            @share="openShareDialog"
-            @cancel="cancelPlan"
-          />
-        </div>
-
-        <div v-if="filteredAndSortedSharedPlans.length > 0">
-          <PlansGroup
-            title="Shared with Me"
-            :plans="filteredAndSortedSharedPlans"
-            chip-color="secondary"
-            hide-shared-badge
-            @edit="viewPlan"
-            @delete="deletePlan"
-            @share="openShareDialog"
-            @cancel="cancelPlan"
-          />
-        </div>
-      </div>
-
-      <q-card
-        v-else
-        flat
-        class="text-center q-py-xl"
-      >
-        <q-card-section>
-          <q-icon
-            :name="searchQuery ? 'eva-search-outline' : 'eva-calendar-outline'"
-            size="4rem"
-            class="text-grey-4 q-mb-md"
-          />
-
-          <div class="text-h5 q-mb-sm text-grey-7">
-            {{ searchQuery ? 'No plans found' : 'No plans yet' }}
-          </div>
-
-          <div class="text-body2 text-grey-5 q-mb-lg">
-            {{
-              searchQuery
-                ? 'Try adjusting your search terms or create a new plan'
-                : 'Create your first plan from a template to start tracking your financial goals'
-            }}
-          </div>
-
-          <div class="q-gutter-sm">
-            <q-btn
-              v-if="searchQuery"
-              flat
-              color="primary"
-              icon="eva-close-outline"
-              label="Clear Search"
-              @click="searchQuery = ''"
-            />
-
-            <q-btn
-              color="primary"
-              icon="eva-plus-outline"
-              label="Create Your First Plan"
-              unelevated
-              @click="goToNewPlan"
-            />
-          </div>
-        </q-card-section>
-      </q-card>
     </div>
+
+    <EmptyState
+      v-else
+      :has-search-query="!!searchQuery"
+      :search-icon="emptyStateConfig.searchIcon"
+      :empty-icon="emptyStateConfig.emptyIcon"
+      :search-title="emptyStateConfig.searchTitle"
+      :empty-title="emptyStateConfig.emptyTitle"
+      :search-description="emptyStateConfig.searchDescription"
+      :empty-description="emptyStateConfig.emptyDescription"
+      :create-button-label="emptyStateConfig.createLabel"
+      @clear-search="clearSearch"
+      @create="goToNew"
+    />
 
     <SharePlanDialog
       v-if="sharePlanId"
@@ -168,91 +63,46 @@
       :plan-id="sharePlanId"
       @shared="onPlanShared"
     />
-  </div>
+  </ListPageLayout>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, onUnmounted } from 'vue'
 
+import ListPageLayout from 'src/components/shared/ListPageLayout.vue'
+import SearchAndSort from 'src/components/shared/SearchAndSort.vue'
+import ListPageSkeleton from 'src/components/shared/ListPageSkeleton.vue'
+import EmptyState from 'src/components/shared/EmptyState.vue'
 import PlansGroup from 'src/components/plans/PlansGroup.vue'
 import SharePlanDialog from 'src/components/plans/SharePlanDialog.vue'
 import { usePlansStore } from 'src/stores/plans'
 import { useNotificationStore } from 'src/stores/notification'
+import { usePlans } from 'src/composables/usePlans'
 import type { PlanWithPermission } from 'src/api'
 
-const router = useRouter()
 const plansStore = usePlansStore()
 const notificationsStore = useNotificationStore()
 
-const searchQuery = ref('')
-const sortBy = ref('created_at')
+const {
+  searchQuery,
+  sortBy,
+  areItemsLoading,
+  filteredAndSortedOwnedItems,
+  filteredAndSortedSharedItems,
+  hasItems,
+  sortOptions,
+  emptyStateConfig,
+  goToNew,
+  viewItem,
+  deleteItem,
+  clearSearch,
+} = usePlans()
+
 const isShareDialogOpen = ref(false)
 const sharePlanId = ref<string | null>(null)
 
-const arePlansLoading = computed(() => plansStore.isLoading)
-const allPlans = computed(() => plansStore.plans)
-
-// Filter plans by search query
-const filteredPlans = computed(() => {
-  let filtered = allPlans.value
-
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter((plan) => plan.name.toLowerCase().includes(query))
-  }
-
-  return filtered
-})
-
-const sortedPlans = computed(() => {
-  const sorted = [...filteredPlans.value]
-
-  switch (sortBy.value) {
-    case 'name':
-      return sorted.sort((a, b) => a.name.localeCompare(b.name))
-    case 'total':
-      return sorted.sort((a, b) => (b.total || 0) - (a.total || 0))
-    case 'start_date':
-      return sorted.sort(
-        (a, b) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime(),
-      )
-    case 'created_at':
-    default:
-      return sorted.sort(
-        (a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime(),
-      )
-  }
-})
-
-const filteredAndSortedOwnedPlans = computed(() => {
-  return sortedPlans.value.filter((plan) => plan.owner_id === plansStore.userId)
-})
-
-const filteredAndSortedSharedPlans = computed(() => {
-  return sortedPlans.value.filter((plan) => plan.owner_id !== plansStore.userId)
-})
-
-const hasPlans = computed(() => allPlans.value.length > 0)
-
-const sortOptions = computed(() => [
-  { label: 'Name', value: 'name' },
-  { label: 'Total Amount', value: 'total' },
-  { label: 'Start Date', value: 'start_date' },
-  { label: 'Created Date', value: 'created_at' },
-])
-
-function goToNewPlan(): void {
-  router.push({ name: 'new-plan' })
-}
-
-function viewPlan(planId: string): void {
-  router.push({ name: 'plan', params: { id: planId } })
-}
-
-async function deletePlan(plan: PlanWithPermission): Promise<void> {
-  await plansStore.removePlan(plan.id)
-  notificationsStore.showSuccess('Plan deleted successfully')
+function handleDeletePlan(plan: PlanWithPermission): void {
+  deleteItem(plan)
 }
 
 async function cancelPlan(plan: PlanWithPermission): Promise<void> {
