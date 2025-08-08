@@ -9,12 +9,12 @@
     :is-searching-users="templatesStore.isSearchingUsers"
     @update:model-value="emit('update:modelValue', $event)"
     @shared="emit('shared')"
-    @load-shared-users="loadSharedUsers"
-    @share-with-user="shareWithUser"
-    @update-user-permission="updateUserPermission"
-    @remove-user-access="removeUserAccess"
-    @search-users="searchUsers"
-    @clear-user-search="clearUserSearch"
+    @load-shared-users="templatesStore.loadTemplateShares"
+    @share-with-user="templatesStore.shareTemplateWithUser"
+    @update-user-permission="templatesStore.updateUserPermission"
+    @remove-user-access="templatesStore.unshareTemplateWithUser"
+    @search-users="templatesStore.searchUsers"
+    @clear-user-search="templatesStore.clearUserSearch"
   />
 </template>
 
@@ -33,32 +33,4 @@ const emit = defineEmits<{
 }>()
 
 const templatesStore = useTemplatesStore()
-
-async function loadSharedUsers(templateId: string) {
-  await templatesStore.loadTemplateShares(templateId)
-}
-
-async function shareWithUser(templateId: string, email: string, permission: 'view' | 'edit') {
-  await templatesStore.shareTemplateWithUser(templateId, email, permission)
-}
-
-async function updateUserPermission(
-  templateId: string,
-  userId: string,
-  permission: 'view' | 'edit',
-) {
-  await templatesStore.updateUserPermission(templateId, userId, permission)
-}
-
-async function removeUserAccess(templateId: string, userId: string) {
-  await templatesStore.unshareTemplateWithUser(templateId, userId)
-}
-
-async function searchUsers(query: string) {
-  await templatesStore.searchUsers(query)
-}
-
-function clearUserSearch() {
-  templatesStore.clearUserSearch()
-}
 </script>

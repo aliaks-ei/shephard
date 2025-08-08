@@ -9,12 +9,12 @@
     :is-searching-users="plansStore.isSearchingUsers"
     @update:model-value="emit('update:modelValue', $event)"
     @shared="emit('shared')"
-    @load-shared-users="loadSharedUsers"
-    @share-with-user="shareWithUser"
-    @update-user-permission="updateUserPermission"
-    @remove-user-access="removeUserAccess"
-    @search-users="searchUsers"
-    @clear-user-search="clearUserSearch"
+    @load-shared-users="plansStore.loadSharedUsers"
+    @share-with-user="plansStore.sharePlanWithUser"
+    @update-user-permission="plansStore.updateUserPermission"
+    @remove-user-access="plansStore.unsharePlanWithUser"
+    @search-users="plansStore.searchUsers"
+    @clear-user-search="plansStore.clearUserSearch"
   />
 </template>
 
@@ -33,28 +33,4 @@ const emit = defineEmits<{
 }>()
 
 const plansStore = usePlansStore()
-
-async function loadSharedUsers(planId: string) {
-  await plansStore.loadSharedUsers(planId)
-}
-
-async function shareWithUser(planId: string, email: string, permission: 'view' | 'edit') {
-  await plansStore.sharePlanWithUser(planId, email, permission)
-}
-
-async function updateUserPermission(planId: string, userId: string, permission: 'view' | 'edit') {
-  await plansStore.updateUserPermission(planId, userId, permission)
-}
-
-async function removeUserAccess(planId: string, userId: string) {
-  await plansStore.unsharePlanWithUser(planId, userId)
-}
-
-async function searchUsers(query: string) {
-  await plansStore.searchUsers(query)
-}
-
-function clearUserSearch() {
-  plansStore.clearUserSearch()
-}
 </script>

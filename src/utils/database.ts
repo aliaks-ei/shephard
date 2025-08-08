@@ -23,7 +23,7 @@ export function isDuplicateNameError(error: PostgrestError, constraintName?: str
 /**
  * Create a standardized duplicate name error
  */
-export function createDuplicateNameError(entityType: 'TEMPLATE' | 'PLAN'): Error {
+export function createDuplicateNameError(entityType: 'TEMPLATE' | 'PLAN' | 'CATEGORY'): Error {
   const errorName = `DUPLICATE_${entityType}_NAME`
   const error = new Error(errorName)
   error.name = errorName

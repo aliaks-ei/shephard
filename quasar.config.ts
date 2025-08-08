@@ -46,21 +46,93 @@ export default defineConfig((ctx) => {
 
       vueRouterMode: 'history', // available values: 'hash', 'history'
       // vueRouterBase,
-      vueDevtools: true,
+      vueDevtools: ctx.dev, // Only enable devtools in development
       // vueOptionsAPI: false,
 
       // rebuildCache: true, // rebuilds Vite/linter/etc cache on startup
 
       // publicPath: '/',
-      // analyze: true,
+      analyze: ctx.prod && typeof ctx.mode === 'object' && 'analyze' in ctx.mode, // Enable bundle analyzer on demand
       // env: {},
       // rawDefine: {}
       // ignorePublicFolder: true,
-      // minify: false,
+      minify: ctx.prod, // Enable minification in production
       // polyfillModulePreload: true,
       // distDir
 
-      // extendViteConf (viteConf) {},
+      extendViteConf(viteConf) {
+        // Ensure build config exists
+        if (!viteConf.build) viteConf.build = {}
+
+        // Bundle size optimizations
+        viteConf.build = {
+          ...viteConf.build,
+          // Chunk splitting for better caching
+          rollupOptions: {
+            ...viteConf.build?.rollupOptions,
+            output: {
+              ...viteConf.build?.rollupOptions?.output,
+              manualChunks: {
+                // Split vendor chunks
+                'vendor-vue': ['vue', 'vue-router', 'pinia'],
+                'vendor-quasar': ['quasar'],
+                'vendor-supabase': ['@supabase/supabase-js'],
+                'vendor-utils': ['@vueuse/core', 'axios'],
+              },
+              // Optimize chunk file names
+              chunkFileNames: ctx.prod ? 'js/[name]-[hash].js' : '[name].js',
+              entryFileNames: ctx.prod ? 'js/[name]-[hash].js' : '[name].js',
+              assetFileNames: ctx.prod ? 'assets/[name]-[hash].[ext]' : '[name].[ext]',
+            },
+          },
+        }
+
+        // Production-only Terser optimizations
+        if (ctx.prod) {
+          viteConf.build.minify = 'terser'
+          viteConf.build.terserOptions = {
+            compress: {
+              drop_console: true, // Remove console.log in production
+              drop_debugger: true,
+              pure_funcs: ['console.log', 'console.info'],
+            },
+            mangle: {
+              safari10: true,
+            },
+          }
+        }
+
+        // Optimize dependency pre-bundling
+        viteConf.optimizeDeps = {
+          ...viteConf.optimizeDeps,
+          include: [
+            'vue',
+            'vue-router',
+            'pinia',
+            'quasar',
+            '@supabase/supabase-js',
+            '@vueuse/core',
+            'axios',
+          ],
+          exclude: [
+            // Exclude test utilities from production builds
+            '@vue/test-utils',
+            'vitest',
+          ],
+        }
+
+        // Additional production optimizations
+        if (ctx.prod && viteConf.build) {
+          // Enable CSS code splitting
+          viteConf.build.cssCodeSplit = true
+
+          // Optimize asset handling
+          viteConf.build.assetsInlineLimit = 4096 // Inline assets smaller than 4kb
+
+          // Enable source maps only for debugging (can be disabled for smaller builds)
+          viteConf.build.sourcemap = false
+        }
+      },
       // viteVuePluginOptions: {},
 
       vitePlugins: [
@@ -167,11 +239,57 @@ export default defineConfig((ctx) => {
       workboxMode: 'GenerateSW', // 'GenerateSW' or 'InjectManifest'
       // swFilename: 'sw.js',
       // manifestFilename: 'manifest.json',
-      // extendManifestJson (json) {},
+      extendManifestJson(json) {
+        // PWA optimizations for better caching
+        json.start_url = '/'
+        json.display = 'standalone'
+        json.orientation = 'portrait-primary'
+        json.categories = ['finance', 'productivity']
+        json.lang = 'en'
+      },
       // useCredentialsForManifestTag: true,
       // injectPwaMetaTags: false,
       // extendPWACustomSWConf (esbuildConf) {},
-      // extendGenerateSWOptions (cfg) {},
+      extendGenerateSWOptions(cfg) {
+        // Optimize caching strategies
+        cfg.skipWaiting = true
+        cfg.clientsClaim = true
+
+        // Cache optimization
+        cfg.runtimeCaching = [
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com/,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'google-fonts-stylesheets',
+              expiration: {
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+              },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-webfonts',
+              expiration: {
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+              },
+            },
+          },
+          {
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'images',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+              },
+            },
+          },
+        ]
+      },
       // extendInjectManifestOptions (cfg) {}
     },
 
