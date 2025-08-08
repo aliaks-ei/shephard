@@ -10,7 +10,7 @@ export type Database = {
     Tables: {
       expense_categories: {
         Row: {
-          color: string
+          color: string | null
           created_at: string | null
           id: string
           name: string
@@ -113,6 +113,136 @@ export type Database = {
         }
         Relationships: []
       }
+      plan_items: {
+        Row: {
+          amount: number
+          category_id: string
+          created_at: string | null
+          id: string
+          name: string
+          plan_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          category_id: string
+          created_at?: string | null
+          id?: string
+          name: string
+          plan_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          category_id?: string
+          created_at?: string | null
+          id?: string
+          name?: string
+          plan_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'plan_items_category_id_fkey'
+            columns: ['category_id']
+            isOneToOne: false
+            referencedRelation: 'expense_categories'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'plan_items_plan_id_fkey'
+            columns: ['plan_id']
+            isOneToOne: false
+            referencedRelation: 'plans'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      plan_shares: {
+        Row: {
+          created_at: string | null
+          id: string
+          permission_level: string
+          plan_id: string
+          shared_by_user_id: string
+          shared_with_user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          permission_level: string
+          plan_id: string
+          shared_by_user_id: string
+          shared_with_user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          permission_level?: string
+          plan_id?: string
+          shared_by_user_id?: string
+          shared_with_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'plan_shares_plan_id_fkey'
+            columns: ['plan_id']
+            isOneToOne: false
+            referencedRelation: 'plans'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      plans: {
+        Row: {
+          created_at: string | null
+          currency: string | null
+          end_date: string
+          id: string
+          name: string
+          owner_id: string
+          start_date: string
+          status: string
+          template_id: string
+          total: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          currency?: string | null
+          end_date: string
+          id?: string
+          name: string
+          owner_id: string
+          start_date: string
+          status: string
+          template_id: string
+          total?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          currency?: string | null
+          end_date?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          start_date?: string
+          status?: string
+          template_id?: string
+          total?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'plans_template_id_fkey'
+            columns: ['template_id']
+            isOneToOne: false
+            referencedRelation: 'expense_templates'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       template_shares: {
         Row: {
           created_at: string | null
@@ -183,12 +313,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_plan: {
+        Args: { plan_id: string; user_id: string }
+        Returns: boolean
+      }
       can_access_template: {
         Args: { template_id: string; user_id: string }
         Returns: boolean
       }
+      can_edit_plan: {
+        Args: { plan_id: string; user_id: string }
+        Returns: boolean
+      }
       can_edit_template: {
         Args: { template_id: string; user_id: string }
+        Returns: boolean
+      }
+      is_plan_owner: {
+        Args: { plan_id: string; user_id: string }
         Returns: boolean
       }
       is_template_owner: {

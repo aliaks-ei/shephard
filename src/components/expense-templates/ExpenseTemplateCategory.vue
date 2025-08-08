@@ -41,8 +41,9 @@
       <q-card-section class="q-pt-none">
         <q-list>
           <ExpenseTemplateItem
-            v-for="item in items"
+            v-for="(item, index) in items"
             :key="item.id"
+            :ref="(el) => setItemRef(el, index)"
             :model-value="item"
             :currency="currency"
             :readonly="!!readonly"
@@ -69,10 +70,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick, watch } from 'vue'
 import ExpenseTemplateItem from './ExpenseTemplateItem.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
-import type { ExpenseTemplateItemUI } from 'src/api'
+import type { ExpenseTemplateItemUI } from 'src/types'
+
+const itemRefs = ref<InstanceType<typeof ExpenseTemplateItem>[]>([])
 
 const emit = defineEmits<{
   (e: 'update-item', itemId: string, item: ExpenseTemplateItemUI): void
@@ -93,7 +96,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   readonly: false,
-  defaultExpanded: true,
+  defaultExpanded: false,
 })
 
 const isExpanded = ref(props.defaultExpanded)
@@ -105,7 +108,45 @@ const groupCaption = computed(() => {
   return `${count} ${count === 1 ? 'item' : 'items'} • ${formattedSubtotal.value}`
 })
 
+function setItemRef(el: unknown, index: number): void {
+  if (el && typeof el === 'object' && 'focusNameInput' in el) {
+    const component = el as InstanceType<typeof ExpenseTemplateItem>
+    if (typeof component.focusNameInput === 'function') {
+      itemRefs.value[index] = component
+    }
+  }
+}
+
 function handleUpdateItem(itemId: string, updatedItem: ExpenseTemplateItemUI): void {
   emit('update-item', itemId, updatedItem)
 }
+
+async function focusLastItem(): Promise<void> {
+  await nextTick()
+
+  const lastItemIndex = props.items.length - 1
+  if (lastItemIndex >= 0 && itemRefs.value[lastItemIndex]) {
+    itemRefs.value[lastItemIndex].focusNameInput()
+  }
+}
+
+watch(
+  () => props.items.length,
+  (newLength, oldLength) => {
+    if (newLength > oldLength) {
+      focusLastItem()
+    }
+  },
+)
+
+watch(
+  () => props.defaultExpanded,
+  (newValue) => {
+    isExpanded.value = newValue
+  },
+)
+
+defineExpose({
+  focusLastItem,
+})
 </script>

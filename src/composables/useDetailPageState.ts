@@ -1,0 +1,66 @@
+import { computed } from 'vue'
+import type { BreadcrumbItem, BannerConfig } from 'src/layouts/DetailPageLayout.vue'
+
+export interface DetailPageConfig {
+  entityName: string
+  entityNamePlural: string
+  listRoute: string
+  listIcon: string
+  createIcon: string
+  editIcon: string
+  viewIcon: string
+}
+
+export function useDetailPageState(
+  config: DetailPageConfig,
+  isNew: boolean,
+  isReadOnly: boolean,
+  isEdit: boolean,
+  currentEntityName?: string,
+) {
+  const pageTitle = computed(() => {
+    if (isNew) return `Create ${config.entityName}`
+    if (isReadOnly) return `View ${config.entityName}`
+    return `Edit ${config.entityName}`
+  })
+
+  const pageIcon = computed(() => {
+    if (isNew) return config.createIcon
+    if (isReadOnly) return config.viewIcon
+    return config.editIcon
+  })
+
+  const breadcrumbs = computed((): BreadcrumbItem[] => [
+    {
+      label: config.entityNamePlural,
+      icon: config.listIcon,
+      to: config.listRoute,
+    },
+    {
+      label: isNew ? `New ${config.entityName}` : currentEntityName || config.entityName,
+      icon: isNew ? 'eva-plus-outline' : config.listIcon,
+    },
+  ])
+
+  const banners = computed((): BannerConfig[] => {
+    const bannersList: BannerConfig[] = []
+
+    if (isReadOnly) {
+      bannersList.push({
+        type: 'readonly',
+        class: 'bg-orange-1 text-orange-8',
+        icon: 'eva-eye-outline',
+        message: `You're viewing this ${config.entityName.toLowerCase()} in read-only mode. Contact the owner for edit access.`,
+      })
+    }
+
+    return bannersList
+  })
+
+  return {
+    pageTitle,
+    pageIcon,
+    breadcrumbs,
+    banners,
+  }
+}

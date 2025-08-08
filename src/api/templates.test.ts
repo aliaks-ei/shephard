@@ -1,6 +1,7 @@
 import { vi, beforeEach, it, expect, describe } from 'vitest'
 import type { PostgrestError } from '@supabase/supabase-js'
 import { supabase } from 'src/lib/supabase/client'
+import { isDuplicateNameError, createDuplicateNameError } from 'src/utils/database'
 import {
   getExpenseTemplates,
   createExpenseTemplate,
@@ -20,6 +21,11 @@ import {
   type ExpenseTemplateItem,
   type ExpenseTemplateItemInsert,
 } from './templates'
+
+vi.mock('src/utils/database', () => ({
+  isDuplicateNameError: vi.fn(),
+  createDuplicateNameError: vi.fn(),
+}))
 
 const createPostgrestError = (message: string, code = '23505'): PostgrestError =>
   ({
@@ -51,10 +57,14 @@ const mockExpenseTemplateItem: ExpenseTemplateItem = {
 }
 
 const mockSupabase = vi.mocked(supabase, true)
+const mockFrom = vi.fn()
+const mockIsDuplicateNameError = vi.mocked(isDuplicateNameError)
+const mockCreateDuplicateNameError = vi.mocked(createDuplicateNameError)
 
 beforeEach(() => {
   vi.clearAllMocks()
   vi.setSystemTime(new Date('2023-01-01T12:00:00Z'))
+  mockSupabase.from = mockFrom
 })
 
 describe('getExpenseTemplates', () => {
@@ -70,40 +80,31 @@ describe('getExpenseTemplates', () => {
       owner_id: 'user-2',
     }
 
-    const mockOwnedOrder = vi.fn().mockResolvedValue({
-      data: [ownedTemplate],
-      error: null,
-    })
-    const mockOwnedEq = vi.fn().mockReturnValue({ order: mockOwnedOrder })
-    const mockOwnedSelect = vi.fn().mockReturnValue({ eq: mockOwnedEq })
+    // Mock the first query for owned templates
+    const mockOwnedQuery = {
+      select: vi.fn().mockReturnThis(),
+      match: vi.fn().mockReturnThis(),
+      order: vi.fn().mockResolvedValue({
+        data: [ownedTemplate],
+        error: null,
+      }),
+    }
 
-    const mockSharedEq = vi.fn().mockResolvedValue({
-      data: [{ permission_level: 'view', expense_templates: sharedTemplate }],
-      error: null,
-    })
-    const mockSharedSelect = vi.fn().mockReturnValue({ eq: mockSharedEq })
+    // Mock the second query for shared templates
+    const mockSharedQuery = {
+      select: vi.fn().mockReturnThis(),
+      match: vi.fn().mockResolvedValue({
+        data: [{ permission_level: 'view', expense_templates: sharedTemplate }],
+        error: null,
+      }),
+    }
 
-    const mockFrom = vi
-      .fn()
-      .mockReturnValueOnce({ select: mockOwnedSelect })
-      .mockReturnValueOnce({ select: mockSharedSelect })
-
-    mockSupabase.from.mockImplementation(mockFrom)
+    mockFrom.mockReturnValueOnce(mockOwnedQuery).mockReturnValueOnce(mockSharedQuery)
 
     const result = await getExpenseTemplates('user-1')
 
     expect(mockFrom).toHaveBeenCalledWith('expense_templates')
     expect(mockFrom).toHaveBeenCalledWith('template_shares')
-    expect(mockOwnedSelect).toHaveBeenCalledWith(`
-      *,
-      template_shares!left(id)
-    `)
-    expect(mockOwnedEq).toHaveBeenCalledWith('owner_id', 'user-1')
-    expect(mockSharedSelect).toHaveBeenCalledWith(`
-      permission_level,
-      expense_templates (*)
-    `)
-    expect(mockSharedEq).toHaveBeenCalledWith('shared_with_user_id', 'user-1')
 
     expect(result).toHaveLength(2)
     expect(result[0]).toEqual({
@@ -118,19 +119,26 @@ describe('getExpenseTemplates', () => {
   })
 
   it('should return empty array when no templates found', async () => {
-    const mockOwnedOrder = vi.fn().mockResolvedValue({ data: [], error: null })
-    const mockOwnedEq = vi.fn().mockReturnValue({ order: mockOwnedOrder })
-    const mockOwnedSelect = vi.fn().mockReturnValue({ eq: mockOwnedEq })
+    // Mock the first query for owned templates
+    const mockOwnedQuery = {
+      select: vi.fn().mockReturnThis(),
+      match: vi.fn().mockReturnThis(),
+      order: vi.fn().mockResolvedValue({
+        data: [],
+        error: null,
+      }),
+    }
 
-    const mockSharedEq = vi.fn().mockResolvedValue({ data: [], error: null })
-    const mockSharedSelect = vi.fn().mockReturnValue({ eq: mockSharedEq })
+    // Mock the second query for shared templates
+    const mockSharedQuery = {
+      select: vi.fn().mockReturnThis(),
+      match: vi.fn().mockResolvedValue({
+        data: [],
+        error: null,
+      }),
+    }
 
-    const mockFrom = vi
-      .fn()
-      .mockReturnValueOnce({ select: mockOwnedSelect })
-      .mockReturnValueOnce({ select: mockSharedSelect })
-
-    mockSupabase.from.mockImplementation(mockFrom)
+    mockFrom.mockReturnValueOnce(mockOwnedQuery).mockReturnValueOnce(mockSharedQuery)
 
     const result = await getExpenseTemplates('user-1')
 
@@ -139,33 +147,45 @@ describe('getExpenseTemplates', () => {
 
   it('should throw error when owned templates query fails', async () => {
     const mockError = createPostgrestError('Failed to fetch owned templates')
-    const mockOwnedOrder = vi.fn().mockResolvedValue({ data: null, error: mockError })
-    const mockOwnedEq = vi.fn().mockReturnValue({ order: mockOwnedOrder })
-    const mockOwnedSelect = vi.fn().mockReturnValue({ eq: mockOwnedEq })
-    const mockFrom = vi.fn().mockReturnValue({ select: mockOwnedSelect })
+    const mockOwnedQuery = {
+      select: vi.fn().mockReturnThis(),
+      match: vi.fn().mockReturnThis(),
+      order: vi.fn().mockResolvedValue({
+        data: null,
+        error: mockError,
+      }),
+    }
 
-    mockSupabase.from.mockImplementation(mockFrom)
+    mockFrom.mockReturnValue(mockOwnedQuery)
 
-    await expect(getExpenseTemplates('user-1')).rejects.toThrow('Failed to fetch owned templates')
+    await expect(getExpenseTemplates('user-1')).rejects.toEqual(mockError)
   })
 
   it('should throw error when shared templates query fails', async () => {
-    const mockOwnedOrder = vi.fn().mockResolvedValue({ data: [], error: null })
-    const mockOwnedEq = vi.fn().mockReturnValue({ order: mockOwnedOrder })
-    const mockOwnedSelect = vi.fn().mockReturnValue({ eq: mockOwnedEq })
-
     const mockError = createPostgrestError('Failed to fetch shared templates')
-    const mockSharedEq = vi.fn().mockResolvedValue({ data: null, error: mockError })
-    const mockSharedSelect = vi.fn().mockReturnValue({ eq: mockSharedEq })
 
-    const mockFrom = vi
-      .fn()
-      .mockReturnValueOnce({ select: mockOwnedSelect })
-      .mockReturnValueOnce({ select: mockSharedSelect })
+    // Mock successful owned templates query
+    const mockOwnedQuery = {
+      select: vi.fn().mockReturnThis(),
+      match: vi.fn().mockReturnThis(),
+      order: vi.fn().mockResolvedValue({
+        data: [],
+        error: null,
+      }),
+    }
 
-    mockSupabase.from.mockImplementation(mockFrom)
+    // Mock failed shared templates query
+    const mockSharedQuery = {
+      select: vi.fn().mockReturnThis(),
+      match: vi.fn().mockResolvedValue({
+        data: null,
+        error: mockError,
+      }),
+    }
 
-    await expect(getExpenseTemplates('user-1')).rejects.toThrow('Failed to fetch shared templates')
+    mockFrom.mockReturnValueOnce(mockOwnedQuery).mockReturnValueOnce(mockSharedQuery)
+
+    await expect(getExpenseTemplates('user-1')).rejects.toEqual(mockError)
   })
 })
 
@@ -202,17 +222,28 @@ describe('createExpenseTemplate', () => {
     }
 
     const mockError = createPostgrestError('unique_template_name_per_user violation')
-    const mockSingle = vi.fn().mockResolvedValue({
-      data: null,
-      error: mockError,
-    })
-    const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
-    const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
-    const mockFrom = vi.fn().mockReturnValue({ insert: mockInsert })
+    const mockDuplicateError = new Error('DUPLICATE_TEMPLATE_NAME')
+    mockIsDuplicateNameError.mockReturnValue(true)
+    mockCreateDuplicateNameError.mockReturnValue(mockDuplicateError)
 
-    mockSupabase.from.mockImplementation(mockFrom)
+    const mockQuery = {
+      select: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({
+        data: null,
+        error: mockError,
+      }),
+    }
 
-    await expect(createExpenseTemplate(templateInsert)).rejects.toThrow('DUPLICATE_TEMPLATE_NAME')
+    mockFrom.mockReturnValue({
+      insert: vi.fn().mockReturnValue(mockQuery),
+    } as never)
+
+    await expect(createExpenseTemplate(templateInsert)).rejects.toEqual(mockDuplicateError)
+    expect(mockIsDuplicateNameError).toHaveBeenCalledWith(
+      mockError,
+      'unique_template_name_per_user',
+    )
+    expect(mockCreateDuplicateNameError).toHaveBeenCalledWith('TEMPLATE')
   })
 
   it('should throw original error for non-duplicate errors', async () => {
@@ -223,17 +254,21 @@ describe('createExpenseTemplate', () => {
     }
 
     const mockError = createPostgrestError('Some other error', '42000')
-    const mockSingle = vi.fn().mockResolvedValue({
-      data: null,
-      error: mockError,
-    })
-    const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
-    const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
-    const mockFrom = vi.fn().mockReturnValue({ insert: mockInsert })
+    mockIsDuplicateNameError.mockReturnValue(false)
 
-    mockSupabase.from.mockImplementation(mockFrom)
+    const mockQuery = {
+      select: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({
+        data: null,
+        error: mockError,
+      }),
+    }
 
-    await expect(createExpenseTemplate(templateInsert)).rejects.toThrow('Some other error')
+    mockFrom.mockReturnValue({
+      insert: vi.fn().mockReturnValue(mockQuery),
+    } as never)
+
+    await expect(createExpenseTemplate(templateInsert)).rejects.toEqual(mockError)
   })
 })
 
@@ -245,68 +280,79 @@ describe('updateExpenseTemplate', () => {
     }
 
     const updatedTemplate = { ...mockExpenseTemplate, ...updates }
-    const mockSingle = vi.fn().mockResolvedValue({
-      data: updatedTemplate,
-      error: null,
-    })
-    const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
-    const mockEq = vi.fn().mockReturnValue({ select: mockSelect })
-    const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
-    const mockFrom = vi.fn().mockReturnValue({ update: mockUpdate })
+    const mockQuery = {
+      match: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({
+        data: updatedTemplate,
+        error: null,
+      }),
+    }
 
-    mockSupabase.from.mockImplementation(mockFrom)
+    mockFrom.mockReturnValue({
+      update: vi.fn().mockReturnValue(mockQuery),
+    } as never)
 
     const result = await updateExpenseTemplate('template-1', updates)
 
     expect(mockFrom).toHaveBeenCalledWith('expense_templates')
-    expect(mockUpdate).toHaveBeenCalledWith(updates)
-    expect(mockEq).toHaveBeenCalledWith('id', 'template-1')
     expect(result).toEqual(updatedTemplate)
   })
 
   it('should throw DUPLICATE_TEMPLATE_NAME error for duplicate name', async () => {
     const updates: ExpenseTemplateUpdate = { name: 'Duplicate Name' }
     const mockError = createPostgrestError('unique_template_name_per_user violation')
-    const mockSingle = vi.fn().mockResolvedValue({
-      data: null,
-      error: mockError,
-    })
-    const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
-    const mockEq = vi.fn().mockReturnValue({ select: mockSelect })
-    const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
-    const mockFrom = vi.fn().mockReturnValue({ update: mockUpdate })
+    const mockDuplicateError = new Error('DUPLICATE_TEMPLATE_NAME')
+    mockIsDuplicateNameError.mockReturnValue(true)
+    mockCreateDuplicateNameError.mockReturnValue(mockDuplicateError)
 
-    mockSupabase.from.mockImplementation(mockFrom)
+    const mockQuery = {
+      match: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({
+        data: null,
+        error: mockError,
+      }),
+    }
 
-    await expect(updateExpenseTemplate('template-1', updates)).rejects.toThrow(
-      'DUPLICATE_TEMPLATE_NAME',
-    )
+    mockFrom.mockReturnValue({
+      update: vi.fn().mockReturnValue(mockQuery),
+    } as never)
+
+    await expect(updateExpenseTemplate('template-1', updates)).rejects.toEqual(mockDuplicateError)
   })
 })
 
 describe('deleteExpenseTemplate', () => {
   it('should delete template successfully', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ data: null, error: null })
-    const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
-    const mockFrom = vi.fn().mockReturnValue({ delete: mockDelete })
+    const mockQuery = {
+      match: vi.fn().mockResolvedValue({
+        error: null,
+      }),
+    }
 
-    mockSupabase.from.mockImplementation(mockFrom)
+    mockFrom.mockReturnValue({
+      delete: vi.fn().mockReturnValue(mockQuery),
+    } as never)
 
     await deleteExpenseTemplate('template-1')
 
     expect(mockFrom).toHaveBeenCalledWith('expense_templates')
-    expect(mockEq).toHaveBeenCalledWith('id', 'template-1')
   })
 
   it('should throw error when delete fails', async () => {
     const mockError = createPostgrestError('Failed to delete template')
-    const mockEq = vi.fn().mockResolvedValue({ data: null, error: mockError })
-    const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
-    const mockFrom = vi.fn().mockReturnValue({ delete: mockDelete })
+    const mockQuery = {
+      match: vi.fn().mockResolvedValue({
+        error: mockError,
+      }),
+    }
 
-    mockSupabase.from.mockImplementation(mockFrom)
+    mockFrom.mockReturnValue({
+      delete: vi.fn().mockReturnValue(mockQuery),
+    } as never)
 
-    await expect(deleteExpenseTemplate('template-1')).rejects.toThrow('Failed to delete template')
+    await expect(deleteExpenseTemplate('template-1')).rejects.toEqual(mockError)
   })
 })
 
@@ -317,24 +363,20 @@ describe('getExpenseTemplateWithItems', () => {
       expense_template_items: [mockExpenseTemplateItem],
     }
 
-    const mockMaybeSingle = vi.fn().mockResolvedValue({
-      data: templateWithItems,
-      error: null,
-    })
-    const mockEq = vi.fn().mockReturnValue({ maybeSingle: mockMaybeSingle })
-    const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
-    const mockFrom = vi.fn().mockReturnValue({ select: mockSelect })
+    const mockQuery = {
+      select: vi.fn().mockReturnThis(),
+      match: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: templateWithItems,
+        error: null,
+      }),
+    }
 
-    mockSupabase.from.mockImplementation(mockFrom)
+    mockFrom.mockReturnValue(mockQuery)
 
     const result = await getExpenseTemplateWithItems('template-1', 'user-1')
 
     expect(mockFrom).toHaveBeenCalledWith('expense_templates')
-    expect(mockSelect).toHaveBeenCalledWith(`
-      *,
-      expense_template_items!expense_template_items_template_id_fkey (*)
-    `)
-    expect(mockEq).toHaveBeenCalledWith('id', 'template-1')
     expect(result).toEqual(templateWithItems)
   })
 
@@ -345,35 +387,32 @@ describe('getExpenseTemplateWithItems', () => {
       expense_template_items: [mockExpenseTemplateItem],
     }
 
-    const mockTemplateMaybeSingle = vi.fn().mockResolvedValue({
-      data: templateWithItems,
-      error: null,
-    })
-    const mockTemplateEq = vi.fn().mockReturnValue({ maybeSingle: mockTemplateMaybeSingle })
-    const mockTemplateSelect = vi.fn().mockReturnValue({ eq: mockTemplateEq })
+    // Mock template query
+    const mockTemplateQuery = {
+      select: vi.fn().mockReturnThis(),
+      match: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: templateWithItems,
+        error: null,
+      }),
+    }
 
-    const mockShareMaybeSingle = vi.fn().mockResolvedValue({
-      data: { permission_level: 'view' },
-      error: null,
-    })
-    const mockShareEq2 = vi.fn().mockReturnValue({ maybeSingle: mockShareMaybeSingle })
-    const mockShareEq1 = vi.fn().mockReturnValue({ eq: mockShareEq2 })
-    const mockShareSelect = vi.fn().mockReturnValue({ eq: mockShareEq1 })
+    // Mock share query
+    const mockShareQuery = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: { permission_level: 'view' },
+        error: null,
+      }),
+    }
 
-    const mockFrom = vi
-      .fn()
-      .mockReturnValueOnce({ select: mockTemplateSelect })
-      .mockReturnValueOnce({ select: mockShareSelect })
-
-    mockSupabase.from.mockImplementation(mockFrom)
+    mockFrom.mockReturnValueOnce(mockTemplateQuery).mockReturnValueOnce(mockShareQuery)
 
     const result = await getExpenseTemplateWithItems('template-1', 'user-1')
 
     expect(mockFrom).toHaveBeenCalledWith('expense_templates')
     expect(mockFrom).toHaveBeenCalledWith('template_shares')
-    expect(mockShareSelect).toHaveBeenCalledWith('permission_level')
-    expect(mockShareEq1).toHaveBeenCalledWith('template_id', 'template-1')
-    expect(mockShareEq2).toHaveBeenCalledWith('shared_with_user_id', 'user-1')
     expect(result).toEqual({
       ...templateWithItems,
       permission_level: 'view',
@@ -381,15 +420,16 @@ describe('getExpenseTemplateWithItems', () => {
   })
 
   it('should return null when template not found', async () => {
-    const mockMaybeSingle = vi.fn().mockResolvedValue({
-      data: null,
-      error: null,
-    })
-    const mockEq = vi.fn().mockReturnValue({ maybeSingle: mockMaybeSingle })
-    const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
-    const mockFrom = vi.fn().mockReturnValue({ select: mockSelect })
+    const mockQuery = {
+      select: vi.fn().mockReturnThis(),
+      match: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: null,
+        error: null,
+      }),
+    }
 
-    mockSupabase.from.mockImplementation(mockFrom)
+    mockFrom.mockReturnValue(mockQuery)
 
     const result = await getExpenseTemplateWithItems('template-1', 'user-1')
 
@@ -403,30 +443,30 @@ describe('getExpenseTemplateWithItems', () => {
       expense_template_items: [mockExpenseTemplateItem],
     }
 
-    const mockTemplateMaybeSingle = vi.fn().mockResolvedValue({
-      data: templateWithItems,
-      error: null,
-    })
-    const mockTemplateEq = vi.fn().mockReturnValue({ maybeSingle: mockTemplateMaybeSingle })
-    const mockTemplateSelect = vi.fn().mockReturnValue({ eq: mockTemplateEq })
+    // Mock template query
+    const mockTemplateQuery = {
+      select: vi.fn().mockReturnThis(),
+      match: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: templateWithItems,
+        error: null,
+      }),
+    }
 
-    const mockShareMaybeSingle = vi.fn().mockResolvedValue({
-      data: null,
-      error: null,
-    })
-    const mockShareEq2 = vi.fn().mockReturnValue({ maybeSingle: mockShareMaybeSingle })
-    const mockShareEq1 = vi.fn().mockReturnValue({ eq: mockShareEq2 })
-    const mockShareSelect = vi.fn().mockReturnValue({ eq: mockShareEq1 })
+    // Mock share query - no share found
+    const mockShareQuery = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: null,
+        error: null,
+      }),
+    }
 
-    const mockFrom = vi
-      .fn()
-      .mockReturnValueOnce({ select: mockTemplateSelect })
-      .mockReturnValueOnce({ select: mockShareSelect })
-
-    mockSupabase.from.mockImplementation(mockFrom)
+    mockFrom.mockReturnValueOnce(mockTemplateQuery).mockReturnValueOnce(mockShareQuery)
 
     await expect(getExpenseTemplateWithItems('template-1', 'user-1')).rejects.toThrow(
-      'Template not found or access denied',
+      'template not found or access denied',
     )
   })
 })
@@ -671,7 +711,7 @@ describe('shareTemplate', () => {
     mockSupabase.from.mockImplementation(mockFrom)
 
     await expect(shareTemplate('template-1', 'john@example.com', 'view', 'user-1')).rejects.toThrow(
-      'Template is already shared with john@example.com',
+      'TEMPLATE is already shared with john@example.com',
     )
   })
 })

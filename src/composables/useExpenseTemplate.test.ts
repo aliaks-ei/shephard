@@ -7,7 +7,6 @@ import { useUserStore } from 'src/stores/user'
 import { useTemplatesStore } from 'src/stores/templates'
 import type { ExpenseTemplateWithItems } from 'src/api'
 
-// Mock vue-router
 const mockRoute = ref<{
   name: string
   params: Record<string, string | string[] | undefined>
@@ -22,7 +21,6 @@ vi.mock('vue-router', () => ({
 
 let pinia: TestingPinia
 
-// Helper functions to create mock objects
 const createMockUserProfile = (id: string) => ({
   id,
   email: `user-${id}@example.com`,
@@ -46,8 +44,6 @@ const createMockPreferences = (currency = 'USD') => ({
 beforeEach(() => {
   pinia = createTestingPinia({ createSpy: vi.fn })
   setActivePinia(pinia)
-
-  // Reset route to default state
   mockRoute.value = {
     name: 'template',
     params: { id: 'template-123' },

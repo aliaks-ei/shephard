@@ -6,7 +6,8 @@ import { ref } from 'vue'
 import TemplatePage from './TemplatePage.vue'
 import { useTemplatesStore } from 'src/stores/templates'
 import { useCategoriesStore } from 'src/stores/categories'
-import type { ExpenseCategory, ExpenseTemplateWithItems, ExpenseTemplateItemUI } from 'src/api'
+import type { ExpenseCategory, ExpenseTemplateWithItems } from 'src/api'
+import type { ExpenseTemplateItemUI } from 'src/types'
 import type { ExpenseCategoryGroup } from 'src/composables/useExpenseTemplateItems'
 
 installQuasarPlugin()
@@ -224,6 +225,9 @@ function createWrapper(
         QForm: {
           template: '<form @submit.prevent="$emit(\'submit\')"><slot /></form>',
           emits: ['submit'],
+          methods: {
+            validate: vi.fn(() => Promise.resolve(true)),
+          },
         },
         QCard: {
           template: '<div class="q-card"><slot /></div>',
@@ -252,9 +256,10 @@ function createWrapper(
           ],
           emits: ['click'],
         },
-        QBtnToggle: {
-          template: '<div class="q-btn-toggle" :data-model-value="modelValue"></div>',
-          props: ['modelValue', 'options'],
+        QSelect: {
+          template:
+            '<select class="q-select" :value="modelValue" @change="$emit(\'update:modelValue\', $event.target.value)" :data-options="options"></select>',
+          props: ['modelValue', 'options', 'outlined', 'emitValue', 'mapOptions'],
           emits: ['update:modelValue'],
         },
         QInput: {
@@ -292,6 +297,17 @@ function createWrapper(
           template:
             '<div class="q-breadcrumbs-el" :data-label="label" :data-icon="icon" :data-to="to">{{ label }}</div>',
           props: ['label', 'icon', 'to'],
+        },
+        ActionsFab: {
+          template:
+            '<div v-if="visible" class="actions-fab" :data-model-value="modelValue" :data-visible="visible"><button v-for="action in visibleActions" :key="action.key" :data-label="action.label" @click="$emit(\'action-clicked\', action.key); action.handler()">{{ action.label }}</button></div>',
+          props: ['modelValue', 'actions', 'visible'],
+          emits: ['update:modelValue', 'action-clicked'],
+          computed: {
+            visibleActions() {
+              return this.actions.filter((action: { visible: boolean }) => action.visible !== false)
+            },
+          },
         },
       },
     },
@@ -348,7 +364,7 @@ describe('TemplatePage', () => {
 
     expect(wrapper.find('form').exists()).toBe(true)
     expect(wrapper.find('.q-input').exists()).toBe(true)
-    expect(wrapper.find('.q-btn-toggle').exists()).toBe(true)
+    expect(wrapper.find('.q-select').exists()).toBe(true)
   })
 
   it('should render readonly view when in read-only mode', () => {
@@ -412,7 +428,7 @@ describe('TemplatePage', () => {
   it('should open category selection dialog when add category button is clicked', async () => {
     const { wrapper } = createWrapper()
 
-    const addButton = wrapper.find('[data-label="Add Expense Category"]')
+    const addButton = wrapper.find('[data-label="Add Category"]')
     await addButton.trigger('click')
 
     const dialog = wrapper.findComponent(ExpenseCategorySelectionDialogStub)
@@ -450,13 +466,16 @@ describe('TemplatePage', () => {
     expect(mockRouterPush).toHaveBeenCalledWith({ name: 'templates' })
   })
 
-  it('should navigate back when discard button is clicked', async () => {
-    const { wrapper } = createWrapper()
+  it('should show delete dialog when delete button is clicked for existing template', async () => {
+    const { wrapper } = createWrapper({ isNewTemplate: false, isOwner: true })
 
-    const discardButton = wrapper.find('[data-label="Discard"]')
-    await discardButton.trigger('click')
+    const deleteButton = wrapper.find('[data-label="Delete Template"]')
+    await deleteButton.trigger('click')
 
-    expect(mockRouterPush).toHaveBeenCalledWith({ name: 'templates' })
+    // Test that the delete dialog component is rendered in the DOM
+    const deleteDialog = wrapper.findComponent({ name: 'DeleteDialog' })
+    expect(deleteDialog.exists()).toBe(true)
+    expect(deleteDialog.props('modelValue')).toBe(true)
   })
 
   it('should show share button for existing template when owner', () => {
@@ -502,12 +521,19 @@ describe('TemplatePage', () => {
   it('should create new template when form is submitted for new template', async () => {
     const { wrapper } = createWrapper({ isNewTemplate: true, hasItems: true })
     mockUseExpenseTemplateItems.isValidForSave.value = true
+    mockUseExpenseTemplateItems.hasValidItems.value = true
+
+    const nameInputs = wrapper.findAll('.q-input')
+    expect(nameInputs.length).toBeGreaterThan(0)
+
+    await nameInputs[0]?.setValue('Test Template')
+    await nameInputs[0]?.trigger('input')
 
     const form = wrapper.find('form')
     await form.trigger('submit')
 
     expect(mockUseExpenseTemplate.createNewTemplateWithItems).toHaveBeenCalledWith(
-      '',
+      'Monthly Budget',
       'monthly',
       500,
       [],
@@ -517,12 +543,17 @@ describe('TemplatePage', () => {
   it('should update existing template when form is submitted for existing template', async () => {
     const { wrapper } = createWrapper({ hasItems: true })
     mockUseExpenseTemplateItems.isValidForSave.value = true
+    mockUseExpenseTemplateItems.hasValidItems.value = true
+
+    const nameInputs = wrapper.findAll('.q-input')
+    await nameInputs[0]?.setValue('Test Template')
+    await nameInputs[0]?.trigger('input')
 
     const form = wrapper.find('form')
     await form.trigger('submit')
 
     expect(mockUseExpenseTemplate.updateExistingTemplateWithItems).toHaveBeenCalledWith(
-      '',
+      'Monthly Budget',
       'monthly',
       500,
       [],
@@ -532,6 +563,11 @@ describe('TemplatePage', () => {
   it('should navigate back after successful save', async () => {
     const { wrapper } = createWrapper({ hasItems: true })
     mockUseExpenseTemplateItems.isValidForSave.value = true
+    mockUseExpenseTemplateItems.hasValidItems.value = true
+
+    const nameInputs = wrapper.findAll('.q-input')
+    await nameInputs[0]?.setValue('Test Template')
+    await nameInputs[0]?.trigger('input')
 
     const form = wrapper.find('form')
     await form.trigger('submit')
@@ -568,14 +604,14 @@ describe('TemplatePage', () => {
   it('should show correct breadcrumb labels for edit template', () => {
     const { wrapper } = createWrapper()
 
-    const breadcrumb = wrapper.find('[data-label="Edit Template"]')
+    const breadcrumb = wrapper.find('[data-label="Template"]')
     expect(breadcrumb.exists()).toBe(true)
   })
 
   it('should show correct breadcrumb labels for view template', () => {
     const { wrapper } = createWrapper({ isReadOnlyMode: true })
 
-    const breadcrumb = wrapper.find('[data-label="View Template"]')
+    const breadcrumb = wrapper.find('[data-label="Template"]')
     expect(breadcrumb.exists()).toBe(true)
   })
 
@@ -587,11 +623,11 @@ describe('TemplatePage', () => {
     expect(mockUseExpenseTemplateItems.loadExpenseTemplateItems).toHaveBeenCalledWith(mockTemplate)
   })
 
-  it('should show duration toggle options in edit mode', () => {
+  it('should show duration select options in edit mode', () => {
     const { wrapper } = createWrapper()
 
-    const durationToggle = wrapper.find('.q-btn-toggle')
-    expect(durationToggle.exists()).toBe(true)
+    const durationSelect = wrapper.find('.q-select')
+    expect(durationSelect.exists()).toBe(true)
   })
 
   it('should show duration as chip in read-only mode', () => {
@@ -641,7 +677,10 @@ describe('TemplatePage', () => {
     const categoryComponent = wrapper.findComponent(ExpenseTemplateCategoryStub)
     await categoryComponent.vm.$emit('add-item', 'cat-1')
 
-    expect(mockUseExpenseTemplateItems.addExpenseTemplateItem).toHaveBeenCalledWith('cat-1')
+    expect(mockUseExpenseTemplateItems.addExpenseTemplateItem).toHaveBeenCalledWith(
+      'cat-1',
+      undefined,
+    )
   })
 
   it('should show correct singular/plural text for category count', () => {

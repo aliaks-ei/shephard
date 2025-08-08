@@ -222,8 +222,8 @@ describe('updateExpenseCategory', () => {
       error: null,
     })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
-    const mockEq = vi.fn().mockReturnValue({ select: mockSelect })
-    const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
+    const mockMatch = vi.fn().mockReturnValue({ select: mockSelect })
+    const mockUpdate = vi.fn().mockReturnValue({ match: mockMatch })
     const mockFrom = vi.fn().mockReturnValue({ update: mockUpdate })
 
     mockSupabase.from.mockImplementation(mockFrom)
@@ -232,7 +232,7 @@ describe('updateExpenseCategory', () => {
 
     expect(mockFrom).toHaveBeenCalledWith('expense_categories')
     expect(mockUpdate).toHaveBeenCalledWith(updates)
-    expect(mockEq).toHaveBeenCalledWith('id', 'category-1')
+    expect(mockMatch).toHaveBeenCalledWith({ id: 'category-1' })
     expect(result).toEqual(updatedCategory)
   })
 
@@ -244,8 +244,8 @@ describe('updateExpenseCategory', () => {
       error: mockError,
     })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
-    const mockEq = vi.fn().mockReturnValue({ select: mockSelect })
-    const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
+    const mockMatch = vi.fn().mockReturnValue({ select: mockSelect })
+    const mockUpdate = vi.fn().mockReturnValue({ match: mockMatch })
     const mockFrom = vi.fn().mockReturnValue({ update: mockUpdate })
 
     mockSupabase.from.mockImplementation(mockFrom)
@@ -263,8 +263,8 @@ describe('updateExpenseCategory', () => {
       error: mockError,
     })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
-    const mockEq = vi.fn().mockReturnValue({ select: mockSelect })
-    const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
+    const mockMatch = vi.fn().mockReturnValue({ select: mockSelect })
+    const mockUpdate = vi.fn().mockReturnValue({ match: mockMatch })
     const mockFrom = vi.fn().mockReturnValue({ update: mockUpdate })
 
     mockSupabase.from.mockImplementation(mockFrom)
@@ -275,8 +275,8 @@ describe('updateExpenseCategory', () => {
 
 describe('deleteExpenseCategory', () => {
   it('should delete category successfully', async () => {
-    const mockEq = vi.fn().mockResolvedValue({ data: null, error: null })
-    const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
+    const mockMatch = vi.fn().mockResolvedValue({ data: null, error: null })
+    const mockDelete = vi.fn().mockReturnValue({ match: mockMatch })
     const mockFrom = vi.fn().mockReturnValue({ delete: mockDelete })
 
     mockSupabase.from.mockImplementation(mockFrom)
@@ -284,13 +284,13 @@ describe('deleteExpenseCategory', () => {
     await deleteExpenseCategory('category-1')
 
     expect(mockFrom).toHaveBeenCalledWith('expense_categories')
-    expect(mockEq).toHaveBeenCalledWith('id', 'category-1')
+    expect(mockMatch).toHaveBeenCalledWith({ id: 'category-1' })
   })
 
   it('should throw error when delete fails', async () => {
     const mockError = createPostgrestError('Failed to delete category')
-    const mockEq = vi.fn().mockResolvedValue({ data: null, error: mockError })
-    const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
+    const mockMatch = vi.fn().mockResolvedValue({ data: null, error: mockError })
+    const mockDelete = vi.fn().mockReturnValue({ match: mockMatch })
     const mockFrom = vi.fn().mockReturnValue({ delete: mockDelete })
 
     mockSupabase.from.mockImplementation(mockFrom)

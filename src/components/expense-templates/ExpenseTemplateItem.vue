@@ -2,6 +2,7 @@
   <q-item class="q-py-sm q-px-none">
     <q-item-section>
       <q-input
+        ref="nameInputRef"
         :model-value="modelValue.name"
         :readonly="readonly"
         :rules="nameRules"
@@ -21,11 +22,12 @@
         :prefix="currencySymbol"
         type="number"
         min="0"
-        step="1"
+        step="0.01"
         label="Amount"
         class="q-px-none"
         outlined
         item-aligned
+        no-error-icon
         @update:model-value="updateAmount"
       />
     </q-item-section>
@@ -49,9 +51,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
+import type { QInput } from 'quasar'
 import { getCurrencySymbol, type CurrencyCode } from 'src/utils/currency'
-import type { ExpenseTemplateItemUI } from 'src/api'
+import type { ExpenseTemplateItemUI } from 'src/types'
+
+const nameInputRef = ref<QInput | null>(null)
 
 const emit = defineEmits<{
   (e: 'update:modelValue', item: ExpenseTemplateItemUI): void
@@ -105,4 +110,12 @@ function updateAmount(amount: string | number | null): void {
   }
   emit('update:modelValue', updatedItem)
 }
+
+function focusNameInput(): void {
+  nameInputRef.value?.focus()
+}
+
+defineExpose({
+  focusNameInput,
+})
 </script>

@@ -19,6 +19,8 @@ const ExpenseTemplatesGroupStub = {
       class="expense-templates-group-mock"
       :data-title="title"
       :data-templates-count="templates ? templates.length : 0"
+      :data-chip-color="chipColor"
+      :data-hide-shared-badge="hideSharedBadge"
     >
       <div v-for="template in templates" :key="template.id" class="template-item">
         <button @click="$emit('edit', template.id)" class="edit-btn">Edit</button>
@@ -43,6 +45,64 @@ const ShareExpenseTemplateDialogStub = {
   `,
   props: ['modelValue', 'templateId'],
   emits: ['update:modelValue', 'shared'],
+}
+
+const SearchAndSortStub = {
+  template: `
+    <div class="search-and-sort-mock">
+      <input
+        class="search-input"
+        :value="searchQuery"
+        @input="$emit('update:searchQuery', $event.target.value)"
+        :placeholder="searchPlaceholder"
+      />
+      <select
+        class="sort-select"
+        :value="sortBy"
+        @change="$emit('update:sortBy', $event.target.value)"
+      >
+        <option v-for="option in sortOptions" :key="option.value" :value="option.value">
+          {{ option.label }}
+        </option>
+      </select>
+    </div>
+  `,
+  props: ['searchQuery', 'sortBy', 'searchPlaceholder', 'sortOptions'],
+  emits: ['update:searchQuery', 'update:sortBy'],
+}
+
+const ListPageSkeletonStub = {
+  template: '<div class="list-page-skeleton-mock"></div>',
+}
+
+const EmptyStateStub = {
+  template: `
+    <div class="empty-state-mock" :data-has-search-query="hasSearchQuery">
+      <div class="empty-state-content">
+        <i v-if="hasSearchQuery" :data-name="searchIcon"></i>
+        <i v-else :data-name="emptyIcon"></i>
+        <h3>{{ hasSearchQuery ? searchTitle : emptyTitle }}</h3>
+        <p>{{ hasSearchQuery ? searchDescription : emptyDescription }}</p>
+        <button v-if="hasSearchQuery" @click="$emit('clear-search')" class="clear-search-btn">
+          Clear Search
+        </button>
+        <button v-else @click="$emit('create')" class="create-btn">
+          {{ createButtonLabel }}
+        </button>
+      </div>
+    </div>
+  `,
+  props: [
+    'hasSearchQuery',
+    'searchIcon',
+    'emptyIcon',
+    'searchTitle',
+    'emptyTitle',
+    'searchDescription',
+    'emptyDescription',
+    'createButtonLabel',
+  ],
+  emits: ['clear-search', 'create'],
 }
 
 const mockOwnedTemplates: ExpenseTemplateWithPermission[] = [
@@ -109,13 +169,30 @@ function createWrapper(
   const mockExpenseTemplatesReturn = {
     searchQuery: ref(searchQuery),
     sortBy: ref(sortBy),
-    areTemplatesLoading: computed(() => isLoading),
-    filteredAndSortedOwnedTemplates: computed(() => ownedTemplates),
-    filteredAndSortedSharedTemplates: computed(() => sharedTemplates),
-    hasTemplates: computed(() => hasTemplates),
-    goToNewTemplate: vi.fn(),
-    viewTemplate: vi.fn(),
-    deleteTemplate: vi.fn(),
+    areItemsLoading: computed(() => isLoading),
+    filteredAndSortedOwnedItems: computed(() => ownedTemplates),
+    filteredAndSortedSharedItems: computed(() => sharedTemplates),
+    allFilteredAndSortedItems: computed(() => [...ownedTemplates, ...sharedTemplates]),
+    hasItems: computed(() => hasTemplates),
+    sortOptions: [
+      { label: 'Name', value: 'name' },
+      { label: 'Total Amount', value: 'total' },
+      { label: 'Duration', value: 'duration' },
+      { label: 'Created Date', value: 'created_at' },
+    ],
+    emptyStateConfig: computed(() => ({
+      searchIcon: 'eva-search-outline',
+      emptyIcon: 'eva-file-text-outline',
+      searchTitle: 'No templates found',
+      emptyTitle: 'No templates yet',
+      searchDescription: 'Try adjusting your search terms or create a new template',
+      emptyDescription: 'Create your first template to start managing your expenses efficiently',
+      createLabel: 'Create Your First Template',
+    })),
+    goToNew: vi.fn(),
+    viewItem: vi.fn(),
+    deleteItem: vi.fn(),
+    clearSearch: vi.fn(),
   }
 
   vi.mocked(useExpenseTemplates).mockReturnValue(mockExpenseTemplatesReturn)
@@ -131,6 +208,9 @@ function createWrapper(
       stubs: {
         ExpenseTemplatesGroup: ExpenseTemplatesGroupStub,
         ShareExpenseTemplateDialog: ShareExpenseTemplateDialogStub,
+        SearchAndSort: SearchAndSortStub,
+        ListPageSkeleton: ListPageSkeletonStub,
+        EmptyState: EmptyStateStub,
         QBtn: {
           template: `
             <button
@@ -152,47 +232,6 @@ function createWrapper(
         },
         QCardSection: {
           template: '<div class="q-card-section"><slot /></div>',
-        },
-        QInput: {
-          template: `
-            <div class="q-input">
-              <input
-                :value="modelValue"
-                @input="$emit('update:modelValue', $event.target.value)"
-                :placeholder="placeholder"
-              />
-              <slot name="prepend" />
-            </div>
-          `,
-          props: ['modelValue', 'placeholder', 'debounce', 'outlined', 'clearable'],
-          emits: ['update:modelValue'],
-        },
-        QSelect: {
-          template: `
-            <div class="q-select">
-              <select
-                :value="modelValue"
-                @change="$emit('update:modelValue', $event.target.value)"
-              >
-                <option v-for="option in options" :key="option.value" :value="option.value">
-                  {{ option.label }}
-                </option>
-              </select>
-            </div>
-          `,
-          props: ['modelValue', 'options', 'label', 'outlined', 'emitValue'],
-          emits: ['update:modelValue'],
-        },
-        QSkeleton: {
-          template: `
-            <div
-              class="q-skeleton"
-              :data-type="type"
-              :data-width="width"
-              :data-height="height"
-            ></div>
-          `,
-          props: ['type', 'width', 'height'],
         },
         QIcon: {
           template: '<i class="q-icon" :data-name="name" :data-size="size"></i>',
@@ -235,31 +274,28 @@ it('should render create template button', () => {
   expect(createButton.attributes('data-icon')).toBe('eva-plus-outline')
 })
 
-it('should call goToNewTemplate when create button is clicked', async () => {
+it('should call goToNew when create button is clicked', async () => {
   const { wrapper, mockUseExpenseTemplates } = createWrapper()
 
   const createButton = wrapper.find('[data-label="Create Template"]')
   await createButton.trigger('click')
 
-  expect(mockUseExpenseTemplates.goToNewTemplate).toHaveBeenCalledOnce()
+  expect(mockUseExpenseTemplates.goToNew).toHaveBeenCalledOnce()
 })
 
-it('should render search input and sort select', () => {
+it('should render search and sort component', () => {
   const { wrapper } = createWrapper()
 
-  const searchInput = wrapper.find('.q-input input')
-  expect(searchInput.exists()).toBe(true)
-  expect(searchInput.attributes('placeholder')).toBe('Search templates...')
-
-  const sortSelect = wrapper.find('.q-select')
-  expect(sortSelect.exists()).toBe(true)
+  const searchAndSort = wrapper.findComponent(SearchAndSortStub)
+  expect(searchAndSort.exists()).toBe(true)
+  expect(searchAndSort.props('searchPlaceholder')).toBe('Search templates...')
 })
 
-it('should show loading skeletons when templates are loading', () => {
+it('should show loading skeleton when templates are loading', () => {
   const { wrapper } = createWrapper({ isLoading: true })
 
-  const skeletons = wrapper.findAll('.q-skeleton')
-  expect(skeletons.length).toBe(18)
+  const skeleton = wrapper.findComponent(ListPageSkeletonStub)
+  expect(skeleton.exists()).toBe(true)
 
   const templateGroups = wrapper.findAll('.expense-templates-group-mock')
   expect(templateGroups.length).toBe(0)
@@ -307,11 +343,13 @@ it('should show empty state when no templates and not loading', () => {
     hasTemplates: false,
   })
 
-  expect(wrapper.text()).toContain('No templates yet')
-  expect(wrapper.text()).toContain(
+  const emptyState = wrapper.findComponent(EmptyStateStub)
+  expect(emptyState.exists()).toBe(true)
+  expect(emptyState.props('hasSearchQuery')).toBe(false)
+  expect(emptyState.props('emptyTitle')).toBe('No templates yet')
+  expect(emptyState.props('emptyDescription')).toBe(
     'Create your first template to start managing your expenses efficiently',
   )
-  expect(wrapper.find('[data-label="Create Your First Template"]').exists()).toBe(true)
 })
 
 it('should show search empty state when searching with no results', () => {
@@ -320,9 +358,13 @@ it('should show search empty state when searching with no results', () => {
     hasTemplates: false,
   })
 
-  expect(wrapper.text()).toContain('No templates found')
-  expect(wrapper.text()).toContain('Try adjusting your search terms or create a new template')
-  expect(wrapper.find('[data-label="Clear Search"]').exists()).toBe(true)
+  const emptyState = wrapper.findComponent(EmptyStateStub)
+  expect(emptyState.exists()).toBe(true)
+  expect(emptyState.props('hasSearchQuery')).toBe(true)
+  expect(emptyState.props('searchTitle')).toBe('No templates found')
+  expect(emptyState.props('searchDescription')).toBe(
+    'Try adjusting your search terms or create a new template',
+  )
 })
 
 it('should clear search when clear search button is clicked', async () => {
@@ -331,13 +373,13 @@ it('should clear search when clear search button is clicked', async () => {
     hasTemplates: false,
   })
 
-  const clearButton = wrapper.find('[data-label="Clear Search"]')
-  await clearButton.trigger('click')
+  const emptyState = wrapper.findComponent(EmptyStateStub)
+  await emptyState.vm.$emit('clear-search')
 
-  expect(mockUseExpenseTemplates.searchQuery.value).toBe('')
+  expect(mockUseExpenseTemplates.clearSearch).toHaveBeenCalledOnce()
 })
 
-it('should call viewTemplate when edit button is clicked', async () => {
+it('should call viewItem when edit button is clicked', async () => {
   const { wrapper, mockUseExpenseTemplates } = createWrapper({
     ownedTemplates: mockOwnedTemplates,
     hasTemplates: true,
@@ -346,10 +388,10 @@ it('should call viewTemplate when edit button is clicked', async () => {
   const editButton = wrapper.find('.edit-btn')
   await editButton.trigger('click')
 
-  expect(mockUseExpenseTemplates.viewTemplate).toHaveBeenCalledWith('template-1')
+  expect(mockUseExpenseTemplates.viewItem).toHaveBeenCalledWith('template-1')
 })
 
-it('should call deleteTemplate when delete button is clicked', async () => {
+it('should call deleteItem when delete button is clicked', async () => {
   const { wrapper, mockUseExpenseTemplates } = createWrapper({
     ownedTemplates: mockOwnedTemplates,
     hasTemplates: true,
@@ -358,7 +400,7 @@ it('should call deleteTemplate when delete button is clicked', async () => {
   const deleteButton = wrapper.find('.delete-btn')
   await deleteButton.trigger('click')
 
-  expect(mockUseExpenseTemplates.deleteTemplate).toHaveBeenCalledWith(mockOwnedTemplates[0])
+  expect(mockUseExpenseTemplates.deleteItem).toHaveBeenCalledWith(mockOwnedTemplates[0])
 })
 
 it('should open share dialog when share button is clicked', async () => {
@@ -405,33 +447,33 @@ it('should reset templates store on unmount', () => {
   expect(templatesStore.reset).toHaveBeenCalledOnce()
 })
 
-it('should render correct sort options', () => {
+it('should pass correct sort options to search and sort component', () => {
   const { wrapper } = createWrapper()
 
-  const sortSelect = wrapper.find('.q-select select')
-  const options = sortSelect.findAll('option')
+  const searchAndSort = wrapper.findComponent(SearchAndSortStub)
+  const sortOptions = searchAndSort.props('sortOptions')
 
-  expect(options).toHaveLength(4)
-  expect(options[0]?.text()).toBe('Name')
-  expect(options[1]?.text()).toBe('Total Amount')
-  expect(options[2]?.text()).toBe('Duration')
-  expect(options[3]?.text()).toBe('Created Date')
+  expect(sortOptions).toHaveLength(4)
+  expect(sortOptions[0]).toEqual({ label: 'Name', value: 'name' })
+  expect(sortOptions[1]).toEqual({ label: 'Total Amount', value: 'total' })
+  expect(sortOptions[2]).toEqual({ label: 'Duration', value: 'duration' })
+  expect(sortOptions[3]).toEqual({ label: 'Created Date', value: 'created_at' })
 })
 
-it('should update search query when input changes', async () => {
+it('should update search query when search input changes', async () => {
   const { wrapper, mockUseExpenseTemplates } = createWrapper()
 
-  const searchInput = wrapper.find('.q-input input')
-  await searchInput.setValue('test query')
+  const searchAndSort = wrapper.findComponent(SearchAndSortStub)
+  await searchAndSort.vm.$emit('update:searchQuery', 'test query')
 
   expect(mockUseExpenseTemplates.searchQuery.value).toBe('test query')
 })
 
-it('should update sort by when select changes', async () => {
+it('should update sort by when sort select changes', async () => {
   const { wrapper, mockUseExpenseTemplates } = createWrapper()
 
-  const sortSelect = wrapper.find('.q-select select')
-  await sortSelect.setValue('total')
+  const searchAndSort = wrapper.findComponent(SearchAndSortStub)
+  await searchAndSort.vm.$emit('update:sortBy', 'total')
 
   expect(mockUseExpenseTemplates.sortBy.value).toBe('total')
 })
@@ -441,20 +483,27 @@ it('should show proper icons in empty states', () => {
     hasTemplates: false,
   })
 
-  expect(emptyWrapper.find('[data-name="eva-file-text-outline"]').exists()).toBe(true)
+  const emptyState = emptyWrapper.findComponent(EmptyStateStub)
+  expect(emptyState.props('emptyIcon')).toBe('eva-file-text-outline')
 
   const { wrapper: searchWrapper } = createWrapper({
     searchQuery: 'test',
     hasTemplates: false,
   })
 
-  expect(searchWrapper.find('[data-name="eva-search-outline"]').exists()).toBe(true)
+  const searchEmptyState = searchWrapper.findComponent(EmptyStateStub)
+  expect(searchEmptyState.props('searchIcon')).toBe('eva-search-outline')
 })
 
-it('should render search icon in input', () => {
-  const { wrapper } = createWrapper()
+it('should create new template when create button clicked from empty state', async () => {
+  const { wrapper, mockUseExpenseTemplates } = createWrapper({
+    hasTemplates: false,
+  })
 
-  expect(wrapper.find('[data-name="eva-search-outline"]').exists()).toBe(true)
+  const emptyState = wrapper.findComponent(EmptyStateStub)
+  await emptyState.vm.$emit('create')
+
+  expect(mockUseExpenseTemplates.goToNew).toHaveBeenCalledOnce()
 })
 
 it('should handle empty template arrays gracefully', () => {
@@ -466,7 +515,9 @@ it('should handle empty template arrays gracefully', () => {
 
   expect(wrapper.find('[data-title="My Templates"]').exists()).toBe(false)
   expect(wrapper.find('[data-title="Shared with Me"]').exists()).toBe(false)
-  expect(wrapper.text()).toContain('No templates yet')
+
+  const emptyState = wrapper.findComponent(EmptyStateStub)
+  expect(emptyState.exists()).toBe(true)
 })
 
 it('should show only owned templates group when no shared templates', () => {
@@ -491,30 +542,43 @@ it('should show only shared templates group when no owned templates', () => {
   expect(wrapper.find('[data-title="Shared with Me"]').exists()).toBe(true)
 })
 
-it('should pass correct props to shared templates group', () => {
+it('should show proper create button label in empty state', () => {
   const { wrapper } = createWrapper({
-    sharedTemplates: mockSharedTemplates,
+    hasTemplates: false,
+  })
+
+  const emptyState = wrapper.findComponent(EmptyStateStub)
+  expect(emptyState.props('createButtonLabel')).toBe('Create Your First Template')
+})
+
+it('should maintain reactive search and sort state', () => {
+  const { wrapper, mockUseExpenseTemplates } = createWrapper({
+    searchQuery: 'initial',
+    sortBy: 'name',
+  })
+
+  expect(mockUseExpenseTemplates.searchQuery.value).toBe('initial')
+  expect(mockUseExpenseTemplates.sortBy.value).toBe('name')
+
+  const searchAndSort = wrapper.findComponent(SearchAndSortStub)
+  expect(searchAndSort.props('searchQuery')).toBe('initial')
+  expect(searchAndSort.props('sortBy')).toBe('name')
+})
+
+it('should close share dialog when model value changes', async () => {
+  const { wrapper } = createWrapper({
+    ownedTemplates: mockOwnedTemplates,
     hasTemplates: true,
   })
 
-  const sharedGroup = wrapper.find('[data-title="Shared with Me"]')
-  expect(sharedGroup.exists()).toBe(true)
-})
+  const shareButton = wrapper.find('.share-btn')
+  await shareButton.trigger('click')
 
-it('should render proper page layout structure', () => {
-  const { wrapper } = createWrapper()
+  let shareDialog = wrapper.findComponent(ShareExpenseTemplateDialogStub)
+  expect(shareDialog.attributes('data-model-value')).toBe('true')
 
-  expect(wrapper.find('.row.justify-center.q-pa-md').exists()).toBe(true)
-  expect(wrapper.find('.col-12.col-md-10.col-lg-8.col-xl-6').exists()).toBe(true)
-  expect(wrapper.find('.row.items-center.justify-between.wrap').exists()).toBe(true)
-})
+  await shareDialog.vm.$emit('update:modelValue', false)
 
-it('should show loading state with proper skeleton count', () => {
-  const { wrapper } = createWrapper({ isLoading: true })
-
-  const skeletonCards = wrapper.findAll('.q-card')
-  const skeletons = wrapper.findAll('.q-skeleton')
-
-  expect(skeletonCards.length).toBeGreaterThan(0)
-  expect(skeletons.length).toBe(18)
+  shareDialog = wrapper.findComponent(ShareExpenseTemplateDialogStub)
+  expect(shareDialog.attributes('data-model-value')).toBe('false')
 })

@@ -37,6 +37,22 @@ export type ErrorMessageKey =
   | 'TEMPLATE_ITEMS.VALIDATION_FAILED'
   | 'TEMPLATE_ITEMS.DUPLICATE_NAME_CATEGORY'
   | 'TEMPLATE_ITEMS.NAME_REQUIRED'
+  | 'PLANS.LOAD_FAILED'
+  | 'PLANS.LOAD_PLAN_FAILED'
+  | 'PLANS.CREATE_FAILED'
+  | 'PLANS.UPDATE_FAILED'
+  | 'PLANS.DELETE_FAILED'
+  | 'PLANS.CANCEL_FAILED'
+  | 'PLANS.LOAD_SHARED_USERS_FAILED'
+  | 'PLANS.SHARE_FAILED'
+  | 'PLANS.UNSHARE_FAILED'
+  | 'PLANS.UPDATE_PERMISSION_FAILED'
+  | 'PLANS.DUPLICATE_NAME'
+  | 'PLANS.USER_NOT_FOUND'
+  | 'PLANS.ALREADY_SHARED'
+  | 'PLANS.SEARCH_USERS_FAILED'
+  | 'PLANS.SAVE_ITEMS_FAILED'
+  | 'PLANS.DELETE_ITEMS_FAILED'
   | 'UNKNOWN'
 
 interface ErrorMessageConfig {
@@ -256,6 +272,88 @@ export const ERROR_MESSAGES: Record<ErrorMessageKey, ErrorMessageConfig> = {
       'Please add at least one item with a name, category, and valid amount to create your template.',
     notify: true,
     log: false,
+  },
+
+  // Plans errors
+  'PLANS.LOAD_FAILED': {
+    message: "We couldn't load your plans. Please refresh or try again later.",
+    notify: true,
+    log: true,
+  },
+  'PLANS.LOAD_PLAN_FAILED': {
+    message: "We couldn't load that plan. Please try again or check if it still exists.",
+    notify: true,
+    log: true,
+  },
+  'PLANS.CREATE_FAILED': {
+    message: "We couldn't create your plan. Please check your details and try again.",
+    notify: true,
+    log: true,
+  },
+  'PLANS.UPDATE_FAILED': {
+    message: "We couldn't save your plan changes. Please try again.",
+    notify: true,
+    log: true,
+  },
+  'PLANS.DELETE_FAILED': {
+    message: "We couldn't delete that plan. Please try again.",
+    notify: true,
+    log: true,
+  },
+  'PLANS.CANCEL_FAILED': {
+    message: "We couldn't cancel that plan. Please try again.",
+    notify: true,
+    log: true,
+  },
+  'PLANS.LOAD_SHARED_USERS_FAILED': {
+    message: "We couldn't load the users this plan is shared with. Please try again.",
+    notify: true,
+    log: true,
+  },
+  'PLANS.SHARE_FAILED': {
+    message: "We couldn't share that plan. Please try again.",
+    notify: true,
+    log: true,
+  },
+  'PLANS.UNSHARE_FAILED': {
+    message: "We couldn't remove access to that plan. Please try again.",
+    notify: true,
+    log: true,
+  },
+  'PLANS.UPDATE_PERMISSION_FAILED': {
+    message: "We couldn't update the access permissions. Please try again.",
+    notify: true,
+    log: true,
+  },
+  'PLANS.DUPLICATE_NAME': {
+    message: 'You already have a plan with this name. Please choose a different name.',
+    notify: true,
+    log: true,
+  },
+  'PLANS.USER_NOT_FOUND': {
+    message: "We couldn't find a user with that email address. Please check and try again.",
+    notify: true,
+    log: true,
+  },
+  'PLANS.ALREADY_SHARED': {
+    message: 'This plan is already shared with that user.',
+    notify: true,
+    log: true,
+  },
+  'PLANS.SEARCH_USERS_FAILED': {
+    message: "We couldn't search for users. Please try again.",
+    notify: true,
+    log: true,
+  },
+  'PLANS.SAVE_ITEMS_FAILED': {
+    message: "We couldn't save the plan items. Please try again.",
+    notify: true,
+    log: true,
+  },
+  'PLANS.DELETE_ITEMS_FAILED': {
+    message: "We couldn't remove those items from your plan. Please try again.",
+    notify: true,
+    log: true,
   },
 
   // Default error

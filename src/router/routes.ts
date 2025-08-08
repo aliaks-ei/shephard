@@ -23,6 +23,17 @@ const routes: RouteRecordRaw[] = [
         component: () => import('pages/CategoriesPage.vue'),
         name: 'categories',
       },
+      { path: 'plans', component: () => import('pages/PlansPage.vue'), name: 'plans' },
+      {
+        path: 'plans/new',
+        component: () => import('pages/PlanPage.vue'),
+        name: 'new-plan',
+      },
+      {
+        path: 'plans/:id',
+        component: () => import('pages/PlanPage.vue'),
+        name: 'plan',
+      },
     ],
     meta: {
       requiresAuth: true,

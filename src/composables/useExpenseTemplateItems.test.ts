@@ -5,7 +5,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useExpenseTemplateItems } from './useExpenseTemplateItems'
 import { useCategoriesStore } from 'src/stores/categories'
-import type { ExpenseTemplateWithItems, ExpenseTemplateItemUI } from 'src/api'
+import type { ExpenseTemplateWithItems } from 'src/api'
+import type { ExpenseTemplateItemUI } from 'src/types'
 
 let pinia: TestingPinia
 
