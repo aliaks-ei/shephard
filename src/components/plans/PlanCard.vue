@@ -87,79 +87,27 @@
       </q-item-section>
     </q-item>
 
-    <!-- Delete Confirmation Dialog -->
-    <q-dialog
+    <!-- Delete Plan Dialog -->
+    <DeleteDialog
       v-model="isDeleteDialogOpen"
-      persistent
-    >
-      <q-card class="q-pa-md">
-        <q-card-section>
-          <div class="text-h6 q-mb-md">Delete Plan</div>
-          <p class="q-mb-md">
-            Are you sure you want to delete "<strong>{{ plan.name }}</strong
-            >"?
-          </p>
-          <p class="text-caption text-grey-6 q-mb-none">
-            This action cannot be undone. All plan data will be permanently removed.
-          </p>
-        </q-card-section>
+      title="Delete Plan"
+      warning-message="This action cannot be undone. All plan data will be permanently removed."
+      :confirmation-message="`Are you sure you want to delete &quot;${plan.name}&quot;?`"
+      cancel-label="Cancel"
+      confirm-label="Delete Plan"
+      @confirm="confirmDelete"
+    />
 
-        <q-card-actions
-          align="right"
-          class="q-pt-none"
-        >
-          <q-btn
-            flat
-            label="Cancel"
-            color="grey-7"
-            @click="isDeleteDialogOpen = false"
-          />
-          <q-btn
-            unelevated
-            label="Delete Plan"
-            color="negative"
-            @click="confirmDelete"
-          />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
-
-    <!-- Cancel Confirmation Dialog -->
-    <q-dialog
+    <!-- Cancel Plan Dialog -->
+    <DeleteDialog
       v-model="isCancelDialogOpen"
-      persistent
-    >
-      <q-card class="q-pa-md">
-        <q-card-section>
-          <div class="text-h6 q-mb-md">Cancel Plan</div>
-          <p class="q-mb-md">
-            Are you sure you want to cancel "<strong>{{ plan.name }}</strong
-            >"?
-          </p>
-          <p class="text-caption text-grey-6 q-mb-none">
-            This will mark the plan as cancelled and stop any active tracking.
-          </p>
-        </q-card-section>
-
-        <q-card-actions
-          align="right"
-          class="q-pt-none"
-        >
-          <q-btn
-            flat
-            label="Keep Active"
-            color="grey-7"
-            @click="isCancelDialogOpen = false"
-          />
-          <q-btn
-            unelevated
-            label="Cancel Plan"
-            color="warning"
-            @click="confirmCancel"
-          />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
+      title="Cancel Plan"
+      warning-message="This will mark the plan as cancelled and stop any active tracking."
+      :confirmation-message="`Are you sure you want to cancel &quot;${plan.name}&quot;?`"
+      cancel-label="Keep Active"
+      confirm-label="Cancel Plan"
+      @confirm="confirmCancel"
+    />
   </q-card>
 </template>
 
@@ -167,6 +115,7 @@
 import { computed, ref } from 'vue'
 
 import PlanCardMenu from './PlanCardMenu.vue'
+import DeleteDialog from 'src/components/shared/DeleteDialog.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import { useUserStore } from 'src/stores/user'
 import {

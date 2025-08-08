@@ -12,6 +12,7 @@ export interface EntityConfig<TName extends MainTableName> {
   itemsTableName?: ItemsTableName
   uniqueConstraintName: string
   entityTypeName: 'PLAN' | 'TEMPLATE' | 'CATEGORY'
+  shareTableForeignKeyColumn?: string
 }
 
 export interface SharedUser {
@@ -174,10 +175,12 @@ export class BaseAPIService<
       throw new Error('Sharing is not supported for this entity')
     }
     const shareTable = this.config.shareTableName
+    const foreignKeyColumn =
+      this.config.shareTableForeignKeyColumn || `${this.config.tableName.slice(0, -1)}_id`
     const { data: share, error: shareError } = await supabase
       .from(shareTable)
       .select('permission_level')
-      .eq(`${this.config.tableName.slice(0, -1)}_id` as never, entityId as never)
+      .eq(foreignKeyColumn as never, entityId as never)
       .eq('shared_with_user_id' as never, userId as never)
       .maybeSingle()
 
@@ -201,11 +204,14 @@ export class BaseAPIService<
       throw new Error('Sharing is not supported for this entity')
     }
     const shareTable = this.config.shareTableName
+    const foreignKeyColumn =
+      this.config.shareTableForeignKeyColumn || `${this.config.tableName.slice(0, -1)}_id`
+
     // Get entity shares first
     const { data: shares, error: sharesError } = await supabase
       .from(shareTable)
       .select('shared_with_user_id, permission_level, created_at')
-      .eq(`${this.config.tableName.slice(0, -1)}_id` as never, entityId as never)
+      .eq(foreignKeyColumn as never, entityId as never)
       .order('created_at', { ascending: false })
 
     if (sharesError) throw sharesError
@@ -264,7 +270,8 @@ export class BaseAPIService<
       throw new Error(`User not found: ${userEmail}`)
     }
 
-    const entityIdColumn = `${this.config.tableName.slice(0, -1)}_id` // Remove 's' from table name
+    const entityIdColumn =
+      this.config.shareTableForeignKeyColumn || `${this.config.tableName.slice(0, -1)}_id`
 
     // Check if already shared
     const { data: existingShare, error: shareCheckError } = await supabase
@@ -291,11 +298,12 @@ export class BaseAPIService<
   }
 
   async unshareEntity(entityId: string, userId: string): Promise<void> {
-    const entityIdColumn = `${this.config.tableName.slice(0, -1)}_id`
-
     if (!this.config.shareTableName) {
       throw new Error('Sharing is not supported for this entity')
     }
+    const entityIdColumn =
+      this.config.shareTableForeignKeyColumn || `${this.config.tableName.slice(0, -1)}_id`
+
     const { error } = await supabase
       .from(this.config.shareTableName)
       .delete()
@@ -310,11 +318,12 @@ export class BaseAPIService<
     userId: string,
     permission: 'view' | 'edit',
   ): Promise<void> {
-    const entityIdColumn = `${this.config.tableName.slice(0, -1)}_id`
-
     if (!this.config.shareTableName) {
       throw new Error('Sharing is not supported for this entity')
     }
+    const entityIdColumn =
+      this.config.shareTableForeignKeyColumn || `${this.config.tableName.slice(0, -1)}_id`
+
     const { error } = await supabase
       .from(this.config.shareTableName)
       .update({ permission_level: permission })

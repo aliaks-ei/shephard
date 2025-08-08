@@ -581,7 +581,7 @@ describe('PlanPage', () => {
     expect(cancelButton.exists()).toBe(true)
   })
 
-  it('should show remove plan button for non-active plan when owner', () => {
+  it('should show delete plan button for non-active plan when owner', () => {
     const planWithPendingStatus = { ...mockPlan, status: 'pending' }
     const { wrapper } = createWrapper({ isOwner: true, currentPlan: planWithPendingStatus })
 
@@ -800,7 +800,7 @@ describe('PlanPage', () => {
     expect(wrapper.text()).toContain('Cancel Plan')
   })
 
-  it('should show remove plan dialog when remove button clicked', () => {
+  it('should show delete plan dialog when delete button clicked', () => {
     const planWithPendingStatus = { ...mockPlan, status: 'pending' }
     const { wrapper } = createWrapper({ isOwner: true, currentPlan: planWithPendingStatus })
 

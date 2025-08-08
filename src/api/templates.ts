@@ -40,6 +40,7 @@ const templateService = new BaseAPIService<
   itemsTableName: 'expense_template_items',
   uniqueConstraintName: 'unique_template_name_per_user',
   entityTypeName: 'TEMPLATE',
+  shareTableForeignKeyColumn: 'template_id',
 })
 
 export async function getExpenseTemplates(

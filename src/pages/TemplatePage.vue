@@ -33,6 +33,9 @@
                 label="Template Name"
                 outlined
                 :rules="nameRules"
+                :error="nameError"
+                :error-message="nameErrorMessage"
+                @update:model-value="clearNameError"
               />
             </div>
             <div class="col-12 col-sm">
@@ -310,6 +313,19 @@
         :template-id="routeTemplateId"
         @shared="onTemplateShared"
       />
+
+      <!-- Delete Template Dialog -->
+      <DeleteDialog
+        v-if="!isNewTemplate"
+        v-model="showDeleteDialog"
+        title="Delete Template"
+        warning-message="This will permanently delete your template and all its data. This action cannot be undone."
+        :confirmation-message="`Are you sure you want to delete this template?`"
+        cancel-label="Keep Template"
+        confirm-label="Delete Template"
+        :is-deleting="templatesStore.isLoading"
+        @confirm="deleteTemplate"
+      />
     </template>
 
     <!-- FAB Slot -->
@@ -334,6 +350,7 @@ import ActionsFab from 'src/components/shared/ActionsFab.vue'
 import ExpenseTemplateCategory from 'src/components/expense-templates/ExpenseTemplateCategory.vue'
 import ExpenseCategorySelectionDialog from 'src/components/expense-categories/ExpenseCategorySelectionDialog.vue'
 import ShareExpenseTemplateDialog from 'src/components/expense-templates/ShareExpenseTemplateDialog.vue'
+import DeleteDialog from 'src/components/shared/DeleteDialog.vue'
 import { useTemplatesStore } from 'src/stores/templates'
 import { useCategoriesStore } from 'src/stores/categories'
 import { useExpenseTemplateItems } from 'src/composables/useExpenseTemplateItems'
@@ -418,11 +435,16 @@ const { fabOpen, openDialog, closeDialog, getDialogState, createFabAction, initi
 const categoryRefs = ref<Map<string, InstanceType<typeof ExpenseTemplateCategory>>>(new Map())
 const lastAddedCategoryId = ref<string | null>(null)
 const allCategoriesExpanded = ref(false)
+const showDeleteDialog = ref(false)
 const formRef = ref<QForm>()
 const form = ref({
   name: '',
   duration: 'monthly' as string,
 })
+
+// Error states for validation
+const nameError = ref(false)
+const nameErrorMessage = ref('')
 
 // Computed properties
 const formattedTotalAmount = computed(() =>
@@ -507,11 +529,14 @@ const fabActions = computed(() => [
     handler: createFabAction(() => openDialog('share')),
   },
   {
-    key: 'discard',
+    key: 'delete',
     icon: 'eva-trash-2-outline',
-    label: 'Discard',
+    label: 'Delete Template',
     color: 'negative',
-    handler: createFabAction(goBack),
+    visible: !isNewTemplate.value && isOwner.value,
+    handler: createFabAction(() => {
+      showDeleteDialog.value = true
+    }),
   },
 ])
 
@@ -569,8 +594,18 @@ function goBack(): void {
   router.push({ name: 'templates' })
 }
 
+function clearNameError(): void {
+  nameError.value = false
+  nameErrorMessage.value = ''
+}
+
 async function saveTemplate(): Promise<void> {
+  // Clear previous errors
+  clearNameError()
+
   if (!form.value.name || form.value.name.trim().length === 0) {
+    nameError.value = true
+    nameErrorMessage.value = 'Template name is required'
     handleError('TEMPLATES.NAME_VALIDATION_FAILED', new Error('Template name is required'))
     return
   }
@@ -625,6 +660,14 @@ async function loadCurrentTemplate(): Promise<void> {
   form.value.duration = template.duration
 
   loadExpenseTemplateItems(template)
+}
+
+async function deleteTemplate(): Promise<void> {
+  if (!routeTemplateId.value) return
+
+  await templatesStore.removeTemplate(routeTemplateId.value)
+  showDeleteDialog.value = false
+  goBack()
 }
 
 function onTemplateShared(): void {

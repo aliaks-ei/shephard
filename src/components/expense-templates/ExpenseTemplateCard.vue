@@ -53,7 +53,7 @@
                 :permission-level="template.permission_level"
                 @edit="emit('edit', template.id)"
                 @share="emit('share', template.id)"
-                @delete="emit('delete', template)"
+                @delete="showDeleteDialog"
               />
             </q-btn>
           </div>
@@ -85,13 +85,25 @@
         </div>
       </q-item-section>
     </q-item>
+
+    <!-- Delete Template Dialog -->
+    <DeleteDialog
+      v-model="isDeleteDialogOpen"
+      title="Delete Template"
+      warning-message="This action cannot be undone. All template data will be permanently removed."
+      :confirmation-message="`Are you sure you want to delete &quot;${template.name}&quot;?`"
+      cancel-label="Cancel"
+      confirm-label="Delete Template"
+      @confirm="confirmDelete"
+    />
   </q-card>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import ExpenseTemplateCardMenu from './ExpenseTemplateCardMenu.vue'
+import DeleteDialog from 'src/components/shared/DeleteDialog.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import { useUserStore } from 'src/stores/user'
 import {
@@ -120,6 +132,8 @@ const props = withDefaults(
 )
 
 const userStore = useUserStore()
+
+const isDeleteDialogOpen = ref(false)
 
 const isOwner = computed(() => props.template.owner_id === userStore.userProfile?.id)
 const hasShares = computed(() => isOwner.value && !!props.template.is_shared)
@@ -152,5 +166,14 @@ const templateBadges = computed(() => {
 function formatAmount(amount: number | null | undefined): string {
   const currency = props.template.currency as CurrencyCode
   return formatCurrency(amount, currency)
+}
+
+function showDeleteDialog(): void {
+  isDeleteDialogOpen.value = true
+}
+
+function confirmDelete(): void {
+  emit('delete', props.template)
+  isDeleteDialogOpen.value = false
 }
 </script>

@@ -515,7 +515,7 @@ describe('getTemplateSharedUsers', () => {
     expect(mockSharesSelect).toHaveBeenCalledWith(
       'shared_with_user_id, permission_level, created_at',
     )
-    expect(mockSharesEq).toHaveBeenCalledWith('expense_template_id', 'template-1')
+    expect(mockSharesEq).toHaveBeenCalledWith('template_id', 'template-1')
     expect(mockUsersSelect).toHaveBeenCalledWith('id, name, email')
     expect(mockUsersIn).toHaveBeenCalledWith('id', ['user-2'])
 
@@ -662,7 +662,7 @@ describe('shareTemplate', () => {
     expect(mockUserSelect).toHaveBeenCalledWith('id, email')
     expect(mockUserEq).toHaveBeenCalledWith('email', 'john@example.com')
     expect(mockInsert).toHaveBeenCalledWith({
-      expense_template_id: 'template-1',
+      template_id: 'template-1',
       shared_with_user_id: 'user-2',
       shared_by_user_id: 'user-1',
       permission_level: 'view',
@@ -728,7 +728,7 @@ describe('unshareTemplate', () => {
     await unshareTemplate('template-1', 'user-2')
 
     expect(mockFrom).toHaveBeenCalledWith('template_shares')
-    expect(mockEq1).toHaveBeenCalledWith('expense_template_id', 'template-1')
+    expect(mockEq1).toHaveBeenCalledWith('template_id', 'template-1')
     expect(mockEq2).toHaveBeenCalledWith('shared_with_user_id', 'user-2')
   })
 
@@ -760,7 +760,7 @@ describe('updateSharePermission', () => {
 
     expect(mockFrom).toHaveBeenCalledWith('template_shares')
     expect(mockUpdate).toHaveBeenCalledWith({ permission_level: 'edit' })
-    expect(mockEq1).toHaveBeenCalledWith('expense_template_id', 'template-1')
+    expect(mockEq1).toHaveBeenCalledWith('template_id', 'template-1')
     expect(mockEq2).toHaveBeenCalledWith('shared_with_user_id', 'user-2')
   })
 

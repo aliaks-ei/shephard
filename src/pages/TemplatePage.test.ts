@@ -466,13 +466,16 @@ describe('TemplatePage', () => {
     expect(mockRouterPush).toHaveBeenCalledWith({ name: 'templates' })
   })
 
-  it('should navigate back when discard button is clicked', async () => {
-    const { wrapper } = createWrapper()
+  it('should show delete dialog when delete button is clicked for existing template', async () => {
+    const { wrapper } = createWrapper({ isNewTemplate: false, isOwner: true })
 
-    const discardButton = wrapper.find('[data-label="Discard"]')
-    await discardButton.trigger('click')
+    const deleteButton = wrapper.find('[data-label="Delete Template"]')
+    await deleteButton.trigger('click')
 
-    expect(mockRouterPush).toHaveBeenCalledWith({ name: 'templates' })
+    // Test that the delete dialog component is rendered in the DOM
+    const deleteDialog = wrapper.findComponent({ name: 'DeleteDialog' })
+    expect(deleteDialog.exists()).toBe(true)
+    expect(deleteDialog.props('modelValue')).toBe(true)
   })
 
   it('should show share button for existing template when owner', () => {

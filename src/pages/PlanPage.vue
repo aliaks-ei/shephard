@@ -11,7 +11,7 @@
     <q-form
       v-if="isEditMode && (isNewPlan || canEditPlanData)"
       ref="planForm"
-      @submit="savePlan"
+      @submit="handleSavePlan"
     >
       <!-- Template Selection (only for new plans) -->
       <q-card
@@ -43,6 +43,8 @@
           emit-value
           map-options
           :loading="templatesStore.isLoading"
+          :error="templateError"
+          :error-message="templateErrorMessage"
           @update:model-value="onTemplateSelected"
         >
           <template #option="scope">
@@ -391,40 +393,17 @@
         </q-card>
       </q-dialog>
 
-      <!-- Remove Plan Dialog -->
-      <q-dialog
-        v-model="showRemoveDialog"
-        persistent
-      >
-        <q-card style="min-width: 350px">
-          <q-card-section>
-            <div class="text-h6">Remove Plan</div>
-          </q-card-section>
-
-          <q-card-section class="q-pt-none">
-            <q-banner class="bg-red-1 text-red-8 q-mb-md">
-              <template #avatar>
-                <q-icon name="eva-alert-triangle-outline" />
-              </template>
-              This will permanently delete your plan and all its data. This action cannot be undone.
-            </q-banner>
-            Are you sure you want to remove this plan?
-          </q-card-section>
-
-          <q-card-actions align="right">
-            <q-btn
-              flat
-              label="Keep Plan"
-              @click="showRemoveDialog = false"
-            />
-            <q-btn
-              color="negative"
-              label="Remove Plan"
-              @click="removePlan"
-            />
-          </q-card-actions>
-        </q-card>
-      </q-dialog>
+      <!-- Delete Plan Dialog -->
+      <DeleteDialog
+        v-model="showDeleteDialog"
+        title="Delete Plan"
+        warning-message="This will permanently delete your plan and all its data. This action cannot be undone."
+        :confirmation-message="`Are you sure you want to delete this plan?`"
+        cancel-label="Keep Plan"
+        confirm-label="Delete Plan"
+        :is-deleting="plansStore.isLoading"
+        @confirm="deletePlan"
+      />
     </template>
 
     <!-- FAB Slot -->
@@ -449,6 +428,7 @@ import ActionsFab from 'src/components/shared/ActionsFab.vue'
 import PlanCategory from 'src/components/plans/PlanCategory.vue'
 import SharePlanDialog from 'src/components/plans/SharePlanDialog.vue'
 import ExpenseTemplateCard from 'src/components/expense-templates/ExpenseTemplateCard.vue'
+import DeleteDialog from 'src/components/shared/DeleteDialog.vue'
 import { usePlansStore } from 'src/stores/plans'
 import { useCategoriesStore } from 'src/stores/categories'
 import { useNotificationStore } from 'src/stores/notification'
@@ -572,13 +552,17 @@ const selectedTemplate = ref<ExpenseTemplateWithItems | null>(null)
 const selectedTemplateOption = ref<string | null>(null)
 const allCategoriesExpanded = ref(false)
 const showCancelDialog = ref(false)
-const showRemoveDialog = ref(false)
+const showDeleteDialog = ref(false)
 
 const form = ref({
   name: '',
   startDate: '',
   endDate: '',
 })
+
+// Error states for validation
+const templateError = ref(false)
+const templateErrorMessage = ref('')
 
 // Computed properties
 const currentPlanStatus = computed(() => {
@@ -656,9 +640,9 @@ const fabActions = computed(() => [
     }),
   },
   {
-    key: 'remove',
+    key: 'delete',
     icon: 'eva-trash-2-outline',
-    label: 'Remove Plan',
+    label: 'Delete Plan',
     color: 'negative',
     visible:
       !isNewPlan.value &&
@@ -668,7 +652,7 @@ const fabActions = computed(() => [
         getPlanStatus(currentPlan.value) === 'cancelled') &&
       isOwner.value,
     handler: createFabAction(() => {
-      showRemoveDialog.value = true
+      showDeleteDialog.value = true
     }),
   },
 ])
@@ -680,6 +664,9 @@ function getCategoryName(categoryId: string): string {
 }
 
 async function onTemplateSelected(templateId: string | null): Promise<void> {
+  // Clear template error when a selection is made
+  clearTemplateError()
+
   if (!templateId) {
     selectedTemplate.value = null
     selectedTemplateOption.value = null
@@ -746,6 +733,15 @@ function handleAddItem(categoryId: string, categoryColor: string): void {
 }
 
 async function handleSavePlan(): Promise<void> {
+  clearTemplateError()
+
+  if (isNewPlan.value && !selectedTemplate.value) {
+    templateError.value = true
+    templateErrorMessage.value = 'Please select a template'
+    notificationsStore.showError('Please select a template before creating the plan')
+    return
+  }
+
   const formRef = planForm.value
   if (formRef) {
     const isFormValid = await formRef.validate()
@@ -753,11 +749,6 @@ async function handleSavePlan(): Promise<void> {
       notificationsStore.showError('Please fix the form errors before saving')
       return
     }
-  }
-
-  if (isNewPlan.value && !selectedTemplate.value) {
-    notificationsStore.showError('Please select a template before creating the plan')
-    return
   }
 
   if (!isValidForSave.value && hasDuplicateItems.value) {
@@ -806,12 +797,12 @@ async function cancelPlan(): Promise<void> {
   goBack()
 }
 
-async function removePlan(): Promise<void> {
+async function deletePlan(): Promise<void> {
   if (!currentPlan.value) return
 
   await plansStore.removePlan(currentPlan.value.id)
-  showRemoveDialog.value = false
-  notificationsStore.showSuccess('Plan removed successfully')
+  showDeleteDialog.value = false
+  notificationsStore.showSuccess('Plan deleted successfully')
   goBack()
 }
 
@@ -826,6 +817,11 @@ function toggleAllCategories(): void {
 
 function goBack(): void {
   router.push({ name: 'plans' })
+}
+
+function clearTemplateError(): void {
+  templateError.value = false
+  templateErrorMessage.value = ''
 }
 
 onMounted(async () => {
