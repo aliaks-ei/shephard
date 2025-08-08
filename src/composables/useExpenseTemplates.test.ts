@@ -6,7 +6,6 @@ import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-v
 
 import { useExpenseTemplates } from './useExpenseTemplates'
 import { useTemplatesStore } from 'src/stores/templates'
-import { useNotificationStore } from 'src/stores/notification'
 import type { ExpenseTemplateWithPermission } from 'src/api'
 
 installQuasarPlugin()
@@ -102,7 +101,6 @@ const mockTemplates: ExpenseTemplateWithPermission[] = [
 
 describe('useExpenseTemplates', () => {
   let templatesStore: ReturnType<typeof useTemplatesStore>
-  let notificationStore: ReturnType<typeof useNotificationStore>
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -110,7 +108,6 @@ describe('useExpenseTemplates', () => {
     setActivePinia(pinia)
 
     templatesStore = useTemplatesStore()
-    notificationStore = useNotificationStore()
 
     // @ts-expect-error - Testing Pinia
     templatesStore.templates = ref([...mockTemplates])
