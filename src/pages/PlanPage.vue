@@ -359,39 +359,15 @@
       />
 
       <!-- Cancel Plan Dialog -->
-      <q-dialog
+      <DeleteDialog
         v-model="showCancelDialog"
-        persistent
-      >
-        <q-card style="min-width: 350px">
-          <q-card-section>
-            <div class="text-h6">Cancel Plan</div>
-          </q-card-section>
-
-          <q-card-section class="q-pt-none">
-            <q-banner class="bg-red-1 text-red-8 q-mb-md">
-              <template #avatar>
-                <q-icon name="eva-alert-triangle-outline" />
-              </template>
-              This will cancel your active plan and cannot be undone.
-            </q-banner>
-            Are you sure you want to cancel this plan?
-          </q-card-section>
-
-          <q-card-actions align="right">
-            <q-btn
-              flat
-              label="Keep Plan"
-              @click="showCancelDialog = false"
-            />
-            <q-btn
-              color="negative"
-              label="Cancel Plan"
-              @click="cancelPlan"
-            />
-          </q-card-actions>
-        </q-card>
-      </q-dialog>
+        title="Cancel Plan"
+        warning-message="This will mark the plan as cancelled and stop any active tracking."
+        :confirmation-message="`Are you sure you want to cancel &quot;${form.name}&quot;?`"
+        cancel-label="Keep Active"
+        confirm-label="Cancel Plan"
+        @confirm="cancelPlan"
+      />
 
       <!-- Delete Plan Dialog -->
       <DeleteDialog

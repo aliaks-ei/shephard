@@ -1,6 +1,5 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useQuasar } from 'quasar'
 import { useNotificationStore } from 'src/stores/notification'
 
 type SortOption = {
@@ -27,7 +26,6 @@ export function useListPage<T extends { id: string; name: string }>(
   isLoading: () => boolean,
 ) {
   const router = useRouter()
-  const $q = useQuasar()
   const notificationsStore = useNotificationStore()
 
   const searchQuery = ref('')
@@ -60,26 +58,9 @@ export function useListPage<T extends { id: string; name: string }>(
     router.push({ name: config.viewRouteNameSingular, params: { id } })
   }
 
-  async function onDeleteConfirm(item: T): Promise<void> {
+  async function deleteItem(item: T): Promise<void> {
     await config.deleteFn(item.id)
     notificationsStore.showSuccess(`${config.entityName} deleted successfully`)
-  }
-
-  function deleteItem(item: T): void {
-    $q.dialog({
-      title: `Delete ${config.entityName}`,
-      message: `Are you sure you want to delete "${item.name}"? This action cannot be undone.`,
-      persistent: true,
-      ok: {
-        label: 'Delete',
-        color: 'negative',
-        unelevated: true,
-      },
-      cancel: {
-        label: 'Cancel',
-        flat: true,
-      },
-    }).onOk(() => void onDeleteConfirm(item))
   }
 
   function clearSearch(): void {
