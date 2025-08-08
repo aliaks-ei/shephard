@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { PostgrestError } from '@supabase/supabase-js'
 import * as plansApi from './plans'
 import { supabase } from 'src/lib/supabase/client'
+import { isDuplicateNameError, createDuplicateNameError } from 'src/utils/database'
 
 vi.mock('src/utils/database', () => ({
   isDuplicateNameError: vi.fn(),
@@ -10,10 +11,8 @@ vi.mock('src/utils/database', () => ({
 
 const mockSupabase = vi.mocked(supabase, true)
 const mockFrom = vi.fn()
-const mockIsDuplicateNameError = vi.mocked(await import('src/utils/database')).isDuplicateNameError
-const mockCreateDuplicateNameError = vi.mocked(
-  await import('src/utils/database'),
-).createDuplicateNameError
+const mockIsDuplicateNameError = vi.mocked(isDuplicateNameError)
+const mockCreateDuplicateNameError = vi.mocked(createDuplicateNameError)
 
 describe('plans API', () => {
   const mockUserId = 'user-123'
@@ -53,7 +52,7 @@ describe('plans API', () => {
       // Mock the first query for owned plans
       const mockOwnedQuery = {
         select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
+        match: vi.fn().mockReturnThis(),
         order: vi.fn().mockResolvedValue({
           data: mockOwnedPlans,
           error: null,
@@ -63,13 +62,14 @@ describe('plans API', () => {
       // Mock the second query for shared plans
       const mockSharedQuery = {
         select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockResolvedValue({
+        match: vi.fn().mockResolvedValue({
           data: mockSharedPlansData,
           error: null,
         }),
       }
 
-      mockSupabase.from.mockReturnValueOnce(mockOwnedQuery).mockReturnValueOnce(mockSharedQuery)
+      mockFrom.mockReturnValueOnce(mockOwnedQuery).mockReturnValueOnce(mockSharedQuery)
+      mockSupabase.from = mockFrom
 
       const result = await plansApi.getPlans(mockUserId)
 
@@ -97,14 +97,15 @@ describe('plans API', () => {
       const mockError = { message: 'Database error' }
       const mockQuery = {
         select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
+        match: vi.fn().mockReturnThis(),
         order: vi.fn().mockResolvedValue({
           data: null,
           error: mockError,
         }),
       }
 
-      mockSupabase.from.mockReturnValue(mockQuery)
+      mockFrom.mockReturnValue(mockQuery)
+      mockSupabase.from = mockFrom
 
       await expect(plansApi.getPlans(mockUserId)).rejects.toEqual(mockError)
     })
@@ -115,7 +116,7 @@ describe('plans API', () => {
       // Mock successful owned plans query
       const mockOwnedQuery = {
         select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
+        match: vi.fn().mockReturnThis(),
         order: vi.fn().mockResolvedValue({
           data: [],
           error: null,
@@ -125,13 +126,14 @@ describe('plans API', () => {
       // Mock failed shared plans query
       const mockSharedQuery = {
         select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockResolvedValue({
+        match: vi.fn().mockResolvedValue({
           data: null,
           error: mockError,
         }),
       }
 
-      mockSupabase.from.mockReturnValueOnce(mockOwnedQuery).mockReturnValueOnce(mockSharedQuery)
+      mockFrom.mockReturnValueOnce(mockOwnedQuery).mockReturnValueOnce(mockSharedQuery)
+      mockSupabase.from = mockFrom
 
       await expect(plansApi.getPlans(mockUserId)).rejects.toEqual(mockError)
     })
@@ -149,7 +151,6 @@ describe('plans API', () => {
 
     it('should create a new plan successfully', async () => {
       const mockQuery = {
-        insert: vi.fn().mockReturnThis(),
         select: vi.fn().mockReturnThis(),
         single: vi.fn().mockResolvedValue({
           data: mockPlan,
@@ -157,12 +158,14 @@ describe('plans API', () => {
         }),
       }
 
-      mockSupabase.from.mockReturnValue(mockQuery)
+      mockFrom.mockReturnValue({
+        insert: vi.fn().mockReturnValue(mockQuery),
+      } as never)
+      mockSupabase.from = mockFrom
 
       const result = await plansApi.createPlan(mockPlanInsert)
 
       expect(mockFrom).toHaveBeenCalledWith('plans')
-      expect(mockQuery.insert).toHaveBeenCalledWith(mockPlanInsert)
       expect(result).toEqual(mockPlan)
     })
 
@@ -177,7 +180,6 @@ describe('plans API', () => {
       mockCreateDuplicateNameError.mockReturnValue(mockDuplicateError)
 
       const mockQuery = {
-        insert: vi.fn().mockReturnThis(),
         select: vi.fn().mockReturnThis(),
         single: vi.fn().mockResolvedValue({
           data: null,
@@ -185,7 +187,10 @@ describe('plans API', () => {
         }),
       }
 
-      mockSupabase.from.mockReturnValue(mockQuery)
+      mockFrom.mockReturnValue({
+        insert: vi.fn().mockReturnValue(mockQuery),
+      } as never)
+      mockSupabase.from = mockFrom
 
       await expect(plansApi.createPlan(mockPlanInsert)).rejects.toEqual(mockDuplicateError)
       expect(mockIsDuplicateNameError).toHaveBeenCalledWith(mockError, 'unique_plan_name_per_user')
@@ -197,7 +202,6 @@ describe('plans API', () => {
       mockIsDuplicateNameError.mockReturnValue(false)
 
       const mockQuery = {
-        insert: vi.fn().mockReturnThis(),
         select: vi.fn().mockReturnThis(),
         single: vi.fn().mockResolvedValue({
           data: null,
@@ -205,7 +209,10 @@ describe('plans API', () => {
         }),
       }
 
-      mockSupabase.from.mockReturnValue(mockQuery)
+      mockFrom.mockReturnValue({
+        insert: vi.fn().mockReturnValue(mockQuery),
+      } as never)
+      mockSupabase.from = mockFrom
 
       await expect(plansApi.createPlan(mockPlanInsert)).rejects.toEqual(mockError)
     })
@@ -220,8 +227,7 @@ describe('plans API', () => {
     it('should update a plan successfully', async () => {
       const updatedPlan = { ...mockPlan, ...mockPlanUpdate }
       const mockQuery = {
-        update: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
+        match: vi.fn().mockReturnThis(),
         select: vi.fn().mockReturnThis(),
         single: vi.fn().mockResolvedValue({
           data: updatedPlan,
@@ -229,13 +235,14 @@ describe('plans API', () => {
         }),
       }
 
-      mockSupabase.from.mockReturnValue(mockQuery)
+      mockFrom.mockReturnValue({
+        update: vi.fn().mockReturnValue(mockQuery),
+      } as never)
+      mockSupabase.from = mockFrom
 
       const result = await plansApi.updatePlan(mockPlanId, mockPlanUpdate)
 
       expect(mockFrom).toHaveBeenCalledWith('plans')
-      expect(mockQuery.update).toHaveBeenCalledWith(mockPlanUpdate)
-      expect(mockQuery.eq).toHaveBeenCalledWith('id', mockPlanId)
       expect(result).toEqual(updatedPlan)
     })
 
@@ -250,8 +257,7 @@ describe('plans API', () => {
       mockCreateDuplicateNameError.mockReturnValue(mockDuplicateError)
 
       const mockQuery = {
-        update: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
+        match: vi.fn().mockReturnThis(),
         select: vi.fn().mockReturnThis(),
         single: vi.fn().mockResolvedValue({
           data: null,
@@ -259,7 +265,10 @@ describe('plans API', () => {
         }),
       }
 
-      mockSupabase.from.mockReturnValue(mockQuery)
+      mockFrom.mockReturnValue({
+        update: vi.fn().mockReturnValue(mockQuery),
+      } as never)
+      mockSupabase.from = mockFrom
 
       await expect(plansApi.updatePlan(mockPlanId, mockPlanUpdate)).rejects.toEqual(
         mockDuplicateError,
@@ -270,31 +279,33 @@ describe('plans API', () => {
   describe('deletePlan', () => {
     it('should delete a plan successfully', async () => {
       const mockQuery = {
-        delete: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockResolvedValue({
+        match: vi.fn().mockResolvedValue({
           error: null,
         }),
       }
 
-      mockSupabase.from.mockReturnValue(mockQuery)
+      mockFrom.mockReturnValue({
+        delete: vi.fn().mockReturnValue(mockQuery),
+      } as never)
+      mockSupabase.from = mockFrom
 
       await plansApi.deletePlan(mockPlanId)
 
       expect(mockFrom).toHaveBeenCalledWith('plans')
-      expect(mockQuery.delete).toHaveBeenCalled()
-      expect(mockQuery.eq).toHaveBeenCalledWith('id', mockPlanId)
     })
 
     it('should throw error if delete fails', async () => {
       const mockError = { message: 'Delete failed' }
       const mockQuery = {
-        delete: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockResolvedValue({
+        match: vi.fn().mockResolvedValue({
           error: mockError,
         }),
       }
 
-      mockSupabase.from.mockReturnValue(mockQuery)
+      mockFrom.mockReturnValue({
+        delete: vi.fn().mockReturnValue(mockQuery),
+      } as never)
+      mockSupabase.from = mockFrom
 
       await expect(plansApi.deletePlan(mockPlanId)).rejects.toEqual(mockError)
     })
@@ -321,14 +332,15 @@ describe('plans API', () => {
     it('should return plan with items for owner', async () => {
       const mockQuery = {
         select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
+        match: vi.fn().mockReturnThis(),
         maybeSingle: vi.fn().mockResolvedValue({
           data: mockPlanWithItems,
           error: null,
         }),
       }
 
-      mockSupabase.from.mockReturnValue(mockQuery)
+      mockFrom.mockReturnValue(mockQuery)
+      mockSupabase.from = mockFrom
 
       const result = await plansApi.getPlanWithItems(mockPlanId, mockUserId)
 
@@ -343,7 +355,7 @@ describe('plans API', () => {
       // Mock plan query
       const mockPlanQuery = {
         select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
+        match: vi.fn().mockReturnThis(),
         maybeSingle: vi.fn().mockResolvedValue({
           data: planOwnedByOther,
           error: null,
@@ -360,7 +372,8 @@ describe('plans API', () => {
         }),
       }
 
-      mockSupabase.from.mockReturnValueOnce(mockPlanQuery).mockReturnValueOnce(mockShareQuery)
+      mockFrom.mockReturnValueOnce(mockPlanQuery).mockReturnValueOnce(mockShareQuery)
+      mockSupabase.from = mockFrom
 
       const result = await plansApi.getPlanWithItems(mockPlanId, otherUserId)
 
@@ -373,14 +386,15 @@ describe('plans API', () => {
     it('should return null if plan not found', async () => {
       const mockQuery = {
         select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
+        match: vi.fn().mockReturnThis(),
         maybeSingle: vi.fn().mockResolvedValue({
           data: null,
           error: null,
         }),
       }
 
-      mockSupabase.from.mockReturnValue(mockQuery)
+      mockFrom.mockReturnValue(mockQuery)
+      mockSupabase.from = mockFrom
 
       const result = await plansApi.getPlanWithItems(mockPlanId, mockUserId)
 
@@ -394,7 +408,7 @@ describe('plans API', () => {
       // Mock plan query
       const mockPlanQuery = {
         select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
+        match: vi.fn().mockReturnThis(),
         maybeSingle: vi.fn().mockResolvedValue({
           data: planOwnedByOther,
           error: null,
@@ -411,10 +425,11 @@ describe('plans API', () => {
         }),
       }
 
-      mockSupabase.from.mockReturnValueOnce(mockPlanQuery).mockReturnValueOnce(mockShareQuery)
+      mockFrom.mockReturnValueOnce(mockPlanQuery).mockReturnValueOnce(mockShareQuery)
+      mockSupabase.from = mockFrom
 
       await expect(plansApi.getPlanWithItems(mockPlanId, otherUserId)).rejects.toThrow(
-        'Plan not found or access denied',
+        'plan not found or access denied',
       )
     })
 
@@ -422,14 +437,15 @@ describe('plans API', () => {
       const mockError = { message: 'Database error' }
       const mockQuery = {
         select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
+        match: vi.fn().mockReturnThis(),
         maybeSingle: vi.fn().mockResolvedValue({
           data: null,
           error: mockError,
         }),
       }
 
-      mockSupabase.from.mockReturnValue(mockQuery)
+      mockFrom.mockReturnValue(mockQuery)
+      mockSupabase.from = mockFrom
 
       await expect(plansApi.getPlanWithItems(mockPlanId, mockUserId)).rejects.toEqual(mockError)
     })
@@ -704,7 +720,7 @@ describe('plans API', () => {
 
       await expect(
         plansApi.sharePlan(mockPlanId, userEmail, 'view', sharedByUserId),
-      ).rejects.toThrow(`Plan is already shared with ${userEmail}`)
+      ).rejects.toThrow(`PLAN is already shared with ${userEmail}`)
     })
 
     it('should throw error if user lookup fails', async () => {

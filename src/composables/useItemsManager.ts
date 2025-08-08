@@ -9,7 +9,7 @@ export type CategoryGroup<T extends BaseItemUI = BaseItemUI> = BaseCategoryUI & 
 
 export interface ItemsConfig<T extends BaseItemUI> {
   itemsPropertyName: string
-  createItemForSave: (item: T) => Record<string, unknown>
+  createItemForSave: (item: T) => { name: string; category_id: string; amount: number }
 }
 
 export function useItemsManager<T extends BaseItemUI>(config: ItemsConfig<T>) {

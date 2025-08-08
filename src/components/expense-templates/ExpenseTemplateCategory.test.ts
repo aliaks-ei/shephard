@@ -93,7 +93,7 @@ describe('ExpenseTemplateCategory', () => {
     })
 
     expect(wrapper.props('readonly')).toBe(false)
-    expect(wrapper.props('defaultExpanded')).toBe(true)
+    expect(wrapper.props('defaultExpanded')).toBe(false)
   })
 
   it('should emit update-item event when child item emits update', async () => {

@@ -77,9 +77,7 @@ export const usePlansStore = defineStore('plans', () => {
     isLoading.value = true
 
     try {
-      // Get user's preferred currency for new plans
       const userCurrency = userStore.preferences.currency as CurrencyCode
-
       const newPlan = await createPlan({
         ...planData,
         owner_id: userId.value,
@@ -88,7 +86,6 @@ export const usePlansStore = defineStore('plans', () => {
 
       return newPlan
     } catch (error) {
-      // Handle specific duplicate name error
       if (error instanceof Error && error.name === 'DUPLICATE_PLAN_NAME') {
         handleError('PLANS.DUPLICATE_NAME', error)
       } else {
@@ -106,8 +103,6 @@ export const usePlansStore = defineStore('plans', () => {
 
     try {
       const updatedPlan = await updatePlan(planId, updates)
-
-      // Update the plan in the local state
       const index = plans.value.findIndex((p) => p.id === planId)
       if (index !== -1) {
         plans.value[index] = { ...plans.value[index], ...updatedPlan }
@@ -115,7 +110,6 @@ export const usePlansStore = defineStore('plans', () => {
 
       return updatedPlan
     } catch (error) {
-      // Handle specific duplicate name error
       if (error instanceof Error && error.name === 'DUPLICATE_PLAN_NAME') {
         handleError('PLANS.DUPLICATE_NAME', error)
       } else {
@@ -133,8 +127,6 @@ export const usePlansStore = defineStore('plans', () => {
 
     try {
       await deletePlan(planId)
-
-      // Remove the plan from local state
       plans.value = plans.value.filter((p) => p.id !== planId)
     } catch (error) {
       handleError('PLANS.DELETE_FAILED', error, { planId })
@@ -176,13 +168,11 @@ export const usePlansStore = defineStore('plans', () => {
     try {
       await sharePlan(planId, userEmail, permission, userId.value)
 
-      // Mark the plan as shared in local state
       const planIndex = plans.value.findIndex((p) => p.id === planId)
       if (planIndex !== -1 && plans.value[planIndex]) {
         plans.value[planIndex].is_shared = true
       }
 
-      // Reload shared users to get the updated list
       await loadSharedUsers(planId)
     } catch (error) {
       if (error instanceof Error && error.message.includes('User not found')) {
@@ -205,10 +195,8 @@ export const usePlansStore = defineStore('plans', () => {
     try {
       await unsharePlan(planId, targetUserId)
 
-      // Remove user from shared users list
       sharedUsers.value = sharedUsers.value.filter((user) => user.user_id !== targetUserId)
 
-      // Update is_shared flag if no more shares
       if (sharedUsers.value.length === 0) {
         const planIndex = plans.value.findIndex((p) => p.id === planId)
         if (planIndex !== -1 && plans.value[planIndex]) {
@@ -234,7 +222,6 @@ export const usePlansStore = defineStore('plans', () => {
     try {
       await updatePlanSharePermission(planId, targetUserId, permission)
 
-      // Update permission in shared users list
       const userIndex = sharedUsers.value.findIndex((user) => user.user_id === targetUserId)
       if (userIndex !== -1 && sharedUsers.value[userIndex]) {
         sharedUsers.value[userIndex].permission_level = permission
