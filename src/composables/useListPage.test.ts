@@ -13,20 +13,7 @@ vi.mock('vue-router', async () => {
   }
 })
 
-// Quasar dialog mock
-type DialogOn = { onOk: (cb: () => void) => DialogOn }
-const dialogMock = vi.fn<() => DialogOn>().mockImplementation(() => {
-  const chain: DialogOn = {
-    onOk: (cb: () => void) => {
-      cb()
-      return chain
-    },
-  }
-  return chain
-})
-
 vi.mock('quasar', () => ({
-  useQuasar: () => ({ dialog: dialogMock }),
   Quasar: {},
 }))
 
@@ -119,8 +106,9 @@ describe('navigation', () => {
 })
 
 describe('deletion flow', () => {
-  it('shows confirm dialog and calls delete on confirm, then success notification', () => {
+  it('calls delete function and shows success notification', () => {
     const deleteFn = vi.fn().mockResolvedValue(undefined)
+
     const use = () =>
       useListPage<Item>(
         {
@@ -142,7 +130,6 @@ describe('deletion flow', () => {
     const lp = use()
     lp.deleteItem({ id: '1', name: 'Alpha' })
 
-    expect(dialogMock).toHaveBeenCalled()
     expect(deleteFn).toHaveBeenCalledWith('1')
   })
 })

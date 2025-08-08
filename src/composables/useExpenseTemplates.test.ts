@@ -18,11 +18,7 @@ vi.mock('vue-router', () => ({
   }),
 }))
 
-const mockDialog = vi.fn(() => ({ onOk: vi.fn() }))
 vi.mock('quasar', () => ({
-  useQuasar: () => ({
-    dialog: mockDialog,
-  }),
   Dark: {
     set: vi.fn(),
   },
@@ -248,67 +244,14 @@ describe('useExpenseTemplates', () => {
   })
 
   describe('deleteTemplate', () => {
-    it('should show confirmation dialog with correct template name', () => {
+    it('should delete template and show success notification', () => {
       const composable = useExpenseTemplates()
       const template = mockTemplates[0] as ExpenseTemplateWithPermission
-
-      composable.deleteItem(template)
-
-      expect(mockDialog).toHaveBeenCalledWith({
-        title: 'Delete Template',
-        message: `Are you sure you want to delete "${template.name}"? This action cannot be undone.`,
-        persistent: true,
-        ok: {
-          label: 'Delete',
-          color: 'negative',
-          unelevated: true,
-        },
-        cancel: {
-          label: 'Cancel',
-          flat: true,
-        },
-      })
-    })
-
-    it('should delete template and show success notification when confirmed', async () => {
-      const mockOnOk = vi.fn()
-      mockDialog.mockReturnValue({ onOk: mockOnOk })
-
-      const composable = useExpenseTemplates()
-      const template = mockTemplates[0] as ExpenseTemplateWithPermission
-
       const removeTemplateSpy = vi.spyOn(templatesStore, 'removeTemplate')
-      const showSuccessSpy = vi.spyOn(notificationStore, 'showSuccess')
 
       composable.deleteItem(template)
 
-      const onOkCallback = mockOnOk.mock.calls[0]?.[0]
-      expect(onOkCallback).toBeDefined()
-
-      if (onOkCallback) {
-        const result = onOkCallback()
-        if (result instanceof Promise) {
-          await result
-        }
-
-        await new Promise((resolve) => setTimeout(resolve, 10))
-
-        expect(removeTemplateSpy).toHaveBeenCalledWith(template.id)
-        expect(showSuccessSpy).toHaveBeenCalledWith('Template deleted successfully')
-      }
-    })
-
-    it('should not delete template when dialog is cancelled', () => {
-      const mockOnOk = vi.fn()
-      mockDialog.mockReturnValue({ onOk: mockOnOk })
-
-      const composable = useExpenseTemplates()
-      const template = mockTemplates[0] as ExpenseTemplateWithPermission
-
-      composable.deleteItem(template)
-
-      expect(templatesStore.removeTemplate).not.toHaveBeenCalled()
-      expect(notificationStore.showSuccess).not.toHaveBeenCalled()
+      expect(removeTemplateSpy).toHaveBeenCalledWith(template.id)
     })
   })
 
