@@ -11,7 +11,10 @@
             {{ description }}
           </p>
         </div>
-        <div class="col-auto">
+        <div
+          v-if="showCreateButton"
+          class="col-auto"
+        >
           <q-btn
             color="primary"
             icon="eva-plus-outline"
@@ -32,9 +35,15 @@ const emit = defineEmits<{
   (e: 'create'): void
 }>()
 
-defineProps<{
-  title: string
-  description: string
-  createButtonLabel: string
-}>()
+withDefaults(
+  defineProps<{
+    title: string
+    description: string
+    createButtonLabel?: string
+    showCreateButton?: boolean
+  }>(),
+  {
+    showCreateButton: true,
+  },
+)
 </script>

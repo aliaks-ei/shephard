@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils'
-import { it, expect, vi, beforeEach } from 'vitest'
+import { it, expect, vi, beforeEach, describe } from 'vitest'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 import { createTestingPinia } from '@pinia/testing'
 import { ref, computed } from 'vue'
@@ -9,40 +9,27 @@ import type { ExpenseCategory } from 'src/api'
 
 installQuasarPlugin()
 
-vi.mock('src/utils/date', () => ({
-  formatDate: vi.fn((date: string) => `formatted-${date}`),
-}))
-
-const CategoryDialogStub = {
-  template:
-    '<div class="category-dialog-mock" :data-model-value="modelValue" :data-category="category ? category.id : \'null\'"></div>',
-  props: ['modelValue', 'category'],
-  emits: ['update:modelValue', 'category-saved'],
-}
-
-const CategoryDeleteDialogStub = {
-  template:
-    '<div class="category-delete-dialog-mock" :data-model-value="modelValue" :data-category="category ? category.id : \'null\'"></div>',
-  props: ['modelValue', 'category'],
-  emits: ['update:modelValue', 'category-deleted'],
-}
-
 const mockCategories: ExpenseCategory[] = [
   {
     id: 'cat-1',
-    name: 'Food',
-    color: '#FF5722',
-    owner_id: 'user-1',
+    name: 'Rent/Mortgage',
+    color: '#1d4ed8',
     created_at: '2023-01-01T00:00:00Z',
     updated_at: '2023-01-01T00:00:00Z',
   },
   {
     id: 'cat-2',
-    name: 'Transport',
-    color: '#2196F3',
-    owner_id: 'user-1',
+    name: 'Groceries',
+    color: '#22c55e',
     created_at: '2023-01-02T00:00:00Z',
     updated_at: '2023-01-02T00:00:00Z',
+  },
+  {
+    id: 'cat-3',
+    name: 'Entertainment',
+    color: '#e879f9',
+    created_at: '2023-01-03T00:00:00Z',
+    updated_at: '2023-01-03T00:00:00Z',
   },
 ]
 
@@ -63,8 +50,6 @@ function createWrapper(initialState: { categories?: ExpenseCategory[]; isLoading
         }),
       ],
       stubs: {
-        CategoryDialog: CategoryDialogStub,
-        CategoryDeleteDialog: CategoryDeleteDialogStub,
         QBtn: {
           template:
             '<button class="q-btn" @click="$emit(\'click\')" :loading="loading" :data-loading="loading">{{ label }}<slot /></button>',
@@ -88,25 +73,11 @@ function createWrapper(initialState: { categories?: ExpenseCategory[]; isLoading
         QCardSection: {
           template: '<div class="q-card-section"><slot /></div>',
         },
-        QTable: {
+        QInput: {
           template:
-            '<div class="q-table" :class="$attrs.class">Table with {{ rows ? rows.length : 0 }} rows</div>',
-          props: ['rows', 'columns', 'rowKey', 'bordered', 'flat', 'pagination', 'hidePagination'],
-          inheritAttrs: false,
-        },
-        QTd: {
-          template: '<td class="q-td"><slot /></td>',
-          props: ['props'],
-        },
-        QList: {
-          template: '<div class="q-list"><slot /></div>',
-        },
-        QItem: {
-          template: '<div class="q-item"><slot /></div>',
-        },
-        QItemSection: {
-          template: '<div class="q-item-section" :class="$attrs.class"><slot /></div>',
-          inheritAttrs: false,
+            '<div class="q-input"><input :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" :placeholder="placeholder" /></div>',
+          props: ['modelValue', 'placeholder', 'outlined', 'dense'],
+          emits: ['update:modelValue'],
         },
         QSkeleton: {
           template:
@@ -121,9 +92,6 @@ function createWrapper(initialState: { categories?: ExpenseCategory[]; isLoading
           template: '<i class="q-icon" :data-name="name" :data-size="size"></i>',
           props: ['name', 'size'],
         },
-        QTooltip: {
-          template: '<div class="q-tooltip"><slot /></div>',
-        },
       },
     },
   })
@@ -134,8 +102,10 @@ function createWrapper(initialState: { categories?: ExpenseCategory[]; isLoading
     // @ts-expect-error - Testing Pinia
     categoriesStore.categories = ref(initialState.categories)
     // @ts-expect-error - Testing Pinia
+    categoriesStore.categoryCount = computed(() => initialState.categories?.length || 0)
+    // @ts-expect-error - Testing Pinia
     categoriesStore.sortedCategories = computed(() =>
-      (categoriesStore.categories || []).sort((a: ExpenseCategory, b: ExpenseCategory) =>
+      (initialState.categories || []).sort((a: ExpenseCategory, b: ExpenseCategory) =>
         a.name.localeCompare(b.name),
       ),
     )
@@ -152,170 +122,134 @@ beforeEach(() => {
   vi.clearAllMocks()
 })
 
-it('should mount component properly', () => {
-  const { wrapper } = createWrapper()
-  expect(wrapper.exists()).toBe(true)
-})
-
-it('should render page title and description', () => {
-  const { wrapper } = createWrapper()
-
-  expect(wrapper.find('h1').text()).toBe('Categories')
-  expect(wrapper.text()).toContain('Manage your expense categories')
-})
-
-it('should render add category button', () => {
-  const { wrapper } = createWrapper()
-
-  const addButton = wrapper.find('.q-btn')
-  expect(addButton.exists()).toBe(true)
-  expect(wrapper.text()).toContain('Add Category')
-})
-
-it('should call loadCategories on mount', () => {
-  const { categoriesStore } = createWrapper()
-  expect(categoriesStore.loadCategories).toHaveBeenCalledOnce()
-})
-
-it('should show loading skeleton when loading and no categories', () => {
-  const { wrapper } = createWrapper({
-    isLoading: true,
-    categories: [],
+describe('CategoriesPage', () => {
+  it('should mount component properly', () => {
+    const { wrapper } = createWrapper()
+    expect(wrapper.exists()).toBe(true)
   })
 
-  const skeletons = wrapper.findAll('.q-skeleton')
-  expect(skeletons.length).toBeGreaterThan(0)
-  expect(wrapper.find('.q-table').exists()).toBe(false)
-})
+  it('should render updated page title and description', () => {
+    const { wrapper } = createWrapper()
 
-it('should show categories table when categories exist', () => {
-  const { wrapper } = createWrapper({
-    categories: mockCategories,
+    expect(wrapper.find('h1').text()).toBe('Available Expense Categories')
+    expect(wrapper.text()).toContain('Standard categories available for all expense tracking')
   })
 
-  expect(wrapper.find('.q-table').exists()).toBe(true)
-  expect(wrapper.find('.categories-table').exists()).toBe(true)
-})
+  it('should not render add category button (read-only)', () => {
+    const { wrapper } = createWrapper()
 
-it('should show empty state when no categories and not loading', () => {
-  const { wrapper } = createWrapper({
-    isLoading: false,
-    categories: [],
+    // Should not have Add Category button anymore
+    expect(wrapper.text()).not.toContain('Add Category')
   })
 
-  expect(wrapper.text()).toContain('No categories found')
-  expect(wrapper.text()).toContain('Start by creating your first custom category')
-  expect(wrapper.text()).toContain('Create Your First Category')
-})
+  it('should render search input', () => {
+    const { wrapper } = createWrapper()
 
-it('should not show empty state when categories exist', () => {
-  const { wrapper } = createWrapper({
-    categories: mockCategories,
+    const searchInput = wrapper.find('.q-input')
+    expect(searchInput.exists()).toBe(true)
   })
 
-  expect(wrapper.text()).not.toContain('No categories found')
-  expect(wrapper.text()).not.toContain('Create Your First Category')
-})
-
-it('should have formatDate mock available', () => {
-  const { wrapper } = createWrapper({
-    categories: mockCategories,
+  it('should call loadCategories on mount', () => {
+    const { categoriesStore } = createWrapper()
+    expect(categoriesStore.loadCategories).toHaveBeenCalledOnce()
   })
 
-  expect(wrapper.find('.q-table').exists()).toBe(true)
-  expect(vi.mocked).toBeDefined()
-})
+  it('should show loading skeleton when loading and no categories', () => {
+    const { wrapper } = createWrapper({
+      isLoading: true,
+      categories: [],
+    })
 
-it('should open create dialog when add category button is clicked', async () => {
-  const { wrapper } = createWrapper()
-
-  const addButton = wrapper.find('.q-btn')
-  await addButton.trigger('click')
-
-  const dialog = wrapper.findComponent(CategoryDialogStub)
-  expect(dialog.attributes('data-model-value')).toBe('true')
-  expect(dialog.attributes('data-category')).toBe('null')
-})
-
-it('should open create dialog when empty state button is clicked', async () => {
-  const { wrapper } = createWrapper({
-    isLoading: false,
-    categories: [],
+    const skeletons = wrapper.findAll('.q-skeleton')
+    expect(skeletons.length).toBeGreaterThan(0)
   })
 
-  const createButton = wrapper.find('.q-btn')
-  await createButton.trigger('click')
+  it('should show categories in card grid when categories exist', () => {
+    const { wrapper } = createWrapper({
+      categories: mockCategories,
+    })
 
-  const dialog = wrapper.findComponent(CategoryDialogStub)
-  expect(dialog.attributes('data-model-value')).toBe('true')
-})
-
-it('should render edit and delete actions when categories exist', () => {
-  const { wrapper } = createWrapper({
-    categories: mockCategories,
+    // Should render category cards
+    const categoryCards = wrapper.findAll('.category-card')
+    expect(categoryCards.length).toBe(3)
   })
 
-  expect(wrapper.text()).toContain('Table with 2 rows')
-  expect(wrapper.find('.q-table').exists()).toBe(true)
-})
+  it('should show empty state for search when no results', async () => {
+    const { wrapper } = createWrapper({
+      categories: mockCategories,
+    })
 
-it('should have proper table structure when categories exist', () => {
-  const { wrapper } = createWrapper({
-    categories: mockCategories,
+    // Simulate search with no results by setting search query
+    const searchInput = wrapper.find('.q-input input')
+    await searchInput.setValue('nonexistent')
+    await wrapper.vm.$nextTick()
+
+    // Should show empty search state
+    expect(wrapper.text()).toContain('No categories found')
+    expect(wrapper.text()).toContain('Try adjusting your search terms')
   })
 
-  const table = wrapper.find('.q-table')
-  expect(table.exists()).toBe(true)
-  expect(table.classes()).toContain('categories-table')
-})
+  it('should filter categories based on search query', async () => {
+    const { wrapper } = createWrapper({
+      categories: mockCategories,
+    })
 
-it('should reset selected category when category is saved', async () => {
-  const { wrapper } = createWrapper()
+    // Search for "Rent"
+    const searchInput = wrapper.find('.q-input input')
+    await searchInput.setValue('Rent')
+    await wrapper.vm.$nextTick()
 
-  const dialog = wrapper.findComponent(CategoryDialogStub)
-  await dialog.vm.$emit('category-saved')
-
-  expect(dialog.attributes('data-category')).toBe('null')
-})
-
-it('should reset selected category when category is deleted', async () => {
-  const { wrapper } = createWrapper()
-
-  const deleteDialog = wrapper.findComponent(CategoryDeleteDialogStub)
-  await deleteDialog.vm.$emit('category-deleted')
-
-  const dialog = wrapper.findComponent(CategoryDialogStub)
-  expect(dialog.attributes('data-category')).toBe('null')
-})
-
-it('should show proper page structure with categories', () => {
-  const { wrapper } = createWrapper({
-    categories: mockCategories,
+    // Should filter the results - check the actual rendered cards
+    const categoryCards = wrapper.findAll('.category-card')
+    expect(categoryCards.length).toBeLessThan(mockCategories.length)
+    expect(wrapper.text()).toContain('Rent/Mortgage')
+    expect(wrapper.text()).not.toContain('Groceries')
+    expect(wrapper.text()).not.toContain('Entertainment')
   })
 
-  expect(wrapper.find('.q-table').exists()).toBe(true)
-  expect(wrapper.find('.q-card').exists()).toBe(false)
-  expect(wrapper.text()).toContain('Categories')
-  expect(wrapper.text()).toContain('Manage your expense categories')
-})
+  it('should display category information in cards', () => {
+    const { wrapper } = createWrapper({
+      categories: mockCategories,
+    })
 
-it('should show loading skeleton when store is loading', () => {
-  const { wrapper } = createWrapper({
-    isLoading: true,
-    categories: [],
+    // Should show category names and colors
+    expect(wrapper.text()).toContain('Rent/Mortgage')
+    expect(wrapper.text()).toContain('Groceries')
+    expect(wrapper.text()).toContain('Entertainment')
+
+    // Should show color values
+    expect(wrapper.text()).toContain('#1d4ed8')
+    expect(wrapper.text()).toContain('#22c55e')
+    expect(wrapper.text()).toContain('#e879f9')
   })
 
-  const skeletons = wrapper.findAll('.q-skeleton')
-  expect(skeletons.length).toBeGreaterThan(0)
-  expect(wrapper.find('.q-table').exists()).toBe(false)
-})
+  it('should have proper responsive grid structure', () => {
+    const { wrapper } = createWrapper({
+      categories: mockCategories,
+    })
 
-it('should render category management interface', () => {
-  const { wrapper } = createWrapper({
-    categories: mockCategories,
+    // Should have grid layout
+    expect(wrapper.find('.row.q-col-gutter-md').exists()).toBe(true)
   })
 
-  expect(wrapper.text()).toContain('Categories')
-  expect(wrapper.text()).toContain('Add Category')
-  expect(wrapper.find('.q-table').exists()).toBe(true)
+  it('should show search functionality', () => {
+    const { wrapper } = createWrapper({
+      categories: mockCategories,
+    })
+
+    const searchInput = wrapper.find('.q-input')
+    expect(searchInput.exists()).toBe(true)
+    expect(searchInput.find('input').attributes('placeholder')).toBe('Search categories...')
+  })
+
+  it('should not show CRUD functionality', () => {
+    const { wrapper } = createWrapper({
+      categories: mockCategories,
+    })
+
+    // Should not have edit or delete buttons
+    expect(wrapper.text()).not.toContain('Edit')
+    expect(wrapper.text()).not.toContain('Delete')
+    expect(wrapper.text()).not.toContain('Create')
+  })
 })

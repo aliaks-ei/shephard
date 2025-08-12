@@ -20,8 +20,8 @@ beforeEach(() => {
   setActivePinia(pinia)
   const categoriesStore = useCategoriesStore()
   categoriesStore.categories = [
-    { id: 'c1', name: 'Food', color: '#f00', created_at: '', owner_id: 'u', updated_at: '' },
-    { id: 'c2', name: 'Rent', color: '#0f0', created_at: '', owner_id: 'u', updated_at: '' },
+    { id: 'c1', name: 'Food', color: '#f00', created_at: '', updated_at: '' },
+    { id: 'c2', name: 'Rent', color: '#0f0', created_at: '', updated_at: '' },
   ]
   categoriesStore.getCategoryById = vi
     .fn()
