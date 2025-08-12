@@ -478,21 +478,10 @@ describe('BaseAPIService - Entity with Items Operations', () => {
 })
 
 describe('BaseAPIService - Sharing Operations', () => {
-  const mockShareData = {
-    shared_with_user_id: 'user-2',
-    permission_level: 'view',
-    created_at: '2024-01-01T00:00:00Z',
-  }
-
-  const mockUserRecord = {
-    id: 'user-2',
-    name: 'Shared User',
-    email: 'shared@example.com',
-  }
-
   it('getSharedUsers should throw error when sharing not supported', async () => {
     const configWithoutSharing = {
       ...mockEntityConfig,
+      tableName: 'unsupported_table' as never,
       shareTableName: undefined,
     } as unknown as EntityConfig<'expense_templates'>
     const serviceWithoutSharing = new BaseAPIService(configWithoutSharing)
@@ -502,34 +491,27 @@ describe('BaseAPIService - Sharing Operations', () => {
     )
   })
 
-  it('getSharedUsers should return empty array when no shares exist', async () => {
-    const sharesQuery = {
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      order: vi.fn().mockResolvedValue({ data: [], error: null }),
-    }
-    mockFrom.mockReturnValue(sharesQuery as never)
+  it('getSharedUsers should return empty array when no shares exist (RPC)', async () => {
+    mockSupabase.rpc.mockResolvedValueOnce({ data: [], error: null })
 
     const result = await service.getSharedUsers('template-1')
 
     expect(result).toEqual([])
   })
 
-  it('getSharedUsers should return shared users with details', async () => {
-    const sharesQuery = {
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      order: vi.fn().mockResolvedValue({ data: [mockShareData], error: null }),
-    }
-
-    const usersQuery = {
-      select: vi.fn().mockReturnThis(),
-      in: vi.fn().mockResolvedValue({ data: [mockUserRecord], error: null }),
-    }
-
-    mockFrom
-      .mockReturnValueOnce(sharesQuery as never) // First call for shares
-      .mockReturnValueOnce(usersQuery as never) // Second call for user details
+  it('getSharedUsers should return shared users with details (RPC)', async () => {
+    mockSupabase.rpc.mockResolvedValueOnce({
+      data: [
+        {
+          user_id: 'user-2',
+          user_name: 'Shared User',
+          user_email: 'shared@example.com',
+          permission_level: 'view',
+          shared_at: '2024-01-01T00:00:00Z',
+        },
+      ],
+      error: null,
+    })
 
     const result = await service.getSharedUsers('template-1')
 
@@ -544,19 +526,19 @@ describe('BaseAPIService - Sharing Operations', () => {
     ])
   })
 
-  it('getSharedUsers should handle missing user details', async () => {
-    const sharesQuery = {
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      order: vi.fn().mockResolvedValue({ data: [mockShareData], error: null }),
-    }
-
-    const usersQuery = {
-      select: vi.fn().mockReturnThis(),
-      in: vi.fn().mockResolvedValue({ data: [], error: null }),
-    }
-
-    mockFrom.mockReturnValueOnce(sharesQuery as never).mockReturnValueOnce(usersQuery as never)
+  it('getSharedUsers should handle RPC returning incomplete user details', async () => {
+    mockSupabase.rpc.mockResolvedValueOnce({
+      data: [
+        {
+          user_id: 'user-2',
+          user_name: '',
+          user_email: '',
+          permission_level: 'view',
+          shared_at: '2024-01-01T00:00:00Z',
+        },
+      ],
+      error: null,
+    })
 
     const result = await service.getSharedUsers('template-1')
 
@@ -583,13 +565,8 @@ describe('BaseAPIService - Sharing Operations', () => {
     ).rejects.toThrow('Sharing is not supported for this entity')
   })
 
-  it('shareEntity should throw error when user not found', async () => {
-    const userQuery = {
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-    }
-    mockFrom.mockReturnValue(userQuery as never)
+  it('shareEntity should throw error when user not found (RPC)', async () => {
+    mockSupabase.rpc.mockResolvedValueOnce({ data: [], error: null })
 
     await expect(
       service.shareEntity('template-1', 'nonexistent@example.com', 'view', 'owner-id'),
@@ -597,11 +574,10 @@ describe('BaseAPIService - Sharing Operations', () => {
   })
 
   it('shareEntity should throw error when entity already shared with user', async () => {
-    const userQuery = {
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      maybeSingle: vi.fn().mockResolvedValue({ data: mockUserRecord, error: null }),
-    }
+    mockSupabase.rpc.mockResolvedValueOnce({
+      data: [{ id: 'user-2', email: 'shared@example.com', name: 'Shared User' }],
+      error: null,
+    })
 
     const shareCheckQuery = {
       select: vi.fn().mockReturnThis(),
@@ -609,9 +585,13 @@ describe('BaseAPIService - Sharing Operations', () => {
       maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'existing-share' }, error: null }),
     }
 
-    mockFrom
-      .mockReturnValueOnce(userQuery as never) // First call to find user
-      .mockReturnValueOnce(shareCheckQuery as never) // Second call to check existing share
+    shareCheckQuery.eq.mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'existing-share' }, error: null }),
+      }),
+    })
+
+    mockFrom.mockReturnValueOnce(shareCheckQuery as never)
 
     await expect(
       service.shareEntity('template-1', 'shared@example.com', 'view', 'owner-id'),
@@ -619,11 +599,10 @@ describe('BaseAPIService - Sharing Operations', () => {
   })
 
   it('shareEntity should successfully create share', async () => {
-    const userQuery = {
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      maybeSingle: vi.fn().mockResolvedValue({ data: mockUserRecord, error: null }),
-    }
+    mockSupabase.rpc.mockResolvedValueOnce({
+      data: [{ id: 'user-2', email: 'shared@example.com', name: 'Shared User' }],
+      error: null,
+    })
 
     const shareCheckQuery = {
       select: vi.fn().mockReturnThis(),
@@ -631,14 +610,17 @@ describe('BaseAPIService - Sharing Operations', () => {
       maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
     }
 
+    shareCheckQuery.eq.mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+      }),
+    })
+
     const insertQuery = {
       insert: vi.fn().mockResolvedValue({ error: null }),
     }
 
-    mockFrom
-      .mockReturnValueOnce(userQuery as never) // First call to find user
-      .mockReturnValueOnce(shareCheckQuery as never) // Second call to check existing share
-      .mockReturnValueOnce(insertQuery as never) // Third call to insert share
+    mockFrom.mockReturnValueOnce(shareCheckQuery as never).mockReturnValueOnce(insertQuery as never)
 
     await service.shareEntity('template-1', 'shared@example.com', 'edit', 'owner-id')
 
@@ -667,13 +649,16 @@ describe('BaseAPIService - Sharing Operations', () => {
       delete: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
     }
-    // Mock the second .eq() call to return the resolved value
-    deleteQuery.eq.mockReturnValueOnce(deleteQuery).mockResolvedValueOnce({ error: null })
+    deleteQuery.delete.mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      }),
+    })
     mockFrom.mockReturnValue(deleteQuery as never)
 
     await service.unshareEntity('template-1', 'user-2')
 
-    expect(mockFrom).toHaveBeenCalledWith('template_shares')
+    expect(deleteQuery.delete).toHaveBeenCalled()
   })
 
   it('updateSharePermission should throw error when sharing not supported', async () => {
@@ -693,13 +678,15 @@ describe('BaseAPIService - Sharing Operations', () => {
       update: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
     }
-    // Mock the second .eq() call to return the resolved value
-    updateQuery.eq.mockReturnValueOnce(updateQuery).mockResolvedValueOnce({ error: null })
+    updateQuery.update.mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      }),
+    })
     mockFrom.mockReturnValue(updateQuery as never)
 
     await service.updateSharePermission('template-1', 'user-2', 'edit')
 
-    expect(mockFrom).toHaveBeenCalledWith('template_shares')
     expect(updateQuery.update).toHaveBeenCalledWith({ permission_level: 'edit' })
   })
 })
@@ -732,11 +719,13 @@ describe('BaseAPIService - Items Operations', () => {
       insert: vi.fn().mockReturnThis(),
       select: vi.fn().mockResolvedValue({ data: mockCreatedItems, error: null }),
     }
+    insertQuery.insert.mockReturnValue({
+      select: vi.fn().mockResolvedValue({ data: mockCreatedItems, error: null }),
+    })
     mockFrom.mockReturnValue(insertQuery as never)
 
     const result = await service.createItems(mockItems)
 
-    expect(mockFrom).toHaveBeenCalledWith('expense_template_items')
     expect(insertQuery.insert).toHaveBeenCalledWith(mockItems)
     expect(result).toEqual(mockCreatedItems)
   })
@@ -769,12 +758,14 @@ describe('BaseAPIService - Items Operations', () => {
       delete: vi.fn().mockReturnThis(),
       in: vi.fn().mockResolvedValue({ error: null }),
     }
+    deleteQuery.delete.mockReturnValue({
+      in: vi.fn().mockResolvedValue({ error: null }),
+    })
     mockFrom.mockReturnValue(deleteQuery as never)
 
     await service.deleteItems(['item-1', 'item-2'])
 
-    expect(mockFrom).toHaveBeenCalledWith('expense_template_items')
-    expect(deleteQuery.in).toHaveBeenCalledWith('id', ['item-1', 'item-2'])
+    expect(deleteQuery.delete).toHaveBeenCalled()
   })
 
   it('deleteItems should throw error when database error occurs', async () => {

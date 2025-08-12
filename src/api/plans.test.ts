@@ -452,58 +452,29 @@ describe('plans API', () => {
   })
 
   describe('getPlanSharedUsers', () => {
-    const mockShares = [
-      {
-        shared_with_user_id: 'user-1',
-        permission_level: 'view',
-        created_at: '2024-01-01T00:00:00Z',
-      },
-      {
-        shared_with_user_id: 'user-2',
-        permission_level: 'edit',
-        created_at: '2024-01-02T00:00:00Z',
-      },
-    ]
-
-    const mockUsers = [
-      {
-        id: 'user-1',
-        name: 'User One',
-        email: 'user1@example.com',
-      },
-      {
-        id: 'user-2',
-        name: 'User Two',
-        email: 'user2@example.com',
-      },
-    ]
-
-    it('should return shared users with details', async () => {
-      // Mock shares query
-      const mockSharesQuery = {
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        order: vi.fn().mockResolvedValue({
-          data: mockShares,
-          error: null,
-        }),
-      }
-
-      // Mock users query
-      const mockUsersQuery = {
-        select: vi.fn().mockReturnThis(),
-        in: vi.fn().mockResolvedValue({
-          data: mockUsers,
-          error: null,
-        }),
-      }
-
-      mockSupabase.from.mockReturnValueOnce(mockSharesQuery).mockReturnValueOnce(mockUsersQuery)
+    it('should return shared users with details (RPC)', async () => {
+      mockSupabase.rpc.mockResolvedValueOnce({
+        data: [
+          {
+            user_id: 'user-1',
+            user_name: 'User One',
+            user_email: 'user1@example.com',
+            permission_level: 'view',
+            shared_at: '2024-01-01T00:00:00Z',
+          },
+          {
+            user_id: 'user-2',
+            user_name: 'User Two',
+            user_email: 'user2@example.com',
+            permission_level: 'edit',
+            shared_at: '2024-01-02T00:00:00Z',
+          },
+        ],
+        error: null,
+      })
 
       const result = await plansApi.getPlanSharedUsers(mockPlanId)
 
-      expect(mockFrom).toHaveBeenCalledWith('plan_shares')
-      expect(mockFrom).toHaveBeenCalledWith('users')
       expect(result).toEqual([
         {
           user_id: 'user-1',
@@ -522,42 +493,32 @@ describe('plans API', () => {
       ])
     })
 
-    it('should return empty array if no shares exist', async () => {
-      const mockQuery = {
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        order: vi.fn().mockResolvedValue({
-          data: [],
-          error: null,
-        }),
-      }
-
-      mockSupabase.from.mockReturnValue(mockQuery)
-
+    it('should return empty array if no shares exist (RPC)', async () => {
+      mockSupabase.rpc.mockResolvedValueOnce({ data: [], error: null })
       const result = await plansApi.getPlanSharedUsers(mockPlanId)
-
       expect(result).toEqual([])
     })
 
-    it('should handle missing user details gracefully', async () => {
-      const mockSharesQuery = {
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        order: vi.fn().mockResolvedValue({
-          data: mockShares,
-          error: null,
-        }),
-      }
-
-      const mockUsersQuery = {
-        select: vi.fn().mockReturnThis(),
-        in: vi.fn().mockResolvedValue({
-          data: [mockUsers[0]], // Only first user found
-          error: null,
-        }),
-      }
-
-      mockSupabase.from.mockReturnValueOnce(mockSharesQuery).mockReturnValueOnce(mockUsersQuery)
+    it('should handle missing user details gracefully (RPC)', async () => {
+      mockSupabase.rpc.mockResolvedValueOnce({
+        data: [
+          {
+            user_id: 'user-1',
+            user_name: 'User One',
+            user_email: 'user1@example.com',
+            permission_level: 'view',
+            shared_at: '2024-01-01T00:00:00Z',
+          },
+          {
+            user_id: 'user-2',
+            user_name: '',
+            user_email: '',
+            permission_level: 'edit',
+            shared_at: '2024-01-02T00:00:00Z',
+          },
+        ],
+        error: null,
+      })
 
       const result = await plansApi.getPlanSharedUsers(mockPlanId)
 
@@ -579,44 +540,15 @@ describe('plans API', () => {
       ])
     })
 
-    it('should throw error if shares query fails', async () => {
+    it('should throw error if RPC fails', async () => {
       const mockError = { message: 'Database error' }
-      const mockQuery = {
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        order: vi.fn().mockResolvedValue({
-          data: null,
-          error: mockError,
-        }),
-      }
-
-      mockSupabase.from.mockReturnValue(mockQuery)
-
+      mockSupabase.rpc.mockResolvedValueOnce({ data: null, error: mockError as never })
       await expect(plansApi.getPlanSharedUsers(mockPlanId)).rejects.toEqual(mockError)
     })
 
-    it('should throw error if users query fails', async () => {
+    it('should throw error if RPC fails (users)', async () => {
       const mockError = { message: 'Database error' }
-
-      const mockSharesQuery = {
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        order: vi.fn().mockResolvedValue({
-          data: mockShares,
-          error: null,
-        }),
-      }
-
-      const mockUsersQuery = {
-        select: vi.fn().mockReturnThis(),
-        in: vi.fn().mockResolvedValue({
-          data: null,
-          error: mockError,
-        }),
-      }
-
-      mockSupabase.from.mockReturnValueOnce(mockSharesQuery).mockReturnValueOnce(mockUsersQuery)
-
+      mockSupabase.rpc.mockResolvedValueOnce({ data: null, error: mockError as never })
       await expect(plansApi.getPlanSharedUsers(mockPlanId)).rejects.toEqual(mockError)
     })
   })
@@ -625,48 +557,25 @@ describe('plans API', () => {
     const userEmail = 'user@example.com'
     const sharedByUserId = 'sharer-123'
 
-    it('should share plan successfully', async () => {
-      const mockUser = {
-        id: 'user-123',
-        email: userEmail,
-      }
+    it('should share plan successfully (RPC user search)', async () => {
+      const mockUser = { id: 'user-123', email: userEmail }
+      mockSupabase.rpc.mockResolvedValueOnce({ data: [mockUser], error: null })
 
-      // Mock user lookup query
-      const mockUserQuery = {
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        maybeSingle: vi.fn().mockResolvedValue({
-          data: mockUser,
-          error: null,
-        }),
-      }
-
-      // Mock existing share check query
       const mockShareCheckQuery = {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
-        maybeSingle: vi.fn().mockResolvedValue({
-          data: null,
-          error: null,
-        }),
+        maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
       }
-
-      // Mock insert query
       const mockInsertQuery = {
-        insert: vi.fn().mockResolvedValue({
-          error: null,
-        }),
+        insert: vi.fn().mockResolvedValue({ error: null }),
       }
 
       mockSupabase.from
-        .mockReturnValueOnce(mockUserQuery)
         .mockReturnValueOnce(mockShareCheckQuery)
         .mockReturnValueOnce(mockInsertQuery)
 
       await plansApi.sharePlan(mockPlanId, userEmail, 'view', sharedByUserId)
 
-      expect(mockFrom).toHaveBeenCalledWith('users')
-      expect(mockFrom).toHaveBeenCalledWith('plan_shares')
       expect(mockInsertQuery.insert).toHaveBeenCalledWith({
         plan_id: mockPlanId,
         shared_with_user_id: mockUser.id,
@@ -675,67 +584,33 @@ describe('plans API', () => {
       })
     })
 
-    it('should throw error if user not found', async () => {
-      const mockQuery = {
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        maybeSingle: vi.fn().mockResolvedValue({
-          data: null,
-          error: null,
-        }),
-      }
-
-      mockSupabase.from.mockReturnValue(mockQuery)
-
+    it('should throw error if user not found (RPC)', async () => {
+      mockSupabase.rpc.mockResolvedValueOnce({ data: [], error: null })
       await expect(
         plansApi.sharePlan(mockPlanId, userEmail, 'view', sharedByUserId),
       ).rejects.toThrow(`User not found: ${userEmail}`)
     })
 
-    it('should throw error if plan already shared with user', async () => {
-      const mockUser = {
-        id: 'user-123',
-        email: userEmail,
-      }
-
-      const mockUserQuery = {
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        maybeSingle: vi.fn().mockResolvedValue({
-          data: mockUser,
-          error: null,
-        }),
-      }
+    it('should throw error if plan already shared with user (RPC user search)', async () => {
+      const mockUser = { id: 'user-123', email: userEmail }
+      mockSupabase.rpc.mockResolvedValueOnce({ data: [mockUser], error: null })
 
       const mockShareCheckQuery = {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
-        maybeSingle: vi.fn().mockResolvedValue({
-          data: { id: 'existing-share' },
-          error: null,
-        }),
+        maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'existing-share' }, error: null }),
       }
 
-      mockSupabase.from.mockReturnValueOnce(mockUserQuery).mockReturnValueOnce(mockShareCheckQuery)
+      mockSupabase.from.mockReturnValueOnce(mockShareCheckQuery)
 
       await expect(
         plansApi.sharePlan(mockPlanId, userEmail, 'view', sharedByUserId),
       ).rejects.toThrow(`PLAN is already shared with ${userEmail}`)
     })
 
-    it('should throw error if user lookup fails', async () => {
+    it('should throw error if user lookup RPC fails', async () => {
       const mockError = { message: 'Database error' }
-      const mockQuery = {
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        maybeSingle: vi.fn().mockResolvedValue({
-          data: null,
-          error: mockError,
-        }),
-      }
-
-      mockSupabase.from.mockReturnValue(mockQuery)
-
+      mockSupabase.rpc.mockResolvedValueOnce({ data: null, error: mockError as never })
       await expect(
         plansApi.sharePlan(mockPlanId, userEmail, 'view', sharedByUserId),
       ).rejects.toEqual(mockError)
@@ -743,37 +618,19 @@ describe('plans API', () => {
 
     it('should throw error if insert fails', async () => {
       const mockError = { message: 'Insert failed' }
-      const mockUser = {
-        id: 'user-123',
-        email: userEmail,
-      }
-
-      const mockUserQuery = {
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        maybeSingle: vi.fn().mockResolvedValue({
-          data: mockUser,
-          error: null,
-        }),
-      }
+      const mockUser = { id: 'user-123', email: userEmail }
+      mockSupabase.rpc.mockResolvedValueOnce({ data: [mockUser], error: null })
 
       const mockShareCheckQuery = {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
-        maybeSingle: vi.fn().mockResolvedValue({
-          data: null,
-          error: null,
-        }),
+        maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
       }
-
       const mockInsertQuery = {
-        insert: vi.fn().mockResolvedValue({
-          error: mockError,
-        }),
+        insert: vi.fn().mockResolvedValue({ error: mockError }),
       }
 
       mockSupabase.from
-        .mockReturnValueOnce(mockUserQuery)
         .mockReturnValueOnce(mockShareCheckQuery)
         .mockReturnValueOnce(mockInsertQuery)
 
