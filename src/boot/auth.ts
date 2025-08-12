@@ -1,10 +1,8 @@
 import { defineBoot } from '#q-app/wrappers'
 import { useUserStore } from 'src/stores/user'
 
-export default defineBoot(() => {
-  // Define the global callback that Google Sign-In will use
+export default defineBoot(async () => {
   window.handleGoogleSignIn = (response) => {
-    // Forward to the Vue component's handler if it exists
     if (window.vueGoogleCallback) {
       window.vueGoogleCallback(response)
     } else {
@@ -14,5 +12,5 @@ export default defineBoot(() => {
 
   const userStore = useUserStore()
 
-  userStore.initUser()
+  await userStore.initUser()
 })
