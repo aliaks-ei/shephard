@@ -30,6 +30,7 @@ export type UserProfileUpdates = {
 export const useUserStore = defineStore('user', () => {
   const authStore = useAuthStore()
   const preferencesStore = usePreferencesStore()
+  let initPromise: Promise<void> | null = null
 
   const userProfile = computed((): UserProfile | null => {
     if (!authStore.user) return null
@@ -54,9 +55,21 @@ export const useUserStore = defineStore('user', () => {
   const isLoading = computed(() => authStore.isLoading || preferencesStore.isLoading)
 
   async function initUser() {
-    await authStore.init()
-    if (authStore.isAuthenticated) {
-      await preferencesStore.loadPreferences()
+    if (initPromise) {
+      return initPromise
+    }
+
+    initPromise = (async () => {
+      await authStore.init()
+      if (authStore.isAuthenticated) {
+        await preferencesStore.loadPreferences()
+      }
+    })()
+
+    try {
+      await initPromise
+    } finally {
+      initPromise = null
     }
   }
 

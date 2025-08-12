@@ -42,25 +42,25 @@ describe('authGuard', () => {
     mockNext.mockClear()
   })
 
-  it('should wait for user store to initialize if still loading', async () => {
+  it('should proceed even if store is loading (no initUser in guard)', () => {
     mockUserStore.isLoading = true
 
     const to: RouteLocationNormalized = getTo('/dashboard', true)
     const from: RouteLocationNormalized = {} as RouteLocationNormalized
 
-    await authGuard(to, from, mockNext)
+    authGuard(to, from, mockNext)
 
-    expect(mockUserStore.initUser).toHaveBeenCalled()
+    expect(mockUserStore.initUser).not.toHaveBeenCalled()
     expect(mockNext).toHaveBeenCalled()
   })
 
-  it('should redirect to auth page if route requires auth and user is not authenticated', async () => {
+  it('should redirect to auth page if route requires auth and user is not authenticated', () => {
     mockUserStore.isAuthenticated = false
 
     const to: RouteLocationNormalized = getTo('/dashboard', true)
     const from: RouteLocationNormalized = {} as RouteLocationNormalized
 
-    await authGuard(to, from, mockNext)
+    authGuard(to, from, mockNext)
 
     expect(mockNext).toHaveBeenCalledWith({
       path: '/auth',
@@ -68,55 +68,49 @@ describe('authGuard', () => {
     })
   })
 
-  it('should proceed if route requires auth and user is authenticated', async () => {
+  it('should proceed if route requires auth and user is authenticated', () => {
     mockUserStore.isAuthenticated = true
 
     const to: RouteLocationNormalized = getTo('/dashboard', true)
     const from: RouteLocationNormalized = {} as RouteLocationNormalized
 
-    await authGuard(to, from, mockNext)
+    authGuard(to, from, mockNext)
 
     expect(mockNext).toHaveBeenCalledWith()
   })
 
-  it('should proceed if route does not require auth and user is authenticated', async () => {
+  it('should proceed if route does not require auth and user is authenticated', () => {
     mockUserStore.isAuthenticated = true
 
     const to: RouteLocationNormalized = getTo('/public', false)
     const from: RouteLocationNormalized = {} as RouteLocationNormalized
 
-    await authGuard(to, from, mockNext)
+    authGuard(to, from, mockNext)
 
     expect(mockNext).toHaveBeenCalledWith()
   })
 
-  it('should proceed if route does not require auth and user is not authenticated', async () => {
+  it('should proceed if route does not require auth and user is not authenticated', () => {
     mockUserStore.isAuthenticated = false
 
     const to: RouteLocationNormalized = getTo('/public', false)
     const from: RouteLocationNormalized = {} as RouteLocationNormalized
 
-    await authGuard(to, from, mockNext)
+    authGuard(to, from, mockNext)
 
     expect(mockNext).toHaveBeenCalledWith()
   })
 
-  it('should handle loading state and authentication check in sequence', async () => {
+  it('should not attempt initialization; just handle auth check', () => {
     mockUserStore.isLoading = true
-    mockUserStore.isAuthenticated = false
+    mockUserStore.isAuthenticated = true
 
     const to: RouteLocationNormalized = getTo('/dashboard', true)
     const from: RouteLocationNormalized = {} as RouteLocationNormalized
 
-    mockUserStore.initUser = vi.fn().mockImplementation(async () => {
-      mockUserStore.isAuthenticated = true
-      mockUserStore.isLoading = false
-      return Promise.resolve()
-    })
+    authGuard(to, from, mockNext)
 
-    await authGuard(to, from, mockNext)
-
-    expect(mockUserStore.initUser).toHaveBeenCalled()
+    expect(mockUserStore.initUser).not.toHaveBeenCalled()
     expect(mockNext).toHaveBeenCalledWith()
   })
 })

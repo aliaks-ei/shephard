@@ -121,14 +121,17 @@ export const useAuthStore = defineStore('auth', () => {
     emailError.value = null
   }
 
-  // Subscribe to auth state changes
-  onAuthStateChange(async (_event, currentSession) => {
+  onAuthStateChange(async (event, currentSession) => {
     const previousUserId = user.value?.id
 
     session.value = currentSession
     user.value = currentSession?.user ?? null
 
-    if (currentSession?.user && currentSession.user.id !== previousUserId) {
+    if (
+      event !== 'INITIAL_SESSION' &&
+      currentSession?.user &&
+      currentSession.user.id !== previousUserId
+    ) {
       await preferencesStore.loadPreferences()
     }
   })

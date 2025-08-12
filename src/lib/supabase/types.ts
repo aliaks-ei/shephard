@@ -341,6 +341,34 @@ export type Database = {
         Args: { template_id: string; user_id: string }
         Returns: boolean
       }
+      get_template_shared_users: {
+        Args: { p_template_id: string }
+        Returns: {
+          user_id: string
+          user_name: string | null
+          user_email: string
+          permission_level: string
+          shared_at: string | null
+        }[]
+      }
+      get_plan_shared_users: {
+        Args: { p_plan_id: string }
+        Returns: {
+          user_id: string
+          user_name: string | null
+          user_email: string
+          permission_level: string
+          shared_at: string | null
+        }[]
+      }
+      search_users_for_sharing: {
+        Args: { q: string }
+        Returns: {
+          id: string
+          name: string | null
+          email: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

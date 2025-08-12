@@ -12,6 +12,7 @@ export const mockSupabaseClient = {
       return { data: { subscription: { unsubscribe: vi.fn() } } }
     }),
   },
+  rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
   from: vi.fn().mockImplementation(() => {
     return {
       select: vi.fn().mockReturnThis(),
@@ -19,8 +20,11 @@ export const mockSupabaseClient = {
       update: vi.fn().mockReturnThis(),
       delete: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
       single: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockReturnThis(),
       match: vi.fn().mockReturnThis(),
+      order: vi.fn().mockReturnThis(),
       then: vi.fn().mockImplementation((callback) => {
         return Promise.resolve(callback({ data: [], error: null }))
       }),

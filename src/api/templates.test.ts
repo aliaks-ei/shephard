@@ -472,52 +472,21 @@ describe('getExpenseTemplateWithItems', () => {
 })
 
 describe('getTemplateSharedUsers', () => {
-  it('should return shared users with details', async () => {
-    const shares = [
-      {
-        shared_with_user_id: 'user-2',
-        permission_level: 'view',
-        created_at: '2023-01-01T12:00:00Z',
-      },
-    ]
-    const users = [
-      {
-        id: 'user-2',
-        name: 'John Doe',
-        email: 'john@example.com',
-      },
-    ]
-
-    const mockSharesOrder = vi.fn().mockResolvedValue({
-      data: shares,
+  it('should return shared users with details (RPC)', async () => {
+    mockSupabase.rpc.mockResolvedValueOnce({
+      data: [
+        {
+          user_id: 'user-2',
+          user_name: 'John Doe',
+          user_email: 'john@example.com',
+          permission_level: 'view',
+          shared_at: '2023-01-01T12:00:00Z',
+        },
+      ],
       error: null,
     })
-    const mockSharesEq = vi.fn().mockReturnValue({ order: mockSharesOrder })
-    const mockSharesSelect = vi.fn().mockReturnValue({ eq: mockSharesEq })
-
-    const mockUsersIn = vi.fn().mockResolvedValue({
-      data: users,
-      error: null,
-    })
-    const mockUsersSelect = vi.fn().mockReturnValue({ in: mockUsersIn })
-
-    const mockFrom = vi
-      .fn()
-      .mockReturnValueOnce({ select: mockSharesSelect })
-      .mockReturnValueOnce({ select: mockUsersSelect })
-
-    mockSupabase.from.mockImplementation(mockFrom)
 
     const result = await getTemplateSharedUsers('template-1')
-
-    expect(mockFrom).toHaveBeenCalledWith('template_shares')
-    expect(mockFrom).toHaveBeenCalledWith('users')
-    expect(mockSharesSelect).toHaveBeenCalledWith(
-      'shared_with_user_id, permission_level, created_at',
-    )
-    expect(mockSharesEq).toHaveBeenCalledWith('template_id', 'template-1')
-    expect(mockUsersSelect).toHaveBeenCalledWith('id, name, email')
-    expect(mockUsersIn).toHaveBeenCalledWith('id', ['user-2'])
 
     expect(result).toEqual([
       {
@@ -530,19 +499,9 @@ describe('getTemplateSharedUsers', () => {
     ])
   })
 
-  it('should return empty array when no shares exist', async () => {
-    const mockSharesOrder = vi.fn().mockResolvedValue({
-      data: [],
-      error: null,
-    })
-    const mockSharesEq = vi.fn().mockReturnValue({ order: mockSharesOrder })
-    const mockSharesSelect = vi.fn().mockReturnValue({ eq: mockSharesEq })
-    const mockFrom = vi.fn().mockReturnValue({ select: mockSharesSelect })
-
-    mockSupabase.from.mockImplementation(mockFrom)
-
+  it('should return empty array when no shares exist (RPC)', async () => {
+    mockSupabase.rpc.mockResolvedValueOnce({ data: [], error: null })
     const result = await getTemplateSharedUsers('template-1')
-
     expect(result).toEqual([])
   })
 })
@@ -627,20 +586,11 @@ describe('deleteExpenseTemplateItems', () => {
 })
 
 describe('shareTemplate', () => {
-  it('should share template successfully', async () => {
+  it('should share template successfully (RPC user search)', async () => {
     const user = { id: 'user-2', email: 'john@example.com' }
+    mockSupabase.rpc.mockResolvedValueOnce({ data: [user], error: null })
 
-    const mockUserMaybeSingle = vi.fn().mockResolvedValue({
-      data: user,
-      error: null,
-    })
-    const mockUserEq = vi.fn().mockReturnValue({ maybeSingle: mockUserMaybeSingle })
-    const mockUserSelect = vi.fn().mockReturnValue({ eq: mockUserEq })
-
-    const mockShareCheckMaybeSingle = vi.fn().mockResolvedValue({
-      data: null,
-      error: null,
-    })
+    const mockShareCheckMaybeSingle = vi.fn().mockResolvedValue({ data: null, error: null })
     const mockShareCheckEq2 = vi.fn().mockReturnValue({ maybeSingle: mockShareCheckMaybeSingle })
     const mockShareCheckEq1 = vi.fn().mockReturnValue({ eq: mockShareCheckEq2 })
     const mockShareCheckSelect = vi.fn().mockReturnValue({ eq: mockShareCheckEq1 })
@@ -649,7 +599,6 @@ describe('shareTemplate', () => {
 
     const mockFrom = vi
       .fn()
-      .mockReturnValueOnce({ select: mockUserSelect })
       .mockReturnValueOnce({ select: mockShareCheckSelect })
       .mockReturnValueOnce({ insert: mockInsert })
 
@@ -657,10 +606,6 @@ describe('shareTemplate', () => {
 
     await shareTemplate('template-1', 'john@example.com', 'view', 'user-1')
 
-    expect(mockFrom).toHaveBeenCalledWith('users')
-    expect(mockFrom).toHaveBeenCalledWith('template_shares')
-    expect(mockUserSelect).toHaveBeenCalledWith('id, email')
-    expect(mockUserEq).toHaveBeenCalledWith('email', 'john@example.com')
     expect(mockInsert).toHaveBeenCalledWith({
       template_id: 'template-1',
       shared_with_user_id: 'user-2',
@@ -669,44 +614,25 @@ describe('shareTemplate', () => {
     })
   })
 
-  it('should throw error when user not found', async () => {
-    const mockUserMaybeSingle = vi.fn().mockResolvedValue({
-      data: null,
-      error: null,
-    })
-    const mockUserEq = vi.fn().mockReturnValue({ maybeSingle: mockUserMaybeSingle })
-    const mockUserSelect = vi.fn().mockReturnValue({ eq: mockUserEq })
-    const mockFrom = vi.fn().mockReturnValue({ select: mockUserSelect })
-
-    mockSupabase.from.mockImplementation(mockFrom)
-
+  it('should throw error when user not found (RPC)', async () => {
+    mockSupabase.rpc.mockResolvedValueOnce({ data: [], error: null })
     await expect(
       shareTemplate('template-1', 'notfound@example.com', 'view', 'user-1'),
     ).rejects.toThrow('User not found: notfound@example.com')
   })
 
-  it('should throw error when template already shared', async () => {
+  it('should throw error when template already shared (RPC user search)', async () => {
     const user = { id: 'user-2', email: 'john@example.com' }
+    mockSupabase.rpc.mockResolvedValueOnce({ data: [user], error: null })
 
-    const mockUserMaybeSingle = vi.fn().mockResolvedValue({
-      data: user,
-      error: null,
-    })
-    const mockUserEq = vi.fn().mockReturnValue({ maybeSingle: mockUserMaybeSingle })
-    const mockUserSelect = vi.fn().mockReturnValue({ eq: mockUserEq })
-
-    const mockShareCheckMaybeSingle = vi.fn().mockResolvedValue({
-      data: { id: 'share-1' },
-      error: null,
-    })
+    const mockShareCheckMaybeSingle = vi
+      .fn()
+      .mockResolvedValue({ data: { id: 'share-1' }, error: null })
     const mockShareCheckEq2 = vi.fn().mockReturnValue({ maybeSingle: mockShareCheckMaybeSingle })
     const mockShareCheckEq1 = vi.fn().mockReturnValue({ eq: mockShareCheckEq2 })
     const mockShareCheckSelect = vi.fn().mockReturnValue({ eq: mockShareCheckEq1 })
 
-    const mockFrom = vi
-      .fn()
-      .mockReturnValueOnce({ select: mockUserSelect })
-      .mockReturnValueOnce({ select: mockShareCheckSelect })
+    const mockFrom = vi.fn().mockReturnValueOnce({ select: mockShareCheckSelect })
 
     mockSupabase.from.mockImplementation(mockFrom)
 
