@@ -280,5 +280,6 @@ watch(
     emit('load-shared-users', props.entityId)
     isLoadingShares.value = false
   },
+  { immediate: true },
 )
 </script>

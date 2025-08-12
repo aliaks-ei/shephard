@@ -10,11 +10,10 @@ export type Database = {
     Tables: {
       expense_categories: {
         Row: {
-          color: string | null
+          color: string
           created_at: string | null
           id: string
           name: string
-          owner_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -22,7 +21,6 @@ export type Database = {
           created_at?: string | null
           id?: string
           name: string
-          owner_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -30,7 +28,6 @@ export type Database = {
           created_at?: string | null
           id?: string
           name?: string
-          owner_id?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -313,61 +310,82 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      can_access_plan: {
-        Args: { plan_id: string; user_id: string }
-        Returns: boolean
-      }
       can_access_template: {
         Args: { template_id: string; user_id: string }
-        Returns: boolean
-      }
-      can_edit_plan: {
-        Args: { plan_id: string; user_id: string }
         Returns: boolean
       }
       can_edit_template: {
         Args: { template_id: string; user_id: string }
         Returns: boolean
       }
-      is_plan_owner: {
-        Args: { plan_id: string; user_id: string }
+      check_excessive_sharing: {
+        Args: { user_id: string; hours_window?: number; max_shares?: number }
         Returns: boolean
       }
-      is_template_owner: {
-        Args: { template_id: string; user_id: string }
-        Returns: boolean
-      }
-      user_has_template_access: {
-        Args: { template_id: string; user_id: string }
-        Returns: boolean
-      }
-      get_template_shared_users: {
-        Args: { p_template_id: string }
-        Returns: {
-          user_id: string
-          user_name: string | null
-          user_email: string
-          permission_level: string
-          shared_at: string | null
-        }[]
+      cleanup_audit_logs: {
+        Args: { days_to_keep?: number }
+        Returns: number
       }
       get_plan_shared_users: {
         Args: { p_plan_id: string }
         Returns: {
           user_id: string
-          user_name: string | null
+          user_name: string
           user_email: string
           permission_level: string
-          shared_at: string | null
+          shared_at: string
         }[]
+      }
+      get_template_shared_users: {
+        Args: { p_template_id: string }
+        Returns: {
+          user_id: string
+          user_name: string
+          user_email: string
+          permission_level: string
+          shared_at: string
+        }[]
+      }
+      get_user_accessible_plan_ids: {
+        Args: { user_id: string }
+        Returns: {
+          plan_id: string
+        }[]
+      }
+      get_user_activity_summary: {
+        Args: { user_id: string; days_back?: number }
+        Returns: {
+          table_name: string
+          operation: string
+          count: number
+          last_activity: string
+        }[]
+      }
+      get_user_editable_plan_ids: {
+        Args: { user_id: string }
+        Returns: {
+          plan_id: string
+        }[]
+      }
+      is_template_owner: {
+        Args: { template_id: string; user_id: string }
+        Returns: boolean
       }
       search_users_for_sharing: {
         Args: { q: string }
         Returns: {
           id: string
-          name: string | null
+          name: string
           email: string
         }[]
+      }
+      user_has_template_access: {
+        Args: { template_id: string; user_id: string }
+        Returns: boolean
+      }
+      user_owns_plan: {
+        Args: { plan_id: string; user_id: string }
+        Returns: boolean
       }
     }
     Enums: {
@@ -462,15 +480,29 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends { schema: keyof DatabaseWithoutInternals },
-  EnumName extends
-    keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'],
-> = DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
+  : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends
-    keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'],
-> = DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
+  : never
 
 export const Constants = {
   public: {

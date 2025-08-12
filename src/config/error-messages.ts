@@ -26,10 +26,6 @@ export type ErrorMessageKey =
   | 'TEMPLATES.DUPLICATE_NAME'
   | 'TEMPLATES.NAME_VALIDATION_FAILED'
   | 'CATEGORIES.LOAD_FAILED'
-  | 'CATEGORIES.CREATE_FAILED'
-  | 'CATEGORIES.UPDATE_FAILED'
-  | 'CATEGORIES.DELETE_FAILED'
-  | 'CATEGORIES.DUPLICATE_NAME'
   | 'TEMPLATE_ITEMS.LOAD_FAILED'
   | 'TEMPLATE_ITEMS.CREATE_FAILED'
   | 'TEMPLATE_ITEMS.UPDATE_FAILED'
@@ -210,26 +206,6 @@ export const ERROR_MESSAGES: Record<ErrorMessageKey, ErrorMessageConfig> = {
   // Categories errors
   'CATEGORIES.LOAD_FAILED': {
     message: "We couldn't load your categories. Please refresh or try again later.",
-    notify: true,
-    log: true,
-  },
-  'CATEGORIES.CREATE_FAILED': {
-    message: "We couldn't create your category. Please check your details and try again.",
-    notify: true,
-    log: true,
-  },
-  'CATEGORIES.UPDATE_FAILED': {
-    message: "We couldn't save your category changes. Please try again.",
-    notify: true,
-    log: true,
-  },
-  'CATEGORIES.DELETE_FAILED': {
-    message: "We couldn't delete that category. Please try again.",
-    notify: true,
-    log: true,
-  },
-  'CATEGORIES.DUPLICATE_NAME': {
-    message: 'You already have a category with this name. Please choose a different name.',
     notify: true,
     log: true,
   },

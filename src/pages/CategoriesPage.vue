@@ -1,260 +1,149 @@
 <template>
-  <div class="q-pa-md">
-    <div class="row justify-center">
-      <div class="col-12 col-md-10 col-lg-8 col-xl-6">
-        <div class="row items-center justify-between wrap q-col-gutter-md q-mb-lg">
-          <div class="col-auto">
-            <h1 class="text-h4 text-weight-medium q-mb-sm q-mt-none">Categories</h1>
-            <p class="text-body2 text-grey-6 q-mb-none">Manage your expense categories</p>
-          </div>
-          <div class="col-auto">
-            <q-btn
-              color="primary"
-              icon="eva-plus-outline"
-              label="Add Category"
-              unelevated
-              @click="openCreateDialog"
-            />
-          </div>
-        </div>
+  <ListPageLayout
+    title="Available Expense Categories"
+    description="Standard categories available for all expense tracking"
+    :show-create-button="false"
+  >
+    <!-- Search and Sort Section -->
+    <SearchAndSort
+      :search-query="searchQuery"
+      :sort-by="sortBy"
+      search-placeholder="Search categories..."
+      :sort-options="sortOptions"
+      @update:search-query="searchQuery = $event"
+      @update:sort-by="sortBy = $event"
+    />
 
-        <!-- Loading State -->
+    <!-- Loading State -->
+    <ListPageSkeleton
+      v-if="categoriesStore.isLoading"
+      :count="8"
+    />
+
+    <!-- Categories Grid -->
+    <div
+      v-else-if="filteredCategories.length > 0"
+      class="row q-col-gutter-md"
+    >
+      <div
+        v-for="category in filteredCategories"
+        :key="category.id"
+        class="col-12 col-sm-6 col-md-4 col-lg-3"
+      >
         <q-card
-          v-if="categoriesStore.isLoading && categoriesStore.categories.length === 0"
           flat
-        >
-          <q-list>
-            <q-item
-              v-for="n in 6"
-              :key="n"
-            >
-              <q-item-section avatar>
-                <q-skeleton
-                  type="QAvatar"
-                  size="24px"
-                />
-              </q-item-section>
-              <q-item-section>
-                <q-skeleton
-                  type="text"
-                  width="40%"
-                  height="16px"
-                />
-              </q-item-section>
-              <q-item-section side>
-                <q-skeleton
-                  type="text"
-                  width="60px"
-                  height="16px"
-                />
-              </q-item-section>
-              <q-item-section side>
-                <q-skeleton
-                  type="text"
-                  width="80px"
-                  height="16px"
-                />
-              </q-item-section>
-              <q-item-section side>
-                <div class="row q-gutter-xs">
-                  <q-skeleton
-                    type="QBtn"
-                    size="24px"
-                  />
-                  <q-skeleton
-                    type="QBtn"
-                    size="24px"
-                  />
-                </div>
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-card>
-
-        <!-- Categories Table -->
-        <q-table
-          v-else-if="categoriesStore.categories.length > 0"
-          :rows="categoriesStore.sortedCategories"
-          :columns="columns"
-          row-key="id"
           bordered
-          flat
-          :pagination="{ rowsPerPage: 0 }"
-          hide-pagination
-          class="categories-table"
+          class="category-card cursor-pointer full-height column"
         >
-          <template #body-cell-name="props">
-            <q-td :props="props">
-              <div class="row items-center q-gutter-sm">
-                <q-avatar
-                  size="24px"
-                  :style="{ backgroundColor: props.row.color }"
-                  text-color="white"
-                >
-                  <q-icon
-                    name="eva-pricetags-outline"
-                    size="12px"
-                  />
-                </q-avatar>
-                <span class="text-weight-medium">{{ props.row.name }}</span>
-              </div>
-            </q-td>
-          </template>
-
-          <template #body-cell-created="props">
-            <q-td :props="props">
-              {{ formatDate(props.row.created_at) }}
-            </q-td>
-          </template>
-
-          <template #body-cell-actions="props">
-            <q-td
-              :props="props"
-              class="text-right"
+          <q-card-section
+            class="column flex-center text-center q-py-lg"
+            style="flex: 1"
+          >
+            <q-avatar
+              :style="{ backgroundColor: category.color }"
+              size="48px"
+              text-color="white"
+              class="category-card__avatar q-mb-md"
             >
-              <div class="row items-center justify-end q-gutter-xs">
-                <q-btn
-                  flat
-                  round
-                  dense
-                  icon="eva-edit-outline"
-                  color="primary"
-                  size="sm"
-                  @click="openEditDialog(props.row)"
-                >
-                  <q-tooltip>Edit category</q-tooltip>
-                </q-btn>
+              <q-icon
+                name="eva-pricetags-outline"
+                size="24px"
+              />
+            </q-avatar>
 
-                <q-btn
-                  flat
-                  round
-                  dense
-                  icon="eva-trash-2-outline"
-                  color="negative"
-                  size="sm"
-                  @click="onDeleteCategory(props.row)"
-                >
-                  <q-tooltip>Delete category</q-tooltip>
-                </q-btn>
-              </div>
-            </q-td>
-          </template>
-        </q-table>
-
-        <!-- Empty State -->
-        <q-card
-          v-else
-          flat
-          class="text-center q-py-xl"
-        >
-          <q-card-section>
-            <q-icon
-              name="eva-pricetags-outline"
-              size="4rem"
-              class="text-grey-4 q-mb-md"
-            />
-            <div class="text-h5 q-mb-sm text-grey-7">No categories found</div>
-            <div class="text-body2 text-grey-5 q-mb-lg">
-              Start by creating your first custom category
+            <div class="text-weight-medium text-body1 q-mb-xs">
+              {{ category.name }}
             </div>
-            <q-btn
-              color="primary"
-              icon="eva-plus-outline"
-              label="Create Your First Category"
-              unelevated
-              @click="openCreateDialog"
-              :loading="categoriesStore.isLoading"
-            />
+
+            <div class="text-caption text-grey-6">
+              {{ category.color }}
+            </div>
           </q-card-section>
+
+          <!-- Color strip at bottom -->
+          <div :style="{ backgroundColor: category.color, height: '4px' }"></div>
         </q-card>
-
-        <!-- Unified Category Dialog -->
-        <CategoryDialog
-          v-model="showDialog"
-          :category="selectedCategory"
-          @category-saved="onCategorySaved"
-        />
-
-        <!-- Delete Category Dialog -->
-        <CategoryDeleteDialog
-          v-model="showDeleteDialog"
-          :category="selectedCategory"
-          @category-deleted="onCategoryDeleted"
-        />
       </div>
     </div>
-  </div>
+
+    <!-- Empty State -->
+    <q-card
+      v-else-if="searchQuery"
+      flat
+      class="text-center q-py-xl"
+    >
+      <q-card-section>
+        <q-icon
+          name="eva-search-outline"
+          size="4rem"
+          class="text-grey-4 q-mb-md"
+        />
+        <div class="text-h6 q-mb-sm text-grey-7">No categories found</div>
+        <div class="text-body2 text-grey-5 q-mb-lg">Try adjusting your search terms</div>
+        <q-btn
+          color="primary"
+          label="Clear Search"
+          unelevated
+          @click="searchQuery = ''"
+        />
+      </q-card-section>
+    </q-card>
+  </ListPageLayout>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useCategoriesStore } from 'src/stores/categories'
-import { formatDate } from 'src/utils/date'
-import type { ExpenseCategory } from 'src/api'
-
-import CategoryDialog from 'src/components/categories/CategoryDialog.vue'
-import CategoryDeleteDialog from 'src/components/categories/CategoryDeleteDialog.vue'
+import ListPageLayout from 'src/layouts/ListPageLayout.vue'
+import SearchAndSort from 'src/components/shared/SearchAndSort.vue'
+import ListPageSkeleton from 'src/components/shared/ListPageSkeleton.vue'
 
 const categoriesStore = useCategoriesStore()
+const searchQuery = ref('')
+const sortBy = ref('name')
 
-const showDialog = ref(false)
-const showDeleteDialog = ref(false)
-const selectedCategory = ref<ExpenseCategory | null>(null)
+const sortOptions = [{ label: 'Name', value: 'name' }]
 
-const columns = [
-  {
-    name: 'name',
-    label: 'Name',
-    align: 'left' as const,
-    field: 'name',
-    sortable: true,
-    style: 'width: 50%',
-    headerStyle: 'width: 50%',
-  },
-  {
-    name: 'created',
-    label: 'Created',
-    align: 'left' as const,
-    field: 'created_at',
-    sortable: true,
-    style: 'width: 30%',
-    headerStyle: 'width: 30%',
-  },
-  {
-    name: 'actions',
-    label: '',
-    align: 'right' as const,
-    field: 'actions',
-    sortable: false,
-    style: 'width: 20%',
-    headerStyle: 'width: 20%',
-  },
-]
+const filteredCategories = computed(() => {
+  let categories = [...categoriesStore.categories]
 
-function openCreateDialog() {
-  selectedCategory.value = null
-  showDialog.value = true
-}
+  if (searchQuery.value.trim()) {
+    const query = searchQuery.value.toLowerCase().trim()
+    categories = categories.filter((category) => category.name.toLowerCase().includes(query))
+  }
 
-function openEditDialog(category: ExpenseCategory) {
-  selectedCategory.value = category
-  showDialog.value = true
-}
+  if (sortBy.value === 'name') {
+    categories.sort((a, b) => a.name.localeCompare(b.name))
+  }
 
-function onDeleteCategory(category: ExpenseCategory) {
-  selectedCategory.value = category
-  showDeleteDialog.value = true
-}
-
-function onCategorySaved() {
-  selectedCategory.value = null
-}
-
-function onCategoryDeleted() {
-  selectedCategory.value = null
-}
+  return categories
+})
 
 onMounted(() => {
   categoriesStore.loadCategories()
 })
 </script>
+
+<style lang="scss" scoped>
+.category-card {
+  transition-property: transform, box-shadow;
+  transition-duration: 0.2s;
+  transition-timing-function: ease-in-out;
+
+  &__avatar {
+    transition-property: transform;
+    transition-duration: 0.2s;
+    transition-timing-function: ease-in-out;
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+    .category-card__avatar {
+      transform: scale(1.05);
+      transition: transform 0.2s ease-in-out;
+    }
+  }
+}
+</style>

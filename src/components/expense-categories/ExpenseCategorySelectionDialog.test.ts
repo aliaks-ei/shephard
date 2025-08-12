@@ -14,25 +14,22 @@ type ExpenseCategorySelectionDialogProps = ComponentProps<typeof ExpenseCategory
 const mockCategories: ExpenseCategory[] = [
   {
     id: 'category-1',
-    name: 'Food & Dining',
-    color: '#ff5722',
-    owner_id: 'user-1',
+    name: 'Rent/Mortgage',
+    color: '#1d4ed8',
     created_at: '2023-01-01T00:00:00Z',
     updated_at: '2023-01-01T00:00:00Z',
   },
   {
     id: 'category-2',
     name: 'Transportation',
-    color: '#2196f3',
-    owner_id: 'user-1',
+    color: '#6366f1',
     created_at: '2023-01-02T00:00:00Z',
     updated_at: '2023-01-02T00:00:00Z',
   },
   {
     id: 'category-3',
     name: 'Entertainment',
-    color: '#9c27b0',
-    owner_id: 'user-1',
+    color: '#e879f9',
     created_at: '2023-01-03T00:00:00Z',
     updated_at: '2023-01-03T00:00:00Z',
   },
@@ -56,9 +53,6 @@ const renderExpenseCategorySelectionDialog = (
           stubActions: true,
         }),
       ],
-      stubs: {
-        CategoryDialog: true,
-      },
     },
   })
 }
@@ -115,7 +109,6 @@ describe('ExpenseCategorySelectionDialog', () => {
           id: 'category-null',
           name: 'Test Category',
           color: '#000000',
-          owner_id: null,
           created_at: null,
           updated_at: null,
         },
