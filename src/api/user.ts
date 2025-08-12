@@ -56,13 +56,14 @@ export async function saveUserPreferences(
 export async function searchUsersByEmail(query: string): Promise<UserSearchResult[]> {
   if (!query.trim()) return []
 
-  const { data, error } = await supabase
-    .from('users')
-    .select('id, name, email')
-    .ilike('email', `%${query.trim()}%`)
-    .limit(10)
-    .order('email')
+  const { data, error } = await (
+    supabase as unknown as {
+      rpc: (fn: string, args?: unknown) => Promise<{ data: unknown; error: unknown }>
+    }
+  ).rpc('search_users_for_sharing', {
+    q: query.trim(),
+  })
 
-  if (error) throw error
-  return data || []
+  if (error) throw error as Error
+  return (data as UserSearchResult[]) || []
 }

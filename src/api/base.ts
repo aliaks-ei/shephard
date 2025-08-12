@@ -37,6 +37,17 @@ export class BaseAPIService<
   TWithItems = TEntity,
   TWithPermission = TEntity & EntityWithPermission,
 > {
+  private async rpcRaw<T>(fn: string, args?: Record<string, unknown>): Promise<T> {
+    const { data, error } = await (
+      supabase as unknown as {
+        rpc: (fn: string, args?: unknown) => Promise<{ data: unknown; error: unknown }>
+      }
+    ).rpc(fn, args)
+
+    if (error) throw error as Error
+    return data as T
+  }
+
   constructor(protected config: EntityConfig<TName>) {}
 
   async create(entity: TInsert): Promise<TEntity> {
@@ -200,53 +211,20 @@ export class BaseAPIService<
    * Sharing Operations
    */
   async getSharedUsers(entityId: string): Promise<SharedUser[]> {
-    if (!this.config.shareTableName) {
-      throw new Error('Sharing is not supported for this entity')
+    // Prefer secure RPCs that encapsulate joins and respect RLS
+    if (this.config.tableName === 'expense_templates') {
+      const data = await this.rpcRaw<SharedUser[]>('get_template_shared_users', {
+        p_template_id: entityId,
+      })
+      return data || []
     }
-    const shareTable = this.config.shareTableName
-    const foreignKeyColumn =
-      this.config.shareTableForeignKeyColumn || `${this.config.tableName.slice(0, -1)}_id`
-
-    // Get entity shares first
-    const { data: shares, error: sharesError } = await supabase
-      .from(shareTable)
-      .select('shared_with_user_id, permission_level, created_at')
-      .eq(foreignKeyColumn as never, entityId as never)
-      .order('created_at', { ascending: false })
-
-    if (sharesError) throw sharesError
-
-    if (!shares || shares.length === 0) {
-      return []
+    if (this.config.tableName === 'plans') {
+      const data = await this.rpcRaw<SharedUser[]>('get_plan_shared_users', {
+        p_plan_id: entityId,
+      })
+      return data || []
     }
-
-    // Get user details for all shared users
-    const userIds = (shares as unknown as { shared_with_user_id: string }[]).map(
-      (share) => share.shared_with_user_id,
-    )
-    const { data: users, error: usersError } = await supabase
-      .from('users')
-      .select('id, name, email')
-      .in('id', userIds)
-
-    if (usersError) throw usersError
-
-    return (
-      shares as unknown as {
-        shared_with_user_id: string
-        permission_level: string
-        created_at?: string
-      }[]
-    ).map((share) => {
-      const user = users?.find((u) => u.id === share.shared_with_user_id)
-      return {
-        user_id: share.shared_with_user_id,
-        user_name: user?.name || '',
-        user_email: user?.email || '',
-        permission_level: share.permission_level,
-        shared_at: share.created_at || '',
-      }
-    })
+    throw new Error('Sharing is not supported for this entity')
   }
 
   async shareEntity(
@@ -258,15 +236,15 @@ export class BaseAPIService<
     if (!this.config.shareTableName) {
       throw new Error('Sharing is not supported for this entity')
     }
-    // Get user ID from email
-    const { data: users, error: usersError } = await supabase
-      .from('users')
-      .select('id, email')
-      .eq('email', userEmail)
-      .maybeSingle()
-
-    if (usersError) throw usersError
-    if (!users) {
+    // Resolve user by email via secure RPC to avoid broad table SELECT
+    const candidates = await this.rpcRaw<{ id: string; email: string; name?: string | null }[]>(
+      'search_users_for_sharing',
+      { q: userEmail },
+    )
+    const list = candidates || []
+    const targetUser =
+      list.find((u) => u.email.toLowerCase() === userEmail.toLowerCase()) || list[0]
+    if (!targetUser) {
       throw new Error(`User not found: ${userEmail}`)
     }
 
@@ -278,7 +256,7 @@ export class BaseAPIService<
       .from(this.config.shareTableName)
       .select('id')
       .eq(entityIdColumn as never, entityId as never)
-      .eq('shared_with_user_id' as never, users.id as never)
+      .eq('shared_with_user_id' as never, targetUser.id as never)
       .maybeSingle()
 
     if (shareCheckError) throw shareCheckError
@@ -289,7 +267,7 @@ export class BaseAPIService<
     // Create new share
     const { error: insertError } = await supabase.from(this.config.shareTableName).insert({
       [entityIdColumn]: entityId,
-      shared_with_user_id: users.id,
+      shared_with_user_id: targetUser.id,
       shared_by_user_id: sharedByUserId,
       permission_level: permission,
     } as never)
