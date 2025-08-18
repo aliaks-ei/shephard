@@ -12,13 +12,27 @@ beforeEach(() => {
   setActivePinia(pinia)
   const categoriesStore = useCategoriesStore()
   categoriesStore.categories = [
-    { id: 'food', name: 'Food', color: '#f00', created_at: '', updated_at: '' },
+    {
+      id: 'food',
+      name: 'Food',
+      color: '#f00',
+      created_at: '',
+      updated_at: '',
+      icon: 'eva-pricetags-outline',
+    },
   ]
   categoriesStore.getCategoryById = vi
     .fn()
     .mockImplementation((categoryId: string) =>
       categoryId === 'food'
-        ? { id: 'food', name: 'Food', color: '#f00', created_at: '', updated_at: '' }
+        ? {
+            id: 'food',
+            name: 'Food',
+            color: '#f00',
+            created_at: '',
+            updated_at: '',
+            icon: 'eva-pricetags-outline',
+          }
         : undefined,
     )
 })

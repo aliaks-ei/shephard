@@ -15,6 +15,7 @@ const mockExpenseCategory: ExpenseCategory = {
   id: 'category-1',
   name: 'Groceries',
   color: '#22c55e',
+  icon: 'eva-pricetags-outline',
   created_at: '2023-01-01T12:00:00Z',
   updated_at: '2023-01-01T12:00:00Z',
 }

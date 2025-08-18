@@ -220,6 +220,7 @@
             :category-id="group.categoryId"
             :category-name="getCategoryName(group.categoryId)"
             :category-color="group.categoryColor"
+            :category-icon="getCategoryIcon(group.categoryId)"
             :items="group.items"
             :currency="planCurrency"
             :default-expanded="allCategoriesExpanded"
@@ -341,6 +342,7 @@
             :category-id="group.categoryId"
             :category-name="getCategoryName(group.categoryId)"
             :category-color="group.categoryColor"
+            :category-icon="getCategoryIcon(group.categoryId)"
             :items="group.items"
             :currency="planCurrency"
             readonly
@@ -637,6 +639,11 @@ const fabActions = computed(() => [
 function getCategoryName(categoryId: string): string {
   const category = categoriesStore.getCategoryById(categoryId)
   return category?.name || 'Unknown Category'
+}
+
+function getCategoryIcon(categoryId: string): string {
+  const category = categoriesStore.getCategoryById(categoryId)
+  return category?.icon ?? ''
 }
 
 async function onTemplateSelected(templateId: string | null): Promise<void> {

@@ -28,7 +28,7 @@
                   :style="{ backgroundColor: category.color }"
                   text-color="white"
                 >
-                  <q-icon name="eva-pricetags-outline" />
+                  <q-icon :name="category.icon" />
                 </q-avatar>
               </q-item-section>
               <q-item-section>
@@ -43,7 +43,7 @@
           <div v-else>
             <div class="text-center q-py-md">
               <q-icon
-                name="eva-pricetags-outline"
+                name="eva-grid-outline"
                 size="2rem"
                 class="text-grey-4 q-mb-sm"
               />
