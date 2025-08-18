@@ -56,6 +56,7 @@ describe('ExpenseTemplateCategory', () => {
       items: mockItems,
       subtotal: 80,
       currency: 'USD',
+      categoryIcon: 'eva-pricetags-outline',
     })
     expect(wrapper.exists()).toBe(true)
   })
@@ -68,6 +69,7 @@ describe('ExpenseTemplateCategory', () => {
       items: mockItems,
       subtotal: 80,
       currency: 'USD',
+      categoryIcon: 'eva-pricetags-outline',
       readonly: true,
       defaultExpanded: false,
     })
@@ -90,6 +92,7 @@ describe('ExpenseTemplateCategory', () => {
       items: mockItems,
       subtotal: 80,
       currency: 'USD',
+      categoryIcon: 'eva-pricetags-outline',
     })
 
     expect(wrapper.props('readonly')).toBe(false)
@@ -104,6 +107,7 @@ describe('ExpenseTemplateCategory', () => {
       items: mockItems,
       subtotal: 80,
       currency: 'USD',
+      categoryIcon: 'eva-pricetags-outline',
     })
 
     const templateItem = wrapper.findComponent({ name: 'ExpenseTemplateItem' })
@@ -121,6 +125,7 @@ describe('ExpenseTemplateCategory', () => {
       items: mockItems,
       subtotal: 80,
       currency: 'USD',
+      categoryIcon: 'eva-pricetags-outline',
     })
 
     const templateItem = wrapper.findComponent({ name: 'ExpenseTemplateItem' })
@@ -137,6 +142,7 @@ describe('ExpenseTemplateCategory', () => {
       items: mockItems,
       subtotal: 80,
       currency: 'USD',
+      categoryIcon: 'eva-pricetags-outline',
     })
 
     const addButton = wrapper.find('button[aria-label="Add Item"], .q-btn:has([class*="plus"])')
@@ -161,6 +167,7 @@ describe('ExpenseTemplateCategory', () => {
       items: [],
       subtotal: 0,
       currency: 'USD',
+      categoryIcon: 'eva-pricetags-outline',
     })
 
     expect(wrapper.props('items')).toEqual([])
@@ -178,6 +185,7 @@ describe('ExpenseTemplateCategory', () => {
         items: mockItems,
         subtotal: 80,
         currency: currency as CurrencyCode,
+        categoryIcon: 'eva-pricetags-outline',
       })
 
       expect(wrapper.props('currency')).toBe(currency)
@@ -193,6 +201,7 @@ describe('ExpenseTemplateCategory', () => {
       subtotal: 80,
       currency: 'USD',
       readonly: true,
+      categoryIcon: 'eva-pricetags-outline',
     })
 
     expect(wrapper.props('readonly')).toBe(true)

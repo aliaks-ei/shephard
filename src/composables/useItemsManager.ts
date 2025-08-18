@@ -50,6 +50,7 @@ export function useItemsManager<T extends BaseItemUI>(config: ItemsConfig<T>) {
           categoryId: item.categoryId,
           categoryName: '',
           categoryColor: item.color,
+          categoryIcon: '',
           items: [],
           subtotal: 0,
         })

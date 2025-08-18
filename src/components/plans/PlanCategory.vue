@@ -8,7 +8,7 @@
       v-model="isExpanded"
       :label="categoryName"
       :caption="groupCaption"
-      icon="eva-pricetags-outline"
+      :icon="categoryIcon"
       expand-icon="eva-chevron-down-outline"
       expanded-icon="eva-chevron-up-outline"
     >
@@ -19,7 +19,7 @@
             size="sm"
             text-color="white"
           >
-            <q-icon name="eva-pricetags-outline" />
+            <q-icon :name="categoryIcon" />
           </q-avatar>
         </q-item-section>
 
@@ -86,6 +86,7 @@ interface Props {
   categoryId: string
   categoryName: string
   categoryColor: string
+  categoryIcon: string
   items: PlanItemUI[]
   currency: CurrencyCode
   readonly?: boolean

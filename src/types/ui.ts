@@ -16,6 +16,7 @@ export type BaseCategoryUI = {
   categoryId: string
   categoryName: string
   categoryColor: string
+  categoryIcon: string
   items: BaseItemUI[]
   subtotal: number
 }
