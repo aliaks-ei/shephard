@@ -116,6 +116,7 @@
               :category-id="group.categoryId"
               :category-name="group.categoryName"
               :category-color="group.categoryColor"
+              :category-icon="group.categoryIcon"
               :items="group.items"
               :subtotal="group.subtotal"
               :currency="templateCurrency"
@@ -249,6 +250,7 @@
             :category-id="group.categoryId"
             :category-name="group.categoryName"
             :category-color="group.categoryColor"
+            :category-icon="group.categoryIcon"
             :items="group.items"
             :subtotal="group.subtotal"
             :currency="templateCurrency"
@@ -485,7 +487,8 @@ const enrichedExpenseCategories = computed(() => {
       acc.push({
         ...group,
         categoryName: category.name,
-        categoryColor: category.color || '#1976d2',
+        categoryColor: category.color,
+        categoryIcon: category.icon,
       })
     }
     return acc

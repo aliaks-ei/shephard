@@ -60,6 +60,7 @@ describe('PlanCategory', () => {
       categoryColor: '#f00',
       items: mockItems,
       currency: 'USD',
+      categoryIcon: 'eva-pricetags-outline',
     })
     expect(wrapper.exists()).toBe(true)
   })
@@ -71,6 +72,7 @@ describe('PlanCategory', () => {
       categoryColor: '#f00',
       items: mockItems,
       currency: 'USD',
+      categoryIcon: 'eva-pricetags-outline',
     })
 
     expect(wrapper.text()).toContain('Food')
@@ -85,6 +87,7 @@ describe('PlanCategory', () => {
       categoryColor: '#f00',
       items: [],
       currency: 'USD',
+      categoryIcon: 'eva-pricetags-outline',
     })
     expect(wrapper.props('readonly')).toBe(false)
     expect(wrapper.props('defaultExpanded')).toBe(false)
@@ -97,6 +100,7 @@ describe('PlanCategory', () => {
       categoryColor: '#f00',
       items: mockItems,
       currency: 'USD',
+      categoryIcon: 'eva-pricetags-outline',
     })
     const addBtn = wrapper.find('.q-btn')
     await addBtn.trigger('click')
@@ -112,6 +116,7 @@ describe('PlanCategory', () => {
       items: mockItems,
       currency: 'USD',
       readonly: true,
+      categoryIcon: 'eva-pricetags-outline',
     })
     expect(wrapper.find('.q-btn').exists()).toBe(false)
   })
@@ -123,6 +128,7 @@ describe('PlanCategory', () => {
       categoryColor: '#f00',
       items: mockItems,
       currency: 'USD',
+      categoryIcon: 'eva-pricetags-outline',
     })
     const item = wrapper.find('.plan-item')
     await item.trigger('click')
@@ -137,6 +143,7 @@ describe('PlanCategory', () => {
         categoryColor: '#f00',
         items: mockItems,
         currency: 'USD',
+        categoryIcon: 'eva-pricetags-outline',
       },
       global: {
         stubs: {
@@ -173,6 +180,7 @@ describe('PlanCategory', () => {
       items: mockItems,
       currency: 'USD',
       defaultExpanded: false,
+      categoryIcon: 'eva-pricetags-outline',
     })
 
     await wrapper.setProps({ defaultExpanded: true })

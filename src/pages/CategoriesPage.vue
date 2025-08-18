@@ -46,7 +46,7 @@
               class="category-card__avatar q-mb-md"
             >
               <q-icon
-                name="eva-pricetags-outline"
+                :name="category.icon"
                 size="24px"
               />
             </q-avatar>
