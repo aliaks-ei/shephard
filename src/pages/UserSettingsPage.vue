@@ -11,7 +11,7 @@
             />
           </div>
           <div class="col">
-            <div class="text-h4 q-mb-xs section-title">
+            <div class="text-h4 q-mb-xs">
               {{ userStore.userProfile?.displayName }}
             </div>
             <div class="text-subtitle1">{{ userStore.userProfile?.email }}</div>
@@ -20,7 +20,7 @@
       </div>
 
       <div class="q-mt-lg q-mb-xl">
-        <h5 class="q-mt-none q-mb-md section-title text-primary">Preferences</h5>
+        <h5 class="q-mt-none q-mb-md text-primary">Preferences</h5>
         <q-separator class="q-mb-md separator" />
 
         <q-list>
@@ -93,7 +93,7 @@
       </div>
 
       <div class="q-mb-xl">
-        <h5 class="q-mt-none q-mb-md section-title text-primary">Account Information</h5>
+        <h5 class="q-mt-none q-mb-md text-primary">Account Information</h5>
         <q-separator class="q-mb-md separator" />
 
         <div class="row q-col-gutter-md q-col-gutter-y-xs">
