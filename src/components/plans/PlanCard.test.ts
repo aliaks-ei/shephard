@@ -256,13 +256,13 @@ describe('PlanCard', () => {
     expect(shownBadgeWrapper.props('hideSharedBadge')).toBe(false)
   })
 
-  it('should handle null total amount', () => {
-    const planWithNullTotal = { ...mockPlan, total: null }
+  it('should handle zero total amount', () => {
+    const planWithZeroTotal = { ...mockPlan, total: 0 }
 
-    const wrapperNull = renderPlanCard({
-      plan: planWithNullTotal,
+    const wrapperZero = renderPlanCard({
+      plan: planWithZeroTotal,
     })
-    expect(wrapperNull.text()).toContain('USD 0.00')
+    expect(wrapperZero.text()).toContain('USD 0.00')
   })
 
   it('should show shared badge when user is owner and plan is shared', () => {

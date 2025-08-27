@@ -552,7 +552,7 @@ describe('useExpenseTemplateItems', () => {
         updated_at: '2024-01-01',
         currency: 'USD',
         duration: 'monthly',
-        total: null,
+        total: 0,
         expense_template_items: [
           {
             id: 'item1',
@@ -605,7 +605,7 @@ describe('useExpenseTemplateItems', () => {
         updated_at: '2024-01-01',
         currency: 'USD',
         duration: 'monthly',
-        total: null,
+        total: 0,
         expense_template_items: [
           {
             id: 'item1',
@@ -635,7 +635,7 @@ describe('useExpenseTemplateItems', () => {
         updated_at: '2024-01-01',
         currency: 'USD',
         duration: 'monthly',
-        total: null,
+        total: 0,
         expense_template_items: [
           {
             id: 'item1',
@@ -679,7 +679,7 @@ describe('useExpenseTemplateItems', () => {
         updated_at: '2024-01-01',
         currency: 'USD',
         duration: 'monthly',
-        total: null,
+        total: 0,
         expense_template_items: [
           {
             id: 'item1',

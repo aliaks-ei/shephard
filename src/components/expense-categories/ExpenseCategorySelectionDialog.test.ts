@@ -113,8 +113,8 @@ describe('ExpenseCategorySelectionDialog', () => {
           name: 'Test Category',
           color: '#000000',
           icon: 'eva-pricetags-outline',
-          created_at: null,
-          updated_at: null,
+          created_at: '',
+          updated_at: '',
         },
       ]
 

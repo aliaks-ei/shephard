@@ -37,31 +37,29 @@ beforeEach(() => {
       icon: 'eva-pricetags-outline',
     },
   ]
-  categoriesStore.getCategoryById = vi
-    .fn()
-    .mockImplementation((categoryId: string) =>
-      categoryId === 'c1'
+  categoriesStore.getCategoryById = vi.fn().mockImplementation((categoryId: string) =>
+    categoryId === 'c1'
+      ? {
+          id: 'c1',
+          name: 'Food',
+          color: '#f00',
+          created_at: '',
+          owner_id: 'u',
+          updated_at: '',
+          icon: 'eva-pricetags-outline',
+        }
+      : categoryId === 'c2'
         ? {
-            id: 'c1',
-            name: 'Food',
-            color: '#f00',
+            id: 'c2',
+            name: 'Rent',
+            color: '#0f0',
             created_at: '',
             owner_id: 'u',
             updated_at: '',
             icon: 'eva-pricetags-outline',
           }
-        : categoryId === 'c2'
-          ? {
-              id: 'c2',
-              name: 'Rent',
-              color: '#0f0',
-              created_at: '',
-              owner_id: 'u',
-              updated_at: '',
-              icon: 'eva-pricetags-outline',
-            }
-          : undefined,
-    )
+        : undefined,
+  )
 })
 
 describe('initialization', () => {
