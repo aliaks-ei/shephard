@@ -1,0 +1,69 @@
+---
+description: Vue.js, Quasar Framework, and UI development guidelines
+globs:
+alwaysApply: true
+---
+
+# Frontend Development Guidelines
+
+## Vue.js Specific
+
+- Always use the Vue Composition API script setup style.
+- Do not use `props.{key}` in component templates. Use `{key}` directly. This is how Vue works
+- When adding smaller components to the template, remember to import them
+- Composable functions should only be called directly in `<script setup>` blocks, or from within other composable functions.
+
+## Template Formatting
+
+- For all tags (both Quasar components and HTML elements) with multiple attributes, place each attribute on a new line with consistent indentation.
+- Always format multi-line tag content with proper spacing:
+  ```vue
+  <any-tag attribute1="value" attribute2="value">
+    Content goes here
+  </any-tag>
+  ```
+- Never use self-closing syntax for content-containing elements (e.g., avoid `>Content</tag>`).
+- Keep closing tags aligned with opening tags when the content spans multiple lines.
+- Apply the same formatting rules to all components, not just specific ones.
+
+## Navigation and Links
+
+- Use Quasar's built-in routing components instead of manual event handlers for navigation.
+- Prefer `q-btn` with the `to` prop over manual `@click="$router.push()"` for navigation links.
+- For main navigation elements, use `q-btn` with appropriate styling (e.g., `flat`, `no-caps`).
+- When styling navigation buttons, use Quasar's text utility classes like `text-white` and `text-h6`.
+- Avoid using custom router-link components when Quasar provides equivalent functionality.
+
+## Styling and Layout
+
+- Use Quasar's built-in utility classes for spacing, margin, and padding instead of custom CSS whenever possible
+- Prefer `q-pa-*` and `q-ma-*` classes over custom styling for consistent spacing
+- Use Quasar's grid system with responsive classes (`col-*`, `col-sm-*`, etc.) for adaptable layouts
+- For background styling, use Quasar's color classes (`bg-*`) and helper classes (`rounded-borders`, etc.)
+
+## Component Design
+
+- Use `withDefaults()` with TypeScript interfaces for component props instead of computed properties for defaults
+- Include proper responsive breakpoints in all user-facing layouts
+- Use Quasar's form components with consistent styling and spacing
+- Avoid logic in templates. Encourage extracting even small logic to the `<script setup>` block
+
+## Code Structure
+
+- Group related functionality in clear sections with descriptive comments
+- When displaying user information, use proper null handling and optional chaining
+- For repeated UI patterns, create dedicated components rather than duplicating code
+- Follow a consistent pattern for data presentation: labels as captions, values as regular text
+
+## Delightful User Experience
+
+- Implement optimistic UI where possible
+- Ensure that all interactive elements can be accessed and controlled with a keyboard
+- Minimise layout shift
+- Implement client-side validation for forms with clear error messages
+- Inform the user when an API request fails
+- Show loading states for asynchronous operation
+
+## Quasar-Specific Guidelines
+
+- Leverage Quasar components, plugins and helpers over custom implementation

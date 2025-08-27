@@ -49,6 +49,14 @@ export type ErrorMessageKey =
   | 'PLANS.SEARCH_USERS_FAILED'
   | 'PLANS.SAVE_ITEMS_FAILED'
   | 'PLANS.DELETE_ITEMS_FAILED'
+  | 'EXPENSES.LOAD_FAILED'
+  | 'EXPENSES.LOAD_SUMMARY_FAILED'
+  | 'EXPENSES.CREATE_FAILED'
+  | 'EXPENSES.UPDATE_FAILED'
+  | 'EXPENSES.DELETE_FAILED'
+  | 'EXPENSES.DUPLICATE_NAME'
+  | 'EXPENSES.LOAD_DATE_RANGE_FAILED'
+  | 'EXPENSES.LOAD_CATEGORY_FAILED'
   | 'UNKNOWN'
 
 interface ErrorMessageConfig {
@@ -328,6 +336,49 @@ export const ERROR_MESSAGES: Record<ErrorMessageKey, ErrorMessageConfig> = {
   },
   'PLANS.DELETE_ITEMS_FAILED': {
     message: "We couldn't remove those items from your plan. Please try again.",
+    notify: true,
+    log: true,
+  },
+
+  // Expenses errors
+  'EXPENSES.LOAD_FAILED': {
+    message: "We couldn't load your expenses. Please refresh or try again later.",
+    notify: true,
+    log: true,
+  },
+  'EXPENSES.LOAD_SUMMARY_FAILED': {
+    message: "We couldn't load the expense summary. Please try again.",
+    notify: true,
+    log: true,
+  },
+  'EXPENSES.CREATE_FAILED': {
+    message: "We couldn't register your expense. Please check your details and try again.",
+    notify: true,
+    log: true,
+  },
+  'EXPENSES.UPDATE_FAILED': {
+    message: "We couldn't save your expense changes. Please try again.",
+    notify: true,
+    log: true,
+  },
+  'EXPENSES.DELETE_FAILED': {
+    message: "We couldn't delete that expense. Please try again.",
+    notify: true,
+    log: true,
+  },
+  'EXPENSES.DUPLICATE_NAME': {
+    message:
+      'You already have an expense with this name in this plan category. Please choose a different name.',
+    notify: true,
+    log: true,
+  },
+  'EXPENSES.LOAD_DATE_RANGE_FAILED': {
+    message: "We couldn't load expenses for the selected date range. Please try again.",
+    notify: true,
+    log: true,
+  },
+  'EXPENSES.LOAD_CATEGORY_FAILED': {
+    message: "We couldn't load expenses for that category. Please try again.",
     notify: true,
     log: true,
   },
