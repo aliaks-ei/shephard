@@ -752,7 +752,6 @@ async function savePlan(): Promise<void> {
         form.value.name,
         form.value.startDate,
         form.value.endDate,
-        'pending',
         totalAmount.value,
         planItemsForSave,
       )
@@ -760,7 +759,6 @@ async function savePlan(): Promise<void> {
         form.value.name,
         form.value.startDate,
         form.value.endDate,
-        currentPlan.value?.status || 'pending',
         totalAmount.value,
         planItemsForSave,
       )

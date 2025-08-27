@@ -39,6 +39,7 @@ export const usePlansStore = defineStore('plans', () => {
   const userId = computed(() => userStore.userProfile?.id)
   const ownedPlans = computed(() => plans.value.filter((p) => p.owner_id === userId.value))
   const sharedPlans = computed(() => plans.value.filter((p) => p.owner_id !== userId.value))
+  const activePlans = computed(() => plans.value.filter((p) => p.status === 'active'))
 
   async function loadPlans() {
     if (!userId.value) return
@@ -71,7 +72,7 @@ export const usePlansStore = defineStore('plans', () => {
     }
   }
 
-  async function addPlan(planData: Omit<PlanInsert, 'owner_id' | 'currency'>) {
+  async function addPlan(planData: Omit<PlanInsert, 'owner_id' | 'currency' | 'status'>) {
     if (!userId.value) return
 
     isLoading.value = true
@@ -139,7 +140,7 @@ export const usePlansStore = defineStore('plans', () => {
     if (!userId.value) return
 
     try {
-      await editPlan(planId, { status: 'cancelled' })
+      await editPlan(planId, { status: 'cancelled' } as PlanUpdate)
     } catch (error) {
       handleError('PLANS.CANCEL_FAILED', error, { planId })
     }
@@ -304,6 +305,7 @@ export const usePlansStore = defineStore('plans', () => {
     userId,
     ownedPlans,
     sharedPlans,
+    activePlans,
     loadPlans,
     loadPlanWithItems,
     addPlan,

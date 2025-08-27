@@ -299,7 +299,6 @@ describe('Plans Store', () => {
   describe('addPlan', () => {
     const planData: Omit<PlanInsert, 'owner_id' | 'currency'> = {
       name: 'New Plan',
-      status: 'active',
       start_date: '2023-01-01',
       end_date: '2023-01-08',
       template_id: 'template-1',

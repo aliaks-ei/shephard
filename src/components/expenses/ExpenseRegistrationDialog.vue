@@ -292,16 +292,14 @@ const form = ref<ExpenseRegistrationForm>({
 })
 
 const planOptions = computed(() => {
-  return plansStore.plans
-    .filter((plan) => plan.status === 'active' || plan.status === 'pending')
-    .map((plan) => ({
-      label: plan.name,
-      value: plan.id,
-      status: plan.status,
-      startDate: plan.start_date,
-      endDate: plan.end_date,
-      currency: plan.currency,
-    }))
+  return plansStore.activePlans.map((plan) => ({
+    label: plan.name,
+    value: plan.id,
+    status: plan.status,
+    startDate: plan.start_date,
+    endDate: plan.end_date,
+    currency: plan.currency,
+  }))
 })
 
 const selectedPlan = computed(() => {

@@ -145,7 +145,6 @@ describe('plans API', () => {
       owner_id: mockUserId,
       start_date: '2024-01-01',
       end_date: '2024-01-31',
-      status: 'active',
       template_id: 'template-123',
     }
 
@@ -221,7 +220,6 @@ describe('plans API', () => {
   describe('updatePlan', () => {
     const mockPlanUpdate: plansApi.PlanUpdate = {
       name: 'Updated Plan',
-      status: 'completed',
     }
 
     it('should update a plan successfully', async () => {

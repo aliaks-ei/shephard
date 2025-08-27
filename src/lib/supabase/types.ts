@@ -269,7 +269,6 @@ export type Database = {
           name: string
           owner_id: string
           start_date: string
-          status: string
           template_id: string
           total?: number | null
           updated_at?: string | null
@@ -282,7 +281,6 @@ export type Database = {
           name?: string
           owner_id?: string
           start_date?: string
-          status?: string
           template_id?: string
           total?: number | null
           updated_at?: string | null
