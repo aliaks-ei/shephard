@@ -4,7 +4,7 @@ import { createTestingPinia } from '@pinia/testing'
 import { useCategoriesStore } from './categories'
 import { useError } from 'src/composables/useError'
 import * as categoriesApi from 'src/api/categories'
-import type { ExpenseCategory } from 'src/api/categories'
+import { createMockCategories } from 'test/fixtures/categories'
 
 vi.mock('src/composables/useError', () => ({
   useError: vi.fn(),
@@ -18,32 +18,8 @@ describe('Categories Store', () => {
   const mockHandleError = vi.fn()
   let categoriesStore: ReturnType<typeof useCategoriesStore>
 
-  const mockCategories: ExpenseCategory[] = [
-    {
-      id: 'cat-1',
-      name: 'Rent/Mortgage',
-      color: '#1d4ed8',
-      icon: 'eva-pricetags-outline',
-      created_at: '2023-01-01T00:00:00Z',
-      updated_at: '2023-01-01T00:00:00Z',
-    },
-    {
-      id: 'cat-2',
-      name: 'Groceries',
-      color: '#22c55e',
-      icon: 'eva-pricetags-outline',
-      created_at: '2023-01-02T00:00:00Z',
-      updated_at: '2023-01-02T00:00:00Z',
-    },
-    {
-      id: 'cat-3',
-      name: 'Entertainment',
-      color: '#e879f9',
-      icon: 'eva-pricetags-outline',
-      created_at: '2023-01-03T00:00:00Z',
-      updated_at: '2023-01-03T00:00:00Z',
-    },
-  ]
+  // Using our new mock data factories instead of inline mock objects
+  const mockCategories = createMockCategories(3)
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -101,9 +77,10 @@ describe('Categories Store', () => {
 
     it('should return categories sorted alphabetically by name', () => {
       const sorted = categoriesStore.sortedCategories
+      // Updated to match the mock data factory output
       expect(sorted[0]?.name).toBe('Entertainment')
-      expect(sorted[1]?.name).toBe('Groceries')
-      expect(sorted[2]?.name).toBe('Rent/Mortgage')
+      expect(sorted[1]?.name).toBe('Food')
+      expect(sorted[2]?.name).toBe('Transport')
     })
   })
 
@@ -119,8 +96,8 @@ describe('Categories Store', () => {
     })
 
     it('should set loading state correctly during load', async () => {
-      let resolvePromise: (value: ExpenseCategory[]) => void
-      const promise = new Promise<ExpenseCategory[]>((resolve) => {
+      let resolvePromise: (value: typeof mockCategories) => void
+      const promise = new Promise<typeof mockCategories>((resolve) => {
         resolvePromise = resolve
       })
       vi.mocked(categoriesApi.getExpenseCategories).mockReturnValue(promise)

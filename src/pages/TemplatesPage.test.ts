@@ -1,13 +1,14 @@
 import { mount } from '@vue/test-utils'
 import { it, expect, vi, beforeEach } from 'vitest'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
-import { createTestingPinia } from '@pinia/testing'
 import { ref, computed } from 'vue'
 import TemplatesPage from './TemplatesPage.vue'
 import { useTemplatesStore } from 'src/stores/templates'
 import { useNotificationStore } from 'src/stores/notification'
 import { useExpenseTemplates } from 'src/composables/useExpenseTemplates'
 import type { ExpenseTemplateWithPermission } from 'src/api'
+import { setupTestingPinia } from 'test/helpers/pinia-mocks'
+import { createMockTemplates } from 'test/fixtures'
 
 installQuasarPlugin()
 
@@ -105,47 +106,20 @@ const EmptyStateStub = {
   emits: ['clear-search', 'create'],
 }
 
-const mockOwnedTemplates: ExpenseTemplateWithPermission[] = [
-  {
-    id: 'template-1',
-    name: 'Grocery Shopping',
-    currency: 'USD',
-    total: 15000,
-    duration: '7 days',
-    owner_id: 'user-1',
-    created_at: '2023-01-01T00:00:00Z',
-    updated_at: '2023-01-01T00:00:00Z',
-    permission_level: 'owner',
-    is_shared: false,
-  },
-  {
-    id: 'template-2',
-    name: 'Monthly Utilities',
-    currency: 'USD',
-    total: 25000,
-    duration: '30 days',
-    owner_id: 'user-1',
-    created_at: '2023-01-02T00:00:00Z',
-    updated_at: '2023-01-02T00:00:00Z',
-    permission_level: 'owner',
-    is_shared: true,
-  },
-]
+const mockOwnedTemplates = createMockTemplates(2).map((template, index) => ({
+  ...template,
+  permission_level: 'owner' as const,
+  is_shared: index === 1,
+}))
 
-const mockSharedTemplates: ExpenseTemplateWithPermission[] = [
-  {
-    id: 'template-3',
-    name: 'Team Lunch',
-    currency: 'USD',
-    total: 8000,
-    duration: '7 days',
-    owner_id: 'user-2',
-    created_at: '2023-01-03T00:00:00Z',
-    updated_at: '2023-01-03T00:00:00Z',
-    permission_level: 'edit',
-    is_shared: true,
-  },
-]
+const mockSharedTemplates = createMockTemplates(1).map((template) => ({
+  ...template,
+  id: 'template-3',
+  name: 'Team Lunch',
+  owner_id: 'user-2',
+  permission_level: 'edit' as const,
+  is_shared: true,
+}))
 
 function createWrapper(
   options: {
@@ -197,14 +171,10 @@ function createWrapper(
 
   vi.mocked(useExpenseTemplates).mockReturnValue(mockExpenseTemplatesReturn)
 
+  setupTestingPinia({ stubActions: true })
+
   const wrapper = mount(TemplatesPage, {
     global: {
-      plugins: [
-        createTestingPinia({
-          createSpy: vi.fn,
-          stubActions: true,
-        }),
-      ],
       stubs: {
         ExpenseTemplatesGroup: ExpenseTemplatesGroupStub,
         ShareExpenseTemplateDialog: ShareExpenseTemplateDialogStub,

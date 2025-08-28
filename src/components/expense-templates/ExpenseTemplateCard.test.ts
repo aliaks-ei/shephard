@@ -1,11 +1,11 @@
 import { mount } from '@vue/test-utils'
-import { createTestingPinia } from '@pinia/testing'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { ComponentProps } from 'vue-component-type-helpers'
 
 import ExpenseTemplateCard from './ExpenseTemplateCard.vue'
-import type { ExpenseTemplateWithPermission } from 'src/api'
+import { setupTestingPinia } from 'test/helpers/pinia-mocks'
+import { createMockTemplateWithPermission } from 'test/fixtures'
 
 vi.mock('src/utils/currency', () => ({
   formatCurrency: vi.fn((amount: number, currency: string) => `${currency} ${amount.toFixed(2)}`),
@@ -21,29 +21,19 @@ installQuasarPlugin()
 
 type ExpenseTemplateCardProps = ComponentProps<typeof ExpenseTemplateCard>
 
-const mockTemplate: ExpenseTemplateWithPermission = {
-  id: 'template-1',
+const mockTemplate = createMockTemplateWithPermission({
   name: 'Test Template',
-  owner_id: 'user-1',
-  currency: 'USD',
   duration: '1 hour',
-  total: 100,
-  created_at: '2023-01-01T00:00:00Z',
-  updated_at: '2023-01-01T00:00:00Z',
   permission_level: 'edit',
   is_shared: true,
-}
+})
 
 const renderExpenseTemplateCard = (props: ExpenseTemplateCardProps) => {
+  setupTestingPinia({ stubActions: true })
+
   return mount(ExpenseTemplateCard, {
     props,
     global: {
-      plugins: [
-        createTestingPinia({
-          createSpy: vi.fn,
-          stubActions: true,
-        }),
-      ],
       stubs: {
         ExpenseTemplateCardMenu: {
           template: '<div data-testid="expense-template-card-menu" />',

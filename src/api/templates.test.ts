@@ -14,13 +14,12 @@ import {
   shareTemplate,
   unshareTemplate,
   updateSharePermission,
-  type ExpenseTemplate,
   type ExpenseTemplateInsert,
   type ExpenseTemplateUpdate,
   type ExpenseTemplateWithItems,
-  type ExpenseTemplateItem,
   type ExpenseTemplateItemInsert,
 } from './templates'
+import { createMockTemplate, createMockTemplateItem } from 'test/fixtures'
 
 vi.mock('src/utils/database', () => ({
   isDuplicateNameError: vi.fn(),
@@ -35,26 +34,20 @@ const createPostgrestError = (message: string, code = '23505'): PostgrestError =
     code,
   }) as PostgrestError
 
-const mockExpenseTemplate: ExpenseTemplate = {
-  id: 'template-1',
-  name: 'Test Template',
-  owner_id: 'user-1',
+const mockExpenseTemplate = createMockTemplate({
   currency: 'EUR',
   duration: 'monthly',
-  total: 100,
   created_at: '2023-01-01T12:00:00Z',
   updated_at: '2023-01-01T12:00:00Z',
-}
+})
 
-const mockExpenseTemplateItem: ExpenseTemplateItem = {
-  id: 'item-1',
-  template_id: 'template-1',
+const mockExpenseTemplateItem = createMockTemplateItem({
   name: 'Test Item',
   category_id: 'category-1',
   amount: 100,
   created_at: '2023-01-01T12:00:00Z',
   updated_at: '2023-01-01T12:00:00Z',
-}
+})
 
 const mockSupabase = vi.mocked(supabase, true)
 const mockFrom = vi.fn()

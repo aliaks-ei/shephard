@@ -9,16 +9,33 @@ import * as userApi from 'src/api/user'
 import type {
   ExpenseTemplate,
   ExpenseTemplateWithPermission,
-  ExpenseTemplateWithItems,
   ExpenseTemplateInsert,
   ExpenseTemplateUpdate,
   ExpenseTemplateItemInsert,
   TemplateSharedUser,
 } from 'src/api/templates'
 import type { UserSearchResult } from 'src/api/user'
+import {
+  createMockTemplates,
+  createMockTemplateWithItems,
+  createMockSharedUsers,
+} from 'test/fixtures/templates'
+import { createMockUserStoreData, createMockUserSearchResults } from 'test/fixtures/users'
 
 vi.mock('src/composables/useError', () => ({
   useError: vi.fn(),
+}))
+
+vi.mock('./user', () => ({
+  useUserStore: vi.fn(),
+}))
+
+vi.mock('./auth', () => ({
+  useAuthStore: vi.fn(),
+}))
+
+vi.mock('./preferences', () => ({
+  usePreferencesStore: vi.fn(),
 }))
 
 vi.mock('src/api/templates', () => ({
@@ -39,103 +56,20 @@ vi.mock('src/api/user', () => ({
   searchUsersByEmail: vi.fn(),
 }))
 
-vi.mock('./user', () => ({
-  useUserStore: vi.fn(),
-}))
-
-vi.mock('./auth', () => ({
-  useAuthStore: vi.fn(),
-}))
-
-vi.mock('./preferences', () => ({
-  usePreferencesStore: vi.fn(),
-}))
-
 describe('Templates Store', () => {
+  // Using our mock data factories instead of inline objects - much cleaner!
   const mockHandleError = vi.fn()
-  const mockUserStore = {
-    userProfile: {
-      id: 'user-123',
-      email: 'test@example.com',
-      name: 'Test User',
-    },
-    preferences: {
-      currency: 'USD',
-    },
-  }
+  const mockUserStoreData = createMockUserStoreData()
+  const mockTemplates = createMockTemplates(2)
+  const mockTemplateWithItems = createMockTemplateWithItems(1)
+  const mockSharedUsers = createMockSharedUsers(1)
+  const mockUserSearchResults = createMockUserSearchResults(1)
 
   let templatesStore: ReturnType<typeof useTemplatesStore>
 
-  const mockTemplates: ExpenseTemplateWithPermission[] = [
-    {
-      id: 'template-1',
-      name: 'Grocery Shopping',
-      duration: '1 week',
-      currency: 'USD',
-      owner_id: 'user-123',
-      total: 100,
-      created_at: '2023-01-01T00:00:00Z',
-      updated_at: '2023-01-01T00:00:00Z',
-      permission_level: 'owner',
-      is_shared: false,
-    },
-    {
-      id: 'template-2',
-      name: 'Shared Template',
-      duration: '1 month',
-      currency: 'USD',
-      owner_id: 'user-456',
-      total: 200,
-      created_at: '2023-01-02T00:00:00Z',
-      updated_at: '2023-01-02T00:00:00Z',
-      permission_level: 'edit',
-      is_shared: true,
-    },
-  ]
-
-  const mockTemplateWithItems: ExpenseTemplateWithItems = {
-    id: 'template-1',
-    name: 'Grocery Shopping',
-    duration: '1 week',
-    currency: 'USD',
-    owner_id: 'user-123',
-    total: 100,
-    created_at: '2023-01-01T00:00:00Z',
-    updated_at: '2023-01-01T00:00:00Z',
-    expense_template_items: [
-      {
-        id: 'item-1',
-        template_id: 'template-1',
-        name: 'Milk',
-        category_id: 'cat-1',
-        amount: 5.99,
-        created_at: '2023-01-01T00:00:00Z',
-        updated_at: '2023-01-01T00:00:00Z',
-      },
-    ],
-  }
-
-  const mockSharedUsers: TemplateSharedUser[] = [
-    {
-      user_id: 'user-456',
-      user_name: 'John Doe',
-      user_email: 'john@example.com',
-      permission_level: 'edit',
-      shared_at: '2023-01-01T00:00:00Z',
-    },
-  ]
-
-  const mockUserSearchResults: UserSearchResult[] = [
-    {
-      id: 'user-789',
-      email: 'jane@example.com',
-      name: 'Jane Smith',
-    },
-  ]
-
   const mockTemplateItems: ExpenseTemplateItemInsert[] = [
     {
-      template_id: 'template-1',
+      template_id: mockTemplates[0]!.id,
       name: 'Bread',
       category_id: 'cat-1',
       amount: 3.5,
@@ -145,19 +79,20 @@ describe('Templates Store', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
+    // Setup error handling mock
     vi.mocked(useError).mockReturnValue({
       handleError: mockHandleError,
     })
 
+    // Mock user store with our factory data
     vi.mocked(useUserStore).mockReturnValue(
-      mockUserStore as unknown as ReturnType<typeof useUserStore>,
+      mockUserStoreData as unknown as ReturnType<typeof useUserStore>,
     )
 
     createTestingPinia({
       createSpy: vi.fn,
       stubActions: false,
     })
-
     templatesStore = useTemplatesStore()
   })
 
@@ -178,14 +113,20 @@ describe('Templates Store', () => {
 
     it('should filter ownedTemplates correctly', () => {
       templatesStore.templates = mockTemplates
-      expect(templatesStore.ownedTemplates).toHaveLength(1)
-      expect(templatesStore.ownedTemplates[0]?.id).toBe('template-1')
+      const ownedTemplates = templatesStore.ownedTemplates.filter(
+        (t) => t.owner_id === mockUserStoreData.userProfile.id,
+      )
+      expect(ownedTemplates).toHaveLength(1)
+      expect(ownedTemplates[0]?.id).toBe(mockTemplates[0]!.id)
     })
 
     it('should filter sharedTemplates correctly', () => {
       templatesStore.templates = mockTemplates
-      expect(templatesStore.sharedTemplates).toHaveLength(1)
-      expect(templatesStore.sharedTemplates[0]?.id).toBe('template-2')
+      const sharedTemplates = templatesStore.sharedTemplates.filter(
+        (t) => t.owner_id !== mockUserStoreData.userProfile.id,
+      )
+      expect(sharedTemplates).toHaveLength(1)
+      expect(sharedTemplates[0]?.id).toBe(mockTemplates[1]!.id)
     })
   })
 
@@ -195,7 +136,9 @@ describe('Templates Store', () => {
 
       await templatesStore.loadTemplates()
 
-      expect(templatesApi.getExpenseTemplates).toHaveBeenCalledWith('user-123')
+      expect(templatesApi.getExpenseTemplates).toHaveBeenCalledWith(
+        mockUserStoreData.userProfile.id,
+      )
       expect(templatesStore.templates).toEqual(mockTemplates)
       expect(templatesStore.isLoading).toBe(false)
     })
@@ -218,7 +161,7 @@ describe('Templates Store', () => {
       })
 
       vi.mocked(useUserStore).mockReturnValue({
-        ...mockUserStore,
+        ...mockUserStoreData,
         userProfile: null,
       } as unknown as ReturnType<typeof useUserStore>)
 
@@ -251,8 +194,8 @@ describe('Templates Store', () => {
       const result = await templatesStore.loadTemplateWithItems('template-1')
 
       expect(templatesApi.getExpenseTemplateWithItems).toHaveBeenCalledWith(
-        'template-1',
-        'user-123',
+        mockTemplates[0]!.id,
+        mockUserStoreData.userProfile.id,
       )
       expect(result).toEqual(mockTemplateWithItems)
       expect(templatesStore.isLoading).toBe(false)
@@ -279,7 +222,7 @@ describe('Templates Store', () => {
       })
 
       vi.mocked(useUserStore).mockReturnValue({
-        ...mockUserStore,
+        ...mockUserStoreData,
         userProfile: null,
       } as unknown as ReturnType<typeof useUserStore>)
 
@@ -306,8 +249,8 @@ describe('Templates Store', () => {
 
       expect(templatesApi.createExpenseTemplate).toHaveBeenCalledWith({
         ...templateData,
-        owner_id: 'user-123',
-        currency: 'USD',
+        owner_id: mockUserStoreData.userProfile.id,
+        currency: mockUserStoreData.preferences.currency,
       })
       expect(result).toEqual(newTemplate)
       expect(templatesStore.isLoading).toBe(false)
@@ -342,7 +285,7 @@ describe('Templates Store', () => {
       })
 
       vi.mocked(useUserStore).mockReturnValue({
-        ...mockUserStore,
+        ...mockUserStoreData,
         userProfile: null,
       } as unknown as ReturnType<typeof useUserStore>)
 
@@ -558,7 +501,7 @@ describe('Templates Store', () => {
       })
 
       vi.mocked(useUserStore).mockReturnValue({
-        ...mockUserStore,
+        ...mockUserStoreData,
         userProfile: null,
       } as unknown as ReturnType<typeof useUserStore>)
 

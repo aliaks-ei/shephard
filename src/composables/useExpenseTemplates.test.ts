@@ -1,12 +1,12 @@
 import { nextTick, ref } from 'vue'
-import { createTestingPinia, type TestingPinia } from '@pinia/testing'
-import { setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 
 import { useExpenseTemplates } from './useExpenseTemplates'
 import { useTemplatesStore } from 'src/stores/templates'
 import type { ExpenseTemplateWithPermission } from 'src/api'
+import { setupTestingPinia } from 'test/helpers/pinia-mocks'
+import { createMockTemplates } from 'test/fixtures'
 
 installQuasarPlugin()
 
@@ -58,54 +58,14 @@ vi.mock('src/composables/useError', () => ({
   }),
 }))
 
-let pinia: TestingPinia
-
-const mockTemplates: ExpenseTemplateWithPermission[] = [
-  {
-    id: 'template1',
-    name: 'Grocery Shopping',
-    currency: 'USD',
-    duration: 'monthly',
-    total: 100,
-    owner_id: 'user1',
-    created_at: '2024-01-01',
-    updated_at: '2024-01-01',
-    permission_level: 'edit',
-    is_shared: false,
-  },
-  {
-    id: 'template2',
-    name: 'Business Travel',
-    currency: 'USD',
-    duration: 'weekly',
-    total: 250,
-    owner_id: 'user1',
-    created_at: '2024-01-02',
-    updated_at: '2024-01-02',
-    permission_level: 'edit',
-    is_shared: false,
-  },
-  {
-    id: 'template3',
-    name: 'Shared Template',
-    currency: 'USD',
-    duration: 'daily',
-    total: 50,
-    owner_id: 'user2',
-    created_at: '2024-01-03',
-    updated_at: '2024-01-03',
-    permission_level: 'view',
-    is_shared: true,
-  },
-]
+const mockTemplates = createMockTemplates(3)
 
 describe('useExpenseTemplates', () => {
   let templatesStore: ReturnType<typeof useTemplatesStore>
 
   beforeEach(() => {
     vi.clearAllMocks()
-    pinia = createTestingPinia({ createSpy: vi.fn, stubActions: false })
-    setActivePinia(pinia)
+    setupTestingPinia({ stubActions: false })
 
     templatesStore = useTemplatesStore()
 
@@ -114,9 +74,9 @@ describe('useExpenseTemplates', () => {
     // @ts-expect-error - Testing Pinia
     templatesStore.isLoading = ref(false)
     // @ts-expect-error - Testing Pinia
-    templatesStore.ownedTemplates = ref(mockTemplates.filter((t) => t.owner_id === 'user1'))
+    templatesStore.ownedTemplates = ref(mockTemplates.filter((t) => t.owner_id === 'user-1'))
     // @ts-expect-error - Testing Pinia
-    templatesStore.sharedTemplates = ref(mockTemplates.filter((t) => t.owner_id !== 'user1'))
+    templatesStore.sharedTemplates = ref(mockTemplates.filter((t) => t.owner_id !== 'user-1'))
   })
 
   it('should initialize with default state', () => {
@@ -164,7 +124,7 @@ describe('useExpenseTemplates', () => {
       const composable = useExpenseTemplates()
 
       const expectedTemplates = mockTemplates
-        .filter((t) => t.owner_id === 'user1')
+        .filter((t) => t.owner_id === 'user-1')
         .sort((a, b) => a.name.localeCompare(b.name))
 
       expect(composable.filteredAndSortedOwnedItems.value).toEqual(expectedTemplates)
@@ -174,7 +134,7 @@ describe('useExpenseTemplates', () => {
       const composable = useExpenseTemplates()
 
       expect(composable.filteredAndSortedSharedItems.value).toEqual(
-        mockTemplates.filter((t) => t.owner_id !== 'user1'),
+        mockTemplates.filter((t) => t.owner_id !== 'user-1'),
       )
     })
 
@@ -277,18 +237,7 @@ describe('useExpenseTemplates', () => {
 
       expect(composable.hasItems.value).toBe(false)
 
-      const newTemplate: ExpenseTemplateWithPermission = {
-        id: 'new-template',
-        name: 'New Template',
-        currency: 'USD',
-        duration: 'monthly',
-        total: 75,
-        owner_id: 'user1',
-        created_at: '2024-01-04',
-        updated_at: '2024-01-04',
-        permission_level: 'edit',
-        is_shared: false,
-      }
+      const newTemplate = createMockTemplates(1)[0]
 
       // @ts-expect-error - Testing Pinia
       templatesStore.ownedTemplates = ref([newTemplate])

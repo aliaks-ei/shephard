@@ -425,7 +425,9 @@ function createWrapper(
     // @ts-expect-error - Testing Pinia
     categoriesStore.categories = ref(categories)
     categoriesStore.getCategoryById = vi.fn(
-      (id: string) => categories.find((cat) => cat.id === id) || undefined,
+      (id: string) =>
+        categories.map((cat) => ({ ...cat, templates: [] })).find((cat) => cat.id === id) ||
+        undefined,
     )
   }
 

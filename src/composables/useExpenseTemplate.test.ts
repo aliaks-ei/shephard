@@ -1,11 +1,31 @@
-import { createTestingPinia, type TestingPinia } from '@pinia/testing'
-import { setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref, nextTick } from 'vue'
 import { useExpenseTemplate } from './useExpenseTemplate'
 import { useUserStore } from 'src/stores/user'
 import { useTemplatesStore } from 'src/stores/templates'
 import type { ExpenseTemplateWithItems } from 'src/api'
+import { setupTestingPinia } from 'test/helpers/pinia-mocks'
+
+// Simple inline helpers for this test
+const createMockUserProfile = (id: string) => ({
+  id,
+  email: `user-${id}@example.com`,
+  displayName: `User ${id}`,
+  avatarUrl: undefined,
+  nameInitial: 'U',
+  authProvider: 'email' as const,
+  createdAt: '2024-01-01',
+  updatedAt: '2024-01-01',
+  isEmailVerified: true,
+  formattedCreatedAt: 'Jan 1, 2024',
+  preferences: createMockPreferences(),
+})
+
+const createMockPreferences = (currency = 'USD') => ({
+  currency,
+  darkMode: false,
+  pushNotificationsEnabled: true,
+})
 
 const mockRoute = ref<{
   name: string
@@ -19,31 +39,8 @@ vi.mock('vue-router', () => ({
   useRoute: () => mockRoute.value,
 }))
 
-let pinia: TestingPinia
-
-const createMockUserProfile = (id: string) => ({
-  id,
-  email: `user-${id}@example.com`,
-  displayName: `User ${id}`,
-  avatarUrl: undefined,
-  nameInitial: 'U',
-  createdAt: '2024-01-01',
-  updatedAt: '2024-01-01',
-  isEmailVerified: true,
-  authProvider: 'email' as const,
-  formattedCreatedAt: 'Jan 1, 2024',
-  preferences: createMockPreferences(),
-})
-
-const createMockPreferences = (currency = 'USD') => ({
-  darkMode: false,
-  pushNotificationsEnabled: true,
-  currency,
-})
-
 beforeEach(() => {
-  pinia = createTestingPinia({ createSpy: vi.fn })
-  setActivePinia(pinia)
+  setupTestingPinia()
   mockRoute.value = {
     name: 'template',
     params: { id: 'template-123' },

@@ -1,57 +1,18 @@
 import { nextTick } from 'vue'
-import { createTestingPinia, type TestingPinia } from '@pinia/testing'
-import { setActivePinia } from 'pinia'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 import { useExpenseTemplateItems } from './useExpenseTemplateItems'
-import { useCategoriesStore } from 'src/stores/categories'
 import type { ExpenseTemplateWithItems } from 'src/api'
 import type { ExpenseTemplateItemUI } from 'src/types'
-
-let pinia: TestingPinia
+import { setupTestingPinia, setupMockCategoriesStore } from 'test/helpers/pinia-mocks'
+import { createMockCategories, createMockTemplateWithItems } from 'test/fixtures'
 
 describe('useExpenseTemplateItems', () => {
-  let categoriesStore: ReturnType<typeof useCategoriesStore>
-
-  const mockCategories = [
-    {
-      id: 'cat1',
-      name: 'Food',
-      color: '#FF5722',
-      icon: 'eva-pricetags-outline',
-      owner_id: 'user1',
-      created_at: '2024-01-01',
-      updated_at: '2024-01-01',
-    },
-    {
-      id: 'cat2',
-      name: 'Transport',
-      color: '#2196F3',
-      icon: 'eva-pricetags-outline',
-      owner_id: 'user1',
-      created_at: '2024-01-01',
-      updated_at: '2024-01-01',
-    },
-    {
-      id: 'cat3',
-      name: 'Entertainment',
-      color: '#4CAF50',
-      icon: 'eva-pricetags-outline',
-      owner_id: 'user1',
-      created_at: '2024-01-01',
-      updated_at: '2024-01-01',
-    },
-  ]
+  const mockCategories = createMockCategories(3)
 
   beforeEach(() => {
-    pinia = createTestingPinia({ createSpy: vi.fn })
-    setActivePinia(pinia)
-    categoriesStore = useCategoriesStore()
-
-    // Mock getCategoryById method
-    categoriesStore.getCategoryById = vi.fn((id: string) =>
-      mockCategories.find((cat) => cat.id === id),
-    )
+    setupTestingPinia()
+    setupMockCategoriesStore(mockCategories)
   })
 
   it('should initialize with empty state', () => {
@@ -68,16 +29,17 @@ describe('useExpenseTemplateItems', () => {
   describe('addExpenseTemplateItem', () => {
     it('should add a new expense template item', () => {
       const composable = useExpenseTemplateItems()
+      const category = mockCategories[0]!
 
-      composable.addExpenseTemplateItem('cat1', '#FF5722')
+      composable.addExpenseTemplateItem(category.id, category.color)
 
       expect(composable.expenseTemplateItems.value).toHaveLength(1)
       const addedItem = composable.expenseTemplateItems.value[0]
       expect(addedItem).toMatchObject({
         name: '',
-        categoryId: 'cat1',
+        categoryId: category.id,
         amount: 0,
-        color: '#FF5722',
+        color: category.color,
       })
       expect(addedItem?.id).toMatch(/^temp_/)
     })
@@ -85,12 +47,12 @@ describe('useExpenseTemplateItems', () => {
     it('should add multiple items', () => {
       const composable = useExpenseTemplateItems()
 
-      composable.addExpenseTemplateItem('cat1', '#FF5722')
-      composable.addExpenseTemplateItem('cat2', '#2196F3')
+      composable.addExpenseTemplateItem(mockCategories[0]!.id, mockCategories[0]!.color)
+      composable.addExpenseTemplateItem(mockCategories[1]!.id, mockCategories[1]!.color)
 
       expect(composable.expenseTemplateItems.value).toHaveLength(2)
-      expect(composable.expenseTemplateItems.value[0]?.categoryId).toBe('cat1')
-      expect(composable.expenseTemplateItems.value[1]?.categoryId).toBe('cat2')
+      expect(composable.expenseTemplateItems.value[0]?.categoryId).toBe(mockCategories[0]!.id)
+      expect(composable.expenseTemplateItems.value[1]?.categoryId).toBe(mockCategories[1]!.id)
     })
   })
 
@@ -543,22 +505,13 @@ describe('useExpenseTemplateItems', () => {
   describe('loadExpenseTemplateItems', () => {
     it('should load items from template data', () => {
       const composable = useExpenseTemplateItems()
-
-      const mockTemplate: ExpenseTemplateWithItems = {
-        id: 'template1',
-        name: 'Test Template',
-        owner_id: 'user1',
-        created_at: '2024-01-01',
-        updated_at: '2024-01-01',
-        currency: 'USD',
-        duration: 'monthly',
-        total: 0,
+      const mockTemplate = createMockTemplateWithItems(2, {
         expense_template_items: [
           {
             id: 'item1',
             template_id: 'template1',
             name: 'Lunch',
-            category_id: 'cat1',
+            category_id: mockCategories[0]!.id,
             amount: 12.5,
             created_at: '2024-01-01',
             updated_at: '2024-01-01',
@@ -567,13 +520,13 @@ describe('useExpenseTemplateItems', () => {
             id: 'item2',
             template_id: 'template1',
             name: 'Bus ticket',
-            category_id: 'cat2',
+            category_id: mockCategories[1]!.id,
             amount: 3.5,
             created_at: '2024-01-01',
             updated_at: '2024-01-01',
           },
         ],
-      }
+      })
 
       composable.loadExpenseTemplateItems(mockTemplate)
 
@@ -581,16 +534,16 @@ describe('useExpenseTemplateItems', () => {
       expect(composable.expenseTemplateItems.value[0]).toMatchObject({
         id: 'item1',
         name: 'Lunch',
-        categoryId: 'cat1',
+        categoryId: mockCategories[0]!.id,
         amount: 12.5,
-        color: '#FF5722',
+        color: mockCategories[0]!.color,
       })
       expect(composable.expenseTemplateItems.value[1]).toMatchObject({
         id: 'item2',
         name: 'Bus ticket',
-        categoryId: 'cat2',
+        categoryId: mockCategories[1]!.id,
         amount: 3.5,
-        color: '#2196F3',
+        color: mockCategories[1]!.color,
       })
     })
 

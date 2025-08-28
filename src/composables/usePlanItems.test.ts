@@ -19,6 +19,7 @@ beforeEach(() => {
       created_at: '',
       updated_at: '',
       icon: 'eva-pricetags-outline',
+      templates: [],
     },
   ]
   categoriesStore.getCategoryById = vi.fn().mockImplementation((categoryId: string) =>
