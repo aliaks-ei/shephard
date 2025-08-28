@@ -40,7 +40,7 @@
 
       <q-card-section class="q-pt-none">
         <q-list>
-          <ExpenseTemplateItem
+          <TemplateItem
             v-for="(item, index) in items"
             :key="item.id"
             :ref="(el) => setItemRef(el, index)"
@@ -71,14 +71,14 @@
 
 <script setup lang="ts">
 import { ref, computed, nextTick, watch } from 'vue'
-import ExpenseTemplateItem from './ExpenseTemplateItem.vue'
+import TemplateItem from './TemplateItem.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
-import type { ExpenseTemplateItemUI } from 'src/types'
+import type { TemplateItemUI } from 'src/types'
 
-const itemRefs = ref<InstanceType<typeof ExpenseTemplateItem>[]>([])
+const itemRefs = ref<InstanceType<typeof TemplateItem>[]>([])
 
 const emit = defineEmits<{
-  (e: 'update-item', itemId: string, item: ExpenseTemplateItemUI): void
+  (e: 'update-item', itemId: string, item: TemplateItemUI): void
   (e: 'remove-item', itemId: string): void
   (e: 'add-item', categoryId: string, categoryColor: string): void
 }>()
@@ -88,7 +88,7 @@ interface Props {
   categoryName: string
   categoryColor: string
   categoryIcon: string
-  items: ExpenseTemplateItemUI[]
+  items: TemplateItemUI[]
   subtotal: number
   currency: CurrencyCode
   readonly?: boolean
@@ -111,14 +111,14 @@ const groupCaption = computed(() => {
 
 function setItemRef(el: unknown, index: number): void {
   if (el && typeof el === 'object' && 'focusNameInput' in el) {
-    const component = el as InstanceType<typeof ExpenseTemplateItem>
+    const component = el as InstanceType<typeof TemplateItem>
     if (typeof component.focusNameInput === 'function') {
       itemRefs.value[index] = component
     }
   }
 }
 
-function handleUpdateItem(itemId: string, updatedItem: ExpenseTemplateItemUI): void {
+function handleUpdateItem(itemId: string, updatedItem: TemplateItemUI): void {
   emit('update-item', itemId, updatedItem)
 }
 

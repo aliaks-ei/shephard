@@ -11,7 +11,7 @@ vi.mock('src/composables/useError', () => ({
 }))
 
 vi.mock('src/api/categories', () => ({
-  getExpenseCategories: vi.fn(),
+  getCategories: vi.fn(),
 }))
 
 describe('Categories Store', () => {
@@ -86,11 +86,11 @@ describe('Categories Store', () => {
 
   describe('loadCategories', () => {
     it('should successfully load predefined categories', async () => {
-      vi.mocked(categoriesApi.getExpenseCategories).mockResolvedValue(mockCategories)
+      vi.mocked(categoriesApi.getCategories).mockResolvedValue(mockCategories)
 
       await categoriesStore.loadCategories()
 
-      expect(categoriesApi.getExpenseCategories).toHaveBeenCalledWith()
+      expect(categoriesApi.getCategories).toHaveBeenCalledWith()
       expect(categoriesStore.categories).toEqual(mockCategories)
       expect(categoriesStore.isLoading).toBe(false)
     })
@@ -100,7 +100,7 @@ describe('Categories Store', () => {
       const promise = new Promise<typeof mockCategories>((resolve) => {
         resolvePromise = resolve
       })
-      vi.mocked(categoriesApi.getExpenseCategories).mockReturnValue(promise)
+      vi.mocked(categoriesApi.getCategories).mockReturnValue(promise)
 
       const loadPromise = categoriesStore.loadCategories()
       expect(categoriesStore.isLoading).toBe(true)
@@ -113,7 +113,7 @@ describe('Categories Store', () => {
 
     it('should handle load error and call handleError', async () => {
       const error = new Error('Load failed')
-      vi.mocked(categoriesApi.getExpenseCategories).mockRejectedValue(error)
+      vi.mocked(categoriesApi.getCategories).mockRejectedValue(error)
 
       await categoriesStore.loadCategories()
 
@@ -154,7 +154,7 @@ describe('Categories Store', () => {
 
   describe('Store Integration', () => {
     it('should work correctly with load operation', async () => {
-      vi.mocked(categoriesApi.getExpenseCategories).mockResolvedValue(mockCategories)
+      vi.mocked(categoriesApi.getCategories).mockResolvedValue(mockCategories)
 
       await categoriesStore.loadCategories()
       expect(categoriesStore.categoryCount).toBe(3)

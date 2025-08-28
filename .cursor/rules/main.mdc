@@ -10,14 +10,14 @@ This application is a smart expenses wallet built with modern web technologies. 
 
 ## Domain-Specific Business Logic
 
-### Expense Categories
+### Categories
 
-- Implement hierarchical expense categories with parent-child relationships
+- Implement hierarchical categories with parent-child relationships
 - Support custom user-defined categories alongside system defaults
 - Maintain category usage statistics for intelligent suggestions
 - Ensure category deletion handles existing expense reassignment properly
 
-### Expense Templates
+### Templates
 
 - Templates should support both fixed amounts and amount ranges
 - Include smart defaults based on historical spending patterns
@@ -49,7 +49,7 @@ This application is a smart expenses wallet built with modern web technologies. 
 
 ### User Onboarding
 
-- Guide new users through expense category setup
+- Guide new users through category setup
 - Provide sample templates and expenses for learning
 - Implement progressive disclosure of advanced features
 - Track onboarding completion for feature analytics

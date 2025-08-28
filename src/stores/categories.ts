@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 
-import { getExpenseCategoriesWithStats, type ExpenseCategoryWithStats } from 'src/api'
+import { getCategoriesWithStats, type CategoryWithStats } from 'src/api'
 import { useError } from 'src/composables/useError'
 import { useUserStore } from 'src/stores/user'
 
@@ -9,7 +9,7 @@ export const useCategoriesStore = defineStore('categories', () => {
   const { handleError } = useError()
   const userStore = useUserStore()
 
-  const categories = ref<ExpenseCategoryWithStats[]>([])
+  const categories = ref<CategoryWithStats[]>([])
   const isLoading = ref(false)
 
   const userId = computed(() => userStore.userProfile?.id)
@@ -18,7 +18,7 @@ export const useCategoriesStore = defineStore('categories', () => {
     categories.value.reduce((acc, category) => {
       acc.set(category.id, category)
       return acc
-    }, new Map<string, ExpenseCategoryWithStats>()),
+    }, new Map<string, CategoryWithStats>()),
   )
 
   const sortedCategories = computed(() => {
@@ -31,7 +31,7 @@ export const useCategoriesStore = defineStore('categories', () => {
     isLoading.value = true
 
     try {
-      const data = await getExpenseCategoriesWithStats(userId.value)
+      const data = await getCategoriesWithStats(userId.value)
       categories.value = data
     } catch (error) {
       handleError('CATEGORIES.LOAD_FAILED', error)
@@ -40,7 +40,7 @@ export const useCategoriesStore = defineStore('categories', () => {
     }
   }
 
-  function getCategoryById(categoryId: string): ExpenseCategoryWithStats | undefined {
+  function getCategoryById(categoryId: string): CategoryWithStats | undefined {
     return categoriesMap.value.get(categoryId)
   }
 

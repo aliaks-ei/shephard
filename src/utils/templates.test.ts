@@ -1,13 +1,13 @@
 import { describe, it, expect } from 'vitest'
-import type { ExpenseTemplateWithPermission } from 'src/api'
+import type { TemplateWithPermission } from 'src/api'
 import {
   getPermissionText,
   getPermissionColor,
   getPermissionIcon,
   filterAndSortTemplates,
-} from './expense-templates'
+} from './templates'
 
-describe('expense-templates utils', () => {
+describe('templates utils', () => {
   describe('getPermissionText', () => {
     it('should return "view only" for view permission', () => {
       expect(getPermissionText('view')).toBe('view only')
@@ -63,7 +63,7 @@ describe('expense-templates utils', () => {
   })
 
   describe('filterAndSortTemplates', () => {
-    const mockTemplates: ExpenseTemplateWithPermission[] = [
+    const mockTemplates: TemplateWithPermission[] = [
       {
         id: '1',
         name: 'Groceries',
@@ -178,7 +178,7 @@ describe('expense-templates utils', () => {
       })
 
       it('should handle null values in sorting', () => {
-        const templatesWithNulls: ExpenseTemplateWithPermission[] = [
+        const templatesWithNulls: TemplateWithPermission[] = [
           {
             id: '1',
             name: '',
@@ -225,7 +225,7 @@ describe('expense-templates utils', () => {
 
     describe('combined filtering and sorting', () => {
       it('should filter and sort templates correctly', () => {
-        const templatesWithDuplicates: ExpenseTemplateWithPermission[] = [
+        const templatesWithDuplicates: TemplateWithPermission[] = [
           ...mockTemplates,
           {
             id: '5',

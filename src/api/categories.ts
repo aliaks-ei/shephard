@@ -1,15 +1,15 @@
 import { supabase } from 'src/lib/supabase/client'
 import type { Tables } from 'src/lib/supabase/types'
 
-export type ExpenseCategory = Tables<'expense_categories'>
+export type Category = Tables<'categories'>
 
-export type ExpenseCategoryWithStats = ExpenseCategory & {
+export type CategoryWithStats = Category & {
   templates: CategoryTemplate[]
 }
 
-export async function getExpenseCategories(): Promise<ExpenseCategory[]> {
+export async function getCategories(): Promise<Category[]> {
   const { data, error } = await supabase
-    .from('expense_categories')
+    .from('categories')
     .select('*')
     .order('name', { ascending: true })
 
@@ -24,12 +24,10 @@ export type CategoryTemplate = {
   permission_level?: string
 }
 
-export async function getExpenseCategoriesWithStats(
-  userId: string,
-): Promise<ExpenseCategoryWithStats[]> {
+export async function getCategoriesWithStats(userId: string): Promise<CategoryWithStats[]> {
   // First, get all categories
   const { data: categories, error: categoriesError } = await supabase
-    .from('expense_categories')
+    .from('categories')
     .select('*')
     .order('name', { ascending: true })
 
@@ -37,7 +35,7 @@ export async function getExpenseCategoriesWithStats(
 
   // Get template IDs that the user has access to (owned + shared)
   const { data: ownedTemplates, error: ownedError } = await supabase
-    .from('expense_templates')
+    .from('templates')
     .select('id, name, owner_id')
     .match({ owner_id: userId })
 
@@ -45,7 +43,7 @@ export async function getExpenseCategoriesWithStats(
 
   const { data: sharedTemplatesData, error: sharedError } = await supabase
     .from('template_shares')
-    .select('template_id, permission_level, expense_templates(id, name, owner_id)')
+    .select('template_id, permission_level, templates(id, name, owner_id)')
     .match({ shared_with_user_id: userId })
 
   if (sharedError) throw sharedError
@@ -64,7 +62,7 @@ export async function getExpenseCategoriesWithStats(
 
   // Get template items from all accessible templates, grouped by category
   const { data: templateItems, error: itemsError } = await supabase
-    .from('expense_template_items')
+    .from('template_items')
     .select('category_id, template_id')
     .in('template_id', Array.from(allAccessibleTemplateIds))
 
@@ -107,11 +105,11 @@ export async function getExpenseCategoriesWithStats(
 
     // Add shared templates
     for (const sharedData of sharedTemplatesData || []) {
-      if (templateIdsForCategory.has(sharedData.template_id) && sharedData.expense_templates) {
+      if (templateIdsForCategory.has(sharedData.template_id) && sharedData.templates) {
         templates.push({
-          id: sharedData.expense_templates.id,
-          name: sharedData.expense_templates.name,
-          owner_id: sharedData.expense_templates.owner_id,
+          id: sharedData.templates.id,
+          name: sharedData.templates.name,
+          owner_id: sharedData.templates.owner_id,
           permission_level: sharedData.permission_level,
         })
       }

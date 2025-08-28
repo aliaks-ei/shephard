@@ -90,7 +90,7 @@
           class="q-mt-lg"
         >
           <div class="text-body2 text-grey-6 q-mb-sm">Selected Template:</div>
-          <ExpenseTemplateCard
+          <TemplateCard
             :template="selectedTemplate"
             readonly
             @edit="() => {}"
@@ -405,7 +405,7 @@ import DetailPageLayout from 'src/layouts/DetailPageLayout.vue'
 import ActionsFab from 'src/components/shared/ActionsFab.vue'
 import PlanCategory from 'src/components/plans/PlanCategory.vue'
 import SharePlanDialog from 'src/components/plans/SharePlanDialog.vue'
-import ExpenseTemplateCard from 'src/components/expense-templates/ExpenseTemplateCard.vue'
+import TemplateCard from 'src/components/templates/TemplateCard.vue'
 import DeleteDialog from 'src/components/shared/DeleteDialog.vue'
 import { usePlansStore } from 'src/stores/plans'
 import { useCategoriesStore } from 'src/stores/categories'
@@ -424,7 +424,7 @@ import {
   getStatusIcon,
   formatDateRange,
 } from 'src/utils/plans'
-import type { ExpenseTemplateWithItems } from 'src/api'
+import type { TemplateWithItems } from 'src/api'
 import type { PlanItemUI } from 'src/types'
 
 const router = useRouter()
@@ -526,7 +526,7 @@ const { fabOpen, openDialog, closeDialog, getDialogState, createFabAction, initi
 
 // Local state
 const planForm = ref()
-const selectedTemplate = ref<ExpenseTemplateWithItems | null>(null)
+const selectedTemplate = ref<TemplateWithItems | null>(null)
 const selectedTemplateOption = ref<string | null>(null)
 const allCategoriesExpanded = ref(false)
 const showCancelDialog = ref(false)
@@ -663,7 +663,7 @@ async function onTemplateSelected(templateId: string | null): Promise<void> {
     selectedTemplateOption.value = templateId
     form.value.name = `${template.name} Plan`
 
-    loadPlanItemsFromTemplate(template.expense_template_items)
+    loadPlanItemsFromTemplate(template.template_items)
 
     if (!form.value.startDate) {
       form.value.startDate = new Date().toISOString().split('T')[0] || ''

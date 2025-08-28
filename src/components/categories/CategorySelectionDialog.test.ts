@@ -4,14 +4,14 @@ import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-v
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { ComponentProps } from 'vue-component-type-helpers'
 
-import ExpenseCategorySelectionDialog from './ExpenseCategorySelectionDialog.vue'
-import type { ExpenseCategory } from 'src/api'
+import CategorySelectionDialog from './CategorySelectionDialog.vue'
+import type { Category } from 'src/api'
 
 installQuasarPlugin()
 
-type ExpenseCategorySelectionDialogProps = ComponentProps<typeof ExpenseCategorySelectionDialog>
+type CategorySelectionDialogProps = ComponentProps<typeof CategorySelectionDialog>
 
-const mockCategories: ExpenseCategory[] = [
+const mockCategories: Category[] = [
   {
     id: 'category-1',
     name: 'Rent/Mortgage',
@@ -38,16 +38,14 @@ const mockCategories: ExpenseCategory[] = [
   },
 ]
 
-const defaultProps: ExpenseCategorySelectionDialogProps = {
+const defaultProps: CategorySelectionDialogProps = {
   modelValue: true,
   usedCategoryIds: [],
   categories: mockCategories,
 }
 
-const renderExpenseCategorySelectionDialog = (
-  props: Partial<ExpenseCategorySelectionDialogProps> = {},
-) => {
-  return mount(ExpenseCategorySelectionDialog, {
+const renderCategorySelectionDialog = (props: Partial<CategorySelectionDialogProps> = {}) => {
+  return mount(CategorySelectionDialog, {
     props: { ...defaultProps, ...props },
     global: {
       plugins: [
@@ -60,18 +58,18 @@ const renderExpenseCategorySelectionDialog = (
   })
 }
 
-describe('ExpenseCategorySelectionDialog', () => {
+describe('CategorySelectionDialog', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
   it('should mount component properly', () => {
-    const wrapper = renderExpenseCategorySelectionDialog()
+    const wrapper = renderCategorySelectionDialog()
     expect(wrapper.exists()).toBe(true)
   })
 
   it('should have correct props', () => {
-    const wrapper = renderExpenseCategorySelectionDialog({
+    const wrapper = renderCategorySelectionDialog({
       modelValue: false,
       usedCategoryIds: ['category-1'],
       categories: mockCategories,
@@ -86,13 +84,13 @@ describe('ExpenseCategorySelectionDialog', () => {
 
   describe('Component Behavior', () => {
     it('should render with different prop combinations', () => {
-      const wrapper1 = renderExpenseCategorySelectionDialog({
+      const wrapper1 = renderCategorySelectionDialog({
         usedCategoryIds: ['category-2'],
       })
-      const wrapper2 = renderExpenseCategorySelectionDialog({
+      const wrapper2 = renderCategorySelectionDialog({
         usedCategoryIds: ['category-1', 'category-2', 'category-3'],
       })
-      const wrapper3 = renderExpenseCategorySelectionDialog({
+      const wrapper3 = renderCategorySelectionDialog({
         usedCategoryIds: [],
       })
 
@@ -102,12 +100,12 @@ describe('ExpenseCategorySelectionDialog', () => {
     })
 
     it('should handle edge case props without errors', () => {
-      const wrapper1 = renderExpenseCategorySelectionDialog({
+      const wrapper1 = renderCategorySelectionDialog({
         categories: [],
         usedCategoryIds: [],
       })
 
-      const categoriesWithNulls: ExpenseCategory[] = [
+      const categoriesWithNulls: Category[] = [
         {
           id: 'category-null',
           name: 'Test Category',
@@ -118,12 +116,12 @@ describe('ExpenseCategorySelectionDialog', () => {
         },
       ]
 
-      const wrapper2 = renderExpenseCategorySelectionDialog({
+      const wrapper2 = renderCategorySelectionDialog({
         categories: categoriesWithNulls,
         usedCategoryIds: [],
       })
 
-      const wrapper3 = renderExpenseCategorySelectionDialog({
+      const wrapper3 = renderCategorySelectionDialog({
         usedCategoryIds: ['non-existent-id', 'category-1'],
       })
 
@@ -135,8 +133,8 @@ describe('ExpenseCategorySelectionDialog', () => {
 
   describe('Props Validation', () => {
     it('should accept modelValue as boolean', () => {
-      const wrapper1 = renderExpenseCategorySelectionDialog({ modelValue: true })
-      const wrapper2 = renderExpenseCategorySelectionDialog({ modelValue: false })
+      const wrapper1 = renderCategorySelectionDialog({ modelValue: true })
+      const wrapper2 = renderCategorySelectionDialog({ modelValue: false })
 
       expect(wrapper1.props('modelValue')).toBe(true)
       expect(wrapper2.props('modelValue')).toBe(false)
@@ -144,13 +142,13 @@ describe('ExpenseCategorySelectionDialog', () => {
 
     it('should accept usedCategoryIds as string array', () => {
       const usedIds = ['id1', 'id2', 'id3']
-      const wrapper = renderExpenseCategorySelectionDialog({ usedCategoryIds: usedIds })
+      const wrapper = renderCategorySelectionDialog({ usedCategoryIds: usedIds })
 
       expect(wrapper.props('usedCategoryIds')).toEqual(usedIds)
     })
 
-    it('should accept categories as ExpenseCategory array', () => {
-      const wrapper = renderExpenseCategorySelectionDialog({ categories: mockCategories })
+    it('should accept categories as Category array', () => {
+      const wrapper = renderCategorySelectionDialog({ categories: mockCategories })
 
       expect(wrapper.props('categories')).toEqual(mockCategories)
     })
@@ -158,7 +156,7 @@ describe('ExpenseCategorySelectionDialog', () => {
 
   describe('Reactivity', () => {
     it('should handle prop changes without errors', async () => {
-      const wrapper = renderExpenseCategorySelectionDialog({
+      const wrapper = renderCategorySelectionDialog({
         usedCategoryIds: [],
       })
 
@@ -171,7 +169,7 @@ describe('ExpenseCategorySelectionDialog', () => {
     })
 
     it('should handle categories array changes without errors', async () => {
-      const wrapper = renderExpenseCategorySelectionDialog({
+      const wrapper = renderCategorySelectionDialog({
         categories: [mockCategories[0]!],
       })
 

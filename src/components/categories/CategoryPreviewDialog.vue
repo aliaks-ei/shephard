@@ -147,11 +147,11 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import type { ExpenseCategoryWithStats } from 'src/api'
+import type { CategoryWithStats } from 'src/api'
 
 interface CategoryPreviewDialogProps {
   modelValue: boolean
-  category: ExpenseCategoryWithStats | null
+  category: CategoryWithStats | null
 }
 
 defineProps<CategoryPreviewDialogProps>()

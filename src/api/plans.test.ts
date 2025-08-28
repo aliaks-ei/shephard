@@ -23,10 +23,10 @@ describe('plans API', () => {
     owner_id: mockUserId,
     start_date: '2024-01-01',
     end_date: '2024-01-31',
-    status: 'active',
     template_id: 'template-123',
     currency: 'USD',
     total: 1000,
+    status: 'active',
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z',
   }

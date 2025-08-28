@@ -1,9 +1,9 @@
 import { useTemplatesStore } from 'src/stores/templates'
 import { useListPage } from './useListPage'
 import { filterAndSortTemplates } from 'src/utils/list-filters'
-import type { ExpenseTemplateWithPermission } from 'src/api'
+import type { TemplateWithPermission } from 'src/api'
 
-export function useExpenseTemplates() {
+export function useTemplates() {
   const templatesStore = useTemplatesStore()
 
   const sortOptions = [
@@ -13,7 +13,7 @@ export function useExpenseTemplates() {
     { label: 'Created Date', value: 'created_at' },
   ]
 
-  return useListPage<ExpenseTemplateWithPermission>(
+  return useListPage<TemplateWithPermission>(
     {
       entityName: 'Template',
       entityNamePlural: 'Templates',

@@ -6,7 +6,7 @@ export type ExpenseInsert = TablesInsert<'expenses'>
 export type ExpenseUpdate = TablesUpdate<'expenses'>
 
 export type ExpenseWithCategory = Expense & {
-  expense_categories: Tables<'expense_categories'>
+  categories: Tables<'categories'>
 }
 
 export type PlanExpenseSummary = {
@@ -26,7 +26,7 @@ const expenseService = new BaseAPIService<'expenses', Expense, ExpenseInsert, Ex
 export async function getExpensesByPlan(planId: string): Promise<ExpenseWithCategory[]> {
   const { data, error } = await expenseService.supabase
     .from('expenses')
-    .select('*, expense_categories(*)')
+    .select('*, categories(*)')
     .eq('plan_id', planId)
     .order('expense_date', { ascending: false })
 
@@ -62,7 +62,7 @@ export async function getExpensesByDateRange(
 ): Promise<ExpenseWithCategory[]> {
   const { data, error } = await expenseService.supabase
     .from('expenses')
-    .select('*, expense_categories(*)')
+    .select('*, categories(*)')
     .eq('plan_id', planId)
     .gte('expense_date', startDate)
     .lte('expense_date', endDate)
@@ -78,7 +78,7 @@ export async function getExpensesByCategory(
 ): Promise<ExpenseWithCategory[]> {
   const { data, error } = await expenseService.supabase
     .from('expenses')
-    .select('*, expense_categories(*)')
+    .select('*, categories(*)')
     .eq('plan_id', planId)
     .eq('category_id', categoryId)
     .order('expense_date', { ascending: false })

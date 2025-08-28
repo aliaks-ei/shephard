@@ -2,22 +2,22 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 
 import {
-  getExpenseTemplates,
-  getExpenseTemplateWithItems,
+  getTemplates,
+  getTemplateWithItems,
   getTemplateSharedUsers,
-  createExpenseTemplate,
-  updateExpenseTemplate,
-  deleteExpenseTemplate,
+  createTemplate,
+  updateTemplate,
+  deleteTemplate,
   shareTemplate,
   unshareTemplate,
   updateSharePermission,
-  createExpenseTemplateItems,
-  deleteExpenseTemplateItems,
+  createTemplateItems,
+  deleteTemplateItems,
   searchUsersByEmail,
-  type ExpenseTemplateInsert,
-  type ExpenseTemplateUpdate,
-  type ExpenseTemplateWithPermission,
-  type ExpenseTemplateItemInsert,
+  type TemplateInsert,
+  type TemplateUpdate,
+  type TemplateWithPermission,
+  type TemplateItemInsert,
   type TemplateSharedUser,
   type UserSearchResult,
 } from 'src/api'
@@ -29,7 +29,7 @@ export const useTemplatesStore = defineStore('templates', () => {
   const { handleError } = useError()
   const userStore = useUserStore()
 
-  const templates = ref<ExpenseTemplateWithPermission[]>([])
+  const templates = ref<TemplateWithPermission[]>([])
   const isLoading = ref(false)
   const isSharing = ref(false)
   const sharedUsers = ref<TemplateSharedUser[]>([])
@@ -47,7 +47,7 @@ export const useTemplatesStore = defineStore('templates', () => {
     isLoading.value = true
 
     try {
-      const data = await getExpenseTemplates(userId.value)
+      const data = await getTemplates(userId.value)
 
       templates.value = data
     } catch (error) {
@@ -63,7 +63,7 @@ export const useTemplatesStore = defineStore('templates', () => {
     isLoading.value = true
 
     try {
-      const data = await getExpenseTemplateWithItems(templateId, userId.value)
+      const data = await getTemplateWithItems(templateId, userId.value)
 
       return data
     } catch (error) {
@@ -74,7 +74,7 @@ export const useTemplatesStore = defineStore('templates', () => {
     }
   }
 
-  async function addTemplate(templateData: Omit<ExpenseTemplateInsert, 'owner_id' | 'currency'>) {
+  async function addTemplate(templateData: Omit<TemplateInsert, 'owner_id' | 'currency'>) {
     if (!userId.value) return
 
     isLoading.value = true
@@ -83,7 +83,7 @@ export const useTemplatesStore = defineStore('templates', () => {
       // Get user's preferred currency for new templates
       const userCurrency = userStore.preferences.currency as CurrencyCode
 
-      const newTemplate = await createExpenseTemplate({
+      const newTemplate = await createTemplate({
         ...templateData,
         owner_id: userId.value,
         currency: userCurrency,
@@ -102,11 +102,11 @@ export const useTemplatesStore = defineStore('templates', () => {
     }
   }
 
-  async function editTemplate(templateId: string, updates: ExpenseTemplateUpdate) {
+  async function editTemplate(templateId: string, updates: TemplateUpdate) {
     isLoading.value = true
 
     try {
-      const updatedTemplate = await updateExpenseTemplate(templateId, updates)
+      const updatedTemplate = await updateTemplate(templateId, updates)
 
       return updatedTemplate
     } catch (error) {
@@ -125,7 +125,7 @@ export const useTemplatesStore = defineStore('templates', () => {
     isLoading.value = true
 
     try {
-      await deleteExpenseTemplate(templateId)
+      await deleteTemplate(templateId)
 
       templates.value = templates.value.filter((t) => t.id !== templateId)
     } catch (error) {
@@ -135,9 +135,9 @@ export const useTemplatesStore = defineStore('templates', () => {
     }
   }
 
-  async function addItemsToTemplate(items: ExpenseTemplateItemInsert[]) {
+  async function addItemsToTemplate(items: TemplateItemInsert[]) {
     try {
-      const newItems = await createExpenseTemplateItems(items)
+      const newItems = await createTemplateItems(items)
 
       return newItems
     } catch (error) {
@@ -147,7 +147,7 @@ export const useTemplatesStore = defineStore('templates', () => {
 
   async function removeItemsFromTemplate(ids: string[]) {
     try {
-      await deleteExpenseTemplateItems(ids)
+      await deleteTemplateItems(ids)
     } catch (error) {
       handleError('TEMPLATE_ITEMS.DELETE_FAILED', error)
     }

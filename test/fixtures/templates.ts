@@ -1,15 +1,15 @@
 import type {
-  ExpenseTemplate,
-  ExpenseTemplateWithPermission,
-  ExpenseTemplateWithItems,
-  ExpenseTemplateItem,
+  Template,
+  TemplateWithPermission,
+  TemplateWithItems,
+  TemplateItem,
   TemplateSharedUser,
 } from 'src/api/templates'
 
 /**
- * Creates a mock expense template with optional overrides
+ * Creates a mock template with optional overrides
  */
-export const createMockTemplate = (overrides: Partial<ExpenseTemplate> = {}): ExpenseTemplate => ({
+export const createMockTemplate = (overrides: Partial<Template> = {}): Template => ({
   id: 'template-1',
   name: 'Grocery Shopping',
   duration: 'weekly',
@@ -22,11 +22,11 @@ export const createMockTemplate = (overrides: Partial<ExpenseTemplate> = {}): Ex
 })
 
 /**
- * Creates a mock expense template with permission level
+ * Creates a mock template with permission level
  */
 export const createMockTemplateWithPermission = (
-  overrides: Partial<ExpenseTemplateWithPermission> = {},
-): ExpenseTemplateWithPermission => ({
+  overrides: Partial<TemplateWithPermission> = {},
+): TemplateWithPermission => ({
   ...createMockTemplate(overrides),
   permission_level: 'owner',
   is_shared: false,
@@ -36,9 +36,7 @@ export const createMockTemplateWithPermission = (
 /**
  * Creates a mock template item
  */
-export const createMockTemplateItem = (
-  overrides: Partial<ExpenseTemplateItem> = {},
-): ExpenseTemplateItem => ({
+export const createMockTemplateItem = (overrides: Partial<TemplateItem> = {}): TemplateItem => ({
   id: 'item-1',
   template_id: 'template-1',
   name: 'Milk',
@@ -54,8 +52,8 @@ export const createMockTemplateItem = (
  */
 export const createMockTemplateWithItems = (
   itemCount: number = 2,
-  overrides: Partial<ExpenseTemplateWithItems> = {},
-): ExpenseTemplateWithItems => {
+  overrides: Partial<TemplateWithItems> = {},
+): TemplateWithItems => {
   const items = Array.from({ length: itemCount }, (_, i) =>
     createMockTemplateItem({
       id: `item-${i + 1}`,
@@ -67,7 +65,7 @@ export const createMockTemplateWithItems = (
 
   return {
     ...createMockTemplate(overrides),
-    expense_template_items: items,
+    template_items: items,
     ...overrides,
   }
 }
@@ -75,7 +73,7 @@ export const createMockTemplateWithItems = (
 /**
  * Creates multiple mock templates with variety
  */
-export const createMockTemplates = (count: number = 3): ExpenseTemplateWithPermission[] => {
+export const createMockTemplates = (count: number = 3): TemplateWithPermission[] => {
   const templateData = [
     {
       id: 'template-1',

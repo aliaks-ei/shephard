@@ -48,7 +48,7 @@
               class="text-grey-7"
               @click.stop
             >
-              <ExpenseTemplateCardMenu
+              <TemplateCardMenu
                 :is-owner="isOwner"
                 :permission-level="template.permission_level"
                 @edit="emit('edit', template.id)"
@@ -102,26 +102,22 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import ExpenseTemplateCardMenu from './ExpenseTemplateCardMenu.vue'
+import TemplateCardMenu from './TemplateCardMenu.vue'
 import DeleteDialog from 'src/components/shared/DeleteDialog.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import { useUserStore } from 'src/stores/user'
-import {
-  getPermissionText,
-  getPermissionColor,
-  getPermissionIcon,
-} from 'src/utils/expense-templates'
-import type { ExpenseTemplateWithPermission } from 'src/api'
+import { getPermissionText, getPermissionColor, getPermissionIcon } from 'src/utils/templates'
+import type { TemplateWithPermission } from 'src/api'
 
 const emit = defineEmits<{
   (e: 'edit', id: string): void
   (e: 'share', id: string): void
-  (e: 'delete', template: ExpenseTemplateWithPermission): void
+  (e: 'delete', template: TemplateWithPermission): void
 }>()
 
 const props = withDefaults(
   defineProps<{
-    template: ExpenseTemplateWithPermission
+    template: TemplateWithPermission
     hideSharedBadge?: boolean
     readonly?: boolean
   }>(),

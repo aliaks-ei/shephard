@@ -3,14 +3,14 @@ import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-v
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { ComponentProps } from 'vue-component-type-helpers'
 
-import ExpenseTemplatesGroup from './ExpenseTemplatesGroup.vue'
-import type { ExpenseTemplateWithPermission } from 'src/api'
+import TemplatesGroup from './TemplatesGroup.vue'
+import type { TemplateWithPermission } from 'src/api'
 
 installQuasarPlugin()
 
-type ExpenseTemplatesGroupProps = ComponentProps<typeof ExpenseTemplatesGroup>
+type TemplatesGroupProps = ComponentProps<typeof TemplatesGroup>
 
-const mockTemplate: ExpenseTemplateWithPermission = {
+const mockTemplate: TemplateWithPermission = {
   id: 'template-1',
   name: 'Test Template',
   owner_id: 'user-1',
@@ -23,24 +23,24 @@ const mockTemplate: ExpenseTemplateWithPermission = {
   is_shared: true,
 }
 
-const renderExpenseTemplatesGroup = (props: ExpenseTemplatesGroupProps) => {
-  return mount(ExpenseTemplatesGroup, {
+const renderTemplatesGroup = (props: TemplatesGroupProps) => {
+  return mount(TemplatesGroup, {
     props,
     global: {
       stubs: {
-        ExpenseTemplateCard: true,
+        TemplateCard: true,
       },
     },
   })
 }
 
-describe('ExpenseTemplatesGroup', () => {
+describe('TemplatesGroup', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
   it('should mount component properly', () => {
-    const wrapper = renderExpenseTemplatesGroup({
+    const wrapper = renderTemplatesGroup({
       templates: [mockTemplate],
       title: 'My Templates',
     })
@@ -48,7 +48,7 @@ describe('ExpenseTemplatesGroup', () => {
   })
 
   it('should render title', () => {
-    const wrapper = renderExpenseTemplatesGroup({
+    const wrapper = renderTemplatesGroup({
       templates: [mockTemplate],
       title: 'My Templates',
     })
@@ -58,7 +58,7 @@ describe('ExpenseTemplatesGroup', () => {
 
   it('should display template count', () => {
     const templates = [mockTemplate, { ...mockTemplate, id: 'template-2' }]
-    const wrapper = renderExpenseTemplatesGroup({
+    const wrapper = renderTemplatesGroup({
       templates,
       title: 'My Templates',
     })
@@ -67,7 +67,7 @@ describe('ExpenseTemplatesGroup', () => {
   })
 
   it('should handle empty templates array', () => {
-    const wrapper = renderExpenseTemplatesGroup({
+    const wrapper = renderTemplatesGroup({
       templates: [],
       title: 'Empty Templates',
     })
@@ -77,43 +77,43 @@ describe('ExpenseTemplatesGroup', () => {
   })
 
   it('should emit edit event when child card emits edit', async () => {
-    const wrapper = renderExpenseTemplatesGroup({
+    const wrapper = renderTemplatesGroup({
       templates: [mockTemplate],
       title: 'My Templates',
     })
 
-    const templateCard = wrapper.findComponent({ name: 'ExpenseTemplateCard' })
+    const templateCard = wrapper.findComponent({ name: 'TemplateCard' })
     await templateCard.vm.$emit('edit', 'template-1')
     expect(wrapper.emitted('edit')).toBeTruthy()
     expect(wrapper.emitted('edit')?.[0]).toEqual(['template-1'])
   })
 
   it('should emit delete event when child card emits delete', async () => {
-    const wrapper = renderExpenseTemplatesGroup({
+    const wrapper = renderTemplatesGroup({
       templates: [mockTemplate],
       title: 'My Templates',
     })
 
-    const templateCard = wrapper.findComponent({ name: 'ExpenseTemplateCard' })
+    const templateCard = wrapper.findComponent({ name: 'TemplateCard' })
     await templateCard.vm.$emit('delete', mockTemplate)
     expect(wrapper.emitted('delete')).toBeTruthy()
     expect(wrapper.emitted('delete')?.[0]).toEqual([mockTemplate])
   })
 
   it('should emit share event when child card emits share', async () => {
-    const wrapper = renderExpenseTemplatesGroup({
+    const wrapper = renderTemplatesGroup({
       templates: [mockTemplate],
       title: 'My Templates',
     })
 
-    const templateCard = wrapper.findComponent({ name: 'ExpenseTemplateCard' })
+    const templateCard = wrapper.findComponent({ name: 'TemplateCard' })
     await templateCard.vm.$emit('share', 'template-1')
     expect(wrapper.emitted('share')).toBeTruthy()
     expect(wrapper.emitted('share')?.[0]).toEqual(['template-1'])
   })
 
   it('should use default chipColor', () => {
-    const wrapper = renderExpenseTemplatesGroup({
+    const wrapper = renderTemplatesGroup({
       templates: [mockTemplate],
       title: 'My Templates',
     })
@@ -122,7 +122,7 @@ describe('ExpenseTemplatesGroup', () => {
   })
 
   it('should use custom chipColor', () => {
-    const wrapper = renderExpenseTemplatesGroup({
+    const wrapper = renderTemplatesGroup({
       templates: [mockTemplate],
       title: 'My Templates',
       chipColor: 'secondary',
@@ -132,7 +132,7 @@ describe('ExpenseTemplatesGroup', () => {
   })
 
   it('should use default hideSharedBadge', () => {
-    const wrapper = renderExpenseTemplatesGroup({
+    const wrapper = renderTemplatesGroup({
       templates: [mockTemplate],
       title: 'My Templates',
     })
@@ -141,7 +141,7 @@ describe('ExpenseTemplatesGroup', () => {
   })
 
   it('should use custom hideSharedBadge', () => {
-    const wrapper = renderExpenseTemplatesGroup({
+    const wrapper = renderTemplatesGroup({
       templates: [mockTemplate],
       title: 'My Templates',
       hideSharedBadge: true,

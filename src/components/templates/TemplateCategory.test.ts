@@ -3,8 +3,8 @@ import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-v
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { ComponentProps } from 'vue-component-type-helpers'
 
-import ExpenseTemplateCategory from './ExpenseTemplateCategory.vue'
-import type { ExpenseTemplateItemUI } from 'src/types'
+import TemplateCategory from './TemplateCategory.vue'
+import type { TemplateItemUI } from 'src/types'
 import type { CurrencyCode } from 'src/utils/currency'
 
 vi.mock('src/utils/currency', () => ({
@@ -13,9 +13,9 @@ vi.mock('src/utils/currency', () => ({
 
 installQuasarPlugin()
 
-type ExpenseTemplateCategoryProps = ComponentProps<typeof ExpenseTemplateCategory>
+type TemplateCategoryProps = ComponentProps<typeof TemplateCategory>
 
-const mockItems: ExpenseTemplateItemUI[] = [
+const mockItems: TemplateItemUI[] = [
   {
     id: 'item-1',
     name: 'Test Item 1',
@@ -32,24 +32,24 @@ const mockItems: ExpenseTemplateItemUI[] = [
   },
 ]
 
-const renderExpenseTemplateCategory = (props: ExpenseTemplateCategoryProps) => {
-  return mount(ExpenseTemplateCategory, {
+const renderTemplateCategory = (props: TemplateCategoryProps) => {
+  return mount(TemplateCategory, {
     props,
     global: {
       stubs: {
-        ExpenseTemplateItem: true,
+        TemplateItem: true,
       },
     },
   })
 }
 
-describe('ExpenseTemplateCategory', () => {
+describe('TemplateCategory', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
   it('should mount component properly', () => {
-    const wrapper = renderExpenseTemplateCategory({
+    const wrapper = renderTemplateCategory({
       categoryId: 'category-1',
       categoryName: 'Food',
       categoryColor: '#FF0000',
@@ -62,7 +62,7 @@ describe('ExpenseTemplateCategory', () => {
   })
 
   it('should have correct props', () => {
-    const wrapper = renderExpenseTemplateCategory({
+    const wrapper = renderTemplateCategory({
       categoryId: 'category-1',
       categoryName: 'Food',
       categoryColor: '#FF0000',
@@ -85,7 +85,7 @@ describe('ExpenseTemplateCategory', () => {
   })
 
   it('should use default props', () => {
-    const wrapper = renderExpenseTemplateCategory({
+    const wrapper = renderTemplateCategory({
       categoryId: 'category-1',
       categoryName: 'Food',
       categoryColor: '#FF0000',
@@ -100,7 +100,7 @@ describe('ExpenseTemplateCategory', () => {
   })
 
   it('should emit update-item event when child item emits update', async () => {
-    const wrapper = renderExpenseTemplateCategory({
+    const wrapper = renderTemplateCategory({
       categoryId: 'category-1',
       categoryName: 'Food',
       categoryColor: '#FF0000',
@@ -110,7 +110,7 @@ describe('ExpenseTemplateCategory', () => {
       categoryIcon: 'eva-pricetags-outline',
     })
 
-    const templateItem = wrapper.findComponent({ name: 'ExpenseTemplateItem' })
+    const templateItem = wrapper.findComponent({ name: 'TemplateItem' })
     const updatedItem = { ...mockItems[0], name: 'Updated' }
     await templateItem.vm.$emit('update:model-value', updatedItem)
     expect(wrapper.emitted('update-item')).toBeTruthy()
@@ -118,7 +118,7 @@ describe('ExpenseTemplateCategory', () => {
   })
 
   it('should emit remove-item event when child item emits remove', async () => {
-    const wrapper = renderExpenseTemplateCategory({
+    const wrapper = renderTemplateCategory({
       categoryId: 'category-1',
       categoryName: 'Food',
       categoryColor: '#FF0000',
@@ -128,14 +128,14 @@ describe('ExpenseTemplateCategory', () => {
       categoryIcon: 'eva-pricetags-outline',
     })
 
-    const templateItem = wrapper.findComponent({ name: 'ExpenseTemplateItem' })
+    const templateItem = wrapper.findComponent({ name: 'TemplateItem' })
     await templateItem.vm.$emit('remove')
     expect(wrapper.emitted('remove-item')).toBeTruthy()
     expect(wrapper.emitted('remove-item')?.[0]).toEqual(['item-1'])
   })
 
   it('should emit add-item event when add button is clicked', async () => {
-    const wrapper = renderExpenseTemplateCategory({
+    const wrapper = renderTemplateCategory({
       categoryId: 'category-1',
       categoryName: 'Food',
       categoryColor: '#FF0000',
@@ -160,7 +160,7 @@ describe('ExpenseTemplateCategory', () => {
   })
 
   it('should handle empty items array', () => {
-    const wrapper = renderExpenseTemplateCategory({
+    const wrapper = renderTemplateCategory({
       categoryId: 'category-1',
       categoryName: 'Food',
       categoryColor: '#FF0000',
@@ -178,7 +178,7 @@ describe('ExpenseTemplateCategory', () => {
     const currencies = ['USD', 'EUR', 'GBP']
 
     currencies.forEach((currency) => {
-      const wrapper = renderExpenseTemplateCategory({
+      const wrapper = renderTemplateCategory({
         categoryId: 'category-1',
         categoryName: 'Food',
         categoryColor: '#FF0000',
@@ -193,7 +193,7 @@ describe('ExpenseTemplateCategory', () => {
   })
 
   it('should handle readonly mode', () => {
-    const wrapper = renderExpenseTemplateCategory({
+    const wrapper = renderTemplateCategory({
       categoryId: 'category-1',
       categoryName: 'Food',
       categoryColor: '#FF0000',

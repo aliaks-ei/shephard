@@ -3,32 +3,32 @@ import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-v
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { ComponentProps } from 'vue-component-type-helpers'
 
-import ExpenseTemplateCardMenu from './ExpenseTemplateCardMenu.vue'
+import TemplateCardMenu from './TemplateCardMenu.vue'
 
 installQuasarPlugin()
 
-type ExpenseTemplateCardMenuProps = ComponentProps<typeof ExpenseTemplateCardMenu>
+type TemplateCardMenuProps = ComponentProps<typeof TemplateCardMenu>
 
-const renderExpenseTemplateCardMenu = (props: ExpenseTemplateCardMenuProps) => {
-  return mount(ExpenseTemplateCardMenu, {
+const renderTemplateCardMenu = (props: TemplateCardMenuProps) => {
+  return mount(TemplateCardMenu, {
     props,
   })
 }
 
-describe('ExpenseTemplateCardMenu', () => {
+describe('TemplateCardMenu', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
   it('should mount component properly', () => {
-    const wrapper = renderExpenseTemplateCardMenu({
+    const wrapper = renderTemplateCardMenu({
       isOwner: true,
     })
     expect(wrapper.exists()).toBe(true)
   })
 
   it('should have correct props interface', () => {
-    const wrapper = renderExpenseTemplateCardMenu({
+    const wrapper = renderTemplateCardMenu({
       isOwner: true,
       permissionLevel: 'edit',
     })
@@ -38,7 +38,7 @@ describe('ExpenseTemplateCardMenu', () => {
   })
 
   it('should emit edit event when edit item is clicked', () => {
-    const wrapper = renderExpenseTemplateCardMenu({
+    const wrapper = renderTemplateCardMenu({
       isOwner: true,
     })
 
@@ -54,7 +54,7 @@ describe('ExpenseTemplateCardMenu', () => {
   })
 
   it('should emit share event when share item is clicked', () => {
-    const wrapper = renderExpenseTemplateCardMenu({
+    const wrapper = renderTemplateCardMenu({
       isOwner: true,
     })
 
@@ -70,7 +70,7 @@ describe('ExpenseTemplateCardMenu', () => {
   })
 
   it('should emit delete event when delete item is clicked', () => {
-    const wrapper = renderExpenseTemplateCardMenu({
+    const wrapper = renderTemplateCardMenu({
       isOwner: true,
     })
 
@@ -86,25 +86,25 @@ describe('ExpenseTemplateCardMenu', () => {
   })
 
   it('should handle owner prop correctly', () => {
-    const ownerWrapper = renderExpenseTemplateCardMenu({
+    const ownerWrapper = renderTemplateCardMenu({
       isOwner: true,
     })
     expect(ownerWrapper.props('isOwner')).toBe(true)
 
-    const nonOwnerWrapper = renderExpenseTemplateCardMenu({
+    const nonOwnerWrapper = renderTemplateCardMenu({
       isOwner: false,
     })
     expect(nonOwnerWrapper.props('isOwner')).toBe(false)
   })
 
   it('should handle permission level prop', () => {
-    const editWrapper = renderExpenseTemplateCardMenu({
+    const editWrapper = renderTemplateCardMenu({
       isOwner: false,
       permissionLevel: 'edit',
     })
     expect(editWrapper.props('permissionLevel')).toBe('edit')
 
-    const viewWrapper = renderExpenseTemplateCardMenu({
+    const viewWrapper = renderTemplateCardMenu({
       isOwner: false,
       permissionLevel: 'view',
     })
@@ -112,7 +112,7 @@ describe('ExpenseTemplateCardMenu', () => {
   })
 
   it('should handle undefined permission level', () => {
-    const wrapper = renderExpenseTemplateCardMenu({
+    const wrapper = renderTemplateCardMenu({
       isOwner: false,
       permissionLevel: undefined,
     })
@@ -120,7 +120,7 @@ describe('ExpenseTemplateCardMenu', () => {
   })
 
   it('should handle missing permission level', () => {
-    const wrapper = renderExpenseTemplateCardMenu({
+    const wrapper = renderTemplateCardMenu({
       isOwner: false,
     })
     expect(wrapper.props('permissionLevel')).toBeUndefined()

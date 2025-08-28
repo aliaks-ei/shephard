@@ -54,18 +54,18 @@
 import { ref, computed } from 'vue'
 import type { QInput } from 'quasar'
 import { getCurrencySymbol, type CurrencyCode } from 'src/utils/currency'
-import type { ExpenseTemplateItemUI } from 'src/types'
+import type { TemplateItemUI } from 'src/types'
 
 const nameInputRef = ref<QInput | null>(null)
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', item: ExpenseTemplateItemUI): void
+  (e: 'update:modelValue', item: TemplateItemUI): void
   (e: 'remove'): void
 }>()
 
 const props = withDefaults(
   defineProps<{
-    modelValue: ExpenseTemplateItemUI
+    modelValue: TemplateItemUI
     currency: CurrencyCode
     readonly?: boolean
   }>(),
@@ -93,7 +93,7 @@ const amountRules = computed(() =>
 function updateName(name: string | number | null): void {
   if (props.readonly || typeof name !== 'string') return
 
-  const updatedItem: ExpenseTemplateItemUI = {
+  const updatedItem: TemplateItemUI = {
     ...props.modelValue,
     name,
   }
@@ -104,7 +104,7 @@ function updateName(name: string | number | null): void {
 function updateAmount(amount: string | number | null): void {
   if (props.readonly) return
 
-  const updatedItem: ExpenseTemplateItemUI = {
+  const updatedItem: TemplateItemUI = {
     ...props.modelValue,
     amount: Number(amount) || 0,
   }

@@ -3,9 +3,9 @@ import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-v
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { ComponentProps } from 'vue-component-type-helpers'
 
-import ExpenseTemplateItem from './ExpenseTemplateItem.vue'
+import TemplateItem from './TemplateItem.vue'
 import type { CurrencyCode } from 'src/api'
-import type { ExpenseTemplateItemUI } from 'src/types'
+import type { TemplateItemUI } from 'src/types'
 
 vi.mock('src/utils/currency', () => ({
   getCurrencySymbol: vi.fn((currency: string) => {
@@ -16,9 +16,9 @@ vi.mock('src/utils/currency', () => ({
 
 installQuasarPlugin()
 
-type ExpenseTemplateItemProps = ComponentProps<typeof ExpenseTemplateItem>
+type TemplateItemProps = ComponentProps<typeof TemplateItem>
 
-const mockItem: ExpenseTemplateItemUI = {
+const mockItem: TemplateItemUI = {
   id: 'item-1',
   name: 'Test Item',
   categoryId: 'category-1',
@@ -26,19 +26,19 @@ const mockItem: ExpenseTemplateItemUI = {
   color: '#FF0000',
 }
 
-const renderExpenseTemplateItem = (props: ExpenseTemplateItemProps) => {
-  return mount(ExpenseTemplateItem, {
+const renderTemplateItem = (props: TemplateItemProps) => {
+  return mount(TemplateItem, {
     props,
   })
 }
 
-describe('ExpenseTemplateItem', () => {
+describe('TemplateItem', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
   it('should mount component properly', () => {
-    const wrapper = renderExpenseTemplateItem({
+    const wrapper = renderTemplateItem({
       modelValue: mockItem,
       currency: 'USD',
     })
@@ -46,7 +46,7 @@ describe('ExpenseTemplateItem', () => {
   })
 
   it('should have correct props', () => {
-    const wrapper = renderExpenseTemplateItem({
+    const wrapper = renderTemplateItem({
       modelValue: mockItem,
       currency: 'USD',
       readonly: true,
@@ -58,7 +58,7 @@ describe('ExpenseTemplateItem', () => {
   })
 
   it('should use default readonly value', () => {
-    const wrapper = renderExpenseTemplateItem({
+    const wrapper = renderTemplateItem({
       modelValue: mockItem,
       currency: 'USD',
     })
@@ -67,7 +67,7 @@ describe('ExpenseTemplateItem', () => {
   })
 
   it('should emit update:modelValue event when name input changes', async () => {
-    const wrapper = renderExpenseTemplateItem({
+    const wrapper = renderTemplateItem({
       modelValue: mockItem,
       currency: 'USD',
     })
@@ -78,7 +78,7 @@ describe('ExpenseTemplateItem', () => {
   })
 
   it('should emit remove event when trash button is clicked', () => {
-    const wrapper = renderExpenseTemplateItem({
+    const wrapper = renderTemplateItem({
       modelValue: mockItem,
       currency: 'USD',
     })
@@ -105,7 +105,7 @@ describe('ExpenseTemplateItem', () => {
     const currencies = ['USD', 'EUR', 'GBP']
 
     currencies.forEach((currency) => {
-      const wrapper = renderExpenseTemplateItem({
+      const wrapper = renderTemplateItem({
         modelValue: mockItem,
         currency: currency as CurrencyCode,
       })
@@ -116,7 +116,7 @@ describe('ExpenseTemplateItem', () => {
   })
 
   it('should handle readonly mode', () => {
-    const wrapper = renderExpenseTemplateItem({
+    const wrapper = renderTemplateItem({
       modelValue: mockItem,
       currency: 'USD',
       readonly: true,
@@ -126,7 +126,7 @@ describe('ExpenseTemplateItem', () => {
   })
 
   it('should handle editable mode', () => {
-    const wrapper = renderExpenseTemplateItem({
+    const wrapper = renderTemplateItem({
       modelValue: mockItem,
       currency: 'USD',
       readonly: false,
@@ -144,7 +144,7 @@ describe('ExpenseTemplateItem', () => {
       color: '#00FF00',
     }
 
-    const wrapper = renderExpenseTemplateItem({
+    const wrapper = renderTemplateItem({
       modelValue: differentItem,
       currency: 'EUR',
     })

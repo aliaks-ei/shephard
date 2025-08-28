@@ -109,14 +109,14 @@ import { useCategoriesStore } from 'src/stores/categories'
 import ListPageLayout from 'src/layouts/ListPageLayout.vue'
 import SearchAndSort from 'src/components/shared/SearchAndSort.vue'
 import ListPageSkeleton from 'src/components/shared/ListPageSkeleton.vue'
-import CategoryPreviewDialog from 'src/components/expense-categories/CategoryPreviewDialog.vue'
-import type { ExpenseCategoryWithStats } from 'src/api'
+import CategoryPreviewDialog from 'src/components/categories/CategoryPreviewDialog.vue'
+import type { CategoryWithStats } from 'src/api'
 
 const categoriesStore = useCategoriesStore()
 const searchQuery = ref('')
 const sortBy = ref('name')
 const showPreviewDialog = ref(false)
-const selectedCategory = ref<ExpenseCategoryWithStats | null>(null)
+const selectedCategory = ref<CategoryWithStats | null>(null)
 
 const sortOptions = [{ label: 'Name', value: 'name' }]
 
@@ -135,7 +135,7 @@ const filteredCategories = computed(() => {
   return categories
 })
 
-function openCategoryPreview(category: ExpenseCategoryWithStats) {
+function openCategoryPreview(category: CategoryWithStats) {
   selectedCategory.value = category
   showPreviewDialog.value = true
 }

@@ -5,7 +5,7 @@
   >
     <q-card style="min-width: 400px">
       <q-card-section>
-        <h2 class="text-h6 q-my-none">Select Expense Category</h2>
+        <h2 class="text-h6 q-my-none">Select Category</h2>
         <p class="text-body2 text-grey-6 q-my-none">Choose from available predefined categories</p>
       </q-card-section>
 
@@ -66,24 +66,24 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { ExpenseCategory } from 'src/api'
+import type { Category } from 'src/api'
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
-  (e: 'category-selected', category: ExpenseCategory): void
+  (e: 'category-selected', category: Category): void
 }>()
 
 const props = defineProps<{
   modelValue: boolean
   usedCategoryIds: string[]
-  categories: ExpenseCategory[]
+  categories: Category[]
 }>()
 
 const availableCategories = computed(() =>
   props.categories.filter((category) => !props.usedCategoryIds.includes(category.id)),
 )
 
-function selectCategory(category: ExpenseCategory): void {
+function selectCategory(category: Category): void {
   emit('category-selected', category)
   emit('update:modelValue', false)
 }

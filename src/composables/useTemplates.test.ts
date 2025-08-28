@@ -2,9 +2,9 @@ import { nextTick, ref } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 
-import { useExpenseTemplates } from './useExpenseTemplates'
+import { useTemplates } from './useTemplates'
 import { useTemplatesStore } from 'src/stores/templates'
-import type { ExpenseTemplateWithPermission } from 'src/api'
+import type { TemplateWithPermission } from 'src/api'
 import { setupTestingPinia } from 'test/helpers/pinia-mocks'
 import { createMockTemplates } from 'test/fixtures'
 
@@ -31,11 +31,11 @@ vi.mock('src/utils/list-filters', () => ({
   filterAndSortTemplates: vi.fn((templates, searchQuery, sortBy) => {
     let filtered = templates
     if (searchQuery) {
-      filtered = templates.filter((t: ExpenseTemplateWithPermission) =>
+      filtered = templates.filter((t: TemplateWithPermission) =>
         t.name.toLowerCase().includes(searchQuery.toLowerCase()),
       )
     }
-    return filtered.sort((a: ExpenseTemplateWithPermission, b: ExpenseTemplateWithPermission) => {
+    return filtered.sort((a: TemplateWithPermission, b: TemplateWithPermission) => {
       if (sortBy === 'name') {
         return a.name.localeCompare(b.name)
       }
@@ -48,7 +48,7 @@ vi.mock('src/api', async () => {
   const actual = await vi.importActual('src/api')
   return {
     ...actual,
-    deleteExpenseTemplate: vi.fn().mockResolvedValue(undefined),
+    deleteTemplate: vi.fn().mockResolvedValue(undefined),
   }
 })
 
@@ -60,7 +60,7 @@ vi.mock('src/composables/useError', () => ({
 
 const mockTemplates = createMockTemplates(3)
 
-describe('useExpenseTemplates', () => {
+describe('useTemplates', () => {
   let templatesStore: ReturnType<typeof useTemplatesStore>
 
   beforeEach(() => {
@@ -80,7 +80,7 @@ describe('useExpenseTemplates', () => {
   })
 
   it('should initialize with default state', () => {
-    const composable = useExpenseTemplates()
+    const composable = useTemplates()
 
     expect(composable.searchQuery.value).toBe('')
     expect(composable.sortBy.value).toBe('name')
@@ -93,7 +93,7 @@ describe('useExpenseTemplates', () => {
       // @ts-expect-error - Testing Pinia
       templatesStore.templates = ref([])
 
-      const composable = useExpenseTemplates()
+      const composable = useTemplates()
 
       expect(composable.areItemsLoading.value).toBe(true)
     })
@@ -104,7 +104,7 @@ describe('useExpenseTemplates', () => {
       // @ts-expect-error - Testing Pinia
       templatesStore.templates = ref(mockTemplates)
 
-      const composable = useExpenseTemplates()
+      const composable = useTemplates()
 
       expect(composable.areItemsLoading.value).toBe(false)
     })
@@ -115,13 +115,13 @@ describe('useExpenseTemplates', () => {
       // @ts-expect-error - Testing Pinia
       templatesStore.templates = ref([])
 
-      const composable = useExpenseTemplates()
+      const composable = useTemplates()
 
       expect(composable.areItemsLoading.value).toBe(false)
     })
 
     it('should filter and sort owned templates', () => {
-      const composable = useExpenseTemplates()
+      const composable = useTemplates()
 
       const expectedTemplates = mockTemplates
         .filter((t) => t.owner_id === 'user-1')
@@ -131,7 +131,7 @@ describe('useExpenseTemplates', () => {
     })
 
     it('should filter and sort shared templates', () => {
-      const composable = useExpenseTemplates()
+      const composable = useTemplates()
 
       expect(composable.filteredAndSortedSharedItems.value).toEqual(
         mockTemplates.filter((t) => t.owner_id !== 'user-1'),
@@ -139,7 +139,7 @@ describe('useExpenseTemplates', () => {
     })
 
     it('should compute hasTemplates correctly when templates exist', () => {
-      const composable = useExpenseTemplates()
+      const composable = useTemplates()
 
       expect(composable.hasItems.value).toBe(true)
     })
@@ -150,7 +150,7 @@ describe('useExpenseTemplates', () => {
       // @ts-expect-error - Testing Pinia
       templatesStore.sharedTemplates = ref([])
 
-      const composable = useExpenseTemplates()
+      const composable = useTemplates()
 
       expect(composable.hasItems.value).toBe(false)
     })
@@ -158,7 +158,7 @@ describe('useExpenseTemplates', () => {
 
   describe('search and filter functionality', () => {
     it('should update filtered templates when search query changes', async () => {
-      const composable = useExpenseTemplates()
+      const composable = useTemplates()
 
       composable.searchQuery.value = 'grocery'
       await nextTick()
@@ -168,7 +168,7 @@ describe('useExpenseTemplates', () => {
     })
 
     it('should update filtered templates when sort option changes', async () => {
-      const composable = useExpenseTemplates()
+      const composable = useTemplates()
 
       composable.sortBy.value = 'created_at'
       await nextTick()
@@ -180,7 +180,7 @@ describe('useExpenseTemplates', () => {
 
   describe('navigation functions', () => {
     it('should navigate to new template page', () => {
-      const composable = useExpenseTemplates()
+      const composable = useTemplates()
 
       composable.goToNew()
 
@@ -188,7 +188,7 @@ describe('useExpenseTemplates', () => {
     })
 
     it('should navigate to template detail page', () => {
-      const composable = useExpenseTemplates()
+      const composable = useTemplates()
       const templateId = 'template123'
 
       composable.viewItem(templateId)
@@ -202,8 +202,8 @@ describe('useExpenseTemplates', () => {
 
   describe('deleteTemplate', () => {
     it('should delete template and show success notification', () => {
-      const composable = useExpenseTemplates()
-      const template = mockTemplates[0] as ExpenseTemplateWithPermission
+      const composable = useTemplates()
+      const template = mockTemplates[0] as TemplateWithPermission
       const removeTemplateSpy = vi.spyOn(templatesStore, 'removeTemplate')
 
       composable.deleteItem(template)
@@ -214,7 +214,7 @@ describe('useExpenseTemplates', () => {
 
   describe('reactive updates', () => {
     it('should react to store state changes', async () => {
-      const composable = useExpenseTemplates()
+      const composable = useTemplates()
 
       expect(composable.areItemsLoading.value).toBe(false)
 
@@ -233,7 +233,7 @@ describe('useExpenseTemplates', () => {
       // @ts-expect-error - Testing Pinia
       templatesStore.sharedTemplates = ref([])
 
-      const composable = useExpenseTemplates()
+      const composable = useTemplates()
 
       expect(composable.hasItems.value).toBe(false)
 
@@ -249,7 +249,7 @@ describe('useExpenseTemplates', () => {
 
   describe('return object', () => {
     it('should return all expected properties and methods', () => {
-      const composable = useExpenseTemplates()
+      const composable = useTemplates()
 
       expect(composable).toHaveProperty('searchQuery')
       expect(composable).toHaveProperty('sortBy')

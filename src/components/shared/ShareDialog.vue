@@ -179,8 +179,8 @@
 import { ref, watch, computed } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 
-import SharedUsersList from 'src/components/expense-templates/SharedUsersList.vue'
-import SharedUsersSelect from 'src/components/expense-templates/SharedUsersSelect.vue'
+import SharedUsersList from 'src/components/shared/SharedUsersList.vue'
+import SharedUsersSelect from 'src/components/shared/SharedUsersSelect.vue'
 import { useUserStore } from 'src/stores/user'
 import type { UserSearchResult, TemplateSharedUser } from 'src/api'
 

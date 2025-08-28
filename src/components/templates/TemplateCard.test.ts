@@ -3,7 +3,7 @@ import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-v
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { ComponentProps } from 'vue-component-type-helpers'
 
-import ExpenseTemplateCard from './ExpenseTemplateCard.vue'
+import TemplateCard from './TemplateCard.vue'
 import { setupTestingPinia } from 'test/helpers/pinia-mocks'
 import { createMockTemplateWithPermission } from 'test/fixtures'
 
@@ -11,7 +11,7 @@ vi.mock('src/utils/currency', () => ({
   formatCurrency: vi.fn((amount: number, currency: string) => `${currency} ${amount.toFixed(2)}`),
 }))
 
-vi.mock('src/utils/expense-templates', () => ({
+vi.mock('src/utils/templates', () => ({
   getPermissionText: vi.fn(() => `Permission: ${'edit'}`),
   getPermissionColor: vi.fn(() => 'primary'),
   getPermissionIcon: vi.fn(() => 'eva-shield-outline'),
@@ -19,7 +19,7 @@ vi.mock('src/utils/expense-templates', () => ({
 
 installQuasarPlugin()
 
-type ExpenseTemplateCardProps = ComponentProps<typeof ExpenseTemplateCard>
+type TemplateCardProps = ComponentProps<typeof TemplateCard>
 
 const mockTemplate = createMockTemplateWithPermission({
   name: 'Test Template',
@@ -28,15 +28,15 @@ const mockTemplate = createMockTemplateWithPermission({
   is_shared: true,
 })
 
-const renderExpenseTemplateCard = (props: ExpenseTemplateCardProps) => {
+const renderTemplateCard = (props: TemplateCardProps) => {
   setupTestingPinia({ stubActions: true })
 
-  return mount(ExpenseTemplateCard, {
+  return mount(TemplateCard, {
     props,
     global: {
       stubs: {
-        ExpenseTemplateCardMenu: {
-          template: '<div data-testid="expense-template-card-menu" />',
+        TemplateCardMenu: {
+          template: '<div data-testid="template-card-menu" />',
           props: ['isOwner', 'permissionLevel'],
           emits: ['edit', 'share', 'delete'],
         },
@@ -45,20 +45,20 @@ const renderExpenseTemplateCard = (props: ExpenseTemplateCardProps) => {
   })
 }
 
-describe('ExpenseTemplateCard', () => {
+describe('TemplateCard', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
   it('should mount component properly', () => {
-    const wrapper = renderExpenseTemplateCard({
+    const wrapper = renderTemplateCard({
       template: mockTemplate,
     })
     expect(wrapper.exists()).toBe(true)
   })
 
   it('should have correct props', () => {
-    const wrapper = renderExpenseTemplateCard({
+    const wrapper = renderTemplateCard({
       template: mockTemplate,
       hideSharedBadge: true,
     })
@@ -68,7 +68,7 @@ describe('ExpenseTemplateCard', () => {
   })
 
   it('should use default hideSharedBadge value', () => {
-    const wrapper = renderExpenseTemplateCard({
+    const wrapper = renderTemplateCard({
       template: mockTemplate,
     })
 
@@ -76,7 +76,7 @@ describe('ExpenseTemplateCard', () => {
   })
 
   it('should emit edit event when card is clicked', async () => {
-    const wrapper = renderExpenseTemplateCard({
+    const wrapper = renderTemplateCard({
       template: mockTemplate,
     })
 
@@ -93,7 +93,7 @@ describe('ExpenseTemplateCard', () => {
   })
 
   it('should emit share event when menu emits share', () => {
-    const wrapper = renderExpenseTemplateCard({
+    const wrapper = renderTemplateCard({
       template: mockTemplate,
     })
 
@@ -104,7 +104,7 @@ describe('ExpenseTemplateCard', () => {
   })
 
   it('should emit delete event when menu emits delete', () => {
-    const wrapper = renderExpenseTemplateCard({
+    const wrapper = renderTemplateCard({
       template: mockTemplate,
     })
 
@@ -118,7 +118,7 @@ describe('ExpenseTemplateCard', () => {
     const templateWithoutPermission = { ...mockTemplate }
     delete templateWithoutPermission.permission_level
 
-    const wrapper = renderExpenseTemplateCard({
+    const wrapper = renderTemplateCard({
       template: templateWithoutPermission,
     })
 
@@ -128,7 +128,7 @@ describe('ExpenseTemplateCard', () => {
   it('should handle template that is not shared', () => {
     const notSharedTemplate = { ...mockTemplate, is_shared: false }
 
-    const wrapper = renderExpenseTemplateCard({
+    const wrapper = renderTemplateCard({
       template: notSharedTemplate,
     })
 
@@ -145,7 +145,7 @@ describe('ExpenseTemplateCard', () => {
       duration: '2 hours',
     }
 
-    const wrapper = renderExpenseTemplateCard({
+    const wrapper = renderTemplateCard({
       template: differentTemplate,
     })
 
@@ -153,14 +153,14 @@ describe('ExpenseTemplateCard', () => {
   })
 
   it('should handle hideSharedBadge prop', () => {
-    const hiddenBadgeWrapper = renderExpenseTemplateCard({
+    const hiddenBadgeWrapper = renderTemplateCard({
       template: mockTemplate,
       hideSharedBadge: true,
     })
 
     expect(hiddenBadgeWrapper.props('hideSharedBadge')).toBe(true)
 
-    const shownBadgeWrapper = renderExpenseTemplateCard({
+    const shownBadgeWrapper = renderTemplateCard({
       template: mockTemplate,
       hideSharedBadge: false,
     })

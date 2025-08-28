@@ -6,7 +6,7 @@
     :chip-color="chipColor || 'primary'"
   >
     <template #item-card="{ item }">
-      <ExpenseTemplateCard
+      <TemplateCard
         :template="item"
         :hide-shared-badge="hideSharedBadge || false"
         @edit="emit('edit', $event)"
@@ -19,18 +19,18 @@
 
 <script setup lang="ts">
 import ItemsGroup from 'src/components/shared/ItemsGroup.vue'
-import ExpenseTemplateCard from './ExpenseTemplateCard.vue'
-import type { ExpenseTemplateWithPermission } from 'src/api'
+import TemplateCard from './TemplateCard.vue'
+import type { TemplateWithPermission } from 'src/api'
 
 const emit = defineEmits<{
   (e: 'edit', id: string): void
   (e: 'share', id: string): void
-  (e: 'delete', template: ExpenseTemplateWithPermission): void
+  (e: 'delete', template: TemplateWithPermission): void
 }>()
 
 withDefaults(
   defineProps<{
-    templates: ExpenseTemplateWithPermission[]
+    templates: TemplateWithPermission[]
     title: string
     chipColor?: string
     hideSharedBadge?: boolean

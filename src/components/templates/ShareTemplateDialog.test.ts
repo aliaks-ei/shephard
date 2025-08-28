@@ -4,7 +4,7 @@ import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-v
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { ComponentProps } from 'vue-component-type-helpers'
 
-import ShareExpenseTemplateDialog from './ShareExpenseTemplateDialog.vue'
+import ShareTemplateDialog from './ShareTemplateDialog.vue'
 
 vi.mock('@vueuse/core', () => ({
   useDebounceFn: vi.fn((fn) => fn),
@@ -12,10 +12,10 @@ vi.mock('@vueuse/core', () => ({
 
 installQuasarPlugin()
 
-type ShareExpenseTemplateDialogProps = ComponentProps<typeof ShareExpenseTemplateDialog>
+type ShareTemplateDialogProps = ComponentProps<typeof ShareTemplateDialog>
 
-const renderShareExpenseTemplateDialog = (props: ShareExpenseTemplateDialogProps) => {
-  return mount(ShareExpenseTemplateDialog, {
+const renderShareTemplateDialog = (props: ShareTemplateDialogProps) => {
+  return mount(ShareTemplateDialog, {
     props,
     global: {
       plugins: [
@@ -32,13 +32,13 @@ const renderShareExpenseTemplateDialog = (props: ShareExpenseTemplateDialogProps
   })
 }
 
-describe('ShareExpenseTemplateDialog', () => {
+describe('ShareTemplateDialog', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
   it('should mount component properly', () => {
-    const wrapper = renderShareExpenseTemplateDialog({
+    const wrapper = renderShareTemplateDialog({
       templateId: 'template-1',
       modelValue: true,
     })
@@ -46,7 +46,7 @@ describe('ShareExpenseTemplateDialog', () => {
   })
 
   it('should have correct props', () => {
-    const wrapper = renderShareExpenseTemplateDialog({
+    const wrapper = renderShareTemplateDialog({
       templateId: 'template-1',
       modelValue: true,
     })
@@ -56,7 +56,7 @@ describe('ShareExpenseTemplateDialog', () => {
   })
 
   it('should emit update:modelValue event when dialog is closed', async () => {
-    const wrapper = renderShareExpenseTemplateDialog({
+    const wrapper = renderShareTemplateDialog({
       templateId: 'template-1',
       modelValue: true,
     })
@@ -68,7 +68,7 @@ describe('ShareExpenseTemplateDialog', () => {
   })
 
   it('should emit shared event after successful sharing', () => {
-    const wrapper = renderShareExpenseTemplateDialog({
+    const wrapper = renderShareTemplateDialog({
       templateId: 'template-1',
       modelValue: true,
     })
@@ -80,14 +80,14 @@ describe('ShareExpenseTemplateDialog', () => {
   })
 
   it('should handle dialog open state', () => {
-    const openWrapper = renderShareExpenseTemplateDialog({
+    const openWrapper = renderShareTemplateDialog({
       templateId: 'template-1',
       modelValue: true,
     })
 
     expect(openWrapper.props('modelValue')).toBe(true)
 
-    const closedWrapper = renderShareExpenseTemplateDialog({
+    const closedWrapper = renderShareTemplateDialog({
       templateId: 'template-1',
       modelValue: false,
     })
@@ -99,7 +99,7 @@ describe('ShareExpenseTemplateDialog', () => {
     const templateIds = ['template-1', 'template-2', 'template-3']
 
     templateIds.forEach((templateId) => {
-      const wrapper = renderShareExpenseTemplateDialog({
+      const wrapper = renderShareTemplateDialog({
         templateId,
         modelValue: true,
       })
@@ -109,7 +109,7 @@ describe('ShareExpenseTemplateDialog', () => {
   })
 
   it('should handle empty template ID', () => {
-    const wrapper = renderShareExpenseTemplateDialog({
+    const wrapper = renderShareTemplateDialog({
       templateId: '',
       modelValue: true,
     })
@@ -118,7 +118,7 @@ describe('ShareExpenseTemplateDialog', () => {
   })
 
   it('should render when dialog is closed', () => {
-    const wrapper = renderShareExpenseTemplateDialog({
+    const wrapper = renderShareTemplateDialog({
       templateId: 'template-1',
       modelValue: false,
     })
@@ -128,7 +128,7 @@ describe('ShareExpenseTemplateDialog', () => {
   })
 
   it('should handle component lifecycle', async () => {
-    const wrapper = renderShareExpenseTemplateDialog({
+    const wrapper = renderShareTemplateDialog({
       templateId: 'template-1',
       modelValue: false,
     })

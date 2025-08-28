@@ -114,10 +114,10 @@ export const useExpensesStore = defineStore('expenses', () => {
       const index = expenses.value.findIndex((e) => e.id === expenseId)
       if (index !== -1 && updatedExpense) {
         // Preserve the category data
-        const existingCategory = expenses.value[index]?.expense_categories
+        const existingCategory = expenses.value[index]?.categories
         expenses.value[index] = {
           ...updatedExpense,
-          expense_categories: existingCategory,
+          categories: existingCategory,
         } as ExpenseWithCategory
       }
 

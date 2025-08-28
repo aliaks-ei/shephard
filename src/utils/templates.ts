@@ -1,4 +1,4 @@
-import type { ExpenseTemplateWithPermission } from 'src/api'
+import type { TemplateWithPermission } from 'src/api'
 
 export const getPermissionText = (permission: string): string => {
   switch (permission) {
@@ -41,10 +41,10 @@ export const getPermissionIcon = (permission: string): string => {
  * @returns The filtered and sorted templates
  */
 export const filterAndSortTemplates = (
-  templates: ExpenseTemplateWithPermission[],
+  templates: TemplateWithPermission[],
   searchQuery: string,
   sortBy: string,
-): ExpenseTemplateWithPermission[] => {
+): TemplateWithPermission[] => {
   let filtered = templates
 
   if (searchQuery) {

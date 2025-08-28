@@ -2,9 +2,9 @@ import { supabase } from 'src/lib/supabase/client'
 import type { Tables, TablesInsert, TablesUpdate } from 'src/lib/supabase/types'
 import { isDuplicateNameError, createDuplicateNameError } from 'src/utils/database'
 
-type MainTableName = 'expense_categories' | 'expense_templates' | 'plans' | 'expenses'
+type MainTableName = 'categories' | 'templates' | 'plans' | 'expenses'
 type ShareTableName = 'plan_shares' | 'template_shares'
-type ItemsTableName = 'expense_template_items' | 'plan_items'
+type ItemsTableName = 'template_items' | 'plan_items'
 
 export interface EntityConfig<TName extends MainTableName> {
   tableName: TName
@@ -205,7 +205,7 @@ export class BaseAPIService<
   }
 
   async getSharedUsers(entityId: string): Promise<SharedUser[]> {
-    if (this.config.tableName === 'expense_templates') {
+    if (this.config.tableName === 'templates') {
       const data = await this.rpcRaw<SharedUser[]>('get_template_shared_users', {
         p_template_id: entityId,
       })

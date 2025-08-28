@@ -1,11 +1,11 @@
-import type { ExpenseCategoryWithStats } from 'src/api/categories'
+import type { CategoryWithStats } from 'src/api/categories'
 
 /**
- * Creates a mock expense category with stats and optional overrides
+ * Creates a mock category with stats and optional overrides
  */
 export const createMockCategory = (
-  overrides: Partial<ExpenseCategoryWithStats> = {},
-): ExpenseCategoryWithStats => ({
+  overrides: Partial<CategoryWithStats> = {},
+): CategoryWithStats => ({
   id: 'cat-1',
   name: 'Food',
   color: '#FF5722',
@@ -19,7 +19,7 @@ export const createMockCategory = (
 /**
  * Creates multiple mock categories with predefined variety
  */
-export const createMockCategories = (count: number = 3): ExpenseCategoryWithStats[] => {
+export const createMockCategories = (count: number = 3): CategoryWithStats[] => {
   const categoryData = [
     { id: 'cat-1', name: 'Food', color: '#FF5722' },
     { id: 'cat-2', name: 'Transport', color: '#2196F3' },

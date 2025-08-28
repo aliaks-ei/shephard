@@ -3,16 +3,14 @@ import { useRoute } from 'vue-router'
 
 import { useUserStore } from 'src/stores/user'
 import { useTemplatesStore } from 'src/stores/templates'
-import type { CurrencyCode, ExpenseTemplateWithItems } from 'src/api'
+import type { CurrencyCode, TemplateWithItems } from 'src/api'
 
-export function useExpenseTemplate() {
+export function useTemplate() {
   const route = useRoute()
   const userStore = useUserStore()
   const templatesStore = useTemplatesStore()
 
-  const currentTemplate = ref<(ExpenseTemplateWithItems & { permission_level?: string }) | null>(
-    null,
-  )
+  const currentTemplate = ref<(TemplateWithItems & { permission_level?: string }) | null>(null)
   const isTemplateLoading = ref(false)
 
   const isNewTemplate = computed(() => route.name === 'new-template')
@@ -84,7 +82,7 @@ export function useExpenseTemplate() {
 
     if (!template) return false
 
-    const existingItemIds = currentTemplate.value.expense_template_items.map((item) => item.id)
+    const existingItemIds = currentTemplate.value.template_items.map((item) => item.id)
     await templatesStore.removeItemsFromTemplate(existingItemIds)
 
     const items = templateItems.map((item) => ({
@@ -99,7 +97,7 @@ export function useExpenseTemplate() {
     return true
   }
 
-  async function loadTemplate(): Promise<ExpenseTemplateWithItems | null> {
+  async function loadTemplate(): Promise<TemplateWithItems | null> {
     if (isNewTemplate.value || !routeTemplateId.value) return null
 
     currentTemplate.value = await templatesStore.loadTemplateWithItems(routeTemplateId.value)

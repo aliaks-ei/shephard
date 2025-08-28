@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref, nextTick } from 'vue'
-import { useExpenseTemplate } from './useExpenseTemplate'
+import { useTemplate } from './useTemplate'
 import { useUserStore } from 'src/stores/user'
 import { useTemplatesStore } from 'src/stores/templates'
-import type { ExpenseTemplateWithItems } from 'src/api'
+import type { TemplateWithItems } from 'src/api'
 import { setupTestingPinia } from 'test/helpers/pinia-mocks'
 
 // Simple inline helpers for this test
@@ -51,7 +51,7 @@ describe('computed properties', () => {
   it('identifies new template correctly', () => {
     mockRoute.value = { name: 'new-template', params: {} }
 
-    const { isNewTemplate } = useExpenseTemplate()
+    const { isNewTemplate } = useTemplate()
 
     expect(isNewTemplate.value).toBe(true)
   })
@@ -59,7 +59,7 @@ describe('computed properties', () => {
   it('identifies existing template correctly', () => {
     mockRoute.value = { name: 'template', params: { id: 'template-123' } }
 
-    const { isNewTemplate } = useExpenseTemplate()
+    const { isNewTemplate } = useTemplate()
 
     expect(isNewTemplate.value).toBe(false)
   })
@@ -67,7 +67,7 @@ describe('computed properties', () => {
   it('extracts route template ID correctly', () => {
     mockRoute.value = { name: 'template', params: { id: 'template-456' } }
 
-    const { routeTemplateId } = useExpenseTemplate()
+    const { routeTemplateId } = useTemplate()
 
     expect(routeTemplateId.value).toBe('template-456')
   })
@@ -75,7 +75,7 @@ describe('computed properties', () => {
   it('handles non-string route ID', () => {
     mockRoute.value = { name: 'template', params: { id: ['array-id'] } }
 
-    const { routeTemplateId } = useExpenseTemplate()
+    const { routeTemplateId } = useTemplate()
 
     expect(routeTemplateId.value).toBeNull()
   })
@@ -83,7 +83,7 @@ describe('computed properties', () => {
   it('handles missing route ID', () => {
     mockRoute.value = { name: 'template', params: {} }
 
-    const { routeTemplateId } = useExpenseTemplate()
+    const { routeTemplateId } = useTemplate()
 
     expect(routeTemplateId.value).toBeNull()
   })
@@ -94,7 +94,7 @@ describe('ownership and permissions', () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
-    const { currentTemplate, isOwner } = useExpenseTemplate()
+    const { currentTemplate, isOwner } = useTemplate()
 
     currentTemplate.value = {
       id: 'template-1',
@@ -105,7 +105,7 @@ describe('ownership and permissions', () => {
       currency: 'USD',
       created_at: '2024-01-01',
       updated_at: '2024-01-01',
-      expense_template_items: [],
+      template_items: [],
     }
 
     expect(isOwner.value).toBe(true)
@@ -115,7 +115,7 @@ describe('ownership and permissions', () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
-    const { currentTemplate, isOwner } = useExpenseTemplate()
+    const { currentTemplate, isOwner } = useTemplate()
 
     currentTemplate.value = {
       id: 'template-1',
@@ -126,7 +126,7 @@ describe('ownership and permissions', () => {
       currency: 'USD',
       created_at: '2024-01-01',
       updated_at: '2024-01-01',
-      expense_template_items: [],
+      template_items: [],
     }
 
     expect(isOwner.value).toBe(false)
@@ -136,7 +136,7 @@ describe('ownership and permissions', () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = null
 
-    const { currentTemplate, isOwner } = useExpenseTemplate()
+    const { currentTemplate, isOwner } = useTemplate()
 
     currentTemplate.value = {
       id: 'template-1',
@@ -147,7 +147,7 @@ describe('ownership and permissions', () => {
       currency: 'USD',
       created_at: '2024-01-01',
       updated_at: '2024-01-01',
-      expense_template_items: [],
+      template_items: [],
     }
 
     expect(isOwner.value).toBe(false)
@@ -157,7 +157,7 @@ describe('ownership and permissions', () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
-    const { currentTemplate, isOwner } = useExpenseTemplate()
+    const { currentTemplate, isOwner } = useTemplate()
 
     currentTemplate.value = null
 
@@ -169,7 +169,7 @@ describe('read-only mode detection', () => {
   it('allows editing for new templates', () => {
     mockRoute.value = { name: 'new-template', params: {} }
 
-    const { isReadOnlyMode } = useExpenseTemplate()
+    const { isReadOnlyMode } = useTemplate()
 
     expect(isReadOnlyMode.value).toBe(false)
   })
@@ -178,7 +178,7 @@ describe('read-only mode detection', () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
-    const { currentTemplate, isReadOnlyMode } = useExpenseTemplate()
+    const { currentTemplate, isReadOnlyMode } = useTemplate()
 
     currentTemplate.value = {
       id: 'template-1',
@@ -189,7 +189,7 @@ describe('read-only mode detection', () => {
       currency: 'USD',
       created_at: '2024-01-01',
       updated_at: '2024-01-01',
-      expense_template_items: [],
+      template_items: [],
     }
 
     expect(isReadOnlyMode.value).toBe(false)
@@ -199,7 +199,7 @@ describe('read-only mode detection', () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
-    const { currentTemplate, isReadOnlyMode } = useExpenseTemplate()
+    const { currentTemplate, isReadOnlyMode } = useTemplate()
 
     currentTemplate.value = {
       id: 'template-1',
@@ -210,7 +210,7 @@ describe('read-only mode detection', () => {
       currency: 'USD',
       created_at: '2024-01-01',
       updated_at: '2024-01-01',
-      expense_template_items: [],
+      template_items: [],
       permission_level: 'view',
     }
 
@@ -221,7 +221,7 @@ describe('read-only mode detection', () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
-    const { currentTemplate, isReadOnlyMode } = useExpenseTemplate()
+    const { currentTemplate, isReadOnlyMode } = useTemplate()
 
     currentTemplate.value = {
       id: 'template-1',
@@ -232,7 +232,7 @@ describe('read-only mode detection', () => {
       currency: 'USD',
       created_at: '2024-01-01',
       updated_at: '2024-01-01',
-      expense_template_items: [],
+      template_items: [],
       permission_level: 'edit',
     }
 
@@ -244,7 +244,7 @@ describe('edit mode detection', () => {
   it('enables edit mode for new templates', () => {
     mockRoute.value = { name: 'new-template', params: {} }
 
-    const { isEditMode } = useExpenseTemplate()
+    const { isEditMode } = useTemplate()
 
     expect(isEditMode.value).toBe(true)
   })
@@ -253,7 +253,7 @@ describe('edit mode detection', () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
-    const { currentTemplate, isEditMode } = useExpenseTemplate()
+    const { currentTemplate, isEditMode } = useTemplate()
 
     currentTemplate.value = {
       id: 'template-1',
@@ -264,7 +264,7 @@ describe('edit mode detection', () => {
       currency: 'USD',
       created_at: '2024-01-01',
       updated_at: '2024-01-01',
-      expense_template_items: [],
+      template_items: [],
     }
 
     expect(isEditMode.value).toBe(true)
@@ -274,7 +274,7 @@ describe('edit mode detection', () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
-    const { currentTemplate, isEditMode } = useExpenseTemplate()
+    const { currentTemplate, isEditMode } = useTemplate()
 
     currentTemplate.value = {
       id: 'template-1',
@@ -285,7 +285,7 @@ describe('edit mode detection', () => {
       currency: 'USD',
       created_at: '2024-01-01',
       updated_at: '2024-01-01',
-      expense_template_items: [],
+      template_items: [],
       permission_level: 'edit',
     }
 
@@ -296,7 +296,7 @@ describe('edit mode detection', () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
-    const { currentTemplate, isEditMode } = useExpenseTemplate()
+    const { currentTemplate, isEditMode } = useTemplate()
 
     currentTemplate.value = {
       id: 'template-1',
@@ -307,7 +307,7 @@ describe('edit mode detection', () => {
       currency: 'USD',
       created_at: '2024-01-01',
       updated_at: '2024-01-01',
-      expense_template_items: [],
+      template_items: [],
       permission_level: 'view',
     }
 
@@ -322,13 +322,13 @@ describe('template currency', () => {
 
     vi.mocked(userStore).preferences.preferences = createMockPreferences('EUR')
 
-    const { templateCurrency } = useExpenseTemplate()
+    const { templateCurrency } = useTemplate()
 
     expect(templateCurrency.value).toBe('EUR')
   })
 
   it('uses template currency for existing templates', () => {
-    const { currentTemplate, templateCurrency } = useExpenseTemplate()
+    const { currentTemplate, templateCurrency } = useTemplate()
 
     currentTemplate.value = {
       id: 'template-1',
@@ -339,7 +339,7 @@ describe('template currency', () => {
       currency: 'GBP',
       created_at: '2024-01-01',
       updated_at: '2024-01-01',
-      expense_template_items: [],
+      template_items: [],
     }
 
     expect(templateCurrency.value).toBe('GBP')
@@ -358,7 +358,7 @@ describe('createNewTemplateWithItems', () => {
     templatesStore.addTemplate = vi.fn().mockResolvedValue(mockTemplate)
     templatesStore.addItemsToTemplate = vi.fn().mockResolvedValue([])
 
-    const { createNewTemplateWithItems } = useExpenseTemplate()
+    const { createNewTemplateWithItems } = useTemplate()
 
     const result = await createNewTemplateWithItems('Test Template', 'monthly', 300, mockItems)
 
@@ -379,7 +379,7 @@ describe('createNewTemplateWithItems', () => {
 
     templatesStore.addTemplate = vi.fn().mockResolvedValue(null)
 
-    const { createNewTemplateWithItems } = useExpenseTemplate()
+    const { createNewTemplateWithItems } = useTemplate()
 
     const result = await createNewTemplateWithItems('Test Template', 'monthly', 300, [])
 
@@ -394,7 +394,7 @@ describe('createNewTemplateWithItems', () => {
     templatesStore.addTemplate = vi.fn().mockResolvedValue(mockTemplate)
     templatesStore.addItemsToTemplate = vi.fn().mockResolvedValue([])
 
-    const { createNewTemplateWithItems } = useExpenseTemplate()
+    const { createNewTemplateWithItems } = useTemplate()
 
     const result = await createNewTemplateWithItems('Test Template', 'monthly', 0, [])
 
@@ -408,7 +408,7 @@ describe('updateExistingTemplateWithItems', () => {
     mockRoute.value = { name: 'template', params: { id: 'template-123' } }
 
     const templatesStore = useTemplatesStore()
-    const { currentTemplate, updateExistingTemplateWithItems } = useExpenseTemplate()
+    const { currentTemplate, updateExistingTemplateWithItems } = useTemplate()
 
     const mockTemplate = { id: 'template-123', name: 'Updated Template' }
     const existingItems = [
@@ -429,8 +429,8 @@ describe('updateExistingTemplateWithItems', () => {
       currency: 'USD',
       created_at: '2024-01-01',
       updated_at: '2024-01-01',
-      expense_template_items: existingItems,
-    } as ExpenseTemplateWithItems
+      template_items: existingItems,
+    } as TemplateWithItems
 
     templatesStore.editTemplate = vi.fn().mockResolvedValue(mockTemplate)
     templatesStore.removeItemsFromTemplate = vi.fn().mockResolvedValue(undefined)
@@ -459,7 +459,7 @@ describe('updateExistingTemplateWithItems', () => {
   it('returns false when no route template ID', async () => {
     mockRoute.value = { name: 'template', params: {} }
 
-    const { updateExistingTemplateWithItems } = useExpenseTemplate()
+    const { updateExistingTemplateWithItems } = useTemplate()
 
     const result = await updateExistingTemplateWithItems('Test', 'monthly', 100, [])
 
@@ -469,7 +469,7 @@ describe('updateExistingTemplateWithItems', () => {
   it('returns false when no current template', async () => {
     mockRoute.value = { name: 'template', params: { id: 'template-123' } }
 
-    const { currentTemplate, updateExistingTemplateWithItems } = useExpenseTemplate()
+    const { currentTemplate, updateExistingTemplateWithItems } = useTemplate()
 
     currentTemplate.value = null
 
@@ -482,7 +482,7 @@ describe('updateExistingTemplateWithItems', () => {
     mockRoute.value = { name: 'template', params: { id: 'template-123' } }
 
     const templatesStore = useTemplatesStore()
-    const { currentTemplate, updateExistingTemplateWithItems } = useExpenseTemplate()
+    const { currentTemplate, updateExistingTemplateWithItems } = useTemplate()
 
     currentTemplate.value = {
       id: 'template-123',
@@ -493,7 +493,7 @@ describe('updateExistingTemplateWithItems', () => {
       currency: 'USD',
       created_at: '2024-01-01',
       updated_at: '2024-01-01',
-      expense_template_items: [],
+      template_items: [],
     }
 
     templatesStore.editTemplate = vi.fn().mockResolvedValue(null)
@@ -507,7 +507,7 @@ describe('updateExistingTemplateWithItems', () => {
     mockRoute.value = { name: 'template', params: { id: 'template-123' } }
 
     const templatesStore = useTemplatesStore()
-    const { currentTemplate, updateExistingTemplateWithItems } = useExpenseTemplate()
+    const { currentTemplate, updateExistingTemplateWithItems } = useTemplate()
 
     const mockTemplate = { id: 'template-123', name: 'Updated Template' }
     const existingItems = [{ id: 'item-1', name: 'Old Item' }]
@@ -521,8 +521,8 @@ describe('updateExistingTemplateWithItems', () => {
       currency: 'USD',
       created_at: '2024-01-01',
       updated_at: '2024-01-01',
-      expense_template_items: existingItems,
-    } as ExpenseTemplateWithItems
+      template_items: existingItems,
+    } as TemplateWithItems
 
     templatesStore.editTemplate = vi.fn().mockResolvedValue(mockTemplate)
     templatesStore.removeItemsFromTemplate = vi.fn().mockResolvedValue(undefined)
@@ -540,7 +540,7 @@ describe('loadTemplate', () => {
   it('returns null for new templates', async () => {
     mockRoute.value = { name: 'new-template', params: {} }
 
-    const { loadTemplate } = useExpenseTemplate()
+    const { loadTemplate } = useTemplate()
 
     const result = await loadTemplate()
 
@@ -550,7 +550,7 @@ describe('loadTemplate', () => {
   it('returns null when no route template ID', async () => {
     mockRoute.value = { name: 'template', params: {} }
 
-    const { loadTemplate } = useExpenseTemplate()
+    const { loadTemplate } = useTemplate()
 
     const result = await loadTemplate()
 
@@ -561,7 +561,7 @@ describe('loadTemplate', () => {
     mockRoute.value = { name: 'template', params: { id: 'template-123' } }
 
     const templatesStore = useTemplatesStore()
-    const { currentTemplate, loadTemplate } = useExpenseTemplate()
+    const { currentTemplate, loadTemplate } = useTemplate()
 
     const mockTemplate = {
       id: 'template-123',
@@ -572,7 +572,7 @@ describe('loadTemplate', () => {
       currency: 'USD',
       created_at: '2024-01-01',
       updated_at: '2024-01-01',
-      expense_template_items: [],
+      template_items: [],
     }
 
     templatesStore.loadTemplateWithItems = vi.fn().mockResolvedValue(mockTemplate)
@@ -588,7 +588,7 @@ describe('loadTemplate', () => {
     mockRoute.value = { name: 'template', params: { id: 'template-123' } }
 
     const templatesStore = useTemplatesStore()
-    const { currentTemplate, loadTemplate } = useExpenseTemplate()
+    const { currentTemplate, loadTemplate } = useTemplate()
 
     templatesStore.loadTemplateWithItems = vi.fn().mockResolvedValue(null)
 
@@ -604,7 +604,7 @@ describe('reactivity', () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
-    const { currentTemplate, isOwner, templateCurrency } = useExpenseTemplate()
+    const { currentTemplate, isOwner, templateCurrency } = useTemplate()
 
     expect(isOwner.value).toBe(false)
     expect(templateCurrency.value).toBeUndefined()
@@ -618,7 +618,7 @@ describe('reactivity', () => {
       currency: 'EUR',
       created_at: '2024-01-01',
       updated_at: '2024-01-01',
-      expense_template_items: [],
+      template_items: [],
     }
 
     await nextTick()
@@ -631,7 +631,7 @@ describe('reactivity', () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
-    const { currentTemplate, isReadOnlyMode, isEditMode } = useExpenseTemplate()
+    const { currentTemplate, isReadOnlyMode, isEditMode } = useTemplate()
 
     currentTemplate.value = {
       id: 'template-1',
@@ -642,7 +642,7 @@ describe('reactivity', () => {
       currency: 'USD',
       created_at: '2024-01-01',
       updated_at: '2024-01-01',
-      expense_template_items: [],
+      template_items: [],
       permission_level: 'view',
     }
 
@@ -662,7 +662,7 @@ describe('reactivity', () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
-    const { currentTemplate, isOwner } = useExpenseTemplate()
+    const { currentTemplate, isOwner } = useTemplate()
 
     expect(isOwner.value).toBe(false)
 
@@ -675,7 +675,7 @@ describe('reactivity', () => {
       currency: 'USD',
       created_at: '2024-01-01',
       updated_at: '2024-01-01',
-      expense_template_items: [],
+      template_items: [],
     }
 
     await nextTick()
@@ -707,7 +707,7 @@ describe('integration scenarios', () => {
     templatesStore.addTemplate = vi.fn().mockResolvedValue(mockTemplate)
     templatesStore.addItemsToTemplate = vi.fn().mockResolvedValue([])
 
-    const { isNewTemplate, templateCurrency, createNewTemplateWithItems } = useExpenseTemplate()
+    const { isNewTemplate, templateCurrency, createNewTemplateWithItems } = useTemplate()
 
     expect(isNewTemplate.value).toBe(true)
     expect(templateCurrency.value).toBe('EUR')
@@ -743,11 +743,11 @@ describe('integration scenarios', () => {
       currency: 'USD',
       created_at: '2024-01-01',
       updated_at: '2024-01-01',
-      expense_template_items: [
+      template_items: [
         { id: 'item-1', name: 'Old Item 1' },
         { id: 'item-2', name: 'Old Item 2' },
       ],
-    } as ExpenseTemplateWithItems
+    } as TemplateWithItems
 
     const updatedTemplate = { id: 'template-456', name: 'New Budget' }
     const newItems = [{ name: 'Updated Groceries', category_id: 'food-cat', amount: 500 }]
@@ -764,7 +764,7 @@ describe('integration scenarios', () => {
       templateCurrency,
       loadTemplate,
       updateExistingTemplateWithItems,
-    } = useExpenseTemplate()
+    } = useTemplate()
 
     expect(isNewTemplate.value).toBe(false)
 
@@ -815,14 +815,13 @@ describe('integration scenarios', () => {
       currency: 'GBP',
       created_at: '2024-01-01',
       updated_at: '2024-01-01',
-      expense_template_items: [],
+      template_items: [],
       permission_level: 'view',
-    } as ExpenseTemplateWithItems & { permission_level: string }
+    } as TemplateWithItems & { permission_level: string }
 
     templatesStore.loadTemplateWithItems = vi.fn().mockResolvedValue(sharedTemplate)
 
-    const { isOwner, isEditMode, isReadOnlyMode, templateCurrency, loadTemplate } =
-      useExpenseTemplate()
+    const { isOwner, isEditMode, isReadOnlyMode, templateCurrency, loadTemplate } = useTemplate()
 
     const loadResult = await loadTemplate()
     expect(loadResult).toEqual(sharedTemplate)

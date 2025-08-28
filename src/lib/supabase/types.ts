@@ -8,10 +8,10 @@ export type Database = {
   }
   public: {
     Tables: {
-      expense_categories: {
+      categories: {
         Row: {
           color: string
-          created_at: string
+          created_at: string | null
           icon: string
           id: string
           name: string
@@ -31,84 +31,6 @@ export type Database = {
           icon?: string | null
           id?: string
           name?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      expense_template_items: {
-        Row: {
-          amount: number
-          category_id: string
-          created_at: string
-          id: string
-          name: string
-          template_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          amount: number
-          category_id: string
-          created_at?: string | null
-          id?: string
-          name: string
-          template_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          amount?: number
-          category_id?: string
-          created_at?: string | null
-          id?: string
-          name?: string
-          template_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'expense_template_items_category_id_fkey'
-            columns: ['category_id']
-            isOneToOne: false
-            referencedRelation: 'expense_categories'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'expense_template_items_template_id_fkey'
-            columns: ['template_id']
-            isOneToOne: false
-            referencedRelation: 'expense_templates'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      expense_templates: {
-        Row: {
-          created_at: string
-          currency: string
-          duration: string
-          id: string
-          name: string
-          owner_id: string
-          total: number
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          currency?: string | null
-          duration: string
-          id?: string
-          name: string
-          owner_id: string
-          total?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          currency?: string | null
-          duration?: string
-          id?: string
-          name?: string
-          owner_id?: string
-          total?: number | null
           updated_at?: string | null
         }
         Relationships: []
@@ -155,7 +77,7 @@ export type Database = {
             foreignKeyName: 'expenses_category_id_fkey'
             columns: ['category_id']
             isOneToOne: false
-            referencedRelation: 'expense_categories'
+            referencedRelation: 'categories'
             referencedColumns: ['id']
           },
           {
@@ -171,7 +93,7 @@ export type Database = {
         Row: {
           amount: number
           category_id: string
-          created_at: string
+          created_at: string | null
           id: string
           name: string
           plan_id: string
@@ -200,7 +122,7 @@ export type Database = {
             foreignKeyName: 'plan_items_category_id_fkey'
             columns: ['category_id']
             isOneToOne: false
-            referencedRelation: 'expense_categories'
+            referencedRelation: 'categories'
             referencedColumns: ['id']
           },
           {
@@ -250,7 +172,7 @@ export type Database = {
       plans: {
         Row: {
           created_at: string | null
-          currency: string
+          currency: string | null
           end_date: string
           id: string
           name: string
@@ -258,7 +180,7 @@ export type Database = {
           start_date: string
           status: string
           template_id: string
-          total: number
+          total: number | null
           updated_at: string | null
         }
         Insert: {
@@ -281,6 +203,7 @@ export type Database = {
           name?: string
           owner_id?: string
           start_date?: string
+          status?: string
           template_id?: string
           total?: number | null
           updated_at?: string | null
@@ -290,7 +213,52 @@ export type Database = {
             foreignKeyName: 'plans_template_id_fkey'
             columns: ['template_id']
             isOneToOne: false
-            referencedRelation: 'expense_templates'
+            referencedRelation: 'templates'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      template_items: {
+        Row: {
+          amount: number
+          category_id: string
+          created_at: string | null
+          id: string
+          name: string
+          template_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          category_id: string
+          created_at?: string | null
+          id?: string
+          name: string
+          template_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          category_id?: string
+          created_at?: string | null
+          id?: string
+          name?: string
+          template_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'template_items_category_id_fkey'
+            columns: ['category_id']
+            isOneToOne: false
+            referencedRelation: 'categories'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'template_items_template_id_fkey'
+            columns: ['template_id']
+            isOneToOne: false
+            referencedRelation: 'templates'
             referencedColumns: ['id']
           },
         ]
@@ -325,10 +293,43 @@ export type Database = {
             foreignKeyName: 'template_shares_template_id_fkey'
             columns: ['template_id']
             isOneToOne: false
-            referencedRelation: 'expense_templates'
+            referencedRelation: 'templates'
             referencedColumns: ['id']
           },
         ]
+      }
+      templates: {
+        Row: {
+          created_at: string | null
+          currency: string | null
+          duration: string
+          id: string
+          name: string
+          owner_id: string
+          total: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          currency?: string | null
+          duration: string
+          id?: string
+          name: string
+          owner_id: string
+          total?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          currency?: string | null
+          duration?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          total?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       users: {
         Row: {
@@ -365,6 +366,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_plan_status: {
+        Args: {
+          p_current_status?: string
+          p_end_date: string
+          p_start_date: string
+        }
+        Returns: string
+      }
       can_access_template: {
         Args: { template_id: string; user_id: string }
         Returns: boolean
