@@ -71,8 +71,7 @@
           <q-card
             flat
             bordered
-            :class="{ 'bg-primary-1 border-primary': selectedTemplateId === template.id }"
-            class="cursor-pointer transition-all"
+            clickable
             @click="selectTemplate(template)"
           >
             <q-card-section>
@@ -180,7 +179,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useTemplatesStore } from 'src/stores/templates'
@@ -206,7 +205,6 @@ const isLoadingTemplates = computed(() => templatesStore.isLoading)
 const availableTemplates = computed(() => templatesStore.templates)
 
 async function selectTemplate(template: TemplateWithPermission): Promise<void> {
-  // Load the full template with items
   const fullTemplate = await templatesStore.loadTemplateWithItems(template.id)
 
   if (fullTemplate) {
@@ -219,31 +217,4 @@ async function selectTemplate(template: TemplateWithPermission): Promise<void> {
 function goToCreateTemplate(): void {
   router.push({ name: 'new-template' })
 }
-
-onMounted(async () => {
-  // Load templates if not already loaded
-  if (templatesStore.templates.length === 0) {
-    await templatesStore.loadTemplates()
-  }
-})
 </script>
-
-<style scoped>
-.border-primary {
-  border-color: var(--q-primary) !important;
-  border-width: 2px !important;
-}
-
-.transition-all {
-  transition: all 0.2s ease;
-}
-
-.cursor-pointer {
-  cursor: pointer;
-}
-
-.cursor-pointer:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-</style>

@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 
-import { getCategoriesWithStats, type CategoryWithStats } from 'src/api'
+import { getCategories, getCategoriesWithStats, type CategoryWithStats } from 'src/api'
 import { useError } from 'src/composables/useError'
 import { useUserStore } from 'src/stores/user'
 
@@ -25,14 +25,20 @@ export const useCategoriesStore = defineStore('categories', () => {
     return categories.value.sort((a, b) => a.name.localeCompare(b.name))
   })
 
-  async function loadCategories() {
-    if (!userId.value) return
+  async function loadCategories(options: { includeTemplateStats?: boolean } = {}) {
+    const { includeTemplateStats = false } = options
 
     isLoading.value = true
 
     try {
-      const data = await getCategoriesWithStats(userId.value)
-      categories.value = data
+      if (includeTemplateStats) {
+        if (!userId.value) return
+        const dataWithStats = await getCategoriesWithStats(userId.value)
+        categories.value = dataWithStats
+      } else {
+        const basic = await getCategories()
+        categories.value = basic.map((c) => ({ ...c, templates: [] }))
+      }
     } catch (error) {
       handleError('CATEGORIES.LOAD_FAILED', error)
     } finally {

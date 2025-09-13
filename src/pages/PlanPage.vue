@@ -7,9 +7,9 @@
     :is-loading="isPlanLoading"
     @back="goBack"
   >
-    <!-- Main Content -->
+    <!-- For new plans, show the creation form directly without tabs -->
     <q-form
-      v-if="isEditMode && (isNewPlan || canEditPlanData)"
+      v-if="isNewPlan"
       ref="planForm"
       @submit="handleSavePlan"
     >
@@ -269,7 +269,226 @@
       </q-card>
     </q-form>
 
-    <!-- Read-only view -->
+    <!-- For existing plans, show tabs for Overview and Edit modes -->
+    <div v-else-if="!isNewPlan">
+      <q-tabs
+        v-model="activeTab"
+        dense
+        no-caps
+        align="justify"
+        active-color="primary"
+        indicator-color="primary"
+      >
+        <q-tab
+          name="overview"
+          label="Overview"
+          icon="eva-pie-chart-outline"
+        />
+        <q-tab
+          v-if="isEditMode"
+          name="edit"
+          label="Edit Plan"
+          icon="eva-edit-outline"
+        />
+      </q-tabs>
+
+      <q-separator />
+
+      <q-tab-panels
+        v-model="activeTab"
+        animated
+        transition-prev="fade"
+        transition-next="fade"
+        class="q-mt-md"
+      >
+        <!-- Overview Tab -->
+        <q-tab-panel name="overview">
+          <PlanOverviewTab
+            :plan="currentPlan"
+            :is-owner="isOwner"
+            :is-edit-mode="isEditMode"
+            @refresh="refreshPlanData"
+            @open-expense-dialog="
+              (categoryId?: string) => openExpenseRegistrationFromCategory(categoryId)
+            "
+          />
+        </q-tab-panel>
+
+        <!-- Edit Tab -->
+        <q-tab-panel
+          v-if="isEditMode"
+          name="edit"
+        >
+          <q-form
+            ref="planEditForm"
+            @submit="handleSavePlan"
+          >
+            <!-- Plan Information for editing existing plan -->
+            <q-card
+              flat
+              bordered
+              class="q-pa-lg q-mb-lg"
+            >
+              <div class="text-h6 q-mb-md">
+                <q-icon
+                  name="eva-info-outline"
+                  class="q-mr-sm"
+                />
+                Plan Information
+              </div>
+
+              <q-input
+                v-model="form.name"
+                label="Plan Name"
+                outlined
+                :rules="[(val) => !!val || 'Plan name is required']"
+                class="q-mb-md"
+              />
+
+              <div class="row q-col-gutter-md">
+                <div class="col-12 col-sm-6">
+                  <q-input
+                    v-model="form.startDate"
+                    label="Start Date"
+                    outlined
+                    :rules="startDateRules"
+                    @update:model-value="updateEndDate"
+                  >
+                    <template #append>
+                      <q-icon
+                        name="eva-calendar-outline"
+                        class="cursor-pointer"
+                      >
+                        <q-popup-proxy
+                          cover
+                          transition-show="scale"
+                          transition-hide="scale"
+                        >
+                          <q-date
+                            v-model="form.startDate"
+                            mask="YYYY-MM-DD"
+                            @update:model-value="onStartDateChange"
+                          >
+                            <div class="row items-center justify-end">
+                              <q-btn
+                                v-close-popup
+                                label="Close"
+                                color="primary"
+                                flat
+                              />
+                            </div>
+                          </q-date>
+                        </q-popup-proxy>
+                      </q-icon>
+                    </template>
+                  </q-input>
+                </div>
+                <div class="col-12 col-sm-6">
+                  <q-input
+                    v-model="form.endDate"
+                    label="End Date"
+                    outlined
+                    readonly
+                    :rules="[(val) => !!val || 'End date is required']"
+                    hint="Calculated automatically based on template duration"
+                  />
+                </div>
+              </div>
+            </q-card>
+
+            <!-- Plan Items for editing existing plan -->
+            <q-card
+              flat
+              bordered
+              class="q-pa-lg q-mb-lg"
+            >
+              <div class="row items-center justify-between q-mb-lg">
+                <div class="text-h6">
+                  <q-icon
+                    name="eva-list-outline"
+                    class="q-mr-sm"
+                  />
+                  Plan Items
+                </div>
+                <q-btn
+                  v-if="planCategoryGroups.length > 1"
+                  flat
+                  :icon="allCategoriesExpanded ? 'eva-collapse-outline' : 'eva-expand-outline'"
+                  :label="allCategoriesExpanded ? 'Collapse All' : 'Expand All'"
+                  color="primary"
+                  @click="toggleAllCategories"
+                />
+              </div>
+
+              <div v-if="planCategoryGroups.length === 0">
+                <q-banner class="bg-grey-1 text-grey-7">
+                  <template #avatar>
+                    <q-icon name="eva-info-outline" />
+                  </template>
+                  No items in this plan
+                </q-banner>
+              </div>
+
+              <div v-else>
+                <PlanCategory
+                  v-for="group in planCategoryGroups"
+                  :key="group.categoryId"
+                  :category-id="group.categoryId"
+                  :category-name="getCategoryName(group.categoryId)"
+                  :category-color="group.categoryColor"
+                  :category-icon="getCategoryIcon(group.categoryId)"
+                  :items="group.items"
+                  :currency="planCurrency"
+                  :default-expanded="allCategoriesExpanded"
+                  @update-item="handleUpdateItem"
+                  @remove-item="handleRemoveItem"
+                  @add-item="handleAddItem"
+                />
+              </div>
+
+              <div v-if="planCategoryGroups.length > 0">
+                <q-separator class="q-mb-lg" />
+                <div class="row items-center justify-between">
+                  <div
+                    class="text-h6"
+                    style="display: flex; align-items: center"
+                  >
+                    <q-icon
+                      name="eva-credit-card-outline"
+                      class="q-mr-sm"
+                    />
+                    Total Amount
+                  </div>
+                  <div class="text-h4 text-primary text-weight-bold">
+                    {{ formattedTotalAmount }}
+                  </div>
+                </div>
+                <div class="text-body2 text-grey-6">
+                  Total across {{ planCategoryGroups.length }}
+                  {{ planCategoryGroups.length === 1 ? 'category' : 'categories' }}
+                </div>
+              </div>
+
+              <div
+                v-if="hasDuplicateItems && planItems.length > 0"
+                class="q-mt-md"
+              >
+                <q-banner class="bg-red-1 text-red-8">
+                  <template #avatar>
+                    <q-icon name="eva-alert-triangle-outline" />
+                  </template>
+                  <div>
+                    You have duplicate item names within the same category. Please use unique names.
+                  </div>
+                </q-banner>
+              </div>
+            </q-card>
+          </q-form>
+        </q-tab-panel>
+      </q-tab-panels>
+    </div>
+
+    <!-- Legacy read-only view (for backward compatibility) -->
     <div v-else>
       <q-card
         flat
@@ -382,14 +601,25 @@
         :is-deleting="plansStore.isLoading"
         @confirm="deletePlan"
       />
+
+      <!-- Expense Registration Dialog -->
+      <ExpenseRegistrationDialog
+        v-if="currentPlan && !isNewPlan"
+        v-model="showExpenseDialog"
+        :default-plan-id="currentPlan.id"
+        :default-category-id="selectedCategory?.categoryId || null"
+        @expense-created="refreshPlanData"
+      />
     </template>
 
     <!-- FAB Slot -->
     <template #fab>
       <ActionsFab
-        v-if="isEditMode && (isNewPlan || canEditPlanData)"
+        v-if="
+          (isEditMode && (isNewPlan || canEditPlanData)) || (!isNewPlan && activeTab === 'overview')
+        "
         v-model="fabOpen"
-        :actions="fabActions"
+        :actions="currentFabActions"
         :visible="true"
       />
     </template>
@@ -407,6 +637,8 @@ import PlanCategory from 'src/components/plans/PlanCategory.vue'
 import SharePlanDialog from 'src/components/plans/SharePlanDialog.vue'
 import TemplateCard from 'src/components/templates/TemplateCard.vue'
 import DeleteDialog from 'src/components/shared/DeleteDialog.vue'
+import PlanOverviewTab from 'src/components/plans/PlanOverviewTab.vue'
+import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 import { usePlansStore } from 'src/stores/plans'
 import { useCategoriesStore } from 'src/stores/categories'
 import { useNotificationStore } from 'src/stores/notification'
@@ -526,11 +758,15 @@ const { fabOpen, openDialog, closeDialog, getDialogState, createFabAction, initi
 
 // Local state
 const planForm = ref()
+const planEditForm = ref()
 const selectedTemplate = ref<TemplateWithItems | null>(null)
 const selectedTemplateOption = ref<string | null>(null)
 const allCategoriesExpanded = ref(false)
 const showCancelDialog = ref(false)
 const showDeleteDialog = ref(false)
+const selectedCategory = ref<{ categoryId: string } | null>(null)
+const activeTab = ref('overview')
+const showExpenseDialog = ref(false)
 
 const form = ref({
   name: '',
@@ -586,8 +822,8 @@ const isShareDialogOpen = computed({
   set: (value: boolean) => (value ? openDialog('share') : closeDialog('share')),
 })
 
-// FAB Actions
-const fabActions = computed(() => [
+// FAB Actions for edit mode and new plans
+const editFabActions = computed(() => [
   {
     key: 'save',
     icon: 'eva-save-outline',
@@ -634,6 +870,47 @@ const fabActions = computed(() => [
     }),
   },
 ])
+
+// FAB Actions for overview tab
+const overviewFabActions = computed(() => [
+  {
+    key: 'add-expense',
+    icon: 'eva-plus-circle-outline',
+    label: 'Add Expense',
+    color: 'primary',
+    visible: isEditMode.value,
+    handler: createFabAction(openExpenseRegistration),
+  },
+  {
+    key: 'edit',
+    icon: 'eva-edit-outline',
+    label: 'Edit Plan',
+    color: 'info',
+    visible: isEditMode.value && canEditPlanData.value,
+    handler: createFabAction(() => {
+      activeTab.value = 'edit'
+    }),
+  },
+  {
+    key: 'share',
+    icon: 'eva-share-outline',
+    label: 'Share',
+    color: 'info',
+    visible: isOwner.value,
+    handler: createFabAction(() => openDialog('share')),
+  },
+])
+
+// Current FAB actions based on context
+const currentFabActions = computed(() => {
+  if (isNewPlan.value) {
+    return editFabActions.value
+  }
+  if (activeTab.value === 'overview') {
+    return overviewFabActions.value
+  }
+  return editFabActions.value
+})
 
 // Component methods
 function getCategoryName(categoryId: string): string {
@@ -725,7 +1002,8 @@ async function handleSavePlan(): Promise<void> {
     return
   }
 
-  const formRef = planForm.value
+  // Use the appropriate form ref based on context
+  const formRef = isNewPlan.value ? planForm.value : planEditForm.value
   if (formRef) {
     const isFormValid = await formRef.validate()
     if (!isFormValid) {
@@ -803,6 +1081,28 @@ function goBack(): void {
 function clearTemplateError(): void {
   templateError.value = false
   templateErrorMessage.value = ''
+}
+
+function openExpenseRegistration(): void {
+  selectedCategory.value = null
+  showExpenseDialog.value = true
+}
+
+function openExpenseRegistrationFromCategory(categoryId?: string): void {
+  selectedCategory.value = categoryId ? { categoryId } : null
+  showExpenseDialog.value = true
+}
+
+async function refreshPlanData(): Promise<void> {
+  if (!isNewPlan.value && currentPlan.value) {
+    const plan = await loadPlan()
+    if (plan) {
+      form.value.name = plan.name
+      form.value.startDate = plan.start_date
+      form.value.endDate = plan.end_date
+      loadPlanItems(plan)
+    }
+  }
 }
 
 onMounted(async () => {

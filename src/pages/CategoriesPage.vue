@@ -146,6 +146,6 @@ function handleDialogClose() {
 }
 
 onMounted(() => {
-  categoriesStore.loadCategories()
+  categoriesStore.loadCategories({ includeTemplateStats: true })
 })
 </script>

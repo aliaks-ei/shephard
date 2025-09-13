@@ -42,6 +42,7 @@
             outlined
             emit-value
             map-options
+            :readonly="!!props.defaultPlanId"
             :loading="plansStore.isLoading"
             :rules="[(val) => !!val || 'Plan is required']"
             @update:model-value="onPlanSelected"
@@ -88,6 +89,7 @@
             map-options
             :loading="!selectedPlan"
             :disable="!selectedPlan"
+            :readonly="!!props.defaultCategoryId"
             :rules="[(val) => !!val || 'Category is required']"
             class="q-mb-md"
           >
@@ -267,6 +269,8 @@ interface ExpenseRegistrationForm {
 
 const props = defineProps<{
   modelValue: boolean
+  defaultPlanId?: string | null
+  defaultCategoryId?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -423,6 +427,22 @@ watch(
     if (newValue) {
       await Promise.all([plansStore.loadPlans(), categoriesStore.loadCategories()])
       resetForm()
+
+      // Preselect plan if provided
+      if (props.defaultPlanId) {
+        form.value.planId = props.defaultPlanId
+        await expensesStore.loadExpenseSummaryForPlan(props.defaultPlanId)
+      }
+
+      // Preselect category if provided and plan is set
+      if (props.defaultCategoryId && form.value.planId) {
+        const categoryExists = categoryOptions.value.some(
+          (c) => c.value === props.defaultCategoryId,
+        )
+        if (categoryExists) {
+          form.value.categoryId = props.defaultCategoryId
+        }
+      }
     }
   },
 )
