@@ -57,7 +57,7 @@ describe('list page wiring for plans', () => {
     lp.goToNew()
     expect(pushMock).toHaveBeenCalledWith({ name: 'new-plan' })
     lp.viewItem('plan-2')
-    expect(pushMock).toHaveBeenCalledWith({ name: 'plan', params: { id: 'plan-2' } })
+    expect(pushMock).toHaveBeenCalledWith({ name: 'plan-overview', params: { id: 'plan-2' } })
   })
 
   it('computes empty state config', () => {

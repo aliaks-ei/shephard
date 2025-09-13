@@ -16,7 +16,7 @@
 
     <q-item-section style="max-width: 150px">
       <q-input
-        :model-value="modelValue.amount"
+        :model-value="modelValue.amount || undefined"
         :readonly="readonly"
         :rules="amountRules"
         :prefix="currencySymbol"
@@ -104,9 +104,11 @@ function updateName(name: string | number | null): void {
 function updateAmount(amount: string | number | null): void {
   if (props.readonly) return
 
+  const numericAmount =
+    amount === null || amount === undefined || amount === '' ? 0 : Number(amount)
   const updatedItem: TemplateItemUI = {
     ...props.modelValue,
-    amount: Number(amount) || 0,
+    amount: numericAmount,
   }
   emit('update:modelValue', updatedItem)
 }

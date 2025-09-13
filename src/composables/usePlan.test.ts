@@ -6,13 +6,24 @@ import { usePlan } from './usePlan'
 import { usePlansStore } from 'src/stores/plans'
 import { useUserStore } from 'src/stores/user'
 
-const mockRoute = ref<{ name: string; params: Record<string, string | string[] | undefined> }>({
-  name: 'plan',
-  params: { id: 'plan-123' },
-})
+const mockRouteValue = ref<{ name: string; params: Record<string, string | string[] | undefined> }>(
+  {
+    name: 'plan-overview',
+    params: { id: 'plan-123' },
+  },
+)
+
+const mockRoute = {
+  get name() {
+    return mockRouteValue.value.name
+  },
+  get params() {
+    return mockRouteValue.value.params
+  },
+}
 
 vi.mock('vue-router', () => ({
-  useRoute: () => mockRoute.value,
+  useRoute: () => mockRoute,
 }))
 
 vi.mock('src/utils/plans', () => ({
@@ -38,12 +49,12 @@ const mockUser = (id: string) => ({
 beforeEach(() => {
   pinia = createTestingPinia({ createSpy: vi.fn })
   setActivePinia(pinia)
-  mockRoute.value = { name: 'plan', params: { id: 'plan-123' } }
+  mockRouteValue.value = { name: 'plan-overview', params: { id: 'plan-123' } }
 })
 
 describe('computed state', () => {
   it('detects new plan and extracts route id', () => {
-    mockRoute.value = { name: 'new-plan', params: {} }
+    mockRouteValue.value = { name: 'new-plan', params: {} }
     const p = usePlan()
     expect(p.isNewPlan.value).toBe(true)
     expect(p.routePlanId.value).toBeNull()
@@ -73,6 +84,20 @@ describe('computed state', () => {
     expect(p.isOwner.value).toBe(true)
     expect(p.isEditMode.value).toBe(true)
     expect(p.isReadOnlyMode.value).toBe(false)
+  })
+
+  it('computes currentTab based on route name', async () => {
+    mockRouteValue.value = { name: 'plan-overview', params: { id: 'plan-123' } }
+    const p = usePlan()
+    expect(p.currentTab.value).toBe('overview')
+
+    mockRouteValue.value = { name: 'plan-edit', params: { id: 'plan-123' } }
+    await nextTick()
+    expect(p.currentTab.value).toBe('edit')
+
+    mockRouteValue.value = { name: 'new-plan', params: {} }
+    await nextTick()
+    expect(p.currentTab.value).toBe('overview')
   })
 
   it('read-only when shared with view permission', () => {
@@ -105,11 +130,11 @@ describe('computed state', () => {
     // @ts-expect-error - test state
     userStore.preferences = { currency: 'EUR' }
 
-    mockRoute.value = { name: 'new-plan', params: {} }
+    mockRouteValue.value = { name: 'new-plan', params: {} }
     const pNew = usePlan()
     expect(pNew.planCurrency.value).toBe('EUR')
 
-    mockRoute.value = { name: 'plan', params: { id: 'plan-1' } }
+    mockRouteValue.value = { name: 'plan-overview', params: { id: 'plan-1' } }
     const p = usePlan()
     p.currentPlan.value = {
       id: 'plan-1',
@@ -162,7 +187,7 @@ describe('CRUD flows', () => {
   })
 
   it('updateExistingPlanWithItems updates, removes old items and saves new ones', async () => {
-    mockRoute.value = { name: 'plan', params: { id: 'plan-123' } }
+    mockRouteValue.value = { name: 'plan-overview', params: { id: 'plan-123' } }
     const plansStore = usePlansStore()
     const p = usePlan()
     p.currentPlan.value = {
@@ -210,12 +235,12 @@ describe('CRUD flows', () => {
   })
 
   it('updateExistingPlanWithItems returns false when route id missing or no current plan', async () => {
-    mockRoute.value = { name: 'plan', params: {} }
+    mockRouteValue.value = { name: 'plan-overview', params: {} }
     let p = usePlan()
     let ok = await p.updateExistingPlanWithItems('n', 's', 'e', 0, [])
     expect(ok).toBe(false)
 
-    mockRoute.value = { name: 'plan', params: { id: 'plan-1' } }
+    mockRouteValue.value = { name: 'plan-overview', params: { id: 'plan-1' } }
     p = usePlan()
     p.currentPlan.value = null
     ok = await p.updateExistingPlanWithItems('n', 's', 'e', 0, [])
@@ -231,7 +256,7 @@ describe('CRUD flows', () => {
     expect(loaded).toEqual({ id: 'plan-123', plan_items: [] })
     expect(plansStore.loadPlanWithItems).toHaveBeenCalledWith('plan-123')
 
-    mockRoute.value = { name: 'new-plan', params: {} }
+    mockRouteValue.value = { name: 'new-plan', params: {} }
     const np = usePlan()
     const res = await np.loadPlan()
     expect(res).toBeNull()

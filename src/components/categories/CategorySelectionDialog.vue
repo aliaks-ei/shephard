@@ -6,7 +6,8 @@
     :full-height="$q.screen.xs"
     @update:model-value="$emit('update:modelValue', $event)"
   >
-    <q-card>
+    <q-card class="column full-height">
+      <!-- Fixed header section -->
       <q-card-section class="row items-center q-pb-none">
         <div class="col">
           <h2 class="text-h6 q-my-none">Select Category</h2>
@@ -23,16 +24,31 @@
         />
       </q-card-section>
 
+      <!-- Fixed search section -->
+      <q-card-section class="q-pt-md q-pb-none">
+        <q-input
+          v-model="searchQuery"
+          placeholder="Search categories..."
+          outlined
+          dense
+          clearable
+        >
+          <template #prepend>
+            <q-icon name="eva-search-outline" />
+          </template>
+        </q-input>
+      </q-card-section>
+
       <q-separator class="q-mt-md" />
 
-      <q-card-section class="q-pt-none">
+      <!-- Scrollable content section -->
+      <q-card-section class="col q-pt-none scroll">
         <q-list>
-          <div v-if="availableCategories.length > 0">
+          <div v-if="filteredCategories.length > 0">
             <q-item
-              v-for="category in availableCategories"
+              v-for="category in filteredCategories"
               :key="category.id"
               clickable
-              v-ripple
               @click="selectCategory(category)"
             >
               <q-item-section
@@ -63,12 +79,19 @@
                 size="2rem"
                 class="text-grey-4 q-mb-sm"
               />
-              <div class="text-body2 text-grey-6">All categories are already in use</div>
+              <div class="text-body2 text-grey-6">
+                {{
+                  searchQuery
+                    ? 'No categories match your search'
+                    : 'All categories are already in use'
+                }}
+              </div>
             </div>
           </div>
         </q-list>
       </q-card-section>
 
+      <!-- Fixed footer actions -->
       <q-card-actions align="right">
         <q-btn
           flat
@@ -81,7 +104,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import type { Category } from 'src/api'
 
@@ -98,8 +121,29 @@ const props = defineProps<{
   categories: Category[]
 }>()
 
+const searchQuery = ref('')
+
 const availableCategories = computed(() =>
   props.categories.filter((category) => !props.usedCategoryIds.includes(category.id)),
+)
+
+const filteredCategories = computed(() => {
+  if (!searchQuery.value || !searchQuery.value.trim()) {
+    return availableCategories.value
+  }
+
+  const query = searchQuery.value.toLowerCase().trim()
+  return availableCategories.value.filter((category) => category.name.toLowerCase().includes(query))
+})
+
+// Clear search when dialog is closed
+watch(
+  () => props.modelValue,
+  (isOpen) => {
+    if (!isOpen) {
+      searchQuery.value = ''
+    }
+  },
 )
 
 function selectCategory(category: Category): void {

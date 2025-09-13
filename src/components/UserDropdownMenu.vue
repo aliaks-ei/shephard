@@ -28,7 +28,6 @@
 
         <q-item
           clickable
-          v-ripple
           to="/settings"
           exact
           class="q-py-md"
@@ -47,7 +46,6 @@
         <q-item
           class="q-py-md text-negative"
           clickable
-          v-ripple
           @click="signOut"
         >
           <q-item-section avatar>

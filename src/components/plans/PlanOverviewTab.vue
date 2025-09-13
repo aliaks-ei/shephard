@@ -159,7 +159,9 @@ const { categoryBudgets, recentExpenses, totalBudget, totalSpent, loadOverviewDa
 // Category expenses for modal
 const categoryExpenses = computed(() => {
   if (!selectedCategory.value) return []
-  return expensesStore.expenses.filter((e) => e.category_id === selectedCategory.value?.categoryId)
+  return expensesStore.sortedExpenses.filter(
+    (e) => e.category_id === selectedCategory.value?.categoryId,
+  )
 })
 
 // Methods
@@ -169,18 +171,26 @@ function openCategoryModal(category: CategoryBudget) {
 }
 
 function emitOpenExpenseDialog() {
-  // If user opens from a category, preselect current plan & category via parent dialog props
-  // Emit so PlanPage can open dialog with defaults
-  // For now, bubble the same event up
-  // Consumers (PlanPage) already pass currentPlanId; we only need to close modal
   showCategoryModal.value = false
-  // Defer to parent to open dialog with defaults
-  // Parent already handles showing ExpenseRegistrationDialog
-  // and has currentPlan in scope
-  // We still emit to keep existing wiring
-  // Emit is declared via defineEmits above
   emit('open-expense-dialog', selectedCategory.value?.categoryId)
 }
+
+// Refresh selected category data when category budgets change
+watch(
+  categoryBudgets,
+  (newBudgets) => {
+    if (selectedCategory.value) {
+      // Find updated category data
+      const updatedCategory = newBudgets.find(
+        (budget) => budget.categoryId === selectedCategory.value?.categoryId,
+      )
+      if (updatedCategory) {
+        selectedCategory.value = updatedCategory
+      }
+    }
+  },
+  { deep: true },
+)
 
 // Load data when component mounts or plan changes
 onMounted(async () => {

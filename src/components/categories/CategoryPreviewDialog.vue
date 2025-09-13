@@ -90,7 +90,6 @@
               v-for="template in category.templates"
               :key="template.id"
               clickable
-              v-ripple
               @click="navigateToTemplate(template.id)"
             >
               <q-item-section>

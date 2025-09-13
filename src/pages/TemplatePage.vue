@@ -81,7 +81,6 @@
 
             <div class="row q-gutter-sm">
               <q-btn
-                v-if="templateItems.length > 1"
                 flat
                 :icon="allCategoriesExpanded ? 'eva-collapse-outline' : 'eva-expand-outline'"
                 :label="allCategoriesExpanded ? 'Collapse All' : 'Expand All'"
@@ -113,7 +112,7 @@
             <TemplateCategory
               v-for="group in enrichedCategories"
               :key="group.categoryId"
-              :ref="(el) => setCategoryRef(el, group.categoryId)"
+              :ref="(el: unknown) => setCategoryRef(el, group.categoryId)"
               :category-id="group.categoryId"
               :category-name="group.categoryName"
               :category-color="group.categoryColor"

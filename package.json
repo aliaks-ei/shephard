@@ -1,9 +1,9 @@
 {
   "name": "shephard",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Smart expenses wallet",
   "productName": "Shephard",
-  "author": "Aliaksei Mazheika <aliaksei.mazheika@v7labs.com>",
+  "author": "Aliaksei Mazheika <aleksmozheiko94@gmail.com>",
   "type": "module",
   "private": true,
   "scripts": {
@@ -17,6 +17,7 @@
     "postinstall": "quasar prepare",
     "test:unit": "vitest",
     "test:unit:ci": "vitest run",
+    "type-check": "vue-tsc --noEmit",
     "prepare": "husky"
   },
   "lint-staged": {
