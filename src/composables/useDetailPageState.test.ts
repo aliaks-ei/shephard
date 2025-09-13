@@ -13,44 +13,27 @@ const baseConfig: DetailPageConfig = {
 
 describe('titles and icons', () => {
   it('returns Create title and create icon for new entity', () => {
-    const { pageTitle, pageIcon } = useDetailPageState(baseConfig, true, false, true)
+    const { pageTitle, pageIcon } = useDetailPageState(baseConfig, true, false)
     expect(pageTitle.value).toBe('Create Plan')
     expect(pageIcon.value).toBe('eva-plus-outline')
   })
 
   it('returns View title and view icon for read-only state', () => {
-    const { pageTitle, pageIcon } = useDetailPageState(baseConfig, false, true, false)
+    const { pageTitle, pageIcon } = useDetailPageState(baseConfig, false, true)
     expect(pageTitle.value).toBe('View Plan')
     expect(pageIcon.value).toBe('eva-eye-outline')
   })
 
   it('returns Edit title and edit icon by default', () => {
-    const { pageTitle, pageIcon } = useDetailPageState(baseConfig, false, false, true)
+    const { pageTitle, pageIcon } = useDetailPageState(baseConfig, false, false)
     expect(pageTitle.value).toBe('Edit Plan')
     expect(pageIcon.value).toBe('eva-edit-2-outline')
   })
 })
 
-describe('breadcrumbs', () => {
-  it('includes list breadcrumb and new label for new entity', () => {
-    const { breadcrumbs } = useDetailPageState(baseConfig, true, false, true)
-    expect(breadcrumbs.value[0]).toEqual({
-      label: 'Plans',
-      icon: 'eva-calendar-outline',
-      to: '/plans',
-    })
-    expect(breadcrumbs.value[1]).toMatchObject({ label: 'New Plan' })
-  })
-
-  it('uses current entity name when provided', () => {
-    const { breadcrumbs } = useDetailPageState(baseConfig, false, false, true, 'Q1 Budget')
-    expect(breadcrumbs.value[1]).toMatchObject({ label: 'Q1 Budget', icon: 'eva-calendar-outline' })
-  })
-})
-
 describe('banners', () => {
   it('shows readonly banner when isReadOnly is true', () => {
-    const { banners } = useDetailPageState(baseConfig, false, true, false)
+    const { banners } = useDetailPageState(baseConfig, false, true)
     expect(banners.value.length).toBe(1)
     expect(banners.value[0]).toMatchObject({
       type: 'readonly',
@@ -64,7 +47,7 @@ describe('banners', () => {
   })
 
   it('returns empty banners when not read-only', () => {
-    const { banners } = useDetailPageState(baseConfig, true, false, true)
+    const { banners } = useDetailPageState(baseConfig, true, false)
     expect(banners.value.length).toBe(0)
   })
 })

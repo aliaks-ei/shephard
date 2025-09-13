@@ -71,8 +71,7 @@
           <q-card
             flat
             bordered
-            :class="{ 'bg-primary-1 border-primary': selectedTemplateId === template.id }"
-            class="cursor-pointer transition-all"
+            clickable
             @click="selectTemplate(template)"
           >
             <q-card-section>
@@ -168,7 +167,7 @@
               <div class="col-12 col-sm-6">
                 <div class="text-caption text-grey-6">Items</div>
                 <div class="text-body1">
-                  {{ selectedTemplate.expense_template_items?.length || 0 }} items
+                  {{ selectedTemplate.template_items?.length || 0 }} items
                 </div>
               </div>
             </div>
@@ -180,37 +179,32 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useTemplatesStore } from 'src/stores/templates'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
-import {
-  getPermissionText,
-  getPermissionColor,
-  getPermissionIcon,
-} from 'src/utils/expense-templates'
-import type { ExpenseTemplateWithItems, ExpenseTemplateWithPermission } from 'src/api'
+import { getPermissionText, getPermissionColor, getPermissionIcon } from 'src/utils/templates'
+import type { TemplateWithItems, TemplateWithPermission } from 'src/api'
 
 const emit = defineEmits<{
-  (e: 'template-selected', template: ExpenseTemplateWithItems): void
+  (e: 'template-selected', template: TemplateWithItems): void
 }>()
 
 const props = defineProps<{
-  modelValue?: ExpenseTemplateWithItems | null
+  modelValue?: TemplateWithItems | null
 }>()
 
 const router = useRouter()
 const templatesStore = useTemplatesStore()
 
 const selectedTemplateId = ref<string | null>(props.modelValue?.id || null)
-const selectedTemplate = ref<ExpenseTemplateWithItems | null>(props.modelValue || null)
+const selectedTemplate = ref<TemplateWithItems | null>(props.modelValue || null)
 
 const isLoadingTemplates = computed(() => templatesStore.isLoading)
 const availableTemplates = computed(() => templatesStore.templates)
 
-async function selectTemplate(template: ExpenseTemplateWithPermission): Promise<void> {
-  // Load the full template with items
+async function selectTemplate(template: TemplateWithPermission): Promise<void> {
   const fullTemplate = await templatesStore.loadTemplateWithItems(template.id)
 
   if (fullTemplate) {
@@ -223,31 +217,4 @@ async function selectTemplate(template: ExpenseTemplateWithPermission): Promise<
 function goToCreateTemplate(): void {
   router.push({ name: 'new-template' })
 }
-
-onMounted(async () => {
-  // Load templates if not already loaded
-  if (templatesStore.templates.length === 0) {
-    await templatesStore.loadTemplates()
-  }
-})
 </script>
-
-<style scoped>
-.border-primary {
-  border-color: var(--q-primary) !important;
-  border-width: 2px !important;
-}
-
-.transition-all {
-  transition: all 0.2s ease;
-}
-
-.cursor-pointer {
-  cursor: pointer;
-}
-
-.cursor-pointer:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-</style>

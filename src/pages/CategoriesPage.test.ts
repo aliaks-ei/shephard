@@ -5,11 +5,11 @@ import { createTestingPinia } from '@pinia/testing'
 import { ref, computed } from 'vue'
 import CategoriesPage from './CategoriesPage.vue'
 import { useCategoriesStore } from 'src/stores/categories'
-import type { ExpenseCategory } from 'src/api'
+import type { Category } from 'src/api'
 
 installQuasarPlugin()
 
-const mockCategories: ExpenseCategory[] = [
+const mockCategories: Category[] = [
   {
     id: 'cat-1',
     name: 'Rent/Mortgage',
@@ -36,7 +36,7 @@ const mockCategories: ExpenseCategory[] = [
   },
 ]
 
-function createWrapper(initialState: { categories?: ExpenseCategory[]; isLoading?: boolean } = {}) {
+function createWrapper(initialState: { categories?: Category[]; isLoading?: boolean } = {}) {
   const wrapper = mount(CategoriesPage, {
     global: {
       plugins: [
@@ -108,7 +108,7 @@ function createWrapper(initialState: { categories?: ExpenseCategory[]; isLoading
     categoriesStore.categoryCount = computed(() => initialState.categories?.length || 0)
     // @ts-expect-error - Testing Pinia
     categoriesStore.sortedCategories = computed(() =>
-      (initialState.categories || []).sort((a: ExpenseCategory, b: ExpenseCategory) =>
+      (initialState.categories || []).sort((a: Category, b: Category) =>
         a.name.localeCompare(b.name),
       ),
     )
@@ -134,7 +134,7 @@ describe('CategoriesPage', () => {
   it('should render updated page title and description', () => {
     const { wrapper } = createWrapper()
 
-    expect(wrapper.find('h1').text()).toBe('Available Expense Categories')
+    expect(wrapper.find('h1').text()).toBe('Available Categories')
     expect(wrapper.text()).toContain('Standard categories available for all expense tracking')
   })
 

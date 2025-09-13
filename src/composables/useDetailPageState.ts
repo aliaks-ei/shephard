@@ -1,5 +1,5 @@
 import { computed } from 'vue'
-import type { BreadcrumbItem, BannerConfig } from 'src/layouts/DetailPageLayout.vue'
+import type { BannerConfig } from 'src/layouts/DetailPageLayout.vue'
 
 export interface DetailPageConfig {
   entityName: string
@@ -11,13 +11,7 @@ export interface DetailPageConfig {
   viewIcon: string
 }
 
-export function useDetailPageState(
-  config: DetailPageConfig,
-  isNew: boolean,
-  isReadOnly: boolean,
-  isEdit: boolean,
-  currentEntityName?: string,
-) {
+export function useDetailPageState(config: DetailPageConfig, isNew: boolean, isReadOnly: boolean) {
   const pageTitle = computed(() => {
     if (isNew) return `Create ${config.entityName}`
     if (isReadOnly) return `View ${config.entityName}`
@@ -29,18 +23,6 @@ export function useDetailPageState(
     if (isReadOnly) return config.viewIcon
     return config.editIcon
   })
-
-  const breadcrumbs = computed((): BreadcrumbItem[] => [
-    {
-      label: config.entityNamePlural,
-      icon: config.listIcon,
-      to: config.listRoute,
-    },
-    {
-      label: isNew ? `New ${config.entityName}` : currentEntityName || config.entityName,
-      icon: isNew ? 'eva-plus-outline' : config.listIcon,
-    },
-  ])
 
   const banners = computed((): BannerConfig[] => {
     const bannersList: BannerConfig[] = []
@@ -60,7 +42,6 @@ export function useDetailPageState(
   return {
     pageTitle,
     pageIcon,
-    breadcrumbs,
     banners,
   }
 }

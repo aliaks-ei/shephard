@@ -6,7 +6,7 @@ import { nextTick } from 'vue'
 import type { ComponentProps } from 'vue-component-type-helpers'
 
 import PlanTemplateSelector from './PlanTemplateSelector.vue'
-import type { ExpenseTemplateWithItems, ExpenseTemplateWithPermission } from 'src/api'
+import type { TemplateWithItems, TemplateWithPermission } from 'src/api'
 import { useTemplatesStore } from 'src/stores/templates'
 
 vi.mock('vue-router', () => ({
@@ -17,7 +17,7 @@ vi.mock('src/utils/currency', () => ({
   formatCurrency: vi.fn((amount: number, currency: string) => `${currency} ${amount.toFixed(2)}`),
 }))
 
-vi.mock('src/utils/expense-templates', () => ({
+vi.mock('src/utils/templates', () => ({
   getPermissionText: vi.fn((level: string) => (level === 'edit' ? 'Can Edit' : 'View Only')),
   getPermissionColor: vi.fn(() => 'primary'),
   getPermissionIcon: vi.fn(() => 'eva-edit-outline'),
@@ -27,7 +27,7 @@ installQuasarPlugin()
 
 type PlanTemplateSelectorProps = ComponentProps<typeof PlanTemplateSelector>
 
-const baseTemplate: ExpenseTemplateWithPermission = {
+const baseTemplate: TemplateWithPermission = {
   id: 't1',
   name: 'Template 1',
   owner_id: 'u1',
@@ -40,9 +40,9 @@ const baseTemplate: ExpenseTemplateWithPermission = {
   is_shared: true,
 }
 
-const fullTemplate: ExpenseTemplateWithItems = {
+const fullTemplate: TemplateWithItems = {
   ...baseTemplate,
-  expense_template_items: [
+  template_items: [
     {
       id: 'i1',
       name: 'Item',
@@ -144,9 +144,7 @@ describe('PlanTemplateSelector', () => {
     const card = wrapper.find('.cursor-pointer')
     await card.trigger('click')
     expect(wrapper.emitted('template-selected')).toBeTruthy()
-    const emitted = wrapper.emitted('template-selected')?.[0]?.[0] as
-      | ExpenseTemplateWithItems
-      | undefined
+    const emitted = wrapper.emitted('template-selected')?.[0]?.[0] as TemplateWithItems | undefined
     expect(emitted?.id).toBe('t1')
   })
 

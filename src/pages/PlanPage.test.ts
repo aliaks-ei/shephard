@@ -7,7 +7,7 @@ import PlanPage from './PlanPage.vue'
 import { usePlansStore } from 'src/stores/plans'
 import { useCategoriesStore } from 'src/stores/categories'
 import { useTemplatesStore } from 'src/stores/templates'
-import type { ExpenseCategory, ExpenseTemplateWithItems, PlanWithItems } from 'src/api'
+import type { Category, TemplateWithItems, PlanWithItems } from 'src/api'
 import type { PlanItemUI } from 'src/types'
 import type { PlanCategoryGroup } from 'src/composables/usePlanItems'
 
@@ -142,13 +142,13 @@ const SharePlanDialogStub = {
   emits: ['update:modelValue', 'shared'],
 }
 
-const ExpenseTemplateCardStub = {
-  template: '<div class="expense-template-card-mock" :data-template-id="template?.id"></div>',
+const TemplateCardStub = {
+  template: '<div class="template-card-mock" :data-template-id="template?.id"></div>',
   props: ['template', 'readonly'],
   emits: ['edit', 'share', 'delete'],
 }
 
-const mockCategories: ExpenseCategory[] = [
+const mockCategories: Category[] = [
   {
     id: 'cat-1',
     name: 'Food',
@@ -167,7 +167,7 @@ const mockCategories: ExpenseCategory[] = [
   },
 ]
 
-const mockTemplate: ExpenseTemplateWithItems = {
+const mockTemplate: TemplateWithItems = {
   id: 'template-1',
   name: 'Monthly Budget',
   duration: 'monthly',
@@ -176,7 +176,7 @@ const mockTemplate: ExpenseTemplateWithItems = {
   owner_id: 'user-1',
   created_at: '2023-01-01T00:00:00Z',
   updated_at: '2023-01-01T00:00:00Z',
-  expense_template_items: [
+  template_items: [
     {
       id: 'item-1',
       template_id: 'template-1',
@@ -231,8 +231,8 @@ function createWrapper(
     isReadOnlyMode?: boolean
     isOwner?: boolean
     canEditPlanData?: boolean
-    categories?: ExpenseCategory[]
-    templates?: ExpenseTemplateWithItems[]
+    categories?: Category[]
+    templates?: TemplateWithItems[]
     hasItems?: boolean
     hasDuplicates?: boolean
     currentPlan?: PlanWithItems | null
@@ -306,7 +306,7 @@ function createWrapper(
       stubs: {
         PlanCategory: PlanCategoryStub,
         SharePlanDialog: SharePlanDialogStub,
-        ExpenseTemplateCard: ExpenseTemplateCardStub,
+        TemplateCard: TemplateCardStub,
         QForm: {
           template: '<form @submit.prevent="handleSubmit"><slot /></form>',
           emits: ['submit'],
@@ -425,7 +425,9 @@ function createWrapper(
     // @ts-expect-error - Testing Pinia
     categoriesStore.categories = ref(categories)
     categoriesStore.getCategoryById = vi.fn(
-      (id: string) => categories.find((cat) => cat.id === id) || undefined,
+      (id: string) =>
+        categories.map((cat) => ({ ...cat, templates: [] })).find((cat) => cat.id === id) ||
+        undefined,
     )
   }
 

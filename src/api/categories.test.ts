@@ -1,7 +1,7 @@
 import { vi, beforeEach, it, expect, describe } from 'vitest'
 import type { PostgrestError } from '@supabase/supabase-js'
 import { supabase } from 'src/lib/supabase/client'
-import { getExpenseCategories, type ExpenseCategory } from './categories'
+import { getCategories, type Category } from './categories'
 
 const createPostgrestError = (message: string, code = '23505'): PostgrestError =>
   ({
@@ -11,7 +11,7 @@ const createPostgrestError = (message: string, code = '23505'): PostgrestError =
     code,
   }) as PostgrestError
 
-const mockExpenseCategory: ExpenseCategory = {
+const mockCategory: Category = {
   id: 'category-1',
   name: 'Groceries',
   color: '#22c55e',
@@ -27,12 +27,12 @@ beforeEach(() => {
   vi.setSystemTime(new Date('2023-01-01T12:00:00Z'))
 })
 
-describe('getExpenseCategories', () => {
+describe('getCategories', () => {
   it('should return all predefined categories ordered by name', async () => {
     const categories = [
-      { ...mockExpenseCategory, name: 'Transportation', color: '#6366f1' },
-      { ...mockExpenseCategory, name: 'Groceries', color: '#22c55e' },
-      { ...mockExpenseCategory, name: 'Entertainment', color: '#e879f9' },
+      { ...mockCategory, name: 'Transportation', color: '#6366f1' },
+      { ...mockCategory, name: 'Groceries', color: '#22c55e' },
+      { ...mockCategory, name: 'Entertainment', color: '#e879f9' },
     ]
 
     const mockOrder = vi.fn().mockResolvedValue({
@@ -44,9 +44,9 @@ describe('getExpenseCategories', () => {
 
     mockSupabase.from.mockImplementation(mockFrom)
 
-    const result = await getExpenseCategories()
+    const result = await getCategories()
 
-    expect(mockFrom).toHaveBeenCalledWith('expense_categories')
+    expect(mockFrom).toHaveBeenCalledWith('categories')
     expect(mockSelect).toHaveBeenCalledWith('*')
     expect(mockOrder).toHaveBeenCalledWith('name', { ascending: true })
     expect(result).toEqual(categories)
@@ -62,7 +62,7 @@ describe('getExpenseCategories', () => {
 
     mockSupabase.from.mockImplementation(mockFrom)
 
-    const result = await getExpenseCategories()
+    const result = await getCategories()
 
     expect(result).toEqual([])
   })
@@ -78,6 +78,6 @@ describe('getExpenseCategories', () => {
 
     mockSupabase.from.mockImplementation(mockFrom)
 
-    await expect(getExpenseCategories()).rejects.toThrow('Failed to fetch categories')
+    await expect(getCategories()).rejects.toThrow('Failed to fetch categories')
   })
 })

@@ -1,0 +1,26 @@
+---
+description: Quality assurance checks and validation steps
+globs:
+alwaysApply: true
+---
+
+Before considering work complete, ensure all quality checks pass. These checks maintain code quality, security, and functionality standards.
+
+## Required Quality Checks
+
+1. **Linting**: `npm run lint` – Identifies code style issues, potential bugs, and anti-patterns
+
+   - Must terminate with zero linting errors
+   - Address all warnings where practical
+   - Follow project's ESLint configuration
+
+2. **Formatting**: `npm run format` – Ensures consistent code formatting across the codebase
+
+   - Run before committing changes
+   - Uses Prettier with project-specific configuration
+   - Formats TypeScript, Vue, SCSS, HTML, MD, and JSON files
+
+3. **Unit Tests**: `npm run test:unit:ci` – Validates functionality and prevents regressions
+   - All tests must pass completely
+   - Maintain or improve test coverage
+   - Fix failing tests before considering work complete

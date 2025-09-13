@@ -6,9 +6,9 @@ import { ref } from 'vue'
 import TemplatePage from './TemplatePage.vue'
 import { useTemplatesStore } from 'src/stores/templates'
 import { useCategoriesStore } from 'src/stores/categories'
-import type { ExpenseCategory, ExpenseTemplateWithItems } from 'src/api'
-import type { ExpenseTemplateItemUI } from 'src/types'
-import type { ExpenseCategoryGroup } from 'src/composables/useExpenseTemplateItems'
+import type { Category, TemplateWithItems } from 'src/api'
+import type { TemplateItemUI } from 'src/types'
+import type { TemplateCategoryGroup } from 'src/composables/useTemplateItems'
 
 installQuasarPlugin()
 
@@ -35,7 +35,7 @@ vi.mock('src/utils/currency', () => ({
   formatCurrency: vi.fn((amount: number, currency: string) => `${currency} ${amount.toFixed(2)}`),
 }))
 
-const mockUseExpenseTemplate = {
+const mockUseTemplate = {
   isTemplateLoading: ref(false),
   isNewTemplate: ref(false),
   routeTemplateId: ref('template-1'),
@@ -48,31 +48,31 @@ const mockUseExpenseTemplate = {
   loadTemplate: vi.fn(),
 }
 
-vi.mock('src/composables/useExpenseTemplate', () => ({
-  useExpenseTemplate: () => mockUseExpenseTemplate,
+vi.mock('src/composables/useTemplate', () => ({
+  useTemplate: () => mockUseTemplate,
 }))
 
-const mockUseExpenseTemplateItems = {
-  expenseTemplateItems: ref<ExpenseTemplateItemUI[]>([]),
+const mockUseTemplateItems = {
+  templateItems: ref<TemplateItemUI[]>([]),
   totalAmount: ref(0),
   hasValidItems: ref(false),
   hasDuplicateItems: ref(false),
   isValidForSave: ref(false),
-  expenseCategoryGroups: ref<ExpenseCategoryGroup[]>([]),
-  addExpenseTemplateItem: vi.fn(),
-  updateExpenseTemplateItem: vi.fn(),
-  removeExpenseTemplateItem: vi.fn(),
-  loadExpenseTemplateItems: vi.fn(),
-  getExpenseTemplateItemsForSave: vi.fn(() => []),
+  categoryGroups: ref<TemplateCategoryGroup[]>([]),
+  addTemplateItem: vi.fn(),
+  updateTemplateItem: vi.fn(),
+  removeTemplateItem: vi.fn(),
+  loadTemplateItems: vi.fn(),
+  getTemplateItemsForSave: vi.fn(() => []),
   getUsedCategoryIds: vi.fn(() => []),
 }
 
-vi.mock('src/composables/useExpenseTemplateItems', () => ({
-  useExpenseTemplateItems: () => mockUseExpenseTemplateItems,
+vi.mock('src/composables/useTemplateItems', () => ({
+  useTemplateItems: () => mockUseTemplateItems,
 }))
 
-const ExpenseTemplateCategoryStub = {
-  template: '<div class="expense-template-category-mock" :data-category-id="categoryId"></div>',
+const TemplateCategoryStub = {
+  template: '<div class="template-category-mock" :data-category-id="categoryId"></div>',
   props: [
     'categoryId',
     'categoryName',
@@ -85,21 +85,20 @@ const ExpenseTemplateCategoryStub = {
   emits: ['update-item', 'remove-item', 'add-item'],
 }
 
-const ExpenseCategorySelectionDialogStub = {
-  template:
-    '<div class="expense-category-selection-dialog-mock" :data-model-value="modelValue"></div>',
+const CategorySelectionDialogStub = {
+  template: '<div class="category-selection-dialog-mock" :data-model-value="modelValue"></div>',
   props: ['modelValue', 'usedCategoryIds', 'categories'],
   emits: ['update:modelValue', 'category-selected'],
 }
 
-const ShareExpenseTemplateDialogStub = {
+const ShareTemplateDialogStub = {
   template:
-    '<div class="share-expense-template-dialog-mock" :data-model-value="modelValue" :data-template-id="templateId"></div>',
+    '<div class="share-template-dialog-mock" :data-model-value="modelValue" :data-template-id="templateId"></div>',
   props: ['modelValue', 'templateId'],
   emits: ['update:modelValue', 'shared'],
 }
 
-const mockCategories: ExpenseCategory[] = [
+const mockCategories: Category[] = [
   {
     id: 'cat-1',
     name: 'Food',
@@ -118,7 +117,7 @@ const mockCategories: ExpenseCategory[] = [
   },
 ]
 
-const mockTemplate: ExpenseTemplateWithItems = {
+const mockTemplate: TemplateWithItems = {
   id: 'template-1',
   name: 'Monthly Budget',
   duration: 'monthly',
@@ -127,7 +126,7 @@ const mockTemplate: ExpenseTemplateWithItems = {
   owner_id: 'user-1',
   created_at: '2023-01-01T00:00:00Z',
   updated_at: '2023-01-01T00:00:00Z',
-  expense_template_items: [
+  template_items: [
     {
       id: 'item-1',
       template_id: 'template-1',
@@ -140,7 +139,7 @@ const mockTemplate: ExpenseTemplateWithItems = {
   ],
 }
 
-const mockExpenseTemplateItems: ExpenseTemplateItemUI[] = [
+const mockTemplateItems: TemplateItemUI[] = [
   {
     id: 'item-1',
     name: 'Groceries',
@@ -156,7 +155,7 @@ function createWrapper(
     isLoading?: boolean
     isReadOnlyMode?: boolean
     isOwner?: boolean
-    categories?: ExpenseCategory[]
+    categories?: Category[]
     hasItems?: boolean
     hasDuplicates?: boolean
   } = {},
@@ -171,36 +170,36 @@ function createWrapper(
     hasDuplicates = false,
   } = options
 
-  mockUseExpenseTemplate.isNewTemplate.value = isNewTemplate
-  mockUseExpenseTemplate.isTemplateLoading.value = isLoading
-  mockUseExpenseTemplate.isReadOnlyMode.value = isReadOnlyMode
-  mockUseExpenseTemplate.isOwner.value = isOwner
-  mockUseExpenseTemplate.isEditMode.value = !isReadOnlyMode
+  mockUseTemplate.isNewTemplate.value = isNewTemplate
+  mockUseTemplate.isTemplateLoading.value = isLoading
+  mockUseTemplate.isReadOnlyMode.value = isReadOnlyMode
+  mockUseTemplate.isOwner.value = isOwner
+  mockUseTemplate.isEditMode.value = !isReadOnlyMode
 
   if (hasItems) {
-    mockUseExpenseTemplateItems.expenseTemplateItems.value = mockExpenseTemplateItems
-    mockUseExpenseTemplateItems.totalAmount.value = 500
-    mockUseExpenseTemplateItems.hasValidItems.value = true
-    mockUseExpenseTemplateItems.isValidForSave.value = !hasDuplicates
-    mockUseExpenseTemplateItems.expenseCategoryGroups.value = [
+    mockUseTemplateItems.templateItems.value = mockTemplateItems
+    mockUseTemplateItems.totalAmount.value = 500
+    mockUseTemplateItems.hasValidItems.value = true
+    mockUseTemplateItems.isValidForSave.value = !hasDuplicates
+    mockUseTemplateItems.categoryGroups.value = [
       {
         categoryId: 'cat-1',
         categoryName: 'Food',
         categoryColor: '#FF5722',
         categoryIcon: 'eva-pricetags-outline',
-        items: mockExpenseTemplateItems,
+        items: mockTemplateItems,
         subtotal: 500,
       },
     ]
   } else {
-    mockUseExpenseTemplateItems.expenseTemplateItems.value = []
-    mockUseExpenseTemplateItems.totalAmount.value = 0
-    mockUseExpenseTemplateItems.hasValidItems.value = false
-    mockUseExpenseTemplateItems.isValidForSave.value = false
-    mockUseExpenseTemplateItems.expenseCategoryGroups.value = []
+    mockUseTemplateItems.templateItems.value = []
+    mockUseTemplateItems.totalAmount.value = 0
+    mockUseTemplateItems.hasValidItems.value = false
+    mockUseTemplateItems.isValidForSave.value = false
+    mockUseTemplateItems.categoryGroups.value = []
   }
 
-  mockUseExpenseTemplateItems.hasDuplicateItems.value = hasDuplicates
+  mockUseTemplateItems.hasDuplicateItems.value = hasDuplicates
 
   const wrapper = mount(TemplatePage, {
     global: {
@@ -220,9 +219,9 @@ function createWrapper(
         }),
       ],
       stubs: {
-        ExpenseTemplateCategory: ExpenseTemplateCategoryStub,
-        ExpenseCategorySelectionDialog: ExpenseCategorySelectionDialogStub,
-        ShareExpenseTemplateDialog: ShareExpenseTemplateDialogStub,
+        TemplateCategory: TemplateCategoryStub,
+        CategorySelectionDialog: CategorySelectionDialogStub,
+        ShareTemplateDialog: ShareTemplateDialogStub,
         QForm: {
           template: '<form @submit.prevent="$emit(\'submit\')"><slot /></form>',
           emits: ['submit'],
@@ -321,7 +320,9 @@ function createWrapper(
     // @ts-expect-error - Testing Pinia
     categoriesStore.categories = ref(categories)
     categoriesStore.getCategoryById = vi.fn(
-      (id: string) => categories.find((cat) => cat.id === id) || undefined,
+      (id: string) =>
+        categories.map((cat) => ({ ...cat, templates: [] })).find((cat) => cat.id === id) ||
+        undefined,
     )
   }
 
@@ -333,9 +334,9 @@ beforeEach(() => {
   mockRoute.name = 'edit-template'
   mockRoute.params = { id: 'template-1' }
 
-  mockUseExpenseTemplate.loadTemplate.mockResolvedValue(mockTemplate)
-  mockUseExpenseTemplate.createNewTemplateWithItems.mockResolvedValue(true)
-  mockUseExpenseTemplate.updateExistingTemplateWithItems.mockResolvedValue(true)
+  mockUseTemplate.loadTemplate.mockResolvedValue(mockTemplate)
+  mockUseTemplate.createNewTemplateWithItems.mockResolvedValue(true)
+  mockUseTemplate.updateExistingTemplateWithItems.mockResolvedValue(true)
 })
 
 describe('TemplatePage', () => {
@@ -349,7 +350,7 @@ describe('TemplatePage', () => {
     await flushPromises()
 
     expect(categoriesStore.loadCategories).toHaveBeenCalledOnce()
-    expect(mockUseExpenseTemplate.loadTemplate).toHaveBeenCalledOnce()
+    expect(mockUseTemplate.loadTemplate).toHaveBeenCalledOnce()
   })
 
   it('should show loading skeleton when template is loading', () => {
@@ -405,17 +406,17 @@ describe('TemplatePage', () => {
     expect(wrapper.text()).not.toContain("You're viewing this template in read-only mode")
   })
 
-  it('should show empty state when no expense items', () => {
+  it('should show empty state when no items', () => {
     const { wrapper } = createWrapper()
 
     expect(wrapper.text()).toContain('No categories yet')
-    expect(wrapper.text()).toContain('Add Your First Expense Category')
+    expect(wrapper.text()).toContain('Add Your First Category')
   })
 
-  it('should show expense categories when items exist', () => {
+  it('should show categories when items exist', () => {
     const { wrapper } = createWrapper({ hasItems: true })
 
-    const categoryComponents = wrapper.findAllComponents(ExpenseTemplateCategoryStub)
+    const categoryComponents = wrapper.findAllComponents(TemplateCategoryStub)
     expect(categoryComponents.length).toBe(1)
     expect(wrapper.text()).toContain('Total Amount')
   })
@@ -432,27 +433,27 @@ describe('TemplatePage', () => {
     const addButton = wrapper.find('[data-label="Add Category"]')
     await addButton.trigger('click')
 
-    const dialog = wrapper.findComponent(ExpenseCategorySelectionDialogStub)
+    const dialog = wrapper.findComponent(CategorySelectionDialogStub)
     expect(dialog.attributes('data-model-value')).toBe('true')
   })
 
   it('should open category selection dialog from empty state', async () => {
     const { wrapper } = createWrapper()
 
-    const addButton = wrapper.find('[data-label="Add Your First Expense Category"]')
+    const addButton = wrapper.find('[data-label="Add Your First Category"]')
     await addButton.trigger('click')
 
-    const dialog = wrapper.findComponent(ExpenseCategorySelectionDialogStub)
+    const dialog = wrapper.findComponent(CategorySelectionDialogStub)
     expect(dialog.attributes('data-model-value')).toBe('true')
   })
 
-  it('should call addExpenseTemplateItem when category is selected', async () => {
+  it('should call addTemplateItem when category is selected', async () => {
     const { wrapper } = createWrapper()
 
-    const dialog = wrapper.findComponent(ExpenseCategorySelectionDialogStub)
+    const dialog = wrapper.findComponent(CategorySelectionDialogStub)
     await dialog.vm.$emit('category-selected', mockCategories[0])
 
-    expect(mockUseExpenseTemplateItems.addExpenseTemplateItem).toHaveBeenCalledWith(
+    expect(mockUseTemplateItems.addTemplateItem).toHaveBeenCalledWith(
       mockCategories[0]?.id,
       mockCategories[0]?.color,
     )
@@ -506,14 +507,14 @@ describe('TemplatePage', () => {
     const shareButton = wrapper.find('[data-label="Share"]')
     await shareButton.trigger('click')
 
-    const shareDialog = wrapper.findComponent(ShareExpenseTemplateDialogStub)
+    const shareDialog = wrapper.findComponent(ShareTemplateDialogStub)
     expect(shareDialog.attributes('data-model-value')).toBe('true')
   })
 
   it('should reload templates when template is shared', async () => {
     const { wrapper, templatesStore } = createWrapper({ isOwner: true })
 
-    const shareDialog = wrapper.findComponent(ShareExpenseTemplateDialogStub)
+    const shareDialog = wrapper.findComponent(ShareTemplateDialogStub)
     await shareDialog.vm.$emit('shared')
 
     expect(templatesStore.loadTemplates).toHaveBeenCalledOnce()
@@ -546,14 +547,14 @@ describe('TemplatePage', () => {
 
   it('should not save when validation fails', async () => {
     const { wrapper } = createWrapper()
-    mockUseExpenseTemplateItems.isValidForSave.value = false
-    mockUseExpenseTemplateItems.hasValidItems.value = false
+    mockUseTemplateItems.isValidForSave.value = false
+    mockUseTemplateItems.hasValidItems.value = false
 
     const form = wrapper.find('form')
     await form.trigger('submit')
 
-    expect(mockUseExpenseTemplate.createNewTemplateWithItems).not.toHaveBeenCalled()
-    expect(mockUseExpenseTemplate.updateExistingTemplateWithItems).not.toHaveBeenCalled()
+    expect(mockUseTemplate.createNewTemplateWithItems).not.toHaveBeenCalled()
+    expect(mockUseTemplate.updateExistingTemplateWithItems).not.toHaveBeenCalled()
   })
 
   it('should display formatted total amount when items exist', () => {
@@ -587,8 +588,8 @@ describe('TemplatePage', () => {
     createWrapper()
     await flushPromises()
 
-    expect(mockUseExpenseTemplate.loadTemplate).toHaveBeenCalledOnce()
-    expect(mockUseExpenseTemplateItems.loadExpenseTemplateItems).toHaveBeenCalledWith(mockTemplate)
+    expect(mockUseTemplate.loadTemplate).toHaveBeenCalledOnce()
+    expect(mockUseTemplateItems.loadTemplateItems).toHaveBeenCalledWith(mockTemplate)
   })
 
   it('should show duration select options in edit mode', () => {
@@ -619,36 +620,33 @@ describe('TemplatePage', () => {
     expect(countChip.exists()).toBe(true)
   })
 
-  it('should handle expense template item updates', async () => {
+  it('should handle template item updates', async () => {
     const { wrapper } = createWrapper({ hasItems: true })
 
-    const categoryComponent = wrapper.findComponent(ExpenseTemplateCategoryStub)
+    const categoryComponent = wrapper.findComponent(TemplateCategoryStub)
     await categoryComponent.vm.$emit('update-item', 'item-1', { name: 'Updated Item' })
 
-    expect(mockUseExpenseTemplateItems.updateExpenseTemplateItem).toHaveBeenCalledWith('item-1', {
+    expect(mockUseTemplateItems.updateTemplateItem).toHaveBeenCalledWith('item-1', {
       name: 'Updated Item',
     })
   })
 
-  it('should handle expense template item removal', async () => {
+  it('should handle template item removal', async () => {
     const { wrapper } = createWrapper({ hasItems: true })
 
-    const categoryComponent = wrapper.findComponent(ExpenseTemplateCategoryStub)
+    const categoryComponent = wrapper.findComponent(TemplateCategoryStub)
     await categoryComponent.vm.$emit('remove-item', 'item-1')
 
-    expect(mockUseExpenseTemplateItems.removeExpenseTemplateItem).toHaveBeenCalledWith('item-1')
+    expect(mockUseTemplateItems.removeTemplateItem).toHaveBeenCalledWith('item-1')
   })
 
-  it('should handle adding new expense template item', async () => {
+  it('should handle adding new template item', async () => {
     const { wrapper } = createWrapper({ hasItems: true })
 
-    const categoryComponent = wrapper.findComponent(ExpenseTemplateCategoryStub)
+    const categoryComponent = wrapper.findComponent(TemplateCategoryStub)
     await categoryComponent.vm.$emit('add-item', 'cat-1')
 
-    expect(mockUseExpenseTemplateItems.addExpenseTemplateItem).toHaveBeenCalledWith(
-      'cat-1',
-      undefined,
-    )
+    expect(mockUseTemplateItems.addTemplateItem).toHaveBeenCalledWith('cat-1', undefined)
   })
 
   it('should show correct singular/plural text for category count', () => {
@@ -664,10 +662,10 @@ describe('TemplatePage', () => {
     expect(nameInput.exists()).toBe(true)
   })
 
-  it('should pass correct props to expense category components', () => {
+  it('should pass correct props to category components', () => {
     const { wrapper } = createWrapper({ hasItems: true })
 
-    const categoryComponent = wrapper.findComponent(ExpenseTemplateCategoryStub)
+    const categoryComponent = wrapper.findComponent(TemplateCategoryStub)
     expect(categoryComponent.props('categoryId')).toBe('cat-1')
     expect(categoryComponent.props('categoryName')).toBe('Food')
     expect(categoryComponent.props('categoryColor')).toBe('#FF5722')
@@ -678,7 +676,7 @@ describe('TemplatePage', () => {
   it('should pass readonly prop correctly in read-only mode', () => {
     const { wrapper } = createWrapper({ isReadOnlyMode: true, hasItems: true })
 
-    const categoryComponent = wrapper.findComponent(ExpenseTemplateCategoryStub)
+    const categoryComponent = wrapper.findComponent(TemplateCategoryStub)
     expect(categoryComponent.props('readonly')).toBe(true)
   })
 })

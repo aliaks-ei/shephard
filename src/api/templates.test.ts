@@ -3,24 +3,23 @@ import type { PostgrestError } from '@supabase/supabase-js'
 import { supabase } from 'src/lib/supabase/client'
 import { isDuplicateNameError, createDuplicateNameError } from 'src/utils/database'
 import {
-  getExpenseTemplates,
-  createExpenseTemplate,
-  updateExpenseTemplate,
-  deleteExpenseTemplate,
-  getExpenseTemplateWithItems,
+  getTemplates,
+  createTemplate,
+  updateTemplate,
+  deleteTemplate,
+  getTemplateWithItems,
   getTemplateSharedUsers,
-  createExpenseTemplateItems,
-  deleteExpenseTemplateItems,
+  createTemplateItems,
+  deleteTemplateItems,
   shareTemplate,
   unshareTemplate,
   updateSharePermission,
-  type ExpenseTemplate,
-  type ExpenseTemplateInsert,
-  type ExpenseTemplateUpdate,
-  type ExpenseTemplateWithItems,
-  type ExpenseTemplateItem,
-  type ExpenseTemplateItemInsert,
+  type TemplateInsert,
+  type TemplateUpdate,
+  type TemplateWithItems,
+  type TemplateItemInsert,
 } from './templates'
+import { createMockTemplate, createMockTemplateItem } from 'test/fixtures'
 
 vi.mock('src/utils/database', () => ({
   isDuplicateNameError: vi.fn(),
@@ -35,26 +34,20 @@ const createPostgrestError = (message: string, code = '23505'): PostgrestError =
     code,
   }) as PostgrestError
 
-const mockExpenseTemplate: ExpenseTemplate = {
-  id: 'template-1',
-  name: 'Test Template',
-  owner_id: 'user-1',
+const mockTemplate = createMockTemplate({
   currency: 'EUR',
   duration: 'monthly',
-  total: 100,
   created_at: '2023-01-01T12:00:00Z',
   updated_at: '2023-01-01T12:00:00Z',
-}
+})
 
-const mockExpenseTemplateItem: ExpenseTemplateItem = {
-  id: 'item-1',
-  template_id: 'template-1',
+const mockTemplateItem = createMockTemplateItem({
   name: 'Test Item',
   category_id: 'category-1',
   amount: 100,
   created_at: '2023-01-01T12:00:00Z',
   updated_at: '2023-01-01T12:00:00Z',
-}
+})
 
 const mockSupabase = vi.mocked(supabase, true)
 const mockFrom = vi.fn()
@@ -67,14 +60,14 @@ beforeEach(() => {
   mockSupabase.from = mockFrom
 })
 
-describe('getExpenseTemplates', () => {
+describe('getTemplates', () => {
   it('should return owned and shared templates combined and sorted', async () => {
     const ownedTemplate = {
-      ...mockExpenseTemplate,
+      ...mockTemplate,
       template_shares: [{ id: 'share-1' }],
     }
     const sharedTemplate = {
-      ...mockExpenseTemplate,
+      ...mockTemplate,
       id: 'template-2',
       name: 'Shared Template',
       owner_id: 'user-2',
@@ -94,16 +87,16 @@ describe('getExpenseTemplates', () => {
     const mockSharedQuery = {
       select: vi.fn().mockReturnThis(),
       match: vi.fn().mockResolvedValue({
-        data: [{ permission_level: 'view', expense_templates: sharedTemplate }],
+        data: [{ permission_level: 'view', templates: sharedTemplate }],
         error: null,
       }),
     }
 
     mockFrom.mockReturnValueOnce(mockOwnedQuery).mockReturnValueOnce(mockSharedQuery)
 
-    const result = await getExpenseTemplates('user-1')
+    const result = await getTemplates('user-1')
 
-    expect(mockFrom).toHaveBeenCalledWith('expense_templates')
+    expect(mockFrom).toHaveBeenCalledWith('templates')
     expect(mockFrom).toHaveBeenCalledWith('template_shares')
 
     expect(result).toHaveLength(2)
@@ -140,7 +133,7 @@ describe('getExpenseTemplates', () => {
 
     mockFrom.mockReturnValueOnce(mockOwnedQuery).mockReturnValueOnce(mockSharedQuery)
 
-    const result = await getExpenseTemplates('user-1')
+    const result = await getTemplates('user-1')
 
     expect(result).toEqual([])
   })
@@ -158,7 +151,7 @@ describe('getExpenseTemplates', () => {
 
     mockFrom.mockReturnValue(mockOwnedQuery)
 
-    await expect(getExpenseTemplates('user-1')).rejects.toEqual(mockError)
+    await expect(getTemplates('user-1')).rejects.toEqual(mockError)
   })
 
   it('should throw error when shared templates query fails', async () => {
@@ -185,20 +178,20 @@ describe('getExpenseTemplates', () => {
 
     mockFrom.mockReturnValueOnce(mockOwnedQuery).mockReturnValueOnce(mockSharedQuery)
 
-    await expect(getExpenseTemplates('user-1')).rejects.toEqual(mockError)
+    await expect(getTemplates('user-1')).rejects.toEqual(mockError)
   })
 })
 
-describe('createExpenseTemplate', () => {
+describe('createTemplate', () => {
   it('should create template successfully', async () => {
-    const templateInsert: ExpenseTemplateInsert = {
+    const templateInsert: TemplateInsert = {
       name: 'New Template',
       duration: 'monthly',
       owner_id: 'user-1',
     }
 
     const mockSingle = vi.fn().mockResolvedValue({
-      data: mockExpenseTemplate,
+      data: mockTemplate,
       error: null,
     })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
@@ -207,15 +200,15 @@ describe('createExpenseTemplate', () => {
 
     mockSupabase.from.mockImplementation(mockFrom)
 
-    const result = await createExpenseTemplate(templateInsert)
+    const result = await createTemplate(templateInsert)
 
-    expect(mockFrom).toHaveBeenCalledWith('expense_templates')
+    expect(mockFrom).toHaveBeenCalledWith('templates')
     expect(mockInsert).toHaveBeenCalledWith(templateInsert)
-    expect(result).toEqual(mockExpenseTemplate)
+    expect(result).toEqual(mockTemplate)
   })
 
   it('should throw DUPLICATE_TEMPLATE_NAME error for duplicate name', async () => {
-    const templateInsert: ExpenseTemplateInsert = {
+    const templateInsert: TemplateInsert = {
       name: 'Duplicate Template',
       duration: 'monthly',
       owner_id: 'user-1',
@@ -238,7 +231,7 @@ describe('createExpenseTemplate', () => {
       insert: vi.fn().mockReturnValue(mockQuery),
     } as never)
 
-    await expect(createExpenseTemplate(templateInsert)).rejects.toEqual(mockDuplicateError)
+    await expect(createTemplate(templateInsert)).rejects.toEqual(mockDuplicateError)
     expect(mockIsDuplicateNameError).toHaveBeenCalledWith(
       mockError,
       'unique_template_name_per_user',
@@ -247,7 +240,7 @@ describe('createExpenseTemplate', () => {
   })
 
   it('should throw original error for non-duplicate errors', async () => {
-    const templateInsert: ExpenseTemplateInsert = {
+    const templateInsert: TemplateInsert = {
       name: 'Template',
       duration: 'monthly',
       owner_id: 'user-1',
@@ -268,18 +261,18 @@ describe('createExpenseTemplate', () => {
       insert: vi.fn().mockReturnValue(mockQuery),
     } as never)
 
-    await expect(createExpenseTemplate(templateInsert)).rejects.toEqual(mockError)
+    await expect(createTemplate(templateInsert)).rejects.toEqual(mockError)
   })
 })
 
-describe('updateExpenseTemplate', () => {
+describe('updateTemplate', () => {
   it('should update template successfully', async () => {
-    const updates: ExpenseTemplateUpdate = {
+    const updates: TemplateUpdate = {
       name: 'Updated Template',
       duration: 'monthly',
     }
 
-    const updatedTemplate = { ...mockExpenseTemplate, ...updates }
+    const updatedTemplate = { ...mockTemplate, ...updates }
     const mockQuery = {
       match: vi.fn().mockReturnThis(),
       select: vi.fn().mockReturnThis(),
@@ -293,14 +286,14 @@ describe('updateExpenseTemplate', () => {
       update: vi.fn().mockReturnValue(mockQuery),
     } as never)
 
-    const result = await updateExpenseTemplate('template-1', updates)
+    const result = await updateTemplate('template-1', updates)
 
-    expect(mockFrom).toHaveBeenCalledWith('expense_templates')
+    expect(mockFrom).toHaveBeenCalledWith('templates')
     expect(result).toEqual(updatedTemplate)
   })
 
   it('should throw DUPLICATE_TEMPLATE_NAME error for duplicate name', async () => {
-    const updates: ExpenseTemplateUpdate = { name: 'Duplicate Name' }
+    const updates: TemplateUpdate = { name: 'Duplicate Name' }
     const mockError = createPostgrestError('unique_template_name_per_user violation')
     const mockDuplicateError = new Error('DUPLICATE_TEMPLATE_NAME')
     mockIsDuplicateNameError.mockReturnValue(true)
@@ -319,11 +312,11 @@ describe('updateExpenseTemplate', () => {
       update: vi.fn().mockReturnValue(mockQuery),
     } as never)
 
-    await expect(updateExpenseTemplate('template-1', updates)).rejects.toEqual(mockDuplicateError)
+    await expect(updateTemplate('template-1', updates)).rejects.toEqual(mockDuplicateError)
   })
 })
 
-describe('deleteExpenseTemplate', () => {
+describe('deleteTemplate', () => {
   it('should delete template successfully', async () => {
     const mockQuery = {
       match: vi.fn().mockResolvedValue({
@@ -335,9 +328,9 @@ describe('deleteExpenseTemplate', () => {
       delete: vi.fn().mockReturnValue(mockQuery),
     } as never)
 
-    await deleteExpenseTemplate('template-1')
+    await deleteTemplate('template-1')
 
-    expect(mockFrom).toHaveBeenCalledWith('expense_templates')
+    expect(mockFrom).toHaveBeenCalledWith('templates')
   })
 
   it('should throw error when delete fails', async () => {
@@ -352,15 +345,15 @@ describe('deleteExpenseTemplate', () => {
       delete: vi.fn().mockReturnValue(mockQuery),
     } as never)
 
-    await expect(deleteExpenseTemplate('template-1')).rejects.toEqual(mockError)
+    await expect(deleteTemplate('template-1')).rejects.toEqual(mockError)
   })
 })
 
-describe('getExpenseTemplateWithItems', () => {
+describe('getTemplateWithItems', () => {
   it('should return template with items for owner', async () => {
-    const templateWithItems: ExpenseTemplateWithItems = {
-      ...mockExpenseTemplate,
-      expense_template_items: [mockExpenseTemplateItem],
+    const templateWithItems: TemplateWithItems = {
+      ...mockTemplate,
+      template_items: [mockTemplateItem],
     }
 
     const mockQuery = {
@@ -374,17 +367,17 @@ describe('getExpenseTemplateWithItems', () => {
 
     mockFrom.mockReturnValue(mockQuery)
 
-    const result = await getExpenseTemplateWithItems('template-1', 'user-1')
+    const result = await getTemplateWithItems('template-1', 'user-1')
 
-    expect(mockFrom).toHaveBeenCalledWith('expense_templates')
+    expect(mockFrom).toHaveBeenCalledWith('templates')
     expect(result).toEqual(templateWithItems)
   })
 
   it('should return template with permission level for shared user', async () => {
-    const templateWithItems: ExpenseTemplateWithItems = {
-      ...mockExpenseTemplate,
+    const templateWithItems: TemplateWithItems = {
+      ...mockTemplate,
       owner_id: 'user-2',
-      expense_template_items: [mockExpenseTemplateItem],
+      template_items: [mockTemplateItem],
     }
 
     // Mock template query
@@ -409,9 +402,9 @@ describe('getExpenseTemplateWithItems', () => {
 
     mockFrom.mockReturnValueOnce(mockTemplateQuery).mockReturnValueOnce(mockShareQuery)
 
-    const result = await getExpenseTemplateWithItems('template-1', 'user-1')
+    const result = await getTemplateWithItems('template-1', 'user-1')
 
-    expect(mockFrom).toHaveBeenCalledWith('expense_templates')
+    expect(mockFrom).toHaveBeenCalledWith('templates')
     expect(mockFrom).toHaveBeenCalledWith('template_shares')
     expect(result).toEqual({
       ...templateWithItems,
@@ -431,16 +424,16 @@ describe('getExpenseTemplateWithItems', () => {
 
     mockFrom.mockReturnValue(mockQuery)
 
-    const result = await getExpenseTemplateWithItems('template-1', 'user-1')
+    const result = await getTemplateWithItems('template-1', 'user-1')
 
     expect(result).toBeNull()
   })
 
   it('should throw error when template not shared with user', async () => {
-    const templateWithItems: ExpenseTemplateWithItems = {
-      ...mockExpenseTemplate,
+    const templateWithItems: TemplateWithItems = {
+      ...mockTemplate,
       owner_id: 'user-2',
-      expense_template_items: [mockExpenseTemplateItem],
+      template_items: [mockTemplateItem],
     }
 
     // Mock template query
@@ -465,7 +458,7 @@ describe('getExpenseTemplateWithItems', () => {
 
     mockFrom.mockReturnValueOnce(mockTemplateQuery).mockReturnValueOnce(mockShareQuery)
 
-    await expect(getExpenseTemplateWithItems('template-1', 'user-1')).rejects.toThrow(
+    await expect(getTemplateWithItems('template-1', 'user-1')).rejects.toThrow(
       'template not found or access denied',
     )
   })
@@ -506,9 +499,9 @@ describe('getTemplateSharedUsers', () => {
   })
 })
 
-describe('createExpenseTemplateItems', () => {
+describe('createTemplateItems', () => {
   it('should create template items successfully', async () => {
-    const items: ExpenseTemplateItemInsert[] = [
+    const items: TemplateItemInsert[] = [
       {
         template_id: 'template-1',
         name: 'Item 1',
@@ -518,7 +511,7 @@ describe('createExpenseTemplateItems', () => {
     ]
 
     const mockSelect = vi.fn().mockResolvedValue({
-      data: [mockExpenseTemplateItem],
+      data: [mockTemplateItem],
       error: null,
     })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
@@ -526,15 +519,15 @@ describe('createExpenseTemplateItems', () => {
 
     mockSupabase.from.mockImplementation(mockFrom)
 
-    const result = await createExpenseTemplateItems(items)
+    const result = await createTemplateItems(items)
 
-    expect(mockFrom).toHaveBeenCalledWith('expense_template_items')
+    expect(mockFrom).toHaveBeenCalledWith('template_items')
     expect(mockInsert).toHaveBeenCalledWith(items)
-    expect(result).toEqual([mockExpenseTemplateItem])
+    expect(result).toEqual([mockTemplateItem])
   })
 
   it('should throw error when creation fails', async () => {
-    const items: ExpenseTemplateItemInsert[] = [
+    const items: TemplateItemInsert[] = [
       {
         template_id: 'template-1',
         name: 'Item 1',
@@ -553,11 +546,11 @@ describe('createExpenseTemplateItems', () => {
 
     mockSupabase.from.mockImplementation(mockFrom)
 
-    await expect(createExpenseTemplateItems(items)).rejects.toThrow('Failed to create items')
+    await expect(createTemplateItems(items)).rejects.toThrow('Failed to create items')
   })
 })
 
-describe('deleteExpenseTemplateItems', () => {
+describe('deleteTemplateItems', () => {
   it('should delete template items successfully', async () => {
     const mockIn = vi.fn().mockResolvedValue({ data: null, error: null })
     const mockDelete = vi.fn().mockReturnValue({ in: mockIn })
@@ -565,9 +558,9 @@ describe('deleteExpenseTemplateItems', () => {
 
     mockSupabase.from.mockImplementation(mockFrom)
 
-    await deleteExpenseTemplateItems(['item-1', 'item-2'])
+    await deleteTemplateItems(['item-1', 'item-2'])
 
-    expect(mockFrom).toHaveBeenCalledWith('expense_template_items')
+    expect(mockFrom).toHaveBeenCalledWith('template_items')
     expect(mockIn).toHaveBeenCalledWith('id', ['item-1', 'item-2'])
   })
 
@@ -579,7 +572,7 @@ describe('deleteExpenseTemplateItems', () => {
 
     mockSupabase.from.mockImplementation(mockFrom)
 
-    await expect(deleteExpenseTemplateItems(['item-1', 'item-2'])).rejects.toThrow(
+    await expect(deleteTemplateItems(['item-1', 'item-2'])).rejects.toThrow(
       'Failed to delete items',
     )
   })

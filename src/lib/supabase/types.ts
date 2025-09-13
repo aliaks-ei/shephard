@@ -1,14 +1,14 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: '12.2.12 (cd3cf9e)'
   }
   public: {
     Tables: {
-      expense_categories: {
+      categories: {
         Row: {
           color: string
           created_at: string | null
@@ -35,83 +35,59 @@ export type Database = {
         }
         Relationships: []
       }
-      expense_template_items: {
+      expenses: {
         Row: {
           amount: number
           category_id: string
           created_at: string | null
+          description: string | null
+          expense_date: string
           id: string
           name: string
-          template_id: string
+          plan_id: string
           updated_at: string | null
+          user_id: string
         }
         Insert: {
           amount: number
           category_id: string
           created_at?: string | null
+          description?: string | null
+          expense_date?: string
           id?: string
           name: string
-          template_id: string
+          plan_id: string
           updated_at?: string | null
+          user_id: string
         }
         Update: {
           amount?: number
           category_id?: string
           created_at?: string | null
+          description?: string | null
+          expense_date?: string
           id?: string
           name?: string
-          template_id?: string
+          plan_id?: string
           updated_at?: string | null
+          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: 'expense_template_items_category_id_fkey'
+            foreignKeyName: 'expenses_category_id_fkey'
             columns: ['category_id']
             isOneToOne: false
-            referencedRelation: 'expense_categories'
+            referencedRelation: 'categories'
             referencedColumns: ['id']
           },
           {
-            foreignKeyName: 'expense_template_items_template_id_fkey'
-            columns: ['template_id']
+            foreignKeyName: 'expenses_plan_id_fkey'
+            columns: ['plan_id']
             isOneToOne: false
-            referencedRelation: 'expense_templates'
+            referencedRelation: 'plans'
             referencedColumns: ['id']
           },
         ]
-      }
-      expense_templates: {
-        Row: {
-          created_at: string | null
-          currency: string | null
-          duration: string
-          id: string
-          name: string
-          owner_id: string
-          total: number | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          currency?: string | null
-          duration: string
-          id?: string
-          name: string
-          owner_id: string
-          total?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          currency?: string | null
-          duration?: string
-          id?: string
-          name?: string
-          owner_id?: string
-          total?: number | null
-          updated_at?: string | null
-        }
-        Relationships: []
       }
       plan_items: {
         Row: {
@@ -146,7 +122,7 @@ export type Database = {
             foreignKeyName: 'plan_items_category_id_fkey'
             columns: ['category_id']
             isOneToOne: false
-            referencedRelation: 'expense_categories'
+            referencedRelation: 'categories'
             referencedColumns: ['id']
           },
           {
@@ -215,7 +191,6 @@ export type Database = {
           name: string
           owner_id: string
           start_date: string
-          status: string
           template_id: string
           total?: number | null
           updated_at?: string | null
@@ -238,7 +213,52 @@ export type Database = {
             foreignKeyName: 'plans_template_id_fkey'
             columns: ['template_id']
             isOneToOne: false
-            referencedRelation: 'expense_templates'
+            referencedRelation: 'templates'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      template_items: {
+        Row: {
+          amount: number
+          category_id: string
+          created_at: string | null
+          id: string
+          name: string
+          template_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          category_id: string
+          created_at?: string | null
+          id?: string
+          name: string
+          template_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          category_id?: string
+          created_at?: string | null
+          id?: string
+          name?: string
+          template_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'template_items_category_id_fkey'
+            columns: ['category_id']
+            isOneToOne: false
+            referencedRelation: 'categories'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'template_items_template_id_fkey'
+            columns: ['template_id']
+            isOneToOne: false
+            referencedRelation: 'templates'
             referencedColumns: ['id']
           },
         ]
@@ -273,10 +293,43 @@ export type Database = {
             foreignKeyName: 'template_shares_template_id_fkey'
             columns: ['template_id']
             isOneToOne: false
-            referencedRelation: 'expense_templates'
+            referencedRelation: 'templates'
             referencedColumns: ['id']
           },
         ]
+      }
+      templates: {
+        Row: {
+          created_at: string | null
+          currency: string | null
+          duration: string
+          id: string
+          name: string
+          owner_id: string
+          total: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          currency?: string | null
+          duration: string
+          id?: string
+          name: string
+          owner_id: string
+          total?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          currency?: string | null
+          duration?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          total?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       users: {
         Row: {
@@ -313,6 +366,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_plan_status: {
+        Args: {
+          p_current_status?: string
+          p_end_date: string
+          p_start_date: string
+        }
+        Returns: string
+      }
       can_access_template: {
         Args: { template_id: string; user_id: string }
         Returns: boolean
@@ -322,31 +383,41 @@ export type Database = {
         Returns: boolean
       }
       check_excessive_sharing: {
-        Args: { user_id: string; hours_window?: number; max_shares?: number }
+        Args: { hours_window?: number; max_shares?: number; user_id: string }
         Returns: boolean
       }
       cleanup_audit_logs: {
         Args: { days_to_keep?: number }
         Returns: number
       }
+      get_plan_expense_summary: {
+        Args: { p_plan_id: string }
+        Returns: {
+          actual_amount: number
+          category_id: string
+          expense_count: number
+          planned_amount: number
+          remaining_amount: number
+        }[]
+      }
       get_plan_shared_users: {
         Args: { p_plan_id: string }
         Returns: {
-          user_id: string
-          user_name: string
-          user_email: string
           permission_level: string
           shared_at: string
+          user_email: string
+          user_id: string
+          user_name: string
         }[]
       }
       get_template_shared_users: {
         Args: { p_template_id: string }
         Returns: {
-          user_id: string
-          user_name: string
-          user_email: string
           permission_level: string
           shared_at: string
+          user_email: string
+          user_id: string
+          user_name: string
         }[]
       }
       get_user_accessible_plan_ids: {
@@ -356,12 +427,12 @@ export type Database = {
         }[]
       }
       get_user_activity_summary: {
-        Args: { user_id: string; days_back?: number }
+        Args: { days_back?: number; user_id: string }
         Returns: {
-          table_name: string
-          operation: string
           count: number
           last_activity: string
+          operation: string
+          table_name: string
         }[]
       }
       get_user_editable_plan_ids: {
@@ -377,9 +448,9 @@ export type Database = {
       search_users_for_sharing: {
         Args: { q: string }
         Returns: {
+          email: string
           id: string
           name: string
-          email: string
         }[]
       }
       user_has_template_access: {

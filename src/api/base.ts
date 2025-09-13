@@ -2,16 +2,16 @@ import { supabase } from 'src/lib/supabase/client'
 import type { Tables, TablesInsert, TablesUpdate } from 'src/lib/supabase/types'
 import { isDuplicateNameError, createDuplicateNameError } from 'src/utils/database'
 
-type MainTableName = 'expense_categories' | 'expense_templates' | 'plans'
+type MainTableName = 'categories' | 'templates' | 'plans' | 'expenses'
 type ShareTableName = 'plan_shares' | 'template_shares'
-type ItemsTableName = 'expense_template_items' | 'plan_items'
+type ItemsTableName = 'template_items' | 'plan_items'
 
 export interface EntityConfig<TName extends MainTableName> {
   tableName: TName
   shareTableName?: ShareTableName
   itemsTableName?: ItemsTableName
   uniqueConstraintName: string
-  entityTypeName: 'PLAN' | 'TEMPLATE' | 'CATEGORY'
+  entityTypeName: 'PLAN' | 'TEMPLATE' | 'CATEGORY' | 'EXPENSE'
   shareTableForeignKeyColumn?: string
 }
 
@@ -49,6 +49,10 @@ export class BaseAPIService<
   }
 
   constructor(protected config: EntityConfig<TName>) {}
+
+  get supabase() {
+    return supabase
+  }
 
   async create(entity: TInsert): Promise<TEntity> {
     const { data, error } = await supabase
@@ -102,9 +106,6 @@ export class BaseAPIService<
     return data as TEntity | null
   }
 
-  /**
-   * User-scoped entity fetching with ownership and sharing
-   */
   async getEntitiesWithPermissions(
     userId: string,
     entityColumnName?: string,
@@ -127,8 +128,7 @@ export class BaseAPIService<
       const entity = raw as unknown as Record<string, unknown>
       const shares = entity[shareTable]
       const isShared = Array.isArray(shares) && shares.length > 0
-      // Remove the join payload key if present
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
       const { [shareTable]: _omit, ...rest } = entity
       return { ...(rest as unknown as TEntity), is_shared: isShared } as TWithPermission
     })
@@ -158,9 +158,6 @@ export class BaseAPIService<
     )
   }
 
-  /**
-   * Get entity with items and permission checking
-   */
   async getEntityWithItems(
     entityId: string,
     userId: string,
@@ -207,12 +204,8 @@ export class BaseAPIService<
     } as TWithItems & { permission_level?: string }
   }
 
-  /**
-   * Sharing Operations
-   */
   async getSharedUsers(entityId: string): Promise<SharedUser[]> {
-    // Prefer secure RPCs that encapsulate joins and respect RLS
-    if (this.config.tableName === 'expense_templates') {
+    if (this.config.tableName === 'templates') {
       const data = await this.rpcRaw<SharedUser[]>('get_template_shared_users', {
         p_template_id: entityId,
       })
@@ -236,7 +229,7 @@ export class BaseAPIService<
     if (!this.config.shareTableName) {
       throw new Error('Sharing is not supported for this entity')
     }
-    // Resolve user by email via secure RPC to avoid broad table SELECT
+
     const candidates = await this.rpcRaw<{ id: string; email: string; name?: string | null }[]>(
       'search_users_for_sharing',
       { q: userEmail },
@@ -244,6 +237,7 @@ export class BaseAPIService<
     const list = candidates || []
     const targetUser =
       list.find((u) => u.email.toLowerCase() === userEmail.toLowerCase()) || list[0]
+
     if (!targetUser) {
       throw new Error(`User not found: ${userEmail}`)
     }
@@ -264,7 +258,6 @@ export class BaseAPIService<
       throw new Error(`${this.config.entityTypeName} is already shared with ${userEmail}`)
     }
 
-    // Create new share
     const { error: insertError } = await supabase.from(this.config.shareTableName).insert({
       [entityIdColumn]: entityId,
       shared_with_user_id: targetUser.id,
@@ -311,9 +304,6 @@ export class BaseAPIService<
     if (error) throw error
   }
 
-  /**
-   * Items Operations (for entities that have child items)
-   */
   async createItems(items: Record<string, unknown>[]): Promise<unknown[]> {
     if (!this.config.itemsTableName) {
       throw new Error('Items table not configured for this entity type')

@@ -62,10 +62,10 @@ describe('computed state', () => {
       name: 'My Plan',
       start_date: '2024-01-01',
       end_date: '2024-02-01',
-      status: 'active',
       total: 0,
       currency: 'USD',
       created_at: '2024-01-01',
+      status: 'pending',
       updated_at: '2024-01-01',
       plan_items: [],
     }
@@ -88,11 +88,11 @@ describe('computed state', () => {
       name: 'Shared',
       start_date: '2024-01-01',
       end_date: '2024-02-01',
-      status: 'active',
       total: 0,
       currency: 'USD',
       created_at: '2024-01-01',
       updated_at: '2024-01-01',
+      status: 'pending',
       plan_items: [],
       permission_level: 'view',
     }
@@ -118,11 +118,11 @@ describe('computed state', () => {
       name: 'X',
       start_date: '2024',
       end_date: '2024',
-      status: 'active',
       total: 0,
       currency: 'GBP',
       created_at: '2024',
       updated_at: '2024',
+      status: 'pending',
       plan_items: [],
     }
     expect(p.planCurrency.value).toBe('GBP')
@@ -136,15 +136,9 @@ describe('CRUD flows', () => {
     plansStore.savePlanItems = vi.fn().mockResolvedValue([])
 
     const { createNewPlanWithItems } = usePlan()
-    const ok = await createNewPlanWithItems(
-      'tpl',
-      'Name',
-      '2024-01-01',
-      '2024-01-31',
-      'active',
-      100,
-      [{ name: 'A', category_id: 'c', amount: 1 }],
-    )
+    const ok = await createNewPlanWithItems('tpl', 'Name', '2024-01-01', '2024-01-31', 100, [
+      { name: 'A', category_id: 'c', amount: 1 },
+    ])
 
     expect(ok).toBe(true)
     expect(plansStore.addPlan).toHaveBeenCalledWith({
@@ -152,7 +146,6 @@ describe('CRUD flows', () => {
       name: 'Name',
       start_date: '2024-01-01',
       end_date: '2024-01-31',
-      status: 'active',
       total: 100,
     })
     expect(plansStore.savePlanItems).toHaveBeenCalledWith('np', [
@@ -164,7 +157,7 @@ describe('CRUD flows', () => {
     const plansStore = usePlansStore()
     plansStore.addPlan = vi.fn().mockResolvedValue(null)
     const { createNewPlanWithItems } = usePlan()
-    const ok = await createNewPlanWithItems('tpl', 'Name', 's', 'e', 'active', 0, [])
+    const ok = await createNewPlanWithItems('tpl', 'Name', 's', 'e', 0, [])
     expect(ok).toBe(false)
   })
 
@@ -179,11 +172,11 @@ describe('CRUD flows', () => {
       name: 'Old',
       start_date: 's',
       end_date: 'e',
-      status: 'active',
       total: 0,
       currency: 'USD',
       created_at: 'c',
       updated_at: 'u',
+      status: 'pending',
       plan_items: [
         {
           id: 'i1',
@@ -200,7 +193,7 @@ describe('CRUD flows', () => {
     plansStore.removePlanItems = vi.fn().mockResolvedValue(undefined)
     plansStore.savePlanItems = vi.fn().mockResolvedValue([])
 
-    const ok = await p.updateExistingPlanWithItems('N', 's2', 'e2', 'active', 2, [
+    const ok = await p.updateExistingPlanWithItems('N', 's2', 'e2', 2, [
       { name: 'A', category_id: 'c', amount: 2 },
     ])
     expect(ok).toBe(true)
@@ -208,7 +201,6 @@ describe('CRUD flows', () => {
       name: 'N',
       start_date: 's2',
       end_date: 'e2',
-      status: 'active',
       total: 2,
     })
     expect(plansStore.removePlanItems).toHaveBeenCalledWith(['i1'])
@@ -220,13 +212,13 @@ describe('CRUD flows', () => {
   it('updateExistingPlanWithItems returns false when route id missing or no current plan', async () => {
     mockRoute.value = { name: 'plan', params: {} }
     let p = usePlan()
-    let ok = await p.updateExistingPlanWithItems('n', 's', 'e', 'active', 0, [])
+    let ok = await p.updateExistingPlanWithItems('n', 's', 'e', 0, [])
     expect(ok).toBe(false)
 
     mockRoute.value = { name: 'plan', params: { id: 'plan-1' } }
     p = usePlan()
     p.currentPlan.value = null
-    ok = await p.updateExistingPlanWithItems('n', 's', 'e', 'active', 0, [])
+    ok = await p.updateExistingPlanWithItems('n', 's', 'e', 0, [])
     expect(ok).toBe(false)
   })
 
@@ -256,11 +248,11 @@ describe('CRUD flows', () => {
       name: 'P',
       start_date: 's',
       end_date: 'e',
-      status: 'active',
       total: 0,
       currency: 'USD',
       created_at: 'c',
       updated_at: 'u',
+      status: 'pending',
       plan_items: [],
     }
     await p.cancelCurrentPlan()

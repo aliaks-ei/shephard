@@ -1,8 +1,9 @@
 ---
-description: 
-globs: **/*.test.ts
+description: Guidelines for writing tests in the codebase
+globs: *.test.ts
 alwaysApply: false
 ---
+
 # Test Guidelines
 
 Before writing tests, create a plan for what exactly to test and check it with me.
@@ -42,6 +43,7 @@ Before writing tests, create a plan for what exactly to test and check it with m
 - Prefer extracting individual mock functions for clarity and type safety.
 
 ### Example:
+
 ```ts
 const mockRouterPush = vi.fn()
 const mockRouter = { push: mockRouterPush }
@@ -49,8 +51,9 @@ const mockRouter = { push: mockRouterPush }
 
 ## Comments
 
-- **You don’t need to write comments.**
-  Avoid obvious comments like `// Mock a function`.
+- Follow the project's comment guidelines (see conventions.mdc)
+- Add comments only for complex test logic or non-obvious test patterns
+- Avoid obvious comments like `// Mock a function`
 
 ## Component Testing
 
@@ -69,6 +72,7 @@ const mockRouter = { push: mockRouterPush }
 - Avoid testing third-party behavior unless you explicitly wrap it.
 
 ### Example:
+
 ```ts
 installQuasarPlugin()
 
@@ -87,6 +91,7 @@ describe('layout example', () => {
 - Modify store state using `ref()` and `// @ts-expect-error` for type bypassing.
 
 ### Example:
+
 ```ts
 // @ts-expect-error - Testing Pinia
 storeInstance.someProperty = ref(mockValue)
@@ -98,19 +103,9 @@ storeInstance.someProperty = ref(mockValue)
 
 ## TypeScript Integration
 
-- Never use `any`. Use `unknown` for conversions:
-  ```ts
-  mock as unknown as TargetType
-  ```
-- Use `// @ts-expect-error` with a reason when needed.
-- Use interface merging to extend global types:
-  ```ts
-  declare global {
-    interface Window {
-      customProperty?: SomeType
-    }
-  }
-  ```
+- Follow the project's TypeScript guidelines (see typescript.mdc)
+- Use proper type assertions for test mocks and fixtures
+- Extend global types when needed for testing browser APIs
 
 ## Test Lifecycle & Cleanup
 
@@ -138,6 +133,7 @@ storeInstance.someProperty = ref(mockValue)
 - Ensure proper cleanup and type safety.
 
 ### Quasar Mocks
+
 - Include `Quasar` export when mocking:
   ```ts
   vi.mock('quasar', () => ({
@@ -147,6 +143,7 @@ storeInstance.someProperty = ref(mockValue)
   ```
 
 ### Reactivity Example
+
 ```ts
 it('should react to state changes', async () => {
   const someRef = ref(false)
@@ -164,6 +161,7 @@ it('should react to state changes', async () => {
 - Create reusable helpers for mocking browser APIs (like `matchMedia`).
 
 ### Example:
+
 ```ts
 const mockMatchMedia = () => {
   const mockMediaQueryList = {

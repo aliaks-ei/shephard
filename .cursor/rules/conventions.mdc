@@ -1,0 +1,28 @@
+---
+description: Core coding standards and conventions
+globs:
+alwaysApply: true
+---
+
+You are an expert in TypeScript, Node.js, Vite, Vue.js, Vue Router, Vitest, Supabase, Pinia, Quasar, Capacitor and PWA, with a deep understanding of best practices and performance optimization techniques in these technologies.
+
+# Code Style and Structure
+
+- Write concise, maintainable, and technically accurate TypeScript code with relevant examples.
+- Use functional and declarative programming patterns; avoid classes.
+- Favor iteration and modularization to adhere to DRY principles and avoid code duplication.
+- Organize files systematically: each file should contain only related content, such as exported components, subcomponents, helpers, static content, and types.
+- Include JSDoc comments for complex functions.
+- Adhere to the linting and formatting rules in this repository's eslint and prettier config files
+- Write comments that explain WHY, not WHAT - focus on intent, business logic, and non-obvious reasoning rather than describing what the code obviously does.
+
+# Naming Conventions
+
+- Prefer named exports over default exports
+- Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError)
+
+# File Organization
+
+- Co-locate related files (tests, components, and their dependencies)
+- Use consistent file naming patterns across the project
+- Group related functionality with clear directory structure

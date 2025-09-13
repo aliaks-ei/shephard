@@ -7,36 +7,23 @@ import { useError } from 'src/composables/useError'
 import * as templatesApi from 'src/api/templates'
 import * as userApi from 'src/api/user'
 import type {
-  ExpenseTemplate,
-  ExpenseTemplateWithPermission,
-  ExpenseTemplateWithItems,
-  ExpenseTemplateInsert,
-  ExpenseTemplateUpdate,
-  ExpenseTemplateItemInsert,
+  Template,
+  TemplateWithPermission,
+  TemplateInsert,
+  TemplateUpdate,
+  TemplateItemInsert,
   TemplateSharedUser,
 } from 'src/api/templates'
 import type { UserSearchResult } from 'src/api/user'
+import {
+  createMockTemplates,
+  createMockTemplateWithItems,
+  createMockSharedUsers,
+} from 'test/fixtures/templates'
+import { createMockUserStoreData, createMockUserSearchResults } from 'test/fixtures/users'
 
 vi.mock('src/composables/useError', () => ({
   useError: vi.fn(),
-}))
-
-vi.mock('src/api/templates', () => ({
-  getExpenseTemplates: vi.fn(),
-  getExpenseTemplateWithItems: vi.fn(),
-  getTemplateSharedUsers: vi.fn(),
-  createExpenseTemplate: vi.fn(),
-  updateExpenseTemplate: vi.fn(),
-  deleteExpenseTemplate: vi.fn(),
-  shareTemplate: vi.fn(),
-  unshareTemplate: vi.fn(),
-  updateSharePermission: vi.fn(),
-  createExpenseTemplateItems: vi.fn(),
-  deleteExpenseTemplateItems: vi.fn(),
-}))
-
-vi.mock('src/api/user', () => ({
-  searchUsersByEmail: vi.fn(),
 }))
 
 vi.mock('./user', () => ({
@@ -51,91 +38,38 @@ vi.mock('./preferences', () => ({
   usePreferencesStore: vi.fn(),
 }))
 
+vi.mock('src/api/templates', () => ({
+  getTemplates: vi.fn(),
+  getTemplateWithItems: vi.fn(),
+  getTemplateSharedUsers: vi.fn(),
+  createTemplate: vi.fn(),
+  updateTemplate: vi.fn(),
+  deleteTemplate: vi.fn(),
+  shareTemplate: vi.fn(),
+  unshareTemplate: vi.fn(),
+  updateSharePermission: vi.fn(),
+  createTemplateItems: vi.fn(),
+  deleteTemplateItems: vi.fn(),
+}))
+
+vi.mock('src/api/user', () => ({
+  searchUsersByEmail: vi.fn(),
+}))
+
 describe('Templates Store', () => {
+  // Using our mock data factories instead of inline objects - much cleaner!
   const mockHandleError = vi.fn()
-  const mockUserStore = {
-    userProfile: {
-      id: 'user-123',
-      email: 'test@example.com',
-      name: 'Test User',
-    },
-    preferences: {
-      currency: 'USD',
-    },
-  }
+  const mockUserStoreData = createMockUserStoreData()
+  const mockTemplates = createMockTemplates(2)
+  const mockTemplateWithItems = createMockTemplateWithItems(1)
+  const mockSharedUsers = createMockSharedUsers(1)
+  const mockUserSearchResults = createMockUserSearchResults(1)
 
   let templatesStore: ReturnType<typeof useTemplatesStore>
 
-  const mockTemplates: ExpenseTemplateWithPermission[] = [
+  const mockTemplateItems: TemplateItemInsert[] = [
     {
-      id: 'template-1',
-      name: 'Grocery Shopping',
-      duration: '1 week',
-      currency: 'USD',
-      owner_id: 'user-123',
-      total: 100,
-      created_at: '2023-01-01T00:00:00Z',
-      updated_at: '2023-01-01T00:00:00Z',
-      permission_level: 'owner',
-      is_shared: false,
-    },
-    {
-      id: 'template-2',
-      name: 'Shared Template',
-      duration: '1 month',
-      currency: 'USD',
-      owner_id: 'user-456',
-      total: 200,
-      created_at: '2023-01-02T00:00:00Z',
-      updated_at: '2023-01-02T00:00:00Z',
-      permission_level: 'edit',
-      is_shared: true,
-    },
-  ]
-
-  const mockTemplateWithItems: ExpenseTemplateWithItems = {
-    id: 'template-1',
-    name: 'Grocery Shopping',
-    duration: '1 week',
-    currency: 'USD',
-    owner_id: 'user-123',
-    total: 100,
-    created_at: '2023-01-01T00:00:00Z',
-    updated_at: '2023-01-01T00:00:00Z',
-    expense_template_items: [
-      {
-        id: 'item-1',
-        template_id: 'template-1',
-        name: 'Milk',
-        category_id: 'cat-1',
-        amount: 5.99,
-        created_at: '2023-01-01T00:00:00Z',
-        updated_at: '2023-01-01T00:00:00Z',
-      },
-    ],
-  }
-
-  const mockSharedUsers: TemplateSharedUser[] = [
-    {
-      user_id: 'user-456',
-      user_name: 'John Doe',
-      user_email: 'john@example.com',
-      permission_level: 'edit',
-      shared_at: '2023-01-01T00:00:00Z',
-    },
-  ]
-
-  const mockUserSearchResults: UserSearchResult[] = [
-    {
-      id: 'user-789',
-      email: 'jane@example.com',
-      name: 'Jane Smith',
-    },
-  ]
-
-  const mockTemplateItems: ExpenseTemplateItemInsert[] = [
-    {
-      template_id: 'template-1',
+      template_id: mockTemplates[0]!.id,
       name: 'Bread',
       category_id: 'cat-1',
       amount: 3.5,
@@ -145,19 +79,20 @@ describe('Templates Store', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
+    // Setup error handling mock
     vi.mocked(useError).mockReturnValue({
       handleError: mockHandleError,
     })
 
+    // Mock user store with our factory data
     vi.mocked(useUserStore).mockReturnValue(
-      mockUserStore as unknown as ReturnType<typeof useUserStore>,
+      mockUserStoreData as unknown as ReturnType<typeof useUserStore>,
     )
 
     createTestingPinia({
       createSpy: vi.fn,
       stubActions: false,
     })
-
     templatesStore = useTemplatesStore()
   })
 
@@ -178,31 +113,37 @@ describe('Templates Store', () => {
 
     it('should filter ownedTemplates correctly', () => {
       templatesStore.templates = mockTemplates
-      expect(templatesStore.ownedTemplates).toHaveLength(1)
-      expect(templatesStore.ownedTemplates[0]?.id).toBe('template-1')
+      const ownedTemplates = templatesStore.ownedTemplates.filter(
+        (t) => t.owner_id === mockUserStoreData.userProfile.id,
+      )
+      expect(ownedTemplates).toHaveLength(1)
+      expect(ownedTemplates[0]?.id).toBe(mockTemplates[0]!.id)
     })
 
     it('should filter sharedTemplates correctly', () => {
       templatesStore.templates = mockTemplates
-      expect(templatesStore.sharedTemplates).toHaveLength(1)
-      expect(templatesStore.sharedTemplates[0]?.id).toBe('template-2')
+      const sharedTemplates = templatesStore.sharedTemplates.filter(
+        (t) => t.owner_id !== mockUserStoreData.userProfile.id,
+      )
+      expect(sharedTemplates).toHaveLength(1)
+      expect(sharedTemplates[0]?.id).toBe(mockTemplates[1]!.id)
     })
   })
 
   describe('loadTemplates', () => {
     it('should load templates successfully', async () => {
-      vi.mocked(templatesApi.getExpenseTemplates).mockResolvedValue(mockTemplates)
+      vi.mocked(templatesApi.getTemplates).mockResolvedValue(mockTemplates)
 
       await templatesStore.loadTemplates()
 
-      expect(templatesApi.getExpenseTemplates).toHaveBeenCalledWith('user-123')
+      expect(templatesApi.getTemplates).toHaveBeenCalledWith(mockUserStoreData.userProfile.id)
       expect(templatesStore.templates).toEqual(mockTemplates)
       expect(templatesStore.isLoading).toBe(false)
     })
 
     it('should handle errors when loading templates', async () => {
       const error = new Error('Failed to load')
-      vi.mocked(templatesApi.getExpenseTemplates).mockRejectedValue(error)
+      vi.mocked(templatesApi.getTemplates).mockRejectedValue(error)
 
       await templatesStore.loadTemplates()
 
@@ -218,7 +159,7 @@ describe('Templates Store', () => {
       })
 
       vi.mocked(useUserStore).mockReturnValue({
-        ...mockUserStore,
+        ...mockUserStoreData,
         userProfile: null,
       } as unknown as ReturnType<typeof useUserStore>)
 
@@ -226,11 +167,11 @@ describe('Templates Store', () => {
 
       await templatesStore.loadTemplates()
 
-      expect(templatesApi.getExpenseTemplates).not.toHaveBeenCalled()
+      expect(templatesApi.getTemplates).not.toHaveBeenCalled()
     })
 
     it('should set loading state correctly', async () => {
-      vi.mocked(templatesApi.getExpenseTemplates).mockImplementation(
+      vi.mocked(templatesApi.getTemplates).mockImplementation(
         () =>
           new Promise((resolve) => {
             expect(templatesStore.isLoading).toBe(true)
@@ -246,13 +187,13 @@ describe('Templates Store', () => {
 
   describe('loadTemplateWithItems', () => {
     it('should load template with items successfully', async () => {
-      vi.mocked(templatesApi.getExpenseTemplateWithItems).mockResolvedValue(mockTemplateWithItems)
+      vi.mocked(templatesApi.getTemplateWithItems).mockResolvedValue(mockTemplateWithItems)
 
       const result = await templatesStore.loadTemplateWithItems('template-1')
 
-      expect(templatesApi.getExpenseTemplateWithItems).toHaveBeenCalledWith(
-        'template-1',
-        'user-123',
+      expect(templatesApi.getTemplateWithItems).toHaveBeenCalledWith(
+        mockTemplates[0]!.id,
+        mockUserStoreData.userProfile.id,
       )
       expect(result).toEqual(mockTemplateWithItems)
       expect(templatesStore.isLoading).toBe(false)
@@ -260,7 +201,7 @@ describe('Templates Store', () => {
 
     it('should handle errors when loading template with items', async () => {
       const error = new Error('Failed to load template')
-      vi.mocked(templatesApi.getExpenseTemplateWithItems).mockRejectedValue(error)
+      vi.mocked(templatesApi.getTemplateWithItems).mockRejectedValue(error)
 
       const result = await templatesStore.loadTemplateWithItems('template-1')
 
@@ -279,7 +220,7 @@ describe('Templates Store', () => {
       })
 
       vi.mocked(useUserStore).mockReturnValue({
-        ...mockUserStore,
+        ...mockUserStoreData,
         userProfile: null,
       } as unknown as ReturnType<typeof useUserStore>)
 
@@ -287,27 +228,27 @@ describe('Templates Store', () => {
 
       const result = await templatesStore.loadTemplateWithItems('template-1')
 
-      expect(templatesApi.getExpenseTemplateWithItems).not.toHaveBeenCalled()
+      expect(templatesApi.getTemplateWithItems).not.toHaveBeenCalled()
       expect(result).toBeNull()
     })
   })
 
   describe('addTemplate', () => {
-    const templateData: Omit<ExpenseTemplateInsert, 'owner_id' | 'currency'> = {
+    const templateData: Omit<TemplateInsert, 'owner_id' | 'currency'> = {
       name: 'New Template',
       duration: '1 week',
     }
 
     it('should create template successfully', async () => {
-      const newTemplate = { ...mockTemplates[0], id: 'new-template' } as ExpenseTemplate
-      vi.mocked(templatesApi.createExpenseTemplate).mockResolvedValue(newTemplate)
+      const newTemplate = { ...mockTemplates[0], id: 'new-template' } as Template
+      vi.mocked(templatesApi.createTemplate).mockResolvedValue(newTemplate)
 
       const result = await templatesStore.addTemplate(templateData)
 
-      expect(templatesApi.createExpenseTemplate).toHaveBeenCalledWith({
+      expect(templatesApi.createTemplate).toHaveBeenCalledWith({
         ...templateData,
-        owner_id: 'user-123',
-        currency: 'USD',
+        owner_id: mockUserStoreData.userProfile.id,
+        currency: mockUserStoreData.preferences.currency,
       })
       expect(result).toEqual(newTemplate)
       expect(templatesStore.isLoading).toBe(false)
@@ -316,7 +257,7 @@ describe('Templates Store', () => {
     it('should handle duplicate name errors', async () => {
       const error = new Error('Duplicate name')
       error.name = 'DUPLICATE_TEMPLATE_NAME'
-      vi.mocked(templatesApi.createExpenseTemplate).mockRejectedValue(error)
+      vi.mocked(templatesApi.createTemplate).mockRejectedValue(error)
 
       await templatesStore.addTemplate(templateData)
 
@@ -326,7 +267,7 @@ describe('Templates Store', () => {
 
     it('should handle general errors', async () => {
       const error = new Error('General error')
-      vi.mocked(templatesApi.createExpenseTemplate).mockRejectedValue(error)
+      vi.mocked(templatesApi.createTemplate).mockRejectedValue(error)
 
       await templatesStore.addTemplate(templateData)
 
@@ -342,7 +283,7 @@ describe('Templates Store', () => {
       })
 
       vi.mocked(useUserStore).mockReturnValue({
-        ...mockUserStore,
+        ...mockUserStoreData,
         userProfile: null,
       } as unknown as ReturnType<typeof useUserStore>)
 
@@ -350,23 +291,23 @@ describe('Templates Store', () => {
 
       await templatesStore.addTemplate(templateData)
 
-      expect(templatesApi.createExpenseTemplate).not.toHaveBeenCalled()
+      expect(templatesApi.createTemplate).not.toHaveBeenCalled()
     })
   })
 
   describe('editTemplate', () => {
-    const updates: ExpenseTemplateUpdate = {
+    const updates: TemplateUpdate = {
       name: 'Updated Template',
       duration: '2 weeks',
     }
 
     it('should update template successfully', async () => {
-      const updatedTemplate = { ...mockTemplates[0], ...updates } as ExpenseTemplate
-      vi.mocked(templatesApi.updateExpenseTemplate).mockResolvedValue(updatedTemplate)
+      const updatedTemplate = { ...mockTemplates[0], ...updates } as Template
+      vi.mocked(templatesApi.updateTemplate).mockResolvedValue(updatedTemplate)
 
       const result = await templatesStore.editTemplate('template-1', updates)
 
-      expect(templatesApi.updateExpenseTemplate).toHaveBeenCalledWith('template-1', updates)
+      expect(templatesApi.updateTemplate).toHaveBeenCalledWith('template-1', updates)
       expect(result).toEqual(updatedTemplate)
       expect(templatesStore.isLoading).toBe(false)
     })
@@ -374,7 +315,7 @@ describe('Templates Store', () => {
     it('should handle duplicate name errors', async () => {
       const error = new Error('Duplicate name')
       error.name = 'DUPLICATE_TEMPLATE_NAME'
-      vi.mocked(templatesApi.updateExpenseTemplate).mockRejectedValue(error)
+      vi.mocked(templatesApi.updateTemplate).mockRejectedValue(error)
 
       await templatesStore.editTemplate('template-1', updates)
 
@@ -386,7 +327,7 @@ describe('Templates Store', () => {
 
     it('should handle general errors', async () => {
       const error = new Error('General error')
-      vi.mocked(templatesApi.updateExpenseTemplate).mockRejectedValue(error)
+      vi.mocked(templatesApi.updateTemplate).mockRejectedValue(error)
 
       await templatesStore.editTemplate('template-1', updates)
 
@@ -403,11 +344,11 @@ describe('Templates Store', () => {
     })
 
     it('should delete template successfully', async () => {
-      vi.mocked(templatesApi.deleteExpenseTemplate).mockResolvedValue()
+      vi.mocked(templatesApi.deleteTemplate).mockResolvedValue()
 
       await templatesStore.removeTemplate('template-1')
 
-      expect(templatesApi.deleteExpenseTemplate).toHaveBeenCalledWith('template-1')
+      expect(templatesApi.deleteTemplate).toHaveBeenCalledWith('template-1')
       expect(templatesStore.templates).toHaveLength(1)
       expect(templatesStore.templates.find((t) => t.id === 'template-1')).toBeUndefined()
       expect(templatesStore.isLoading).toBe(false)
@@ -415,7 +356,7 @@ describe('Templates Store', () => {
 
     it('should handle errors when deleting template', async () => {
       const error = new Error('Failed to delete')
-      vi.mocked(templatesApi.deleteExpenseTemplate).mockRejectedValue(error)
+      vi.mocked(templatesApi.deleteTemplate).mockRejectedValue(error)
 
       await templatesStore.removeTemplate('template-1')
 
@@ -440,17 +381,17 @@ describe('Templates Store', () => {
           updated_at: '2023-01-01T00:00:00Z',
         },
       ]
-      vi.mocked(templatesApi.createExpenseTemplateItems).mockResolvedValue(newItems)
+      vi.mocked(templatesApi.createTemplateItems).mockResolvedValue(newItems)
 
       const result = await templatesStore.addItemsToTemplate(mockTemplateItems)
 
-      expect(templatesApi.createExpenseTemplateItems).toHaveBeenCalledWith(mockTemplateItems)
+      expect(templatesApi.createTemplateItems).toHaveBeenCalledWith(mockTemplateItems)
       expect(result).toEqual(newItems)
     })
 
     it('should handle errors when creating template items', async () => {
       const error = new Error('Failed to create items')
-      vi.mocked(templatesApi.createExpenseTemplateItems).mockRejectedValue(error)
+      vi.mocked(templatesApi.createTemplateItems).mockRejectedValue(error)
 
       await templatesStore.addItemsToTemplate(mockTemplateItems)
 
@@ -460,16 +401,16 @@ describe('Templates Store', () => {
 
   describe('removeItemsFromTemplate', () => {
     it('should delete template items successfully', async () => {
-      vi.mocked(templatesApi.deleteExpenseTemplateItems).mockResolvedValue()
+      vi.mocked(templatesApi.deleteTemplateItems).mockResolvedValue()
 
       await templatesStore.removeItemsFromTemplate(['item-1', 'item-2'])
 
-      expect(templatesApi.deleteExpenseTemplateItems).toHaveBeenCalledWith(['item-1', 'item-2'])
+      expect(templatesApi.deleteTemplateItems).toHaveBeenCalledWith(['item-1', 'item-2'])
     })
 
     it('should handle errors when deleting template items', async () => {
       const error = new Error('Failed to delete items')
-      vi.mocked(templatesApi.deleteExpenseTemplateItems).mockRejectedValue(error)
+      vi.mocked(templatesApi.deleteTemplateItems).mockRejectedValue(error)
 
       await templatesStore.removeItemsFromTemplate(['item-1', 'item-2'])
 
@@ -520,7 +461,7 @@ describe('Templates Store', () => {
     beforeEach(() => {
       vi.mocked(templatesApi.shareTemplate).mockResolvedValue()
       vi.mocked(templatesApi.getTemplateSharedUsers).mockResolvedValue(mockSharedUsers)
-      vi.mocked(templatesApi.getExpenseTemplates).mockResolvedValue(mockTemplates)
+      vi.mocked(templatesApi.getTemplates).mockResolvedValue(mockTemplates)
     })
 
     it('should share template successfully', async () => {
@@ -533,7 +474,7 @@ describe('Templates Store', () => {
         'user-123',
       )
       expect(templatesApi.getTemplateSharedUsers).toHaveBeenCalledWith('template-1')
-      expect(templatesApi.getExpenseTemplates).toHaveBeenCalledWith('user-123')
+      expect(templatesApi.getTemplates).toHaveBeenCalledWith('user-123')
       expect(templatesStore.isSharing).toBe(false)
     })
 
@@ -558,7 +499,7 @@ describe('Templates Store', () => {
       })
 
       vi.mocked(useUserStore).mockReturnValue({
-        ...mockUserStore,
+        ...mockUserStoreData,
         userProfile: null,
       } as unknown as ReturnType<typeof useUserStore>)
 
@@ -574,7 +515,7 @@ describe('Templates Store', () => {
     beforeEach(() => {
       templatesStore.sharedUsers = [...mockSharedUsers]
       vi.mocked(templatesApi.unshareTemplate).mockResolvedValue()
-      vi.mocked(templatesApi.getExpenseTemplates).mockResolvedValue(mockTemplates)
+      vi.mocked(templatesApi.getTemplates).mockResolvedValue(mockTemplates)
     })
 
     it('should unshare template successfully', async () => {
@@ -582,7 +523,7 @@ describe('Templates Store', () => {
 
       expect(templatesApi.unshareTemplate).toHaveBeenCalledWith('template-1', 'user-456')
       expect(templatesStore.sharedUsers).toHaveLength(0)
-      expect(templatesApi.getExpenseTemplates).toHaveBeenCalledWith('user-123')
+      expect(templatesApi.getTemplates).toHaveBeenCalledWith('user-123')
       expect(templatesStore.isSharing).toBe(false)
     })
 
@@ -745,12 +686,12 @@ describe('Templates Store', () => {
 
   describe('Loading States', () => {
     it('should manage isLoading state during template operations', async () => {
-      let resolvePromise: (value: ExpenseTemplateWithPermission[]) => void
-      const promise = new Promise<ExpenseTemplateWithPermission[]>((resolve) => {
+      let resolvePromise: (value: TemplateWithPermission[]) => void
+      const promise = new Promise<TemplateWithPermission[]>((resolve) => {
         resolvePromise = resolve
       })
 
-      vi.mocked(templatesApi.getExpenseTemplates).mockReturnValue(promise)
+      vi.mocked(templatesApi.getTemplates).mockReturnValue(promise)
 
       const loadPromise = templatesStore.loadTemplates()
       expect(templatesStore.isLoading).toBe(true)
@@ -799,7 +740,7 @@ describe('Templates Store', () => {
   describe('Error Handling', () => {
     it('should always reset loading state after errors', async () => {
       const error = new Error('Test error')
-      vi.mocked(templatesApi.getExpenseTemplates).mockRejectedValue(error)
+      vi.mocked(templatesApi.getTemplates).mockRejectedValue(error)
 
       await templatesStore.loadTemplates()
 

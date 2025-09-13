@@ -125,11 +125,7 @@ import {
   getStatusIcon,
   formatDateRange,
 } from 'src/utils/plans'
-import {
-  getPermissionText,
-  getPermissionColor,
-  getPermissionIcon,
-} from 'src/utils/expense-templates'
+import { getPermissionText, getPermissionColor, getPermissionIcon } from 'src/utils/templates'
 import type { PlanWithPermission } from 'src/api'
 
 const emit = defineEmits<{

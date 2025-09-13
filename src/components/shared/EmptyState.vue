@@ -23,7 +23,6 @@
           v-if="showClearSearch"
           flat
           color="primary"
-          icon="eva-close-outline"
           label="Clear Search"
           @click="emit('clearSearch')"
         />
