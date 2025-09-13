@@ -37,7 +37,7 @@
         >
           <q-item
             clickable
-            class="q-pa-md"
+            class="q-pa-md full-height"
             @click="openCategoryPreview(category)"
           >
             <!-- Mobile Layout: Icon + Title in same row -->

@@ -2,9 +2,10 @@
   <DetailPageLayout
     :page-title="pageTitle"
     :page-icon="pageIcon"
-    :breadcrumbs="breadcrumbs"
     :banners="banners"
     :is-loading="isTemplateLoading"
+    :actions="actionBarActions"
+    :actions-visible="isEditMode"
     @back="goBack"
   >
     <!-- Main Content -->
@@ -89,7 +90,7 @@
               />
               <q-btn
                 icon="eva-plus-outline"
-                label="Add Category"
+                label="Add"
                 color="primary"
                 @click="openDialog('category')"
               />
@@ -164,7 +165,9 @@
               />
               Total Amount
             </div>
-            <div class="text-h4 text-primary text-weight-bold">
+            <div
+              :class="['text-primary text-weight-bold', $q.screen.lt.md ? 'text-h5' : 'text-h4']"
+            >
               {{ formattedTotalAmount }}
             </div>
           </div>
@@ -287,7 +290,7 @@
             />
             Total Amount
           </div>
-          <div class="text-h4 text-primary text-weight-bold">
+          <div :class="['text-primary text-weight-bold', $q.screen.lt.md ? 'text-h5' : 'text-h4']">
             {{ formattedTotalAmount }}
           </div>
         </div>
@@ -327,16 +330,6 @@
         @confirm="deleteTemplate"
       />
     </template>
-
-    <!-- FAB Slot -->
-    <template #fab>
-      <ActionsFab
-        v-if="isEditMode"
-        v-model="fabOpen"
-        :actions="fabActions"
-        :visible="true"
-      />
-    </template>
   </DetailPageLayout>
 </template>
 
@@ -346,7 +339,7 @@ import { useRouter } from 'vue-router'
 import type { QForm } from 'quasar'
 
 import DetailPageLayout from 'src/layouts/DetailPageLayout.vue'
-import ActionsFab from 'src/components/shared/ActionsFab.vue'
+import type { ActionBarAction } from 'src/components/shared/ActionBar.vue'
 import TemplateCategory from 'src/components/templates/TemplateCategory.vue'
 import CategorySelectionDialog from 'src/components/categories/CategorySelectionDialog.vue'
 import ShareTemplateDialog from 'src/components/templates/ShareTemplateDialog.vue'
@@ -410,26 +403,9 @@ const { pageTitle, pageIcon, banners } = useDetailPageState(
   pageConfig,
   isNewTemplate.value,
   isReadOnlyMode.value,
-  isEditMode.value,
 )
 
-// Custom breadcrumbs with reactive template name
-const breadcrumbs = computed(() => [
-  {
-    label: pageConfig.entityNamePlural,
-    icon: pageConfig.listIcon,
-    to: pageConfig.listRoute,
-  },
-  {
-    label: isNewTemplate.value
-      ? `New ${pageConfig.entityName}`
-      : form.value.name || pageConfig.entityName,
-    icon: isNewTemplate.value ? 'eva-plus-outline' : pageConfig.listIcon,
-  },
-])
-
-const { fabOpen, openDialog, closeDialog, getDialogState, createFabAction, initializeFab } =
-  useEditablePage()
+const { openDialog, closeDialog, getDialogState } = useEditablePage()
 
 // Local state
 const categoryRefs = ref<Map<string, InstanceType<typeof TemplateCategory>>>(new Map())
@@ -504,40 +480,36 @@ const isShareDialogOpen = computed({
   set: (value: boolean) => (value ? openDialog('share') : closeDialog('share')),
 })
 
-// FAB Actions
-const fabActions = computed(() => [
-  {
-    key: 'add-category',
-    icon: 'eva-plus-outline',
-    label: 'Add Category',
-    color: 'primary',
-    handler: createFabAction(() => openDialog('category')),
-  },
+// Action Bar Actions
+const actionBarActions = computed<ActionBarAction[]>(() => [
   {
     key: 'save',
     icon: 'eva-save-outline',
-    label: 'Save Template',
+    label: 'Save',
     color: 'positive',
+    priority: 'primary',
     loading: templatesStore.isLoading,
-    handler: createFabAction(saveTemplate),
+    handler: saveTemplate,
   },
   {
     key: 'share',
     icon: 'eva-share-outline',
     label: 'Share',
     color: 'info',
+    priority: 'secondary',
     visible: !isNewTemplate.value && isOwner.value,
-    handler: createFabAction(() => openDialog('share')),
+    handler: () => openDialog('share'),
   },
   {
     key: 'delete',
     icon: 'eva-trash-2-outline',
-    label: 'Delete Template',
+    label: 'Delete',
     color: 'negative',
+    priority: 'secondary',
     visible: !isNewTemplate.value && isOwner.value,
-    handler: createFabAction(() => {
+    handler: () => {
       showDeleteDialog.value = true
-    }),
+    },
   },
 ])
 
@@ -682,7 +654,5 @@ onMounted(async () => {
   } finally {
     isTemplateLoading.value = false
   }
-
-  await initializeFab()
 })
 </script>

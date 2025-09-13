@@ -1,83 +1,51 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { nextTick } from 'vue'
+import { describe, it, expect } from 'vitest'
 import { useEditablePage } from './useEditablePage'
 
-describe('initial state', () => {
-  it('has closed fab and not loading by default', () => {
-    const { fabOpen, isLoading } = useEditablePage()
-    expect(fabOpen.value).toBe(false)
+describe('useEditablePage', () => {
+  it('is not loading by default', () => {
+    const { isLoading } = useEditablePage()
     expect(isLoading.value).toBe(false)
   })
-})
 
-describe('dialog management', () => {
-  beforeEach(() => {
-    vi.useRealTimers()
+  it('has empty dialog states by default', () => {
+    const { getDialogState } = useEditablePage()
+    expect(getDialogState('test')).toBe(false)
   })
 
-  it('opens dialog and closes fab', () => {
-    const { fabOpen, openDialog, getDialogState } = useEditablePage()
+  it('opens dialog', () => {
+    const { openDialog, getDialogState } = useEditablePage()
 
-    openDialog('share')
-    expect(fabOpen.value).toBe(false)
-    expect(getDialogState('share')).toBe(true)
+    openDialog('test')
+    expect(getDialogState('test')).toBe(true)
   })
 
   it('closes dialog', () => {
     const { openDialog, closeDialog, getDialogState } = useEditablePage()
 
-    openDialog('rename')
-    expect(getDialogState('rename')).toBe(true)
-    closeDialog('rename')
-    expect(getDialogState('rename')).toBe(false)
+    openDialog('test')
+    expect(getDialogState('test')).toBe(true)
+
+    closeDialog('test')
+    expect(getDialogState('test')).toBe(false)
   })
 
-  it('getDialogState returns false for unknown dialog', () => {
+  it('returns false for non-existent dialog state', () => {
     const { getDialogState } = useEditablePage()
-    expect(getDialogState('nonexistent')).toBe(false)
-  })
-})
-
-describe('fab actions', () => {
-  it('createFabAction closes fab and runs action', async () => {
-    const { fabOpen, createFabAction } = useEditablePage()
-    fabOpen.value = true
-
-    const action = vi.fn().mockResolvedValue(undefined)
-    const wrapped = createFabAction(action)
-
-    await wrapped()
-
-    expect(fabOpen.value).toBe(false)
-    expect(action).toHaveBeenCalled()
-  })
-})
-
-describe('initializeFab', () => {
-  beforeEach(() => {
-    vi.useFakeTimers()
+    expect(getDialogState('non-existent')).toBe(false)
   })
 
-  it('opens fab after nextTick and delay', async () => {
-    const { fabOpen, initializeFab } = useEditablePage()
+  it('can manage multiple dialogs independently', () => {
+    const { openDialog, closeDialog, getDialogState } = useEditablePage()
 
-    expect(fabOpen.value).toBe(false)
-    const promise = initializeFab(200)
+    openDialog('dialog1')
+    openDialog('dialog2')
 
-    await nextTick()
-    expect(fabOpen.value).toBe(false)
+    expect(getDialogState('dialog1')).toBe(true)
+    expect(getDialogState('dialog2')).toBe(true)
 
-    vi.advanceTimersByTime(200)
-    await promise
-    expect(fabOpen.value).toBe(true)
-  })
+    closeDialog('dialog1')
 
-  it('defaults delay to 300ms', async () => {
-    const { fabOpen, initializeFab } = useEditablePage()
-    const promise = initializeFab()
-    await nextTick()
-    vi.advanceTimersByTime(300)
-    await promise
-    expect(fabOpen.value).toBe(true)
+    expect(getDialogState('dialog1')).toBe(false)
+    expect(getDialogState('dialog2')).toBe(true)
   })
 })

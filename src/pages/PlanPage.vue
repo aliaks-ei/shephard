@@ -2,9 +2,10 @@
   <DetailPageLayout
     :page-title="pageTitle"
     :page-icon="pageIcon"
-    :breadcrumbs="breadcrumbs"
     :banners="banners"
     :is-loading="isPlanLoading"
+    :actions="actionBarActions"
+    :actions-visible="actionsVisible"
     @back="goBack"
   >
     <!-- For new plans, show the creation form directly without tabs -->
@@ -243,7 +244,9 @@
               />
               Total Amount
             </div>
-            <div class="text-h4 text-primary text-weight-bold">
+            <div
+              :class="['text-primary text-weight-bold', $q.screen.lt.md ? 'text-h5' : 'text-h4']"
+            >
               {{ formattedTotalAmount }}
             </div>
           </div>
@@ -400,7 +403,7 @@
             <q-card
               flat
               bordered
-              class="q-pa-lg q-mb-lg"
+              class="q-pa-lg"
             >
               <div class="row items-center justify-between q-mb-lg">
                 <div class="text-h6">
@@ -459,7 +462,12 @@
                     />
                     Total Amount
                   </div>
-                  <div class="text-h4 text-primary text-weight-bold">
+                  <div
+                    :class="[
+                      'text-primary text-weight-bold',
+                      $q.screen.lt.md ? 'text-h5' : 'text-h4',
+                    ]"
+                  >
                     {{ formattedTotalAmount }}
                   </div>
                 </div>
@@ -611,18 +619,6 @@
         @expense-created="refreshPlanData"
       />
     </template>
-
-    <!-- FAB Slot -->
-    <template #fab>
-      <ActionsFab
-        v-if="
-          (isEditMode && (isNewPlan || canEditPlanData)) || (!isNewPlan && activeTab === 'overview')
-        "
-        v-model="fabOpen"
-        :actions="currentFabActions"
-        :visible="true"
-      />
-    </template>
   </DetailPageLayout>
 </template>
 
@@ -632,7 +628,7 @@ import { useRouter } from 'vue-router'
 import type { QForm } from 'quasar'
 
 import DetailPageLayout from 'src/layouts/DetailPageLayout.vue'
-import ActionsFab from 'src/components/shared/ActionsFab.vue'
+import type { ActionBarAction } from 'src/components/shared/ActionBar.vue'
 import PlanCategory from 'src/components/plans/PlanCategory.vue'
 import SharePlanDialog from 'src/components/plans/SharePlanDialog.vue'
 import TemplateCard from 'src/components/templates/TemplateCard.vue'
@@ -710,23 +706,7 @@ const { pageTitle, pageIcon } = useDetailPageState(
   pageConfig,
   isNewPlan.value,
   isReadOnlyMode.value,
-  isEditMode.value,
 )
-
-// Custom breadcrumbs with reactive plan name
-const breadcrumbs = computed(() => [
-  {
-    label: pageConfig.entityNamePlural,
-    icon: pageConfig.listIcon,
-    to: pageConfig.listRoute,
-  },
-  {
-    label: isNewPlan.value
-      ? `New ${pageConfig.entityName}`
-      : currentPlan.value?.name || pageConfig.entityName,
-    icon: isNewPlan.value ? 'eva-plus-outline' : pageConfig.listIcon,
-  },
-])
 
 // Custom banners with plan-specific logic
 const banners = computed(() => {
@@ -753,8 +733,7 @@ const banners = computed(() => {
   return bannersList
 })
 
-const { fabOpen, openDialog, closeDialog, getDialogState, createFabAction, initializeFab } =
-  useEditablePage()
+const { openDialog, closeDialog, getDialogState } = useEditablePage()
 
 // Local state
 const planForm = ref()
@@ -822,42 +801,46 @@ const isShareDialogOpen = computed({
   set: (value: boolean) => (value ? openDialog('share') : closeDialog('share')),
 })
 
-// FAB Actions for edit mode and new plans
-const editFabActions = computed(() => [
+// Action Bar Actions for edit mode and new plans
+const editActions = computed<ActionBarAction[]>(() => [
   {
     key: 'save',
     icon: 'eva-save-outline',
-    label: 'Save Plan',
+    label: 'Save',
     color: 'positive',
-    handler: createFabAction(handleSavePlan),
+    priority: 'primary',
+    handler: handleSavePlan,
   },
   {
     key: 'share',
     icon: 'eva-share-outline',
     label: 'Share',
     color: 'info',
+    priority: 'secondary',
     visible: !isNewPlan.value && isOwner.value,
-    handler: createFabAction(() => openDialog('share')),
+    handler: () => openDialog('share'),
   },
   {
     key: 'cancel',
     icon: 'eva-close-circle-outline',
-    label: 'Cancel Plan',
+    label: 'Cancel',
     color: 'negative',
+    priority: 'secondary',
     visible:
       !isNewPlan.value &&
       !!currentPlan.value &&
       getPlanStatus(currentPlan.value) === 'active' &&
       isOwner.value,
-    handler: createFabAction(() => {
+    handler: () => {
       showCancelDialog.value = true
-    }),
+    },
   },
   {
     key: 'delete',
     icon: 'eva-trash-2-outline',
-    label: 'Delete Plan',
+    label: 'Delete',
     color: 'negative',
+    priority: 'secondary',
     visible:
       !isNewPlan.value &&
       !!currentPlan.value &&
@@ -865,51 +848,62 @@ const editFabActions = computed(() => [
         getPlanStatus(currentPlan.value) === 'completed' ||
         getPlanStatus(currentPlan.value) === 'cancelled') &&
       isOwner.value,
-    handler: createFabAction(() => {
+    handler: () => {
       showDeleteDialog.value = true
-    }),
+    },
   },
 ])
 
-// FAB Actions for overview tab
-const overviewFabActions = computed(() => [
+// Action Bar Actions for overview tab
+const overviewActions = computed<ActionBarAction[]>(() => [
   {
     key: 'add-expense',
     icon: 'eva-plus-circle-outline',
     label: 'Add Expense',
     color: 'primary',
+    priority: 'primary',
     visible: isEditMode.value,
-    handler: createFabAction(openExpenseRegistration),
+    handler: openExpenseRegistration,
   },
   {
     key: 'edit',
     icon: 'eva-edit-outline',
-    label: 'Edit Plan',
+    label: 'Edit',
     color: 'info',
+    priority: 'primary',
     visible: isEditMode.value && canEditPlanData.value,
-    handler: createFabAction(() => {
+    handler: () => {
       activeTab.value = 'edit'
-    }),
+    },
   },
   {
     key: 'share',
     icon: 'eva-share-outline',
     label: 'Share',
     color: 'info',
+    priority: 'secondary',
     visible: isOwner.value,
-    handler: createFabAction(() => openDialog('share')),
+    handler: () => openDialog('share'),
   },
 ])
 
-// Current FAB actions based on context
-const currentFabActions = computed(() => {
+// Current Action Bar actions based on context
+const actionBarActions = computed<ActionBarAction[]>(() => {
   if (isNewPlan.value) {
-    return editFabActions.value
+    return editActions.value
   }
   if (activeTab.value === 'overview') {
-    return overviewFabActions.value
+    return overviewActions.value
   }
-  return editFabActions.value
+  return editActions.value
+})
+
+// Actions visibility based on context
+const actionsVisible = computed(() => {
+  return (
+    (isEditMode.value && (isNewPlan.value || canEditPlanData.value)) ||
+    (!isNewPlan.value && activeTab.value === 'overview')
+  )
 })
 
 // Component methods
@@ -1127,7 +1121,5 @@ onMounted(async () => {
       isPlanLoading.value = false
     }
   }
-
-  await initializeFab()
 })
 </script>
