@@ -4,8 +4,11 @@
     @update:model-value="$emit('update:modelValue', $event)"
     transition-show="scale"
     transition-hide="scale"
+    :maximized="$q.screen.xs"
+    :full-width="$q.screen.xs"
+    :full-height="$q.screen.xs"
   >
-    <q-card style="min-width: 500px; max-width: 600px; width: 100%">
+    <q-card>
       <!-- Header -->
       <q-card-section class="row items-center q-pb-none">
         <div class="row items-center">
@@ -209,12 +212,14 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useQuasar, Dialog } from 'quasar'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import { useExpensesStore } from 'src/stores/expenses'
 import { useNotificationStore } from 'src/stores/notification'
-import { Dialog } from 'quasar'
 import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 import type { ExpenseWithCategory } from 'src/api'
+
+const $q = useQuasar()
 
 interface CategoryData {
   categoryId: string

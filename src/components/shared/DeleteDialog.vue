@@ -4,7 +4,7 @@
     persistent
     @update:model-value="emit('update:modelValue', $event)"
   >
-    <q-card style="min-width: 350px">
+    <q-card>
       <q-card-section>
         <div class="text-h6">{{ title }}</div>
       </q-card-section>

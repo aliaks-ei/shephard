@@ -1,9 +1,9 @@
 <template>
-  <div class="row justify-center q-pa-md">
+  <div class="row justify-center q-pa-sm q-pa-md-md">
     <div class="col-12 col-md-10 col-lg-8 col-xl-6">
       <!-- Header Section -->
-      <div class="row items-center justify-between wrap q-col-gutter-md q-mb-lg">
-        <div class="col-auto">
+      <div class="column q-col-gutter-sm q-col-gutter-md-md q-mb-lg">
+        <div class="col">
           <h1 class="text-h4 text-weight-medium q-mb-sm q-mt-none">
             {{ title }}
           </h1>
@@ -20,6 +20,7 @@
             icon="eva-plus-outline"
             :label="createButtonLabel"
             unelevated
+            :class="$q.screen.xs ? 'full-width' : ''"
             @click="emit('create')"
           />
         </div>
@@ -31,6 +32,10 @@
 </template>
 
 <script setup lang="ts">
+import { useQuasar } from 'quasar'
+
+const $q = useQuasar()
+
 const emit = defineEmits<{
   (e: 'create'): void
 }>()

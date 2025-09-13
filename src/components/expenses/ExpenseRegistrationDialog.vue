@@ -4,9 +4,12 @@
     persistent
     transition-show="scale"
     transition-hide="scale"
+    :maximized="$q.screen.xs"
+    :full-width="$q.screen.xs"
+    :full-height="$q.screen.xs"
     @update:model-value="emit('update:modelValue', $event)"
   >
-    <q-card style="min-width: 500px">
+    <q-card>
       <q-card-section class="row items-center q-pb-none">
         <div class="text-h6">
           <q-icon
@@ -250,6 +253,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useQuasar } from 'quasar'
 import { useExpensesStore } from 'src/stores/expenses'
 import { usePlansStore } from 'src/stores/plans'
 import { useCategoriesStore } from 'src/stores/categories'
@@ -257,6 +261,8 @@ import { useNotificationStore } from 'src/stores/notification'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import { formatDateRange, getStatusColor } from 'src/utils/plans'
 import type { QForm } from 'quasar'
+
+const $q = useQuasar()
 
 interface ExpenseRegistrationForm {
   planId: string | null

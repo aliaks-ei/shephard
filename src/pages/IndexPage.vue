@@ -28,7 +28,7 @@
       <div class="row justify-center">
         <div class="col-12 col-md-8 col-lg-6">
           <div class="row q-col-gutter-md">
-            <div class="col-6">
+            <div class="col-12 col-sm-6">
               <q-card>
                 <q-item
                   clickable
@@ -42,12 +42,12 @@
                       color="positive"
                     />
                     <h3 class="text-h6 q-mb-none">Quick Entry</h3>
-                    <p class="text-caption text-grey-6 q-mb-none">Register expenses fast</p>
+                    <p class="text-caption text-grey-6 q-mb-none gt-xs">Register expenses fast</p>
                   </q-item-section>
                 </q-item>
               </q-card>
             </div>
-            <div class="col-6">
+            <div class="col-12 col-sm-6">
               <q-card>
                 <q-item
                   clickable
@@ -61,7 +61,7 @@
                       color="primary"
                     />
                     <h3 class="text-h6 q-mb-none">View Plans</h3>
-                    <p class="text-caption text-grey-6 q-mb-none">Manage your budgets</p>
+                    <p class="text-caption text-grey-6 q-mb-none gt-xs">Manage your budgets</p>
                   </q-item-section>
                 </q-item>
               </q-card>
@@ -69,7 +69,7 @@
           </div>
 
           <div class="row q-col-gutter-md q-mt-xs">
-            <div class="col-4">
+            <div class="col-12 col-sm-4">
               <q-card class="full-height">
                 <q-item
                   clickable
@@ -83,12 +83,12 @@
                       color="secondary"
                     />
                     <h3 class="text-subtitle2 q-mb-none q-mt-sm">Templates</h3>
-                    <p class="text-caption text-grey-6 q-mb-none">Create reusable patterns</p>
+                    <p class="text-caption text-grey-6 q-mb-none gt-xs">Create reusable patterns</p>
                   </q-item-section>
                 </q-item>
               </q-card>
             </div>
-            <div class="col-4">
+            <div class="col-12 col-sm-4">
               <q-card class="full-height">
                 <q-item
                   clickable
@@ -102,12 +102,12 @@
                       color="info"
                     />
                     <h3 class="text-subtitle2 q-mb-none q-mt-sm">Categories</h3>
-                    <p class="text-caption text-grey-6 q-mb-none">Organize your expenses</p>
+                    <p class="text-caption text-grey-6 q-mb-none gt-xs">Organize your expenses</p>
                   </q-item-section>
                 </q-item>
               </q-card>
             </div>
-            <div class="col-4">
+            <div class="col-12 col-sm-4">
               <q-card class="full-height">
                 <q-item
                   clickable
@@ -121,7 +121,7 @@
                       color="warning"
                     />
                     <h3 class="text-subtitle2 q-mb-none q-mt-sm">Settings</h3>
-                    <p class="text-caption text-grey-6 q-mb-none">Manage your account</p>
+                    <p class="text-caption text-grey-6 q-mb-none gt-xs">Manage your account</p>
                   </q-item-section>
                 </q-item>
               </q-card>

@@ -4,9 +4,12 @@
     transition-show="scale"
     transition-hide="scale"
     persistent
+    :maximized="$q.screen.xs"
+    :full-width="$q.screen.xs"
+    :full-height="$q.screen.xs"
     @update:model-value="emit('update:modelValue', $event)"
   >
-    <q-card style="min-width: 480px">
+    <q-card>
       <q-card-section class="row items-center q-pb-none">
         <h2 class="text-h6 q-my-none">
           <q-icon
@@ -178,11 +181,14 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
+import { useQuasar } from 'quasar'
 
 import SharedUsersList from 'src/components/shared/SharedUsersList.vue'
 import SharedUsersSelect from 'src/components/shared/SharedUsersSelect.vue'
 import { useUserStore } from 'src/stores/user'
 import type { UserSearchResult, TemplateSharedUser } from 'src/api'
+
+const $q = useQuasar()
 
 type SharedUser = TemplateSharedUser
 

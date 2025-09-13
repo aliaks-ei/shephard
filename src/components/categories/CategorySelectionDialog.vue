@@ -1,13 +1,29 @@
 <template>
   <q-dialog
     :model-value="modelValue"
+    :maximized="$q.screen.xs"
+    :full-width="$q.screen.xs"
+    :full-height="$q.screen.xs"
     @update:model-value="$emit('update:modelValue', $event)"
   >
-    <q-card style="min-width: 400px">
-      <q-card-section>
-        <h2 class="text-h6 q-my-none">Select Category</h2>
-        <p class="text-body2 text-grey-6 q-my-none">Choose from available predefined categories</p>
+    <q-card>
+      <q-card-section class="row items-center q-pb-none">
+        <div class="col">
+          <h2 class="text-h6 q-my-none">Select Category</h2>
+          <p class="text-body2 text-grey-6 q-my-none">
+            Choose from available predefined categories
+          </p>
+        </div>
+        <q-btn
+          icon="eva-close-outline"
+          flat
+          round
+          dense
+          @click="$emit('update:modelValue', false)"
+        />
       </q-card-section>
+
+      <q-separator class="q-mt-md" />
 
       <q-card-section class="q-pt-none">
         <q-list>
@@ -66,7 +82,10 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useQuasar } from 'quasar'
 import type { Category } from 'src/api'
+
+const $q = useQuasar()
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void

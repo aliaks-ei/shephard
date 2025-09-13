@@ -3,9 +3,12 @@
     :model-value="modelValue"
     transition-show="scale"
     transition-hide="scale"
+    :maximized="$q.screen.xs"
+    :full-width="$q.screen.xs"
+    :full-height="$q.screen.xs"
     @update:model-value="emit('update:modelValue', $event)"
   >
-    <q-card style="min-width: 480px">
+    <q-card>
       <!-- Header -->
       <q-card-section class="row items-center q-pb-none">
         <h2 class="text-h6 q-my-none">Category Details</h2>
@@ -147,7 +150,10 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
+import { useQuasar } from 'quasar'
 import type { CategoryWithStats } from 'src/api'
+
+const $q = useQuasar()
 
 interface CategoryPreviewDialogProps {
   modelValue: boolean

@@ -33,15 +33,45 @@
         <q-card
           flat
           bordered
-          class="full-height column"
+          class="full-height"
         >
           <q-item
             clickable
-            class="column flex-center text-center q-py-lg"
-            style="flex: 1"
+            class="q-pa-md"
             @click="openCategoryPreview(category)"
           >
-            <q-item-section class="column items-center">
+            <!-- Mobile Layout: Icon + Title in same row -->
+            <q-item-section
+              v-if="$q.screen.xs"
+              avatar
+            >
+              <q-avatar
+                :style="{ backgroundColor: category.color }"
+                size="40px"
+                text-color="white"
+              >
+                <q-icon
+                  :name="category.icon"
+                  size="20px"
+                />
+              </q-avatar>
+            </q-item-section>
+
+            <q-item-section v-if="$q.screen.xs">
+              <q-item-label class="text-weight-medium text-body1">
+                {{ category.name }}
+              </q-item-label>
+              <q-item-label caption>
+                {{ category.templates.length }}
+                {{ category.templates.length === 1 ? 'template' : 'templates' }}
+              </q-item-label>
+            </q-item-section>
+
+            <!-- Desktop Layout: Centered vertical layout -->
+            <q-item-section
+              v-if="!$q.screen.xs"
+              class="column items-center text-center q-py-lg"
+            >
               <q-avatar
                 :style="{ backgroundColor: category.color }"
                 size="48px"
@@ -105,12 +135,15 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useQuasar } from 'quasar'
 import { useCategoriesStore } from 'src/stores/categories'
 import ListPageLayout from 'src/layouts/ListPageLayout.vue'
 import SearchAndSort from 'src/components/shared/SearchAndSort.vue'
 import ListPageSkeleton from 'src/components/shared/ListPageSkeleton.vue'
 import CategoryPreviewDialog from 'src/components/categories/CategoryPreviewDialog.vue'
 import type { CategoryWithStats } from 'src/api'
+
+const $q = useQuasar()
 
 const categoriesStore = useCategoriesStore()
 const searchQuery = ref('')

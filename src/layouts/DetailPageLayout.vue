@@ -1,5 +1,5 @@
 <template>
-  <div class="q-pa-md">
+  <div class="q-pa-sm q-pa-md-md">
     <div class="row justify-center">
       <div class="col-12 col-md-10 col-lg-8 col-xl-6">
         <q-toolbar class="q-mb-lg q-px-none">
