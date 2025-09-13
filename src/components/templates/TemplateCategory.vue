@@ -43,11 +43,13 @@
           <TemplateItem
             v-for="(item, index) in items"
             :key="item.id"
-            :ref="(el) => setItemRef(el, index)"
+            :ref="(el: unknown) => setItemRef(el, index)"
             :model-value="item"
             :currency="currency"
             :readonly="!!readonly"
-            @update:model-value="(updatedItem) => handleUpdateItem(item.id, updatedItem)"
+            @update:model-value="
+              (updatedItem: TemplateItemUI) => handleUpdateItem(item.id, updatedItem)
+            "
             @remove="$emit('remove-item', item.id)"
           />
         </q-list>

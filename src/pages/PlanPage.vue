@@ -119,7 +119,7 @@
           v-model="form.name"
           label="Plan Name"
           outlined
-          :rules="[(val) => !!val || 'Plan name is required']"
+          :rules="[(val: string) => !!val || 'Plan name is required']"
           class="q-mb-md"
         />
 
@@ -167,7 +167,7 @@
               label="End Date"
               outlined
               readonly
-              :rules="[(val) => !!val || 'End date is required']"
+              :rules="[(val: string) => !!val || 'End date is required']"
               hint="Calculated automatically based on template duration"
             />
           </div>
@@ -196,7 +196,6 @@
             Plan Items
           </div>
           <q-btn
-            v-if="planCategoryGroups.length > 1"
             flat
             :icon="allCategoriesExpanded ? 'eva-collapse-outline' : 'eva-expand-outline'"
             :label="allCategoriesExpanded ? 'Collapse All' : 'Expand All'"
@@ -275,12 +274,13 @@
     <!-- For existing plans, show tabs for Overview and Edit modes -->
     <div v-else-if="!isNewPlan">
       <q-tabs
-        v-model="activeTab"
+        :model-value="currentTab"
         dense
         no-caps
         align="justify"
         active-color="primary"
         indicator-color="primary"
+        @update:model-value="switchTab"
       >
         <q-tab
           name="overview"
@@ -298,7 +298,7 @@
       <q-separator />
 
       <q-tab-panels
-        v-model="activeTab"
+        :model-value="currentTab"
         animated
         transition-prev="fade"
         transition-next="fade"
@@ -344,7 +344,7 @@
                 v-model="form.name"
                 label="Plan Name"
                 outlined
-                :rules="[(val) => !!val || 'Plan name is required']"
+                :rules="[(val: string) => !!val || 'Plan name is required']"
                 class="q-mb-md"
               />
 
@@ -392,7 +392,7 @@
                     label="End Date"
                     outlined
                     readonly
-                    :rules="[(val) => !!val || 'End date is required']"
+                    :rules="[(val: string) => !!val || 'End date is required']"
                     hint="Calculated automatically based on template duration"
                   />
                 </div>
@@ -414,7 +414,6 @@
                   Plan Items
                 </div>
                 <q-btn
-                  v-if="planCategoryGroups.length > 1"
                   flat
                   :icon="allCategoriesExpanded ? 'eva-collapse-outline' : 'eva-expand-outline'"
                   :label="allCategoriesExpanded ? 'Collapse All' : 'Expand All'"
@@ -666,6 +665,7 @@ const {
   currentPlan,
   isPlanLoading,
   isNewPlan,
+  currentTab,
   isOwner,
   isReadOnlyMode,
   isEditMode,
@@ -744,7 +744,7 @@ const allCategoriesExpanded = ref(false)
 const showCancelDialog = ref(false)
 const showDeleteDialog = ref(false)
 const selectedCategory = ref<{ categoryId: string } | null>(null)
-const activeTab = ref('overview')
+// Remove local activeTab state - now using router-based currentTab from usePlan
 const showExpenseDialog = ref(false)
 
 const form = ref({
@@ -873,7 +873,7 @@ const overviewActions = computed<ActionBarAction[]>(() => [
     priority: 'primary',
     visible: isEditMode.value && canEditPlanData.value,
     handler: () => {
-      activeTab.value = 'edit'
+      switchTab('edit')
     },
   },
   {
@@ -892,7 +892,7 @@ const actionBarActions = computed<ActionBarAction[]>(() => {
   if (isNewPlan.value) {
     return editActions.value
   }
-  if (activeTab.value === 'overview') {
+  if (currentTab.value === 'overview') {
     return overviewActions.value
   }
   return editActions.value
@@ -902,7 +902,7 @@ const actionBarActions = computed<ActionBarAction[]>(() => {
 const actionsVisible = computed(() => {
   return (
     (isEditMode.value && (isNewPlan.value || canEditPlanData.value)) ||
-    (!isNewPlan.value && activeTab.value === 'overview')
+    (!isNewPlan.value && currentTab.value === 'overview')
   )
 })
 
@@ -1039,7 +1039,7 @@ async function savePlan(): Promise<void> {
     notificationsStore.showSuccess(
       isNewPlan.value ? 'Plan created successfully' : 'Plan updated successfully',
     )
-    goBack()
+    router.push({ name: 'plan-overview', params: { id: currentPlan.value?.id } })
   }
 }
 
@@ -1097,6 +1097,16 @@ async function refreshPlanData(): Promise<void> {
       loadPlanItems(plan)
     }
   }
+}
+
+function switchTab(tabName: string): void {
+  if (!currentPlan.value || isNewPlan.value) return
+
+  const routeName = tabName === 'edit' ? 'plan-edit' : 'plan-overview'
+  router.push({
+    name: routeName,
+    params: { id: currentPlan.value.id },
+  })
 }
 
 onMounted(async () => {

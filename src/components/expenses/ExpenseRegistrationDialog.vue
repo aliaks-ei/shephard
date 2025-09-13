@@ -47,9 +47,9 @@
             map-options
             :readonly="!!props.defaultPlanId"
             :loading="plansStore.isLoading"
-            :rules="[(val) => !!val || 'Plan is required']"
+            :rules="[(val: string) => !!val || 'Plan is required']"
             @update:model-value="onPlanSelected"
-            class="q-mb-md"
+            :class="didAutoSelectPlan && selectedPlan ? 'q-mb-none' : 'q-mb-md'"
           >
             <template #option="scope">
               <q-item v-bind="scope.itemProps">
@@ -80,6 +80,18 @@
             </template>
           </q-select>
 
+          <!-- Auto-selection hint -->
+          <q-banner
+            v-if="didAutoSelectPlan && selectedPlan"
+            class="bg-blue-1 text-blue-8 q-mb-md"
+            data-testid="auto-select-banner"
+          >
+            <template #avatar>
+              <q-icon name="eva-info-outline" />
+            </template>
+            Recently used plan "{{ selectedPlan.name }}" has been selected for quick entry.
+          </q-banner>
+
           <!-- Category Selection -->
           <q-select
             v-model="form.categoryId"
@@ -90,10 +102,9 @@
             outlined
             emit-value
             map-options
-            :loading="!selectedPlan"
             :disable="!selectedPlan"
             :readonly="!!props.defaultCategoryId"
-            :rules="[(val) => !!val || 'Category is required']"
+            :rules="[(val: string) => !!val || 'Category is required']"
             class="q-mb-md"
           >
             <template #option="scope">
@@ -172,20 +183,10 @@
           </q-input>
 
           <q-input
-            v-model="form.description"
-            label="Description (Optional)"
-            type="textarea"
-            outlined
-            rows="2"
-            maxlength="500"
-            class="q-mb-md"
-          />
-
-          <q-input
             v-model="form.expenseDate"
             label="Expense Date *"
             outlined
-            :rules="[(val) => !!val || 'Date is required']"
+            :rules="[(val: string) => !!val || 'Date is required']"
             class="q-mb-md"
           >
             <template #append>
@@ -269,7 +270,6 @@ interface ExpenseRegistrationForm {
   categoryId: string | null
   name: string
   amount: number | null
-  description: string | null
   expenseDate: string
 }
 
@@ -277,6 +277,7 @@ const props = defineProps<{
   modelValue: boolean
   defaultPlanId?: string | null
   defaultCategoryId?: string | null
+  autoSelectRecentPlan?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -291,14 +292,27 @@ const notificationStore = useNotificationStore()
 
 const formRef = ref<QForm>()
 const isLoading = ref(false)
+const didAutoSelectPlan = ref(false)
 
 const form = ref<ExpenseRegistrationForm>({
   planId: null,
   categoryId: null,
   name: '',
   amount: null,
-  description: '',
   expenseDate: new Date().toISOString().split('T')[0]!,
+})
+
+const mostRecentlyUsedPlan = computed(() => {
+  if (!plansStore.activePlans.length) return null
+
+  // Sort by updated_at descending (most recent first)
+  const sortedPlans = [...plansStore.activePlans].sort((a, b) => {
+    const dateA = a.updated_at ? new Date(a.updated_at).getTime() : 0
+    const dateB = b.updated_at ? new Date(b.updated_at).getTime() : 0
+    return dateB - dateA
+  })
+
+  return sortedPlans[0] || null
 })
 
 const planOptions = computed(() => {
@@ -388,9 +402,9 @@ function resetForm() {
     categoryId: null,
     name: '',
     amount: null,
-    description: '',
     expenseDate: new Date().toISOString().split('T')[0]!,
   }
+  didAutoSelectPlan.value = false
 }
 
 async function handleSubmit() {
@@ -415,7 +429,6 @@ async function handleSubmit() {
       category_id: form.value.categoryId,
       name: form.value.name.trim(),
       amount: form.value.amount,
-      description: form.value.description?.trim() ?? '',
       expense_date: form.value.expenseDate,
     })
 
@@ -434,13 +447,18 @@ watch(
       await Promise.all([plansStore.loadPlans(), categoriesStore.loadCategories()])
       resetForm()
 
-      // Preselect plan if provided
+      // Handle explicit defaultPlanId prop (takes priority)
       if (props.defaultPlanId) {
         form.value.planId = props.defaultPlanId
         await expensesStore.loadExpenseSummaryForPlan(props.defaultPlanId)
       }
+      // Handle auto-selection of most recent plan when enabled
+      else if (props.autoSelectRecentPlan && mostRecentlyUsedPlan.value) {
+        form.value.planId = mostRecentlyUsedPlan.value.id
+        didAutoSelectPlan.value = true
+        await expensesStore.loadExpenseSummaryForPlan(mostRecentlyUsedPlan.value.id)
+      }
 
-      // Preselect category if provided and plan is set
       if (props.defaultCategoryId && form.value.planId) {
         const categoryExists = categoryOptions.value.some(
           (c) => c.value === props.defaultCategoryId,

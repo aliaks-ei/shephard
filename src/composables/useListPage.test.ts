@@ -46,7 +46,7 @@ const setup = () =>
       entityName: 'Plan',
       entityNamePlural: 'Plans',
       newRouteNameSingular: 'new-plan',
-      viewRouteNameSingular: 'plan',
+      viewRouteNameSingular: 'plan-overview',
       sortOptions: [
         { label: 'Name', value: 'name' },
         { label: 'Created', value: 'created_at' },
@@ -101,7 +101,7 @@ describe('navigation', () => {
     const lp = setup()
     lp.viewItem('2')
     const mock = (globalThis as unknown as { __pushMock: ReturnType<typeof vi.fn> }).__pushMock
-    expect(mock).toHaveBeenCalledWith({ name: 'plan', params: { id: '2' } })
+    expect(mock).toHaveBeenCalledWith({ name: 'plan-overview', params: { id: '2' } })
   })
 })
 

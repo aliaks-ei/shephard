@@ -1,7 +1,7 @@
 import { defineBoot } from '#q-app/wrappers'
 import { useUserStore } from 'src/stores/user'
 
-export default defineBoot(async () => {
+export default defineBoot(() => {
   window.handleGoogleSignIn = (response) => {
     if (window.vueGoogleCallback) {
       window.vueGoogleCallback(response)
@@ -12,5 +12,5 @@ export default defineBoot(async () => {
 
   const userStore = useUserStore()
 
-  await userStore.initUser()
+  userStore.initUser()
 })

@@ -6,7 +6,6 @@
       :to="item.to"
       :active="isActive(item.to)"
       clickable
-      v-ripple
     >
       <q-item-section
         v-if="isMiniMode"
@@ -33,7 +32,13 @@ import { useRoute } from 'vue-router'
 
 const route = useRoute()
 
-const isActive = (itemTo: string) => route.fullPath.startsWith(itemTo)
+const isActive = (itemTo: string) => {
+  if (itemTo === '/') {
+    return route.fullPath === '/'
+  }
+
+  return route.fullPath.startsWith(itemTo)
+}
 
 defineProps<{
   items: {

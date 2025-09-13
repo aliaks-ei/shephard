@@ -133,6 +133,7 @@
 
     <ExpenseRegistrationDialog
       v-model="showExpenseDialog"
+      auto-select-recent-plan
       @expense-created="onExpenseCreated"
     />
   </section>

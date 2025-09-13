@@ -48,7 +48,8 @@
             </q-item-section>
           </q-item>
 
-          <q-item class="q-pa-sm card-bg q-mb-sm">
+          <!-- NOTE: Push notifications are not implemented yet -->
+          <!-- <q-item class="q-pa-sm card-bg q-mb-sm">
             <q-item-section avatar>
               <q-icon
                 name="eva-bell-outline"
@@ -67,7 +68,7 @@
                 @update:model-value="updatePreference('pushNotificationsEnabled', $event)"
               />
             </q-item-section>
-          </q-item>
+          </q-item> -->
 
           <q-item class="q-pa-sm card-bg">
             <q-item-section avatar>
