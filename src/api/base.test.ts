@@ -17,16 +17,15 @@ const mockFrom = vi.fn()
 const mockIsDuplicateNameError = vi.mocked(isDuplicateNameError)
 const mockCreateDuplicateNameError = vi.mocked(createDuplicateNameError)
 
-// Test types for expense templates
-type TestEntity = Tables<'expense_templates'>
-type TestEntityInsert = TablesInsert<'expense_templates'>
-type TestEntityUpdate = TablesUpdate<'expense_templates'>
+type TestEntity = Tables<'templates'>
+type TestEntityInsert = TablesInsert<'templates'>
+type TestEntityUpdate = TablesUpdate<'templates'>
 
 // Mock test data
-const mockEntityConfig: EntityConfig<'expense_templates'> = {
-  tableName: 'expense_templates',
+const mockEntityConfig: EntityConfig<'templates'> = {
+  tableName: 'templates',
   shareTableName: 'template_shares',
-  itemsTableName: 'expense_template_items',
+  itemsTableName: 'template_items',
   uniqueConstraintName: 'unique_template_name_per_user',
   entityTypeName: 'TEMPLATE',
 }
@@ -53,7 +52,7 @@ const mockEntityUpdate: TestEntityUpdate = {
   total: 200.0,
 }
 
-let service: BaseAPIService<'expense_templates', TestEntity, TestEntityInsert, TestEntityUpdate>
+let service: BaseAPIService<'templates', TestEntity, TestEntityInsert, TestEntityUpdate>
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -73,7 +72,7 @@ describe('BaseAPIService - CRUD Operations', () => {
 
     const result = await service.create(mockEntityInsert)
 
-    expect(mockFrom).toHaveBeenCalledWith('expense_templates')
+    expect(mockFrom).toHaveBeenCalledWith('templates')
     expect(result).toEqual(mockEntity)
   })
 
@@ -129,7 +128,7 @@ describe('BaseAPIService - CRUD Operations', () => {
 
     const result = await service.update('template-1', mockEntityUpdate)
 
-    expect(mockFrom).toHaveBeenCalledWith('expense_templates')
+    expect(mockFrom).toHaveBeenCalledWith('templates')
     expect(mockQuery.match).toHaveBeenCalledWith({ id: 'template-1' })
     expect(result).toEqual(updatedEntity)
   })
@@ -169,7 +168,7 @@ describe('BaseAPIService - CRUD Operations', () => {
 
     await service.delete('template-1')
 
-    expect(mockFrom).toHaveBeenCalledWith('expense_templates')
+    expect(mockFrom).toHaveBeenCalledWith('templates')
     expect(mockQuery.match).toHaveBeenCalledWith({ id: 'template-1' })
   })
 
@@ -195,7 +194,7 @@ describe('BaseAPIService - CRUD Operations', () => {
 
     const result = await service.findById('template-1')
 
-    expect(mockFrom).toHaveBeenCalledWith('expense_templates')
+    expect(mockFrom).toHaveBeenCalledWith('templates')
     expect(mockQuery.select).toHaveBeenCalledWith('*')
     expect(mockQuery.match).toHaveBeenCalledWith({ id: 'template-1' })
     expect(result).toEqual(mockEntity)
@@ -232,7 +231,7 @@ describe('BaseAPIService - Permission-based Operations', () => {
     const configWithoutSharing = {
       ...mockEntityConfig,
       shareTableName: undefined,
-    } as unknown as EntityConfig<'expense_templates'>
+    } as unknown as EntityConfig<'templates'>
     const serviceWithoutSharing = new BaseAPIService(configWithoutSharing)
 
     await expect(serviceWithoutSharing.getEntitiesWithPermissions('user-1')).rejects.toThrow(
@@ -255,7 +254,7 @@ describe('BaseAPIService - Permission-based Operations', () => {
     const sharedQuery = {
       select: vi.fn().mockReturnThis(),
       match: vi.fn().mockResolvedValue({
-        data: [{ permission_level: 'view', expense_templates: sharedEntity }],
+        data: [{ permission_level: 'view', templates: sharedEntity }],
         error: null,
       }),
     }
@@ -346,7 +345,7 @@ describe('BaseAPIService - Permission-based Operations', () => {
 
 describe('BaseAPIService - Entity with Items Operations', () => {
   it('getEntityWithItems should return entity with items for owner', async () => {
-    const entityWithItems = { ...mockEntity, expense_template_items: [] }
+    const entityWithItems = { ...mockEntity, template_items: [] }
     const mockQuery = {
       select: vi.fn().mockReturnThis(),
       match: vi.fn().mockReturnThis(),
@@ -354,14 +353,10 @@ describe('BaseAPIService - Entity with Items Operations', () => {
     }
     mockFrom.mockReturnValue(mockQuery as never)
 
-    const result = await service.getEntityWithItems(
-      'template-1',
-      'user-1',
-      'expense_template_items',
-    )
+    const result = await service.getEntityWithItems('template-1', 'user-1', 'template_items')
 
-    expect(mockFrom).toHaveBeenCalledWith('expense_templates')
-    expect(mockQuery.select).toHaveBeenCalledWith('*, expense_template_items (*)')
+    expect(mockFrom).toHaveBeenCalledWith('templates')
+    expect(mockQuery.select).toHaveBeenCalledWith('*, template_items (*)')
     expect(result).toEqual(entityWithItems)
   })
 
@@ -373,11 +368,7 @@ describe('BaseAPIService - Entity with Items Operations', () => {
     }
     mockFrom.mockReturnValue(mockQuery as never)
 
-    const result = await service.getEntityWithItems(
-      'nonexistent-id',
-      'user-1',
-      'expense_template_items',
-    )
+    const result = await service.getEntityWithItems('nonexistent-id', 'user-1', 'template_items')
 
     expect(result).toBeNull()
   })
@@ -402,11 +393,7 @@ describe('BaseAPIService - Entity with Items Operations', () => {
       .mockReturnValueOnce(entityQuery as never) // First call for entity
       .mockReturnValueOnce(shareQuery as never) // Second call for share check
 
-    const result = await service.getEntityWithItems(
-      'template-1',
-      'user-1',
-      'expense_template_items',
-    )
+    const result = await service.getEntityWithItems('template-1', 'user-1', 'template_items')
 
     expect(result).toEqual({ ...entityWithItems, permission_level: 'edit' })
   })
@@ -415,7 +402,7 @@ describe('BaseAPIService - Entity with Items Operations', () => {
     const configWithoutSharing = {
       ...mockEntityConfig,
       shareTableName: undefined,
-    } as unknown as EntityConfig<'expense_templates'>
+    } as unknown as EntityConfig<'templates'>
     const serviceWithoutSharing = new BaseAPIService(configWithoutSharing)
 
     const entityWithItems = { ...mockEntity, owner_id: 'other-user' }
@@ -427,7 +414,7 @@ describe('BaseAPIService - Entity with Items Operations', () => {
     mockFrom.mockReturnValue(mockQuery as never)
 
     await expect(
-      serviceWithoutSharing.getEntityWithItems('template-1', 'user-1', 'expense_template_items'),
+      serviceWithoutSharing.getEntityWithItems('template-1', 'user-1', 'template_items'),
     ).rejects.toThrow('Sharing is not supported for this entity')
   })
 
@@ -449,7 +436,7 @@ describe('BaseAPIService - Entity with Items Operations', () => {
     mockFrom.mockReturnValueOnce(entityQuery as never).mockReturnValueOnce(shareQuery as never)
 
     await expect(
-      service.getEntityWithItems('template-1', 'user-1', 'expense_template_items'),
+      service.getEntityWithItems('template-1', 'user-1', 'template_items'),
     ).rejects.toThrow('template not found or access denied')
   })
 
@@ -472,7 +459,7 @@ describe('BaseAPIService - Entity with Items Operations', () => {
     mockFrom.mockReturnValueOnce(entityQuery as never).mockReturnValueOnce(shareQuery as never)
 
     await expect(
-      service.getEntityWithItems('template-1', 'user-1', 'expense_template_items'),
+      service.getEntityWithItems('template-1', 'user-1', 'template_items'),
     ).rejects.toThrow()
   })
 })
@@ -483,7 +470,7 @@ describe('BaseAPIService - Sharing Operations', () => {
       ...mockEntityConfig,
       tableName: 'unsupported_table' as never,
       shareTableName: undefined,
-    } as unknown as EntityConfig<'expense_templates'>
+    } as unknown as EntityConfig<'templates'>
     const serviceWithoutSharing = new BaseAPIService(configWithoutSharing)
 
     await expect(serviceWithoutSharing.getSharedUsers('template-1')).rejects.toThrow(
@@ -557,7 +544,7 @@ describe('BaseAPIService - Sharing Operations', () => {
     const configWithoutSharing = {
       ...mockEntityConfig,
       shareTableName: undefined,
-    } as unknown as EntityConfig<'expense_templates'>
+    } as unknown as EntityConfig<'templates'>
     const serviceWithoutSharing = new BaseAPIService(configWithoutSharing)
 
     await expect(
@@ -625,7 +612,7 @@ describe('BaseAPIService - Sharing Operations', () => {
     await service.shareEntity('template-1', 'shared@example.com', 'edit', 'owner-id')
 
     expect(insertQuery.insert).toHaveBeenCalledWith({
-      expense_template_id: 'template-1',
+      template_id: 'template-1',
       shared_with_user_id: 'user-2',
       shared_by_user_id: 'owner-id',
       permission_level: 'edit',
@@ -636,7 +623,7 @@ describe('BaseAPIService - Sharing Operations', () => {
     const configWithoutSharing = {
       ...mockEntityConfig,
       shareTableName: undefined,
-    } as unknown as EntityConfig<'expense_templates'>
+    } as unknown as EntityConfig<'templates'>
     const serviceWithoutSharing = new BaseAPIService(configWithoutSharing)
 
     await expect(serviceWithoutSharing.unshareEntity('template-1', 'user-2')).rejects.toThrow(
@@ -665,7 +652,7 @@ describe('BaseAPIService - Sharing Operations', () => {
     const configWithoutSharing = {
       ...mockEntityConfig,
       shareTableName: undefined,
-    } as unknown as EntityConfig<'expense_templates'>
+    } as unknown as EntityConfig<'templates'>
     const serviceWithoutSharing = new BaseAPIService(configWithoutSharing)
 
     await expect(
@@ -706,7 +693,7 @@ describe('BaseAPIService - Items Operations', () => {
     const configWithoutItems = {
       ...mockEntityConfig,
       itemsTableName: undefined,
-    } as unknown as EntityConfig<'expense_templates'>
+    } as unknown as EntityConfig<'templates'>
     const serviceWithoutItems = new BaseAPIService(configWithoutItems)
 
     await expect(serviceWithoutItems.createItems(mockItems)).rejects.toThrow(
@@ -745,7 +732,7 @@ describe('BaseAPIService - Items Operations', () => {
     const configWithoutItems = {
       ...mockEntityConfig,
       itemsTableName: undefined,
-    } as unknown as EntityConfig<'expense_templates'>
+    } as unknown as EntityConfig<'templates'>
     const serviceWithoutItems = new BaseAPIService(configWithoutItems)
 
     await expect(serviceWithoutItems.deleteItems(['item-1', 'item-2'])).rejects.toThrow(

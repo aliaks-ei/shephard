@@ -1,4 +1,5 @@
 import { vi, beforeEach, it, expect } from 'vitest'
+import type { Session } from '@supabase/supabase-js'
 import {
   getCurrentSession,
   signInWithIdToken,
@@ -8,37 +9,11 @@ import {
   updateUserPreferences,
   onAuthStateChange,
 } from './auth'
-import type { Session, AuthError, User } from '@supabase/supabase-js'
+import { mockSupabaseModule, setupSuccessfulAuthMocks, setupAuthErrorMocks } from 'test/helpers'
+import { createMockUser, createMockAuthError } from 'test/fixtures'
 
-// Helper function to create a mock AuthError
-const createAuthError = (message: string): AuthError =>
-  ({
-    name: 'AuthApiError',
-    message,
-    status: 400,
-    code: 'invalid_request',
-  }) as unknown as AuthError
-
-// Mock the Supabase client
-vi.mock('src/lib/supabase/client', () => ({
-  supabase: {
-    auth: {
-      getSession: vi.fn(),
-      signInWithIdToken: vi.fn(),
-      signInWithOtp: vi.fn(),
-      verifyOtp: vi.fn(),
-      signOut: vi.fn(),
-      updateUser: vi.fn(),
-      onAuthStateChange: vi.fn(),
-    },
-  },
-}))
-
-// Import the mocked client
-import { supabase } from 'src/lib/supabase/client'
-
-// Type helper for mocking
-const mockSupabase = vi.mocked(supabase, true)
+// Mock the Supabase client module
+const mockSupabase = mockSupabaseModule()
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -46,13 +21,7 @@ beforeEach(() => {
 
 // getCurrentSession tests
 it('getCurrentSession should return session when successful', async () => {
-  const mockSession: Session = {
-    access_token: 'token',
-    refresh_token: 'refresh',
-    expires_in: 3600,
-  } as Session
-  mockSupabase.auth.getSession.mockResolvedValue({ data: { session: mockSession }, error: null })
-
+  const { mockSession } = setupSuccessfulAuthMocks(mockSupabase)
   const getSessionSpy = vi.spyOn(mockSupabase.auth, 'getSession')
   const result = await getCurrentSession()
 
@@ -61,20 +30,17 @@ it('getCurrentSession should return session when successful', async () => {
 })
 
 it('getCurrentSession should throw error when unsuccessful', async () => {
-  const mockError = createAuthError('Failed to get session')
-  mockSupabase.auth.getSession.mockResolvedValue({ data: { session: null }, error: mockError })
-
+  setupAuthErrorMocks(mockSupabase, 'Failed to get session')
   const getSessionSpy = vi.spyOn(mockSupabase.auth, 'getSession')
+
   await expect(getCurrentSession()).rejects.toThrow('Failed to get session')
   expect(getSessionSpy).toHaveBeenCalled()
 })
 
 // signInWithIdToken tests
 it('signInWithIdToken should return auth data when successful', async () => {
-  const mockUser = { id: 'user-id' } as User
-  const mockSession = { access_token: 'token' } as Session
+  const { mockUser, mockSession } = setupSuccessfulAuthMocks(mockSupabase)
   const mockAuthData = { user: mockUser, session: mockSession }
-  mockSupabase.auth.signInWithIdToken.mockResolvedValue({ data: mockAuthData, error: null })
 
   const params = { provider: 'google', token: 'token123', nonce: 'nonce123' }
   const signInWithIdTokenSpy = vi.spyOn(mockSupabase.auth, 'signInWithIdToken')
@@ -85,14 +51,11 @@ it('signInWithIdToken should return auth data when successful', async () => {
 })
 
 it('signInWithIdToken should throw error when unsuccessful', async () => {
-  const mockError = createAuthError('Failed to sign in with ID token')
-  mockSupabase.auth.signInWithIdToken.mockResolvedValue({
-    data: { user: null, session: null },
-    error: mockError,
-  })
+  setupAuthErrorMocks(mockSupabase, 'Failed to sign in with ID token')
 
   const params = { provider: 'google', token: 'token123', nonce: 'nonce123' }
   const signInWithIdTokenSpy = vi.spyOn(mockSupabase.auth, 'signInWithIdToken')
+
   await expect(signInWithIdToken(params)).rejects.toThrow('Failed to sign in with ID token')
   expect(signInWithIdTokenSpy).toHaveBeenCalledWith(params)
 })
@@ -117,7 +80,7 @@ it('sendOtpToEmail should return data when successful', async () => {
 })
 
 it('sendOtpToEmail should throw error when unsuccessful', async () => {
-  const mockError = createAuthError('Failed to send OTP')
+  const mockError = createMockAuthError('Failed to send OTP')
   mockSupabase.auth.signInWithOtp.mockResolvedValue({
     data: { user: null, session: null },
     error: mockError,
@@ -137,7 +100,7 @@ it('sendOtpToEmail should throw error when unsuccessful', async () => {
 
 // verifyEmailOtp tests
 it('verifyEmailOtp should return auth data when successful', async () => {
-  const mockUser = { id: 'user-id' } as User
+  const mockUser = createMockUser({ id: 'user-id' })
   const mockSession = { access_token: 'token' } as Session
   const mockAuthData = { user: mockUser, session: mockSession }
   mockSupabase.auth.verifyOtp.mockResolvedValue({ data: mockAuthData, error: null })
@@ -156,7 +119,7 @@ it('verifyEmailOtp should return auth data when successful', async () => {
 })
 
 it('verifyEmailOtp should throw error when unsuccessful', async () => {
-  const mockError = createAuthError('Failed to verify OTP')
+  const mockError = createMockAuthError('Failed to verify OTP')
   mockSupabase.auth.verifyOtp.mockResolvedValue({
     data: { user: null, session: null },
     error: mockError,
@@ -184,7 +147,7 @@ it('signOutUser should complete successfully', async () => {
 })
 
 it('signOutUser should throw error when unsuccessful', async () => {
-  const mockError = createAuthError('Failed to sign out')
+  const mockError = createMockAuthError('Failed to sign out')
   mockSupabase.auth.signOut.mockResolvedValue({ error: mockError })
 
   const signOutSpy = vi.spyOn(mockSupabase.auth, 'signOut')
@@ -194,7 +157,7 @@ it('signOutUser should throw error when unsuccessful', async () => {
 
 // updateUserPreferences tests
 it('updateUserPreferences should return user data when successful', async () => {
-  const mockUser = { id: 'user-id', email: 'updated@example.com' } as User
+  const mockUser = createMockUser({ id: 'user-id', email: 'updated@example.com' })
   mockSupabase.auth.updateUser.mockResolvedValue({ data: { user: mockUser }, error: null })
 
   const updates = { email: 'updated@example.com', data: { name: 'Updated Name' } }
@@ -206,7 +169,7 @@ it('updateUserPreferences should return user data when successful', async () => 
 })
 
 it('updateUserPreferences should throw error when unsuccessful', async () => {
-  const mockError = createAuthError('Failed to update user profile')
+  const mockError = createMockAuthError('Failed to update user profile')
   mockSupabase.auth.updateUser.mockResolvedValue({ data: { user: null }, error: mockError })
 
   const updates = { email: 'updated@example.com' }

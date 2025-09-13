@@ -2,9 +2,10 @@
   <DetailPageLayout
     :page-title="pageTitle"
     :page-icon="pageIcon"
-    :breadcrumbs="breadcrumbs"
     :banners="banners"
     :is-loading="isTemplateLoading"
+    :actions="actionBarActions"
+    :actions-visible="isEditMode"
     @back="goBack"
   >
     <!-- Main Content -->
@@ -69,8 +70,8 @@
               />
               Categories
               <q-chip
-                v-if="expenseTemplateItems.length > 0"
-                :label="expenseTemplateItems.length"
+                v-if="templateItems.length > 0"
+                :label="templateItems.length"
                 color="primary"
                 text-color="white"
                 size="sm"
@@ -80,7 +81,7 @@
 
             <div class="row q-gutter-sm">
               <q-btn
-                v-if="expenseTemplateItems.length > 1"
+                v-if="templateItems.length > 1"
                 flat
                 :icon="allCategoriesExpanded ? 'eva-collapse-outline' : 'eva-expand-outline'"
                 :label="allCategoriesExpanded ? 'Collapse All' : 'Expand All'"
@@ -89,7 +90,7 @@
               />
               <q-btn
                 icon="eva-plus-outline"
-                label="Add Category"
+                label="Add"
                 color="primary"
                 @click="openDialog('category')"
               />
@@ -97,7 +98,7 @@
           </div>
 
           <q-banner
-            v-if="expenseTemplateItems.length > 0 && hasDuplicateItems"
+            v-if="templateItems.length > 0 && hasDuplicateItems"
             class="bg-orange-1 text-orange-8 q-mb-md"
             rounded
           >
@@ -108,9 +109,9 @@
             item.
           </q-banner>
 
-          <div v-if="expenseTemplateItems.length > 0">
-            <ExpenseTemplateCategory
-              v-for="group in enrichedExpenseCategories"
+          <div v-if="templateItems.length > 0">
+            <TemplateCategory
+              v-for="group in enrichedCategories"
               :key="group.categoryId"
               :ref="(el) => setCategoryRef(el, group.categoryId)"
               :category-id="group.categoryId"
@@ -122,9 +123,9 @@
               :currency="templateCurrency"
               :readonly="false"
               :default-expanded="getCategoryExpanded(group.categoryId)"
-              @update-item="updateExpenseTemplateItem"
-              @remove-item="removeExpenseTemplateItem"
-              @add-item="handleAddExpenseTemplateItem"
+              @update-item="updateTemplateItem"
+              @remove-item="removeTemplateItem"
+              @add-item="handleAddTemplateItem"
             />
           </div>
 
@@ -139,19 +140,19 @@
             />
             <div class="text-h6 q-mb-sm text-grey-6">No categories yet</div>
             <div class="text-body2 text-grey-5 q-mb-lg">
-              Start building your template by adding named expense items with categories and amounts
+              Start building your template by adding named items with categories and amounts
             </div>
             <q-btn
               color="primary"
               icon="eva-plus-outline"
-              label="Add Your First Expense Category"
+              label="Add Your First Category"
               unelevated
               @click="openDialog('category')"
             />
           </div>
         </div>
 
-        <div v-if="expenseTemplateItems.length > 0">
+        <div v-if="templateItems.length > 0">
           <q-separator class="q-mb-lg" />
           <div class="row items-center justify-between">
             <div
@@ -164,13 +165,15 @@
               />
               Total Amount
             </div>
-            <div class="text-h4 text-primary text-weight-bold">
+            <div
+              :class="['text-primary text-weight-bold', $q.screen.lt.md ? 'text-h5' : 'text-h4']"
+            >
               {{ formattedTotalAmount }}
             </div>
           </div>
           <div class="text-body2 text-grey-6">
-            Total across {{ expenseTemplateItems.length }}
-            {{ expenseTemplateItems.length === 1 ? 'category' : 'categories' }}
+            Total across {{ templateItems.length }}
+            {{ templateItems.length === 1 ? 'category' : 'categories' }}
           </div>
         </div>
       </q-card>
@@ -233,8 +236,8 @@
             />
             Categories
             <q-chip
-              v-if="expenseTemplateItems.length > 0"
-              :label="expenseTemplateItems.length"
+              v-if="templateItems.length > 0"
+              :label="templateItems.length"
               color="primary"
               text-color="white"
               size="sm"
@@ -243,9 +246,9 @@
           </div>
         </div>
 
-        <div v-if="expenseTemplateItems.length > 0">
-          <ExpenseTemplateCategory
-            v-for="group in enrichedExpenseCategories"
+        <div v-if="templateItems.length > 0">
+          <TemplateCategory
+            v-for="group in enrichedCategories"
             :key="group.categoryId"
             :category-id="group.categoryId"
             :category-name="group.categoryName"
@@ -255,8 +258,8 @@
             :subtotal="group.subtotal"
             :currency="templateCurrency"
             :readonly="true"
-            @update-item="updateExpenseTemplateItem"
-            @remove-item="removeExpenseTemplateItem"
+            @update-item="updateTemplateItem"
+            @remove-item="removeTemplateItem"
           />
         </div>
 
@@ -270,13 +273,11 @@
             class="text-grey-4 q-mb-md"
           />
           <div class="text-h6 q-mb-sm text-grey-6">No categories</div>
-          <div class="text-body2 text-grey-5 q-mb-lg">
-            This template doesn't have any expense items yet
-          </div>
+          <div class="text-body2 text-grey-5 q-mb-lg">This template doesn't have any items yet</div>
         </div>
       </div>
 
-      <div v-if="expenseTemplateItems.length > 0">
+      <div v-if="templateItems.length > 0">
         <q-separator class="q-mb-lg" />
         <div class="row items-center justify-between">
           <div
@@ -289,27 +290,27 @@
             />
             Total Amount
           </div>
-          <div class="text-h4 text-primary text-weight-bold">
+          <div :class="['text-primary text-weight-bold', $q.screen.lt.md ? 'text-h5' : 'text-h4']">
             {{ formattedTotalAmount }}
           </div>
         </div>
         <div class="text-body2 text-grey-6">
-          Total across {{ expenseTemplateItems.length }}
-          {{ expenseTemplateItems.length === 1 ? 'category' : 'categories' }}
+          Total across {{ templateItems.length }}
+          {{ templateItems.length === 1 ? 'category' : 'categories' }}
         </div>
       </div>
     </q-card>
 
     <!-- Dialogs Slot -->
     <template #dialogs>
-      <ExpenseCategorySelectionDialog
+      <CategorySelectionDialog
         v-model="showCategoryDialog"
         :used-category-ids="getUsedCategoryIds()"
         :categories="categoriesStore.categories"
         @category-selected="onCategorySelected"
       />
 
-      <ShareExpenseTemplateDialog
+      <ShareTemplateDialog
         v-if="routeTemplateId"
         v-model="isShareDialogOpen"
         :template-id="routeTemplateId"
@@ -329,16 +330,6 @@
         @confirm="deleteTemplate"
       />
     </template>
-
-    <!-- FAB Slot -->
-    <template #fab>
-      <ActionsFab
-        v-if="isEditMode"
-        v-model="fabOpen"
-        :actions="fabActions"
-        :visible="true"
-      />
-    </template>
   </DetailPageLayout>
 </template>
 
@@ -348,21 +339,21 @@ import { useRouter } from 'vue-router'
 import type { QForm } from 'quasar'
 
 import DetailPageLayout from 'src/layouts/DetailPageLayout.vue'
-import ActionsFab from 'src/components/shared/ActionsFab.vue'
-import ExpenseTemplateCategory from 'src/components/expense-templates/ExpenseTemplateCategory.vue'
-import ExpenseCategorySelectionDialog from 'src/components/expense-categories/ExpenseCategorySelectionDialog.vue'
-import ShareExpenseTemplateDialog from 'src/components/expense-templates/ShareExpenseTemplateDialog.vue'
+import type { ActionBarAction } from 'src/components/shared/ActionBar.vue'
+import TemplateCategory from 'src/components/templates/TemplateCategory.vue'
+import CategorySelectionDialog from 'src/components/categories/CategorySelectionDialog.vue'
+import ShareTemplateDialog from 'src/components/templates/ShareTemplateDialog.vue'
 import DeleteDialog from 'src/components/shared/DeleteDialog.vue'
 import { useTemplatesStore } from 'src/stores/templates'
 import { useCategoriesStore } from 'src/stores/categories'
-import { useExpenseTemplateItems } from 'src/composables/useExpenseTemplateItems'
+import { useTemplateItems } from 'src/composables/useTemplateItems'
 import { useError } from 'src/composables/useError'
 import { formatCurrency } from 'src/utils/currency'
-import { useExpenseTemplate } from 'src/composables/useExpenseTemplate'
+import { useTemplate } from 'src/composables/useTemplate'
 import { useDetailPageState } from 'src/composables/useDetailPageState'
 import { useEditablePage } from 'src/composables/useEditablePage'
-import type { ExpenseCategory } from 'src/api'
-import type { ExpenseTemplateCategoryUI } from 'src/types'
+import type { Category } from 'src/api'
+import type { TemplateCategoryUI } from 'src/types'
 
 const router = useRouter()
 const templatesStore = useTemplatesStore()
@@ -380,22 +371,22 @@ const {
   createNewTemplateWithItems,
   updateExistingTemplateWithItems,
   loadTemplate,
-} = useExpenseTemplate()
+} = useTemplate()
 
 const {
-  expenseTemplateItems,
+  templateItems,
   totalAmount,
   hasValidItems,
   hasDuplicateItems,
   isValidForSave,
-  expenseCategoryGroups,
-  addExpenseTemplateItem,
-  updateExpenseTemplateItem,
-  removeExpenseTemplateItem,
-  loadExpenseTemplateItems,
-  getExpenseTemplateItemsForSave,
+  categoryGroups,
+  addTemplateItem,
+  updateTemplateItem,
+  removeTemplateItem,
+  loadTemplateItems,
+  getTemplateItemsForSave,
   getUsedCategoryIds,
-} = useExpenseTemplateItems()
+} = useTemplateItems()
 
 // Page state configuration
 const pageConfig = {
@@ -412,29 +403,12 @@ const { pageTitle, pageIcon, banners } = useDetailPageState(
   pageConfig,
   isNewTemplate.value,
   isReadOnlyMode.value,
-  isEditMode.value,
 )
 
-// Custom breadcrumbs with reactive template name
-const breadcrumbs = computed(() => [
-  {
-    label: pageConfig.entityNamePlural,
-    icon: pageConfig.listIcon,
-    to: pageConfig.listRoute,
-  },
-  {
-    label: isNewTemplate.value
-      ? `New ${pageConfig.entityName}`
-      : form.value.name || pageConfig.entityName,
-    icon: isNewTemplate.value ? 'eva-plus-outline' : pageConfig.listIcon,
-  },
-])
-
-const { fabOpen, openDialog, closeDialog, getDialogState, createFabAction, initializeFab } =
-  useEditablePage()
+const { openDialog, closeDialog, getDialogState } = useEditablePage()
 
 // Local state
-const categoryRefs = ref<Map<string, InstanceType<typeof ExpenseTemplateCategory>>>(new Map())
+const categoryRefs = ref<Map<string, InstanceType<typeof TemplateCategory>>>(new Map())
 const lastAddedCategoryId = ref<string | null>(null)
 const allCategoriesExpanded = ref(false)
 const showDeleteDialog = ref(false)
@@ -480,8 +454,8 @@ const durationSelectOptions = computed(() => [
   },
 ])
 
-const enrichedExpenseCategories = computed(() => {
-  return expenseCategoryGroups.value.reduce((acc, group) => {
+const enrichedCategories = computed(() => {
+  return categoryGroups.value.reduce((acc, group) => {
     const category = categoriesStore.getCategoryById(group.categoryId)
     if (category) {
       acc.push({
@@ -492,7 +466,7 @@ const enrichedExpenseCategories = computed(() => {
       })
     }
     return acc
-  }, [] as ExpenseTemplateCategoryUI[])
+  }, [] as TemplateCategoryUI[])
 })
 
 // Dialog states
@@ -506,47 +480,43 @@ const isShareDialogOpen = computed({
   set: (value: boolean) => (value ? openDialog('share') : closeDialog('share')),
 })
 
-// FAB Actions
-const fabActions = computed(() => [
-  {
-    key: 'add-category',
-    icon: 'eva-plus-outline',
-    label: 'Add Category',
-    color: 'primary',
-    handler: createFabAction(() => openDialog('category')),
-  },
+// Action Bar Actions
+const actionBarActions = computed<ActionBarAction[]>(() => [
   {
     key: 'save',
     icon: 'eva-save-outline',
-    label: 'Save Template',
+    label: 'Save',
     color: 'positive',
+    priority: 'primary',
     loading: templatesStore.isLoading,
-    handler: createFabAction(saveTemplate),
+    handler: saveTemplate,
   },
   {
     key: 'share',
     icon: 'eva-share-outline',
     label: 'Share',
     color: 'info',
+    priority: 'secondary',
     visible: !isNewTemplate.value && isOwner.value,
-    handler: createFabAction(() => openDialog('share')),
+    handler: () => openDialog('share'),
   },
   {
     key: 'delete',
     icon: 'eva-trash-2-outline',
-    label: 'Delete Template',
+    label: 'Delete',
     color: 'negative',
+    priority: 'secondary',
     visible: !isNewTemplate.value && isOwner.value,
-    handler: createFabAction(() => {
+    handler: () => {
       showDeleteDialog.value = true
-    }),
+    },
   },
 ])
 
 // Component methods
 function setCategoryRef(el: unknown, categoryId: string): void {
   if (el && typeof el === 'object' && 'focusLastItem' in el) {
-    const component = el as InstanceType<typeof ExpenseTemplateCategory>
+    const component = el as InstanceType<typeof TemplateCategory>
     if (typeof component.focusLastItem === 'function') {
       categoryRefs.value.set(categoryId, component)
     }
@@ -563,18 +533,15 @@ function focusLastItem(categoryId: string): void {
   }
 }
 
-async function handleAddExpenseTemplateItem(
-  categoryId: string,
-  categoryColor: string,
-): Promise<void> {
-  addExpenseTemplateItem(categoryId, categoryColor)
+async function handleAddTemplateItem(categoryId: string, categoryColor: string): Promise<void> {
+  addTemplateItem(categoryId, categoryColor)
 
   await nextTick()
   focusLastItem(categoryId)
 }
 
-async function onCategorySelected(category: ExpenseCategory): Promise<void> {
-  addExpenseTemplateItem(category.id, category.color || '#1976d2')
+async function onCategorySelected(category: Category): Promise<void> {
+  addTemplateItem(category.id, category.color || '#1976d2')
   lastAddedCategoryId.value = category.id
   closeDialog('category')
 
@@ -631,7 +598,7 @@ async function saveTemplate(): Promise<void> {
   }
 
   let success = false
-  const templateItems = getExpenseTemplateItemsForSave()
+  const templateItems = getTemplateItemsForSave()
 
   if (isNewTemplate.value) {
     success = await createNewTemplateWithItems(
@@ -662,7 +629,7 @@ async function loadCurrentTemplate(): Promise<void> {
   form.value.name = template.name
   form.value.duration = template.duration
 
-  loadExpenseTemplateItems(template)
+  loadTemplateItems(template)
 }
 
 async function deleteTemplate(): Promise<void> {
@@ -687,7 +654,5 @@ onMounted(async () => {
   } finally {
     isTemplateLoading.value = false
   }
-
-  await initializeFab()
 })
 </script>

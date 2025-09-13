@@ -1,0 +1,60 @@
+---
+description: TypeScript usage patterns and type management guidelines
+globs:
+alwaysApply: true
+---
+
+# TypeScript Guidelines
+
+## Core TypeScript Usage
+
+- Use TypeScript for all code; prefer types over interfaces.
+- Avoid enums; use plain objects instead for better type safety and flexibility.
+- Avoid TypeScript's `any` keyword - use `unknown` with proper type guards instead.
+- Use `// @ts-expect-error` with a clear reason when absolutely necessary, but prefer proper typing.
+
+## Type Management
+
+- Use the Supabase-generated types (`Tables`, `TablesInsert`, `TablesUpdate`) for database operations
+- Export types from API files and import them where needed rather than duplicating definitions
+- Use `import type` syntax for type-only imports
+- Prefer nullish coalescing (`??`) for handling potentially undefined values
+- Maintain a single source of truth for type definitions, especially for shared concepts like user preferences
+- When working with Supabase JSON fields, define explicit types that extend the base Json type
+- Use type assertions sparingly and only when you can guarantee type safety
+- For cross-module type references, ensure imports are properly maintained when refactoring
+- Use precise return types from Supabase response objects (e.g., `AuthResponse['data']`) for better type safety
+
+## Function Signatures and Return Types
+
+- Use arrow function syntax for simple functions
+- Use the `function` keyword if you need hoisting/`.this` binding, but we prefer not doing that if it can be avoided
+- Functions that don't return data should have `void` return type
+- Use asynchronous functions with clear return types including possible error states
+
+## Type Safety in Testing
+
+- Never use `any` in tests. Use `unknown` for conversions:
+  ```typescript
+  mock as unknown as TargetType
+  ```
+- Use `// @ts-expect-error` with a reason when needed in tests
+- Use interface merging to extend global types:
+  ```typescript
+  declare global {
+    interface Window {
+      customProperty?: SomeType
+    }
+  }
+  ```
+
+## Variable Naming with Types
+
+- Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError)
+- Ensure type annotations enhance readability rather than cluttering code
+
+## Complex Type Patterns
+
+- For complex callbacks, prefer imperative `for (const element of Array)` blocks over `Array.reduce()` with complex type inference
+- Use type composition rather than duplication when extending types
+- Handle type conversions between different layers (UI, API, Store) explicitly when necessary

@@ -51,7 +51,6 @@ export function usePlan() {
     name: string,
     startDate: string,
     endDate: string,
-    status: string,
     total: number,
     planItems: { name: string; category_id: string; amount: number }[],
   ): Promise<boolean> {
@@ -60,7 +59,6 @@ export function usePlan() {
       name,
       start_date: startDate,
       end_date: endDate,
-      status,
       total,
     })
 
@@ -80,7 +78,6 @@ export function usePlan() {
     name: string,
     startDate: string,
     endDate: string,
-    status: string,
     total: number,
     planItems: { name: string; category_id: string; amount: number }[],
   ): Promise<boolean> {
@@ -90,7 +87,6 @@ export function usePlan() {
       name,
       start_date: startDate,
       end_date: endDate,
-      status,
       total,
     })
 

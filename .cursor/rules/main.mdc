@@ -1,196 +1,78 @@
 ---
-description: 
-globs: **/*.vue,**/*.ts
-alwaysApply: false
+description: Shephard-specific business rules and domain logic
+globs:
+alwaysApply: true
 ---
-# Shephard Project Guidelines
 
-You are an expert in Vue.js 3, TypeScript, Quasar Framework, Pinia, Supabase, and modern frontend development. The Shephard project is a smart expenses wallet application using the Quasar framework with Vue 3 and TypeScript.
+# Shephard Expense Management Application
 
-## Code Style and Structure
+This application is a smart expenses wallet built with modern web technologies. The following rules are specific to the business domain and application requirements.
 
-- Use the Vue 3 Composition API with `<script setup lang="ts">` in all components.
-- Prefer named exports and functional programming patterns; avoid classes.
-- Use TypeScript for all code with explicit typing; prefer `type` over `interface`.
-- Organize files systematically: each file should have a single responsibility.
-- Follow a clean component structure with clear separation of template, script, and styles.
-- Use descriptive variable names with auxiliary verbs (e.g., `isLoading`, `hasError`).
-- Don't write unneccessary commments, especially if variable or function name is explicit.
+## Domain-Specific Business Logic
 
-## Component Guidelines
+### Categories
 
-- Use Quasar components (prefixed with `q-`) for UI elements.
-- Implement responsive design with Quasar's flex utilities and responsive classes.
-- Use composables for reusable logic across components.
-- Keep components small and focused on a single responsibility.
-- Use scoped CSS for component-specific styles.
-- Always use computed properties instead of calling functions directly in templates for better reactivity and performance.
+- Implement hierarchical categories with parent-child relationships
+- Support custom user-defined categories alongside system defaults
+- Maintain category usage statistics for intelligent suggestions
+- Ensure category deletion handles existing expense reassignment properly
 
-## Navigation and Links
+### Templates
 
-- Use Quasar's built-in routing components instead of manual event handlers for navigation.
-- Prefer `q-btn` with the `to` prop over manual `@click="$router.push()"` for navigation links.
-- For main navigation elements, use `q-btn` with appropriate styling (e.g., `flat`, `no-caps`).
-- When styling navigation buttons, use Quasar's text utility classes like `text-white` and `text-h6`.
-- Avoid using custom router-link components when Quasar provides equivalent functionality.
+- Templates should support both fixed amounts and amount ranges
+- Include smart defaults based on historical spending patterns
+- Support template sharing between users (future feature consideration)
+- Implement template versioning to track changes over time
 
-## Template Formatting
+### Financial Data Handling
 
-- For all tags (both Quasar components and HTML elements) with multiple attributes, place each attribute on a new line with consistent indentation.
-- Always format multi-line tag content with proper spacing:
-  ```vue
-  <any-tag
-    attribute1="value"
-    attribute2="value"
-  >
-    Content goes here
-  </any-tag>
-  ```
-- Never use self-closing syntax for content-containing elements (e.g., avoid `>Content</tag>`).
-- Keep closing tags aligned with opening tags when the content spans multiple lines.
-- Apply the same formatting rules to all components, not just specific ones.
+- All monetary amounts must use proper decimal handling (avoid floating-point arithmetic)
+- Support multiple currencies with proper conversion rate management
+- Implement proper rounding rules for financial calculations
+- Maintain audit trails for all financial transactions
 
-## State Management
+### User Preferences and Settings
 
-- Use Pinia for state management with the setup-style store pattern.
-- Create separate stores for different domains (auth, user data, etc.).
-- Use computed properties for derived state.
-- Use refs for reactive state within components and stores.
+- Store user preferences in Supabase with proper RLS policies
+- Support theme customization (light/dark mode) with system preference detection
+- Implement notification preferences for spending alerts and reminders
+- Maintain privacy settings for data sharing and analytics
 
-## Authentication
+## Application-Specific Patterns
 
-- The app uses Supabase for authentication with both Magic Link (OTP) and Google Sign-In.
-- Security features like CSRF protection and nonce validation are implemented.
-- Use the auth store for managing authentication state and operations.
+### Data Synchronization
 
-## Routing
+- Implement optimistic updates for expense entry to improve user experience
+- Handle offline scenarios gracefully with proper conflict resolution
+- Sync expense data across multiple devices using Supabase real-time features
+- Maintain local cache for critical data with proper invalidation strategies
 
-- The app uses Vue Router with lazy-loaded components.
-- Auth guards are implemented to protect routes.
-- Meta fields are used to specify route requirements.
+### User Onboarding
 
-## API Layer Architecture
+- Guide new users through category setup
+- Provide sample templates and expenses for learning
+- Implement progressive disclosure of advanced features
+- Track onboarding completion for feature analytics
 
-- Use a dedicated API layer in `src/api/` to abstract all external data operations (Supabase, third-party APIs).
-- Create domain-specific API files named `[domain].ts` (e.g., `auth.ts`, `user.ts`, `expenses.ts`).
-- Export all API functions through a barrel file (`src/api/index.ts`) for centralized imports.
-- API functions should be pure data fetchers with single responsibility.
-- API functions must throw errors directly rather than returning error objects.
-- API functions should return data directly, not wrapped in `{data, error}` objects.
-- Use precise TypeScript return types (e.g., `AuthResponse['data']` instead of `AuthResponse`).
-- Functions that don't return data should have `void` return type.
+### Smart Expense Features
 
-### API Function Pattern:
-```typescript
-export async function getUserById(userId: string): Promise<Tables<'users'> | null> {
-  const { data, error } = await supabase.from('users').select('*').eq('id', userId).maybeSingle()
-  
-  if (error) throw error
-  return data
-}
-```
+- Implement expense prediction based on historical data and patterns
+- Provide spending insights and budget recommendations
+- Support recurring expense tracking with intelligent notifications
+- Generate spending reports with customizable date ranges and categories
 
-## Store-API Integration
+## Business Rules and Constraints
 
-- Stores should import and use API functions instead of making direct Supabase calls.
-- Only exception: `supabase.auth.onAuthStateChange()` subscriptions should remain in stores for reactive state management.
-- Stores are responsible for catching API errors using the `useError` composable.
-- Stores should return data directly to components, not `{data, error}` objects.
-- Error handling is centralized in stores; components should not check for errors.
-- State management logic (setting loading states, reactive updates) belongs in stores.
+### Data Validation
 
-### Store Function Pattern:
-```typescript
-async function loadUser(userId: string) {
-  try {
-    const user = await getUserById(userId)
-    userState.value = user
-    return user
-  } catch (error) {
-    handleError('USER.LOAD_FAILED', error, { userId })
-  }
-}
+- Expense amounts must be positive values with reasonable maximum limits
+- Expense dates cannot be in the future (unless it's a planned expense)
+- Category names must be unique within user scope
+- Template names must be descriptive and unique per user
 
-// For void functions:
-async function saveData() {
-  try {
-    await saveToDatabase()
-    // Update state...
-  } catch (error) {
-    handleError('DATA.SAVE_FAILED', error)
-    // No return needed for void functions
-  }
-}
-```
+### Security and Privacy
 
-## Error Handling
-
-- Always use the `useError` composable to handle errors consistently throughout the application.
-- Follow a clear error handling hierarchy:
-  1. **API Layer**: API functions should throw errors directly without handling them.
-  2. **Stores**: Catch errors from API functions using the `useError` composable's `handleError` function. Stores are responsible for error management.
-  3. **Components**: Do not implement error handling logic. Components should call store methods and let the stores handle any errors.
-- Use the `handleError` method with predefined error keys from the error configuration system for consistent, user-friendly messaging.
-- Use descriptive, user-friendly error messages with context (e.g., "Failed to load user preferences" rather than "API error").
-- In stores, import and use the `useError` composable with the `handleError` method
-- Pass relevant context information (userId, component, action, etc.) to provide better debugging information
-- Keep UI components clean by avoiding direct error handling or error state management.
-- For composables, let errors propagate to calling stores rather than handling them internally.
-- Use asynchronous functions with clear return types including possible error states.
-- Maintain a centralized error message system in `src/config/error-messages.ts` for consistent messaging.
-- In catch blocks after calling error handling methods, don't use return statement no matter the function.
-
-## Performance Considerations
-
-- Lazy load routes and components.
-- Use proper reactive primitives to avoid unnecessary re-renders.
-- Implement proper cleanup in component lifecycle hooks.
-
-## Testing
-
-- The project uses Vitest for unit testing.
-- Write tests for critical functionality, especially authentication flows.
-
-## Styling and Layout
-
-- Use Quasar's built-in utility classes for spacing, margin, and padding instead of custom CSS whenever possible
-- Prefer `q-pa-*` and `q-ma-*` classes over custom styling for consistent spacing
-- Use Quasar's grid system with responsive classes (`col-*`, `col-sm-*`, etc.) for adaptable layouts
-- For background styling, use Quasar's color classes (`bg-*`) and helper classes (`rounded-borders`, etc.)
-
-## Component Design
-
-- Use `withDefaults()` with TypeScript interfaces for component props instead of computed properties for defaults
-- Include proper responsive breakpoints in all user-facing layouts
-- Use Quasar's form components with consistent styling and spacing
-- Avoid logic in templates. Encourage extracting even small logic to the `<script setup>` block
-
-## Code Structure
-
-- Group related functionality in clear sections with descriptive comments
-- When displaying user information, use proper null handling and optional chaining
-- For repeated UI patterns, create dedicated components rather than duplicating code
-- Follow a consistent pattern for data presentation: labels as captions, values as regular text
-
-## Type Management
-
-- Use the Supabase-generated types (`Tables`, `TablesInsert`, `TablesUpdate`) for database operations
-- Export types from API files and import them where needed rather than duplicating definitions
-- Use `import type` syntax for type-only imports
-- Prefer nullish coalescing (`??`) for handling potentially undefined values
-- Maintain a single source of truth for type definitions, especially for shared concepts like user preferences
-- When working with Supabase JSON fields, define explicit types that extend the base Json type
-- Use type assertions sparingly and only when you can guarantee type safety
-- For cross-module type references, ensure imports are properly maintained when refactoring
-- Use precise return types from Supabase response objects (e.g., `AuthResponse['data']`) for better type safety
-
-## API-Store-Component Pattern
-
-- **API Layer** (`src/api/`): Pure data fetchers that throw errors and return data directly
-- **Store Layer** (`src/stores/`): State management, error handling, business logic coordination
-- **Component Layer**: UI rendering and user interaction, delegates to stores for data operations
-- API files should define and export data types used in their operations
-- Store files should import types from API files rather than redefining them
-- When a store needs to extend an API type, use type composition rather than duplication
-- Stores should handle type conversions between the UI layer and API layer when necessary
-- Maintain consistent file organization: each domain should have corresponding API and store files
+- Implement proper data isolation between users using RLS policies
+- Ensure financial data is never exposed in client logs or error messages
+- Support data export for user privacy compliance (GDPR)
+- Implement secure data deletion with proper cleanup procedures

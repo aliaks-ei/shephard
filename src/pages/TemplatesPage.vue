@@ -1,7 +1,7 @@
 <template>
   <ListPageLayout
     title="Templates"
-    description="Manage your expense templates and create new ones"
+    description="Manage your templates and create new ones"
     create-button-label="Create Template"
     @create="goToNew"
   >
@@ -19,7 +19,7 @@
       class="column q-col-gutter-xl"
     >
       <div v-if="filteredAndSortedOwnedItems.length > 0">
-        <ExpenseTemplatesGroup
+        <TemplatesGroup
           title="My Templates"
           :templates="filteredAndSortedOwnedItems"
           @edit="viewItem"
@@ -29,7 +29,7 @@
       </div>
 
       <div v-if="filteredAndSortedSharedItems.length > 0">
-        <ExpenseTemplatesGroup
+        <TemplatesGroup
           title="Shared with Me"
           :templates="filteredAndSortedSharedItems"
           chip-color="secondary"
@@ -55,7 +55,7 @@
       @create="goToNew"
     />
 
-    <ShareExpenseTemplateDialog
+    <ShareTemplateDialog
       v-if="shareTemplateId"
       v-model="isShareDialogOpen"
       :template-id="shareTemplateId"
@@ -71,11 +71,11 @@ import ListPageLayout from 'src/layouts/ListPageLayout.vue'
 import SearchAndSort from 'src/components/shared/SearchAndSort.vue'
 import ListPageSkeleton from 'src/components/shared/ListPageSkeleton.vue'
 import EmptyState from 'src/components/shared/EmptyState.vue'
-import ShareExpenseTemplateDialog from 'src/components/expense-templates/ShareExpenseTemplateDialog.vue'
-import ExpenseTemplatesGroup from 'src/components/expense-templates/ExpenseTemplatesGroup.vue'
+import ShareTemplateDialog from 'src/components/templates/ShareTemplateDialog.vue'
+import TemplatesGroup from 'src/components/templates/TemplatesGroup.vue'
 import { useTemplatesStore } from 'src/stores/templates'
 import { useNotificationStore } from 'src/stores/notification'
-import { useExpenseTemplates } from 'src/composables/useExpenseTemplates'
+import { useTemplates } from 'src/composables/useTemplates'
 
 const templatesStore = useTemplatesStore()
 const notificationsStore = useNotificationStore()
@@ -93,7 +93,7 @@ const {
   viewItem,
   deleteItem,
   clearSearch,
-} = useExpenseTemplates()
+} = useTemplates()
 
 const isShareDialogOpen = ref(false)
 const shareTemplateId = ref<string | null>(null)

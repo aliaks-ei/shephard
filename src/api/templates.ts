@@ -2,18 +2,18 @@ import type { Tables, TablesInsert, TablesUpdate } from 'src/lib/supabase/types'
 import { BaseAPIService } from './base'
 import { searchUsersByEmail } from './user'
 
-export type ExpenseTemplate = Tables<'expense_templates'>
-export type ExpenseTemplateInsert = TablesInsert<'expense_templates'>
-export type ExpenseTemplateUpdate = TablesUpdate<'expense_templates'>
+export type Template = Tables<'templates'>
+export type TemplateInsert = TablesInsert<'templates'>
+export type TemplateUpdate = TablesUpdate<'templates'>
 export type TemplateShare = Tables<'template_shares'>
 export type TemplateShareInsert = TablesInsert<'template_shares'>
-export type ExpenseTemplateItem = Tables<'expense_template_items'>
-export type ExpenseTemplateItemInsert = TablesInsert<'expense_template_items'>
-export type ExpenseTemplateWithItems = ExpenseTemplate & {
-  expense_template_items: Tables<'expense_template_items'>[]
+export type TemplateItem = Tables<'template_items'>
+export type TemplateItemInsert = TablesInsert<'template_items'>
+export type TemplateWithItems = Template & {
+  template_items: Tables<'template_items'>[]
 }
 
-export type ExpenseTemplateWithPermission = ExpenseTemplate & {
+export type TemplateWithPermission = Template & {
   permission_level?: string
   is_shared?: boolean
 }
@@ -28,52 +28,45 @@ export type TemplateSharedUser = {
 
 // Create service instance with template configuration
 const templateService = new BaseAPIService<
-  'expense_templates',
-  ExpenseTemplate,
-  ExpenseTemplateInsert,
-  ExpenseTemplateUpdate,
-  ExpenseTemplateWithItems,
-  ExpenseTemplateWithPermission
+  'templates',
+  Template,
+  TemplateInsert,
+  TemplateUpdate,
+  TemplateWithItems,
+  TemplateWithPermission
 >({
-  tableName: 'expense_templates',
+  tableName: 'templates',
   shareTableName: 'template_shares',
-  itemsTableName: 'expense_template_items',
+  itemsTableName: 'template_items',
   uniqueConstraintName: 'unique_template_name_per_user',
   entityTypeName: 'TEMPLATE',
   shareTableForeignKeyColumn: 'template_id',
 })
 
-export async function getExpenseTemplates(
-  userId: string,
-): Promise<ExpenseTemplateWithPermission[]> {
+export async function getTemplates(userId: string): Promise<TemplateWithPermission[]> {
   return templateService.getEntitiesWithPermissions(userId)
 }
 
-export async function createExpenseTemplate(
-  template: ExpenseTemplateInsert,
-): Promise<ExpenseTemplate> {
+export async function createTemplate(template: TemplateInsert): Promise<Template> {
   return templateService.create(template)
 }
 
-export async function updateExpenseTemplate(
-  id: string,
-  updates: ExpenseTemplateUpdate,
-): Promise<ExpenseTemplate> {
+export async function updateTemplate(id: string, updates: TemplateUpdate): Promise<Template> {
   return templateService.update(id, updates)
 }
 
-export async function deleteExpenseTemplate(id: string): Promise<void> {
+export async function deleteTemplate(id: string): Promise<void> {
   return templateService.delete(id)
 }
 
-export async function getExpenseTemplateWithItems(
+export async function getTemplateWithItems(
   templateId: string,
   userId: string,
-): Promise<(ExpenseTemplateWithItems & { permission_level?: string }) | null> {
+): Promise<(TemplateWithItems & { permission_level?: string }) | null> {
   return templateService.getEntityWithItems(
     templateId,
     userId,
-    'expense_template_items!expense_template_items_template_id_fkey',
+    'template_items!template_items_template_id_fkey',
   )
 }
 
@@ -81,15 +74,11 @@ export async function getTemplateSharedUsers(templateId: string): Promise<Templa
   return templateService.getSharedUsers(templateId) as Promise<TemplateSharedUser[]>
 }
 
-export async function createExpenseTemplateItems(
-  items: ExpenseTemplateItemInsert[],
-): Promise<ExpenseTemplateItem[]> {
-  return templateService.createItems(items as Record<string, unknown>[]) as Promise<
-    ExpenseTemplateItem[]
-  >
+export async function createTemplateItems(items: TemplateItemInsert[]): Promise<TemplateItem[]> {
+  return templateService.createItems(items as Record<string, unknown>[]) as Promise<TemplateItem[]>
 }
 
-export async function deleteExpenseTemplateItems(ids: string[]): Promise<void> {
+export async function deleteTemplateItems(ids: string[]): Promise<void> {
   return templateService.deleteItems(ids)
 }
 

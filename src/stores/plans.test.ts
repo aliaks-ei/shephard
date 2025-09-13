@@ -9,13 +9,18 @@ import * as userApi from 'src/api/user'
 import type {
   Plan,
   PlanWithPermission,
-  PlanWithItems,
   PlanInsert,
   PlanUpdate,
   PlanItemInsert,
   PlanSharedUser,
 } from 'src/api/plans'
 import type { UserSearchResult } from 'src/api/user'
+import {
+  createMockPlans,
+  createMockPlanWithItems,
+  createMockPlanSharedUsers,
+} from 'test/fixtures/plans'
+import { createMockUserStoreData, createMockUserSearchResults } from 'test/fixtures/users'
 
 vi.mock('src/composables/useError', () => ({
   useError: vi.fn(),
@@ -52,100 +57,19 @@ vi.mock('./preferences', () => ({
 }))
 
 describe('Plans Store', () => {
+  // Using our mock data factories instead of inline objects - much cleaner!
   const mockHandleError = vi.fn()
-  const mockUserStore = {
-    userProfile: {
-      id: 'user-123',
-      email: 'test@example.com',
-      name: 'Test User',
-    },
-    preferences: {
-      currency: 'USD',
-    },
-  }
+  const mockUserStoreData = createMockUserStoreData()
+  const mockPlans = createMockPlans(2)
+  const mockPlanWithItems = createMockPlanWithItems(1)
+  const mockSharedUsers = createMockPlanSharedUsers(1)
+  const mockUserSearchResults = createMockUserSearchResults(1)
 
   let plansStore: ReturnType<typeof usePlansStore>
 
-  const mockPlans: PlanWithPermission[] = [
-    {
-      id: 'plan-1',
-      name: 'Grocery Plan',
-      status: 'active',
-      currency: 'USD',
-      owner_id: 'user-123',
-      total: 100,
-      start_date: '2023-01-01',
-      end_date: '2023-01-08',
-      template_id: 'template-1',
-      created_at: '2023-01-01T00:00:00Z',
-      updated_at: '2023-01-01T00:00:00Z',
-      permission_level: 'owner',
-      is_shared: false,
-    },
-    {
-      id: 'plan-2',
-      name: 'Shared Plan',
-      status: 'active',
-      currency: 'USD',
-      owner_id: 'user-456',
-      total: 200,
-      start_date: '2023-01-01',
-      end_date: '2023-01-31',
-      template_id: 'template-2',
-      created_at: '2023-01-02T00:00:00Z',
-      updated_at: '2023-01-02T00:00:00Z',
-      permission_level: 'edit',
-      is_shared: true,
-    },
-  ]
-
-  const mockPlanWithItems: PlanWithItems & { permission_level?: string } = {
-    id: 'plan-1',
-    name: 'Grocery Plan',
-    status: 'active',
-    currency: 'USD',
-    owner_id: 'user-123',
-    total: 100,
-    start_date: '2023-01-01',
-    end_date: '2023-01-08',
-    template_id: 'template-1',
-    created_at: '2023-01-01T00:00:00Z',
-    updated_at: '2023-01-01T00:00:00Z',
-    permission_level: 'owner',
-    plan_items: [
-      {
-        id: 'item-1',
-        plan_id: 'plan-1',
-        name: 'Milk',
-        category_id: 'cat-1',
-        amount: 5.99,
-        created_at: '2023-01-01T00:00:00Z',
-        updated_at: '2023-01-01T00:00:00Z',
-      },
-    ],
-  }
-
-  const mockSharedUsers: PlanSharedUser[] = [
-    {
-      user_id: 'user-456',
-      user_name: 'John Doe',
-      user_email: 'john@example.com',
-      permission_level: 'edit',
-      shared_at: '2023-01-01T00:00:00Z',
-    },
-  ]
-
-  const mockUserSearchResults: UserSearchResult[] = [
-    {
-      id: 'user-789',
-      email: 'jane@example.com',
-      name: 'Jane Smith',
-    },
-  ]
-
   const mockPlanItems: PlanItemInsert[] = [
     {
-      plan_id: 'plan-1',
+      plan_id: mockPlans[0]!.id,
       name: 'Bread',
       category_id: 'cat-1',
       amount: 3.5,
@@ -155,19 +79,20 @@ describe('Plans Store', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
+    // Setup error handling mock
     vi.mocked(useError).mockReturnValue({
       handleError: mockHandleError,
     })
 
+    // Mock user store with our factory data
     vi.mocked(useUserStore).mockReturnValue(
-      mockUserStore as unknown as ReturnType<typeof useUserStore>,
+      mockUserStoreData as unknown as ReturnType<typeof useUserStore>,
     )
 
     createTestingPinia({
       createSpy: vi.fn,
       stubActions: false,
     })
-
     plansStore = usePlansStore()
   })
 
@@ -226,7 +151,7 @@ describe('Plans Store', () => {
       })
 
       vi.mocked(useUserStore).mockReturnValue({
-        ...mockUserStore,
+        ...mockUserStoreData,
         userProfile: null,
       } as unknown as ReturnType<typeof useUserStore>)
 
@@ -283,7 +208,7 @@ describe('Plans Store', () => {
       })
 
       vi.mocked(useUserStore).mockReturnValue({
-        ...mockUserStore,
+        ...mockUserStoreData,
         userProfile: null,
       } as unknown as ReturnType<typeof useUserStore>)
 
@@ -299,7 +224,6 @@ describe('Plans Store', () => {
   describe('addPlan', () => {
     const planData: Omit<PlanInsert, 'owner_id' | 'currency'> = {
       name: 'New Plan',
-      status: 'active',
       start_date: '2023-01-01',
       end_date: '2023-01-08',
       template_id: 'template-1',
@@ -348,7 +272,7 @@ describe('Plans Store', () => {
       })
 
       vi.mocked(useUserStore).mockReturnValue({
-        ...mockUserStore,
+        ...mockUserStoreData,
         userProfile: null,
       } as unknown as ReturnType<typeof useUserStore>)
 
@@ -412,7 +336,7 @@ describe('Plans Store', () => {
       })
 
       vi.mocked(useUserStore).mockReturnValue({
-        ...mockUserStore,
+        ...mockUserStoreData,
         userProfile: null,
       } as unknown as ReturnType<typeof useUserStore>)
 
@@ -460,7 +384,7 @@ describe('Plans Store', () => {
       })
 
       vi.mocked(useUserStore).mockReturnValue({
-        ...mockUserStore,
+        ...mockUserStoreData,
         userProfile: null,
       } as unknown as ReturnType<typeof useUserStore>)
 
@@ -493,7 +417,7 @@ describe('Plans Store', () => {
       })
 
       vi.mocked(useUserStore).mockReturnValue({
-        ...mockUserStore,
+        ...mockUserStoreData,
         userProfile: null,
       } as unknown as ReturnType<typeof useUserStore>)
 
@@ -610,7 +534,7 @@ describe('Plans Store', () => {
       })
 
       vi.mocked(useUserStore).mockReturnValue({
-        ...mockUserStore,
+        ...mockUserStoreData,
         userProfile: null,
       } as unknown as ReturnType<typeof useUserStore>)
 
@@ -673,7 +597,7 @@ describe('Plans Store', () => {
       })
 
       vi.mocked(useUserStore).mockReturnValue({
-        ...mockUserStore,
+        ...mockUserStoreData,
         userProfile: null,
       } as unknown as ReturnType<typeof useUserStore>)
 
@@ -741,7 +665,7 @@ describe('Plans Store', () => {
       })
 
       vi.mocked(useUserStore).mockReturnValue({
-        ...mockUserStore,
+        ...mockUserStoreData,
         userProfile: null,
       } as unknown as ReturnType<typeof useUserStore>)
 
@@ -875,7 +799,7 @@ describe('Plans Store', () => {
       })
 
       vi.mocked(useUserStore).mockReturnValue({
-        ...mockUserStore,
+        ...mockUserStoreData,
         userProfile: null,
       } as unknown as ReturnType<typeof useUserStore>)
 
@@ -916,7 +840,7 @@ describe('Plans Store', () => {
       })
 
       vi.mocked(useUserStore).mockReturnValue({
-        ...mockUserStore,
+        ...mockUserStoreData,
         userProfile: null,
       } as unknown as ReturnType<typeof useUserStore>)
 

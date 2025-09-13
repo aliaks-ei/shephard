@@ -2,8 +2,8 @@ export type { GoogleSignInResponse } from './global'
 export type {
   BaseItemUI,
   BaseCategoryUI,
-  ExpenseTemplateItemUI,
-  ExpenseTemplateCategoryUI,
+  TemplateItemUI,
+  TemplateCategoryUI,
   PlanItemUI,
   PlanCategoryUI,
 } from './ui'

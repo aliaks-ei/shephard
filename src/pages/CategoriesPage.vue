@@ -1,6 +1,6 @@
 <template>
   <ListPageLayout
-    title="Available Expense Categories"
+    title="Categories"
     description="Standard categories available for all expense tracking"
     :show-create-button="false"
   >
@@ -33,32 +33,67 @@
         <q-card
           flat
           bordered
-          class="category-card cursor-pointer full-height column"
+          class="full-height"
         >
-          <q-card-section
-            class="column flex-center text-center q-py-lg"
-            style="flex: 1"
+          <q-item
+            clickable
+            class="q-pa-md full-height"
+            @click="openCategoryPreview(category)"
           >
-            <q-avatar
-              :style="{ backgroundColor: category.color }"
-              size="48px"
-              text-color="white"
-              class="category-card__avatar q-mb-md"
+            <!-- Mobile Layout: Icon + Title in same row -->
+            <q-item-section
+              v-if="$q.screen.xs"
+              avatar
             >
-              <q-icon
-                :name="category.icon"
-                size="24px"
-              />
-            </q-avatar>
+              <q-avatar
+                :style="{ backgroundColor: category.color }"
+                size="40px"
+                text-color="white"
+              >
+                <q-icon
+                  :name="category.icon"
+                  size="20px"
+                />
+              </q-avatar>
+            </q-item-section>
 
-            <div class="text-weight-medium text-body1 q-mb-xs">
-              {{ category.name }}
-            </div>
+            <q-item-section v-if="$q.screen.xs">
+              <q-item-label class="text-weight-medium text-body1">
+                {{ category.name }}
+              </q-item-label>
+              <q-item-label caption>
+                {{ category.templates.length }}
+                {{ category.templates.length === 1 ? 'template' : 'templates' }}
+              </q-item-label>
+            </q-item-section>
 
-            <div class="text-caption text-grey-6">
-              {{ category.color }}
-            </div>
-          </q-card-section>
+            <!-- Desktop Layout: Centered vertical layout -->
+            <q-item-section
+              v-if="!$q.screen.xs"
+              class="column items-center text-center q-py-lg"
+            >
+              <q-avatar
+                :style="{ backgroundColor: category.color }"
+                size="48px"
+                text-color="white"
+                class="q-mb-md"
+              >
+                <q-icon
+                  :name="category.icon"
+                  size="24px"
+                />
+              </q-avatar>
+
+              <div class="text-weight-medium text-body1 q-mb-xs">
+                {{ category.name }}
+              </div>
+
+              <div class="text-caption text-grey-7">
+                {{ category.templates.length }}
+                {{ category.templates.length === 1 ? 'template' : 'templates' }}
+              </div>
+            </q-item-section>
+          </q-item>
 
           <!-- Color strip at bottom -->
           <div :style="{ backgroundColor: category.color, height: '4px' }"></div>
@@ -88,19 +123,33 @@
         />
       </q-card-section>
     </q-card>
+
+    <!-- Category Preview Dialog -->
+    <CategoryPreviewDialog
+      v-model="showPreviewDialog"
+      :category="selectedCategory"
+      @update:model-value="handleDialogClose"
+    />
   </ListPageLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useQuasar } from 'quasar'
 import { useCategoriesStore } from 'src/stores/categories'
 import ListPageLayout from 'src/layouts/ListPageLayout.vue'
 import SearchAndSort from 'src/components/shared/SearchAndSort.vue'
 import ListPageSkeleton from 'src/components/shared/ListPageSkeleton.vue'
+import CategoryPreviewDialog from 'src/components/categories/CategoryPreviewDialog.vue'
+import type { CategoryWithStats } from 'src/api'
+
+const $q = useQuasar()
 
 const categoriesStore = useCategoriesStore()
 const searchQuery = ref('')
 const sortBy = ref('name')
+const showPreviewDialog = ref(false)
+const selectedCategory = ref<CategoryWithStats | null>(null)
 
 const sortOptions = [{ label: 'Name', value: 'name' }]
 
@@ -119,31 +168,17 @@ const filteredCategories = computed(() => {
   return categories
 })
 
+function openCategoryPreview(category: CategoryWithStats) {
+  selectedCategory.value = category
+  showPreviewDialog.value = true
+}
+
+function handleDialogClose() {
+  showPreviewDialog.value = false
+  selectedCategory.value = null
+}
+
 onMounted(() => {
-  categoriesStore.loadCategories()
+  categoriesStore.loadCategories({ includeTemplateStats: true })
 })
 </script>
-
-<style lang="scss" scoped>
-.category-card {
-  transition-property: transform, box-shadow;
-  transition-duration: 0.2s;
-  transition-timing-function: ease-in-out;
-
-  &__avatar {
-    transition-property: transform;
-    transition-duration: 0.2s;
-    transition-timing-function: ease-in-out;
-  }
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-
-    .category-card__avatar {
-      transform: scale(1.05);
-      transition: transform 0.2s ease-in-out;
-    }
-  }
-}
-</style>

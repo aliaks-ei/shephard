@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { createTestingPinia } from '@pinia/testing'
 import { computed, ref } from 'vue'
 
 import { useAuthStore } from './auth'
@@ -12,6 +11,8 @@ import type { User } from 'src/api/user'
 import type { GoogleSignInResponse } from 'src/types'
 import type { AuthChangeEvent } from '@supabase/supabase-js'
 import type { NonceData } from 'src/utils/nonce'
+import { setupTestingPinia } from 'test/helpers/pinia-mocks'
+import { createTestingPinia } from '@pinia/testing'
 
 vi.mock('src/composables/useNonce', () => ({
   useNonce: vi.fn(),
@@ -72,18 +73,8 @@ describe('Auth Store', () => {
       reset: mockPreferencesReset,
     } as unknown as ReturnType<typeof usePreferencesStore>)
 
-    createTestingPinia({
-      createSpy: vi.fn,
+    setupTestingPinia({
       stubActions: false,
-      initialState: {
-        auth: {
-          user: null,
-          session: null,
-          isLoading: true,
-          isEmailSent: false,
-          emailError: null,
-        },
-      },
     })
 
     authStore = useAuthStore()

@@ -24,7 +24,7 @@ export type BaseCategoryUI = {
 /**
  * Template-specific item UI (extends base)
  */
-export type ExpenseTemplateItemUI = BaseItemUI
+export type TemplateItemUI = BaseItemUI
 
 /**
  * Plan-specific item UI (extends base)
@@ -34,8 +34,8 @@ export type PlanItemUI = BaseItemUI
 /**
  * Template-specific category UI (extends base)
  */
-export type ExpenseTemplateCategoryUI = BaseCategoryUI & {
-  items: ExpenseTemplateItemUI[]
+export type TemplateCategoryUI = BaseCategoryUI & {
+  items: TemplateItemUI[]
 }
 
 /**

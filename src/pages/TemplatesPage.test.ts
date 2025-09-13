@@ -1,22 +1,23 @@
 import { mount } from '@vue/test-utils'
 import { it, expect, vi, beforeEach } from 'vitest'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
-import { createTestingPinia } from '@pinia/testing'
 import { ref, computed } from 'vue'
 import TemplatesPage from './TemplatesPage.vue'
 import { useTemplatesStore } from 'src/stores/templates'
 import { useNotificationStore } from 'src/stores/notification'
-import { useExpenseTemplates } from 'src/composables/useExpenseTemplates'
-import type { ExpenseTemplateWithPermission } from 'src/api'
+import { useTemplates } from 'src/composables/useTemplates'
+import type { TemplateWithPermission } from 'src/api'
+import { setupTestingPinia } from 'test/helpers/pinia-mocks'
+import { createMockTemplates } from 'test/fixtures'
 
 installQuasarPlugin()
 
-vi.mock('src/composables/useExpenseTemplates')
+vi.mock('src/composables/useTemplates')
 
-const ExpenseTemplatesGroupStub = {
+const TemplatesGroupStub = {
   template: `
     <div
-      class="expense-templates-group-mock"
+      class="templates-group-mock"
       :data-title="title"
       :data-templates-count="templates ? templates.length : 0"
       :data-chip-color="chipColor"
@@ -33,7 +34,7 @@ const ExpenseTemplatesGroupStub = {
   emits: ['edit', 'delete', 'share'],
 }
 
-const ShareExpenseTemplateDialogStub = {
+const ShareTemplateDialogStub = {
   template: `
     <div
       class="share-dialog-mock"
@@ -105,52 +106,25 @@ const EmptyStateStub = {
   emits: ['clear-search', 'create'],
 }
 
-const mockOwnedTemplates: ExpenseTemplateWithPermission[] = [
-  {
-    id: 'template-1',
-    name: 'Grocery Shopping',
-    currency: 'USD',
-    total: 15000,
-    duration: '7 days',
-    owner_id: 'user-1',
-    created_at: '2023-01-01T00:00:00Z',
-    updated_at: '2023-01-01T00:00:00Z',
-    permission_level: 'owner',
-    is_shared: false,
-  },
-  {
-    id: 'template-2',
-    name: 'Monthly Utilities',
-    currency: 'USD',
-    total: 25000,
-    duration: '30 days',
-    owner_id: 'user-1',
-    created_at: '2023-01-02T00:00:00Z',
-    updated_at: '2023-01-02T00:00:00Z',
-    permission_level: 'owner',
-    is_shared: true,
-  },
-]
+const mockOwnedTemplates = createMockTemplates(2).map((template, index) => ({
+  ...template,
+  permission_level: 'owner' as const,
+  is_shared: index === 1,
+}))
 
-const mockSharedTemplates: ExpenseTemplateWithPermission[] = [
-  {
-    id: 'template-3',
-    name: 'Team Lunch',
-    currency: 'USD',
-    total: 8000,
-    duration: '7 days',
-    owner_id: 'user-2',
-    created_at: '2023-01-03T00:00:00Z',
-    updated_at: '2023-01-03T00:00:00Z',
-    permission_level: 'edit',
-    is_shared: true,
-  },
-]
+const mockSharedTemplates = createMockTemplates(1).map((template) => ({
+  ...template,
+  id: 'template-3',
+  name: 'Team Lunch',
+  owner_id: 'user-2',
+  permission_level: 'edit' as const,
+  is_shared: true,
+}))
 
 function createWrapper(
   options: {
-    ownedTemplates?: ExpenseTemplateWithPermission[]
-    sharedTemplates?: ExpenseTemplateWithPermission[]
+    ownedTemplates?: TemplateWithPermission[]
+    sharedTemplates?: TemplateWithPermission[]
     isLoading?: boolean
     hasTemplates?: boolean
     searchQuery?: string
@@ -166,7 +140,7 @@ function createWrapper(
     sortBy = 'name',
   } = options
 
-  const mockExpenseTemplatesReturn = {
+  const mockTemplatesReturn = {
     searchQuery: ref(searchQuery),
     sortBy: ref(sortBy),
     areItemsLoading: computed(() => isLoading),
@@ -195,19 +169,15 @@ function createWrapper(
     clearSearch: vi.fn(),
   }
 
-  vi.mocked(useExpenseTemplates).mockReturnValue(mockExpenseTemplatesReturn)
+  vi.mocked(useTemplates).mockReturnValue(mockTemplatesReturn)
+
+  setupTestingPinia({ stubActions: true })
 
   const wrapper = mount(TemplatesPage, {
     global: {
-      plugins: [
-        createTestingPinia({
-          createSpy: vi.fn,
-          stubActions: true,
-        }),
-      ],
       stubs: {
-        ExpenseTemplatesGroup: ExpenseTemplatesGroupStub,
-        ShareExpenseTemplateDialog: ShareExpenseTemplateDialogStub,
+        TemplatesGroup: TemplatesGroupStub,
+        ShareTemplateDialog: ShareTemplateDialogStub,
         SearchAndSort: SearchAndSortStub,
         ListPageSkeleton: ListPageSkeletonStub,
         EmptyState: EmptyStateStub,
@@ -243,7 +213,7 @@ function createWrapper(
 
   return {
     wrapper,
-    mockUseExpenseTemplates: mockExpenseTemplatesReturn,
+    mockUseTemplates: mockTemplatesReturn,
     templatesStore: useTemplatesStore(),
     notificationStore: useNotificationStore(),
   }
@@ -262,7 +232,7 @@ it('should render page title and description', () => {
   const { wrapper } = createWrapper()
 
   expect(wrapper.find('h1').text()).toBe('Templates')
-  expect(wrapper.text()).toContain('Manage your expense templates and create new ones')
+  expect(wrapper.text()).toContain('Manage your templates and create new ones')
 })
 
 it('should render create template button', () => {
@@ -275,12 +245,12 @@ it('should render create template button', () => {
 })
 
 it('should call goToNew when create button is clicked', async () => {
-  const { wrapper, mockUseExpenseTemplates } = createWrapper()
+  const { wrapper, mockUseTemplates } = createWrapper()
 
   const createButton = wrapper.find('[data-label="Create Template"]')
   await createButton.trigger('click')
 
-  expect(mockUseExpenseTemplates.goToNew).toHaveBeenCalledOnce()
+  expect(mockUseTemplates.goToNew).toHaveBeenCalledOnce()
 })
 
 it('should render search and sort component', () => {
@@ -297,7 +267,7 @@ it('should show loading skeleton when templates are loading', () => {
   const skeleton = wrapper.findComponent(ListPageSkeletonStub)
   expect(skeleton.exists()).toBe(true)
 
-  const templateGroups = wrapper.findAll('.expense-templates-group-mock')
+  const templateGroups = wrapper.findAll('.templates-group-mock')
   expect(templateGroups.length).toBe(0)
 })
 
@@ -368,7 +338,7 @@ it('should show search empty state when searching with no results', () => {
 })
 
 it('should clear search when clear search button is clicked', async () => {
-  const { wrapper, mockUseExpenseTemplates } = createWrapper({
+  const { wrapper, mockUseTemplates } = createWrapper({
     searchQuery: 'test',
     hasTemplates: false,
   })
@@ -376,11 +346,11 @@ it('should clear search when clear search button is clicked', async () => {
   const emptyState = wrapper.findComponent(EmptyStateStub)
   await emptyState.vm.$emit('clear-search')
 
-  expect(mockUseExpenseTemplates.clearSearch).toHaveBeenCalledOnce()
+  expect(mockUseTemplates.clearSearch).toHaveBeenCalledOnce()
 })
 
 it('should call viewItem when edit button is clicked', async () => {
-  const { wrapper, mockUseExpenseTemplates } = createWrapper({
+  const { wrapper, mockUseTemplates } = createWrapper({
     ownedTemplates: mockOwnedTemplates,
     hasTemplates: true,
   })
@@ -388,11 +358,11 @@ it('should call viewItem when edit button is clicked', async () => {
   const editButton = wrapper.find('.edit-btn')
   await editButton.trigger('click')
 
-  expect(mockUseExpenseTemplates.viewItem).toHaveBeenCalledWith('template-1')
+  expect(mockUseTemplates.viewItem).toHaveBeenCalledWith('template-1')
 })
 
 it('should call deleteItem when delete button is clicked', async () => {
-  const { wrapper, mockUseExpenseTemplates } = createWrapper({
+  const { wrapper, mockUseTemplates } = createWrapper({
     ownedTemplates: mockOwnedTemplates,
     hasTemplates: true,
   })
@@ -400,7 +370,7 @@ it('should call deleteItem when delete button is clicked', async () => {
   const deleteButton = wrapper.find('.delete-btn')
   await deleteButton.trigger('click')
 
-  expect(mockUseExpenseTemplates.deleteItem).toHaveBeenCalledWith(mockOwnedTemplates[0])
+  expect(mockUseTemplates.deleteItem).toHaveBeenCalledWith(mockOwnedTemplates[0])
 })
 
 it('should open share dialog when share button is clicked', async () => {
@@ -412,7 +382,7 @@ it('should open share dialog when share button is clicked', async () => {
   const shareButton = wrapper.find('.share-btn')
   await shareButton.trigger('click')
 
-  const shareDialog = wrapper.findComponent(ShareExpenseTemplateDialogStub)
+  const shareDialog = wrapper.findComponent(ShareTemplateDialogStub)
   expect(shareDialog.attributes('data-model-value')).toBe('true')
   expect(shareDialog.attributes('data-template-id')).toBe('template-1')
 })
@@ -426,7 +396,7 @@ it('should close share dialog and reload templates when template is shared', asy
   const shareButton = wrapper.find('.share-btn')
   await shareButton.trigger('click')
 
-  const shareDialog = wrapper.findComponent(ShareExpenseTemplateDialogStub)
+  const shareDialog = wrapper.findComponent(ShareTemplateDialogStub)
   const shareConfirmButton = shareDialog.find('.share-confirm-btn')
   await shareConfirmButton.trigger('click')
 
@@ -461,21 +431,21 @@ it('should pass correct sort options to search and sort component', () => {
 })
 
 it('should update search query when search input changes', async () => {
-  const { wrapper, mockUseExpenseTemplates } = createWrapper()
+  const { wrapper, mockUseTemplates } = createWrapper()
 
   const searchAndSort = wrapper.findComponent(SearchAndSortStub)
   await searchAndSort.vm.$emit('update:searchQuery', 'test query')
 
-  expect(mockUseExpenseTemplates.searchQuery.value).toBe('test query')
+  expect(mockUseTemplates.searchQuery.value).toBe('test query')
 })
 
 it('should update sort by when sort select changes', async () => {
-  const { wrapper, mockUseExpenseTemplates } = createWrapper()
+  const { wrapper, mockUseTemplates } = createWrapper()
 
   const searchAndSort = wrapper.findComponent(SearchAndSortStub)
   await searchAndSort.vm.$emit('update:sortBy', 'total')
 
-  expect(mockUseExpenseTemplates.sortBy.value).toBe('total')
+  expect(mockUseTemplates.sortBy.value).toBe('total')
 })
 
 it('should show proper icons in empty states', () => {
@@ -496,14 +466,14 @@ it('should show proper icons in empty states', () => {
 })
 
 it('should create new template when create button clicked from empty state', async () => {
-  const { wrapper, mockUseExpenseTemplates } = createWrapper({
+  const { wrapper, mockUseTemplates } = createWrapper({
     hasTemplates: false,
   })
 
   const emptyState = wrapper.findComponent(EmptyStateStub)
   await emptyState.vm.$emit('create')
 
-  expect(mockUseExpenseTemplates.goToNew).toHaveBeenCalledOnce()
+  expect(mockUseTemplates.goToNew).toHaveBeenCalledOnce()
 })
 
 it('should handle empty template arrays gracefully', () => {
@@ -552,13 +522,13 @@ it('should show proper create button label in empty state', () => {
 })
 
 it('should maintain reactive search and sort state', () => {
-  const { wrapper, mockUseExpenseTemplates } = createWrapper({
+  const { wrapper, mockUseTemplates } = createWrapper({
     searchQuery: 'initial',
     sortBy: 'name',
   })
 
-  expect(mockUseExpenseTemplates.searchQuery.value).toBe('initial')
-  expect(mockUseExpenseTemplates.sortBy.value).toBe('name')
+  expect(mockUseTemplates.searchQuery.value).toBe('initial')
+  expect(mockUseTemplates.sortBy.value).toBe('name')
 
   const searchAndSort = wrapper.findComponent(SearchAndSortStub)
   expect(searchAndSort.props('searchQuery')).toBe('initial')
@@ -574,11 +544,11 @@ it('should close share dialog when model value changes', async () => {
   const shareButton = wrapper.find('.share-btn')
   await shareButton.trigger('click')
 
-  let shareDialog = wrapper.findComponent(ShareExpenseTemplateDialogStub)
+  let shareDialog = wrapper.findComponent(ShareTemplateDialogStub)
   expect(shareDialog.attributes('data-model-value')).toBe('true')
 
   await shareDialog.vm.$emit('update:modelValue', false)
 
-  shareDialog = wrapper.findComponent(ShareExpenseTemplateDialogStub)
+  shareDialog = wrapper.findComponent(ShareTemplateDialogStub)
   expect(shareDialog.attributes('data-model-value')).toBe('false')
 })

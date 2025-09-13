@@ -19,22 +19,21 @@ beforeEach(() => {
       created_at: '',
       updated_at: '',
       icon: 'eva-pricetags-outline',
+      templates: [],
     },
   ]
-  categoriesStore.getCategoryById = vi
-    .fn()
-    .mockImplementation((categoryId: string) =>
-      categoryId === 'food'
-        ? {
-            id: 'food',
-            name: 'Food',
-            color: '#f00',
-            created_at: '',
-            updated_at: '',
-            icon: 'eva-pricetags-outline',
-          }
-        : undefined,
-    )
+  categoriesStore.getCategoryById = vi.fn().mockImplementation((categoryId: string) =>
+    categoryId === 'food'
+      ? {
+          id: 'food',
+          name: 'Food',
+          color: '#f00',
+          created_at: '',
+          updated_at: '',
+          icon: 'eva-pricetags-outline',
+        }
+      : undefined,
+  )
 })
 
 describe('plan items manager mapping', () => {

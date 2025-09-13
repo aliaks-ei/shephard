@@ -13,10 +13,6 @@ const renderDetailPageLayout = (props: Partial<DetailPageLayoutProps> = {}) => {
   const defaultProps: DetailPageLayoutProps = {
     pageTitle: 'Test Page',
     pageIcon: 'eva-settings-outline',
-    breadcrumbs: [
-      { label: 'Home', icon: 'eva-home-outline', to: '/' },
-      { label: 'Settings', icon: 'eva-settings-outline' },
-    ],
   }
 
   return mount(DetailPageLayout, {
@@ -89,35 +85,6 @@ it('should render page title with icon in toolbar', () => {
   expect(icon.classes()).toContain('eva-star-outline')
   expect(icon.classes()).toContain('q-mr-sm')
   expect(toolbarTitle.text()).toContain('Custom Title')
-})
-
-it('should render breadcrumbs with correct structure', () => {
-  const breadcrumbs = [
-    { label: 'Dashboard', icon: 'eva-grid-outline', to: '/dashboard' },
-    { label: 'Users', icon: 'eva-people-outline', to: '/users' },
-    { label: 'Profile', icon: 'eva-person-outline' },
-  ]
-
-  const wrapper = mount(DetailPageLayout, {
-    props: {
-      pageTitle: 'Test Page',
-      pageIcon: 'eva-settings-outline',
-      breadcrumbs,
-    },
-    global: {
-      stubs: {
-        PageBanners: true,
-      },
-    },
-  })
-
-  const breadcrumbsContainer = wrapper.find('.q-breadcrumbs')
-  expect(breadcrumbsContainer.exists()).toBe(true)
-  expect(breadcrumbsContainer.classes()).toContain('q-mb-lg')
-  expect(breadcrumbsContainer.classes()).toContain('text-grey-6')
-
-  // Test that breadcrumbs prop is passed correctly by checking component props
-  expect(wrapper.props('breadcrumbs')).toEqual(breadcrumbs)
 })
 
 it('should render PageBanners component', () => {
