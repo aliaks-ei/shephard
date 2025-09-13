@@ -14,7 +14,7 @@
         />
 
         <q-toolbar-title>
-          <div class="row items-center">
+          <div class="row items-center no-wrap">
             <q-icon
               :name="pageIcon"
               size="sm"
@@ -83,8 +83,8 @@
               @click="emit('back')"
             />
 
-            <q-toolbar-title>
-              <div class="row items-center">
+            <q-toolbar-title style="flex-basis: 30%">
+              <div class="row items-center no-wrap">
                 <q-icon
                   :name="pageIcon"
                   size="sm"

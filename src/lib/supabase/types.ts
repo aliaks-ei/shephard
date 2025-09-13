@@ -11,7 +11,7 @@ export type Database = {
       categories: {
         Row: {
           color: string
-          created_at: string | null
+          created_at: string
           icon: string
           id: string
           name: string
@@ -39,8 +39,7 @@ export type Database = {
         Row: {
           amount: number
           category_id: string
-          created_at: string | null
-          description: string | null
+          created_at: string
           expense_date: string
           id: string
           name: string
@@ -52,7 +51,6 @@ export type Database = {
           amount: number
           category_id: string
           created_at?: string | null
-          description?: string | null
           expense_date?: string
           id?: string
           name: string
@@ -64,7 +62,6 @@ export type Database = {
           amount?: number
           category_id?: string
           created_at?: string | null
-          description?: string | null
           expense_date?: string
           id?: string
           name?: string
@@ -93,7 +90,7 @@ export type Database = {
         Row: {
           amount: number
           category_id: string
-          created_at: string | null
+          created_at: string
           id: string
           name: string
           plan_id: string
@@ -136,7 +133,7 @@ export type Database = {
       }
       plan_shares: {
         Row: {
-          created_at: string | null
+          created_at: string
           id: string
           permission_level: string
           plan_id: string
@@ -171,7 +168,7 @@ export type Database = {
       }
       plans: {
         Row: {
-          created_at: string | null
+          created_at: string
           currency: string | null
           end_date: string
           id: string
@@ -222,7 +219,7 @@ export type Database = {
         Row: {
           amount: number
           category_id: string
-          created_at: string | null
+          created_at: string
           id: string
           name: string
           template_id: string
@@ -265,7 +262,7 @@ export type Database = {
       }
       template_shares: {
         Row: {
-          created_at: string | null
+          created_at: string
           id: string
           permission_level: string
           shared_by_user_id: string
@@ -300,7 +297,7 @@ export type Database = {
       }
       templates: {
         Row: {
-          created_at: string | null
+          created_at: string
           currency: string | null
           duration: string
           id: string

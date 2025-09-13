@@ -1,12 +1,16 @@
 import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router'
 import { useUserStore } from 'src/stores/user'
 
-export function authGuard(
+export async function authGuard(
   to: RouteLocationNormalized,
   _from: RouteLocationNormalized,
   next: NavigationGuardNext,
 ) {
   const userStore = useUserStore()
+
+  if (userStore.isLoading) {
+    await userStore.initUser()
+  }
 
   if (to.meta.requiresAuth && !userStore.isAuthenticated) {
     next({ path: '/auth', query: { redirect: to.fullPath } })

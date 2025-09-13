@@ -16,6 +16,11 @@ export function usePlan() {
 
   const isNewPlan = computed(() => route.name === 'new-plan')
   const routePlanId = computed(() => (typeof route.params.id === 'string' ? route.params.id : null))
+  const currentTab = computed(() => {
+    if (route.name === 'plan-overview') return 'overview'
+    if (route.name === 'plan-edit') return 'edit'
+    return 'overview' // default
+  })
   const isOwner = computed(() => {
     if (!currentPlan.value || !userStore.userProfile) return false
     return currentPlan.value.owner_id === userStore.userProfile.id
@@ -130,6 +135,7 @@ export function usePlan() {
     isPlanLoading,
     isNewPlan,
     routePlanId,
+    currentTab,
     isOwner,
     isReadOnlyMode,
     isEditMode,

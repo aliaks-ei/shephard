@@ -1,5 +1,12 @@
 <template>
   <q-layout view="lHh Lpr fff">
+    <q-inner-loading
+      :showing="userStore.isLoading"
+      label="Initializing..."
+      label-class="text-primary"
+      label-style="font-size: 1.1em"
+    />
+
     <q-header elevated>
       <q-toolbar>
         <q-btn
@@ -20,11 +27,12 @@
           />
         </q-toolbar-title>
 
-        <UserDropdownMenu />
+        <UserDropdownMenu v-if="!userStore.isLoading" />
       </q-toolbar>
     </q-header>
 
     <q-drawer
+      v-if="!userStore.isLoading"
       v-model="leftDrawerOpen"
       class="q-py-md"
       bordered
@@ -38,11 +46,11 @@
         class="shadow-1"
         padding
       >
-        <router-view />
+        <router-view v-if="!userStore.isLoading" />
       </q-page>
 
       <q-page-sticky
-        v-if="$q.screen.gt.sm"
+        v-if="$q.screen.gt.sm && !userStore.isLoading"
         position="left"
         class="navigation-sticky-bg"
         expand
@@ -62,9 +70,17 @@ import { ref } from 'vue'
 
 import UserDropdownMenu from 'src/components/UserDropdownMenu.vue'
 import NavigationDrawer from 'src/components/NavigationDrawer.vue'
+import { useUserStore } from 'src/stores/user'
+
+const userStore = useUserStore()
 
 const leftDrawerOpen = ref(false)
 const navigationItems = ref([
+  {
+    icon: 'eva-home-outline',
+    label: 'Home',
+    to: '/',
+  },
   {
     icon: 'eva-calendar-outline',
     label: 'Plans',

@@ -129,9 +129,7 @@ export function usePlanOverview(planId: string, planArg?: PlanWithItems | null) 
 
   // Recent expenses (last 10)
   const recentExpenses = computed((): ExpenseWithCategory[] => {
-    return [...expensesStore.expenses]
-      .sort((a, b) => new Date(b.expense_date).getTime() - new Date(a.expense_date).getTime())
-      .slice(0, 10)
+    return expensesStore.sortedExpenses.slice(0, 10)
   })
 
   // Expenses grouped by category

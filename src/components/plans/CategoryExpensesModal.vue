@@ -107,13 +107,13 @@
           />
           Expenses
           <q-chip
-            v-if="sortedExpenses.length > 0"
+            v-if="expenses.length > 0"
             color="primary"
             text-color="white"
             size="sm"
             class="q-ml-sm"
           >
-            {{ sortedExpenses.length }}
+            {{ expenses.length }}
           </q-chip>
         </div>
       </q-card-section>
@@ -124,25 +124,17 @@
         style="max-height: 400px"
       >
         <q-list
-          v-if="sortedExpenses.length > 0"
+          v-if="expenses.length > 0"
           separator
         >
           <q-item
-            v-for="expense in sortedExpenses"
+            v-for="expense in expenses"
             :key="expense.id"
             class="q-px-none q-py-md"
           >
             <q-item-section>
               <q-item-label class="text-weight-medium">
                 {{ expense.name }}
-              </q-item-label>
-              <q-item-label
-                v-if="expense.description"
-                caption
-                lines="2"
-                class="q-mt-xs"
-              >
-                {{ expense.description }}
               </q-item-label>
               <q-item-label
                 caption
@@ -251,15 +243,7 @@ const expensesStore = useExpensesStore()
 const notificationStore = useNotificationStore()
 
 // Local state
-const sortOrder = ref<'asc' | 'desc'>('desc')
 const showExpenseDialog = ref(false)
-
-// Computed properties
-const sortedExpenses = computed(() => {
-  const result = [...props.expenses]
-  result.sort((a, b) => new Date(a.expense_date).getTime() - new Date(b.expense_date).getTime())
-  return sortOrder.value === 'desc' ? result.reverse() : result
-})
 
 const progressPercentage = computed(() => {
   if (!props.category || props.category.plannedAmount === 0) return 0

@@ -31,6 +31,24 @@ export const useExpensesStore = defineStore('expenses', () => {
     expenses.value.reduce((total, expense) => total + expense.amount, 0),
   )
 
+  // Sorted expenses (most recent first, with created_at as tiebreaker)
+  const sortedExpenses = computed(() => {
+    return [...expenses.value].sort((a, b) => {
+      const dateA = new Date(a.expense_date).getTime()
+      const dateB = new Date(b.expense_date).getTime()
+
+      // If expense dates are different, sort by expense_date
+      if (dateA !== dateB) {
+        return dateB - dateA // Most recent expense_date first
+      }
+
+      // If expense dates are the same, sort by created_at
+      const createdA = new Date(a.created_at).getTime()
+      const createdB = new Date(b.created_at).getTime()
+      return createdB - createdA // Most recent created_at first
+    })
+  })
+
   const expensesByCategory = computed(() => {
     const grouped: Record<string, ExpenseWithCategory[]> = {}
     expenses.value.forEach((expense) => {
@@ -197,6 +215,7 @@ export const useExpensesStore = defineStore('expenses', () => {
 
   return {
     expenses,
+    sortedExpenses,
     expenseSummary,
     isLoading,
     currentPlanId,
