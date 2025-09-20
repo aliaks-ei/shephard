@@ -120,15 +120,26 @@
           <q-card
             v-else
             flat
-            class="text-center q-py-xl bg-grey-1"
+            class="text-center q-py-lg"
+            :class="$q.dark.isActive ? 'bg-black-2 text-white' : 'bg-grey-1'"
           >
             <q-icon
               name="eva-grid-outline"
               size="3rem"
-              class="text-grey-4 q-mb-md"
+              :class="$q.dark.isActive ? 'text-grey-5 q-mb-md' : 'text-grey-4 q-mb-md'"
             />
-            <div class="text-body1 text-grey-6 q-mb-sm">No templates use this category yet</div>
-            <div class="text-body2 text-grey-5">Templates using this category will appear here</div>
+            <div
+              class="text-body1 q-mb-sm"
+              :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-6'"
+            >
+              No templates use this category yet
+            </div>
+            <div
+              class="text-body2"
+              :class="$q.dark.isActive ? 'text-grey-5' : 'text-grey-5'"
+            >
+              Templates using this category will appear here
+            </div>
           </q-card>
         </q-card-section>
       </div>

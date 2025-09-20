@@ -89,7 +89,7 @@
     />
 
     <!-- Category Expenses Modal -->
-    <CategoryExpensesModal
+    <CategoryExpensesDialog
       v-model="showCategoryModal"
       :category="selectedCategory"
       :expenses="categoryExpenses"
@@ -107,7 +107,7 @@ import { ref, computed, watch } from 'vue'
 import PlanSummaryCard from './PlanSummaryCard.vue'
 import CategoryBudgetCard from './CategoryBudgetCard.vue'
 import RecentExpensesList from './RecentExpensesList.vue'
-import CategoryExpensesModal from './CategoryExpensesModal.vue'
+import CategoryExpensesDialog from './CategoryExpensesDialog.vue'
 import { usePlanOverview } from 'src/composables/usePlanOverview'
 import { useExpensesStore } from 'src/stores/expenses'
 import type { PlanWithItems } from 'src/api'

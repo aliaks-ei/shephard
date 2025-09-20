@@ -17,7 +17,7 @@
       <q-card
         flat
         bordered
-        class="q-pa-lg"
+        class="q-pa-md"
       >
         <div class="q-mb-md">
           <div class="row q-gutter-md">
@@ -81,9 +81,12 @@
 
             <div class="row q-gutter-sm">
               <q-btn
+                v-if="templateItems.length > 0"
                 flat
                 :icon="allCategoriesExpanded ? 'eva-collapse-outline' : 'eva-expand-outline'"
-                :label="allCategoriesExpanded ? 'Collapse All' : 'Expand All'"
+                :label="
+                  $q.screen.lt.md ? '' : allCategoriesExpanded ? 'Collapse All' : 'Expand All'
+                "
                 color="primary"
                 no-caps
                 @click="toggleAllCategories"
@@ -91,7 +94,7 @@
               <q-btn
                 v-if="!$q.screen.lt.md"
                 icon="eva-plus-outline"
-                label="Add"
+                label="Add category"
                 color="primary"
                 no-caps
                 @click="openDialog('category')"
@@ -187,7 +190,7 @@
       v-else
       flat
       bordered
-      class="q-pa-lg"
+      class="q-pa-md"
     >
       <div class="q-mb-lg">
         <div class="text-h6 q-mb-md">
@@ -349,6 +352,7 @@ import ShareTemplateDialog from 'src/components/templates/ShareTemplateDialog.vu
 import DeleteDialog from 'src/components/shared/DeleteDialog.vue'
 import { useTemplatesStore } from 'src/stores/templates'
 import { useCategoriesStore } from 'src/stores/categories'
+import { useNotificationStore } from 'src/stores/notification'
 import { useTemplateItems } from 'src/composables/useTemplateItems'
 import { useError } from 'src/composables/useError'
 import { formatCurrency } from 'src/utils/currency'
@@ -361,6 +365,7 @@ import type { TemplateCategoryUI } from 'src/types'
 const router = useRouter()
 const templatesStore = useTemplatesStore()
 const categoriesStore = useCategoriesStore()
+const notificationsStore = useNotificationStore()
 const { handleError } = useError()
 
 const {
@@ -497,8 +502,8 @@ const actionBarActions = computed<ActionBarAction[]>(() => [
   {
     key: 'save',
     icon: 'eva-save-outline',
-    label: 'Save',
-    color: 'positive',
+    label: isNewTemplate.value ? 'Create' : 'Save',
+    color: isNewTemplate.value ? 'primary' : 'positive',
     priority: 'primary',
     loading: templatesStore.isLoading,
     handler: saveTemplate,
@@ -629,6 +634,9 @@ async function saveTemplate(): Promise<void> {
   }
 
   if (success) {
+    notificationsStore.showSuccess(
+      isNewTemplate.value ? 'Template created successfully' : 'Template updated successfully',
+    )
     goBack()
   }
 }

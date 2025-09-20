@@ -1,20 +1,20 @@
 <template>
-  <div class="row justify-center q-pa-md">
+  <div class="row justify-center q-pa-sm q-pa-md-md">
     <div class="col-12 col-md-10 col-lg-8 col-xl-6">
       <div class="q-mb-md">
         <div class="row items-center">
-          <div class="col-auto q-mr-lg">
+          <div class="col-auto q-mr-md">
             <UserAvatar
               :avatar-url="userStore.userProfile?.avatarUrl"
               :name-initial="userStore.userProfile?.nameInitial"
-              size="100px"
+              :size="$q.screen.lt.md ? '80px' : '100px'"
             />
           </div>
           <div class="col">
-            <div class="text-h4 q-mb-xs">
+            <div :class="$q.screen.lt.md ? 'text-h5' : 'text-h4'">
               {{ userStore.userProfile?.displayName }}
             </div>
-            <div class="text-subtitle1">{{ userStore.userProfile?.email }}</div>
+            <div class="text-subtitle1 text-grey-6">{{ userStore.userProfile?.email }}</div>
           </div>
         </div>
       </div>
@@ -29,7 +29,7 @@
           <q-separator class="q-mb-md separator" />
 
           <q-list>
-            <q-item class="q-pa-sm card-bg q-mb-sm">
+            <q-item class="q-pa-sm q-mb-sm">
               <q-item-section avatar>
                 <q-icon
                   name="eva-credit-card-outline"
@@ -80,13 +80,13 @@
       <q-card
         flat
         bordered
-        class="q-mb-xl"
+        class="q-mb-lg"
       >
         <q-card-section>
           <h5 class="text-h6 q-mt-none q-mb-md">Account Information</h5>
           <q-separator class="q-mb-md separator" />
 
-          <div class="row q-col-gutter-md q-col-gutter-y-xs">
+          <div class="row q-col-gutter-sm">
             <InfoItem
               icon="eva-email-outline"
               label="Email"
@@ -135,6 +135,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
 
 import UserAvatar from 'src/components/UserAvatar.vue'
@@ -143,6 +144,7 @@ import { useUserStore } from 'src/stores/user'
 
 const userStore = useUserStore()
 const router = useRouter()
+const $q = useQuasar()
 
 const isSigningOut = ref(false)
 

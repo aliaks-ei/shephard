@@ -38,12 +38,17 @@
       <q-separator class="q-mt-md" />
 
       <!-- Category Summary -->
-      <q-card-section class="bg-grey-1">
+      <q-card-section :class="$q.dark.isActive ? 'bg-black-2' : 'bg-grey-1'">
         <!-- Budget Overview -->
         <div class="row q-col-gutter-md q-mb-md">
           <div class="col-4">
             <div class="text-center">
-              <div class="text-caption text-grey-6">Budget</div>
+              <div
+                class="text-caption"
+                :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-6'"
+              >
+                Budget
+              </div>
               <div class="text-h6 text-weight-bold">
                 {{ formatCurrency(category?.plannedAmount || 0, currency) }}
               </div>
@@ -51,7 +56,12 @@
           </div>
           <div class="col-4">
             <div class="text-center">
-              <div class="text-caption text-grey-6">Spent</div>
+              <div
+                class="text-caption"
+                :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-6'"
+              >
+                Spent
+              </div>
               <div class="text-h6 text-weight-bold text-primary">
                 {{ formatCurrency(category?.actualAmount || 0, currency) }}
               </div>
@@ -59,7 +69,12 @@
           </div>
           <div class="col-4">
             <div class="text-center">
-              <div class="text-caption text-grey-6">Remaining</div>
+              <div
+                class="text-caption"
+                :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-6'"
+              >
+                Remaining
+              </div>
               <div
                 class="text-h6 text-weight-bold"
                 :class="remainingColorClass"
@@ -73,7 +88,12 @@
         <!-- Progress Bar -->
         <div class="q-mb-md">
           <div class="row items-center justify-between q-mb-xs">
-            <div class="text-caption text-grey-6">Progress</div>
+            <div
+              class="text-caption"
+              :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-6'"
+            >
+              Progress
+            </div>
             <div class="text-caption text-weight-medium">{{ Math.round(progressPercentage) }}%</div>
           </div>
           <q-linear-progress
@@ -172,12 +192,13 @@
         <!-- Empty State -->
         <div
           v-else
-          class="text-center text-grey-6 q-py-xl"
+          class="text-center q-py-xl"
+          :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-6'"
         >
           <q-icon
             name="eva-shopping-cart-outline"
             size="64px"
-            class="q-mb-md"
+            :class="$q.dark.isActive ? 'text-grey-5 q-mb-md' : 'q-mb-md'"
           />
           <div class="text-h6 q-mb-sm">No expenses yet</div>
           <div class="text-body2 q-mb-lg">Start tracking your expenses in this category</div>

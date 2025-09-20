@@ -19,7 +19,7 @@
         v-if="isNewPlan"
         flat
         bordered
-        class="q-pa-lg q-mb-lg"
+        class="q-pa-md q-mb-lg"
       >
         <div class="text-h6 q-mb-md">
           <q-icon
@@ -102,7 +102,7 @@
       <q-card
         flat
         bordered
-        class="q-pa-lg q-mb-lg"
+        class="q-pa-md q-mb-lg"
       >
         <div class="text-h6 q-mb-md">
           <q-icon
@@ -166,7 +166,7 @@
               outlined
               readonly
               :rules="[(val: string) => !!val || 'End date is required']"
-              hint="Calculated automatically based on template duration"
+              hint="Auto-calculated from template"
             />
           </div>
         </div>
@@ -183,7 +183,7 @@
       <q-card
         flat
         bordered
-        class="q-pa-lg q-mb-lg"
+        class="q-pa-md q-mb-lg"
       >
         <div class="row items-center justify-between q-mb-lg">
           <div class="text-h6">
@@ -194,9 +194,10 @@
             Plan Items
           </div>
           <q-btn
+            v-if="planCategoryGroups.length > 0"
             flat
             :icon="allCategoriesExpanded ? 'eva-collapse-outline' : 'eva-expand-outline'"
-            :label="allCategoriesExpanded ? 'Collapse All' : 'Expand All'"
+            :label="$q.screen.lt.md ? '' : allCategoriesExpanded ? 'Collapse All' : 'Expand All'"
             color="primary"
             no-caps
             @click="toggleAllCategories"
@@ -204,9 +205,15 @@
         </div>
 
         <div v-if="planCategoryGroups.length === 0">
-          <q-banner class="bg-grey-1 text-grey-7">
+          <q-banner
+            dense
+            :class="$q.dark.isActive ? 'bg-grey-9 text-grey-3' : 'bg-grey-1 text-grey-7'"
+          >
             <template #avatar>
-              <q-icon name="eva-info-outline" />
+              <q-icon
+                name="eva-info-outline"
+                :size="$q.screen.lt.md ? 'sm' : 'md'"
+              />
             </template>
             {{ isNewPlan ? 'Select a template to load plan items' : 'No items in this plan' }}
           </q-banner>
@@ -261,7 +268,7 @@
           v-if="hasDuplicateItems && planItems.length > 0"
           class="q-mt-md"
         >
-          <q-banner class="bg-red-1 text-red-8">
+          <q-banner :class="$q.dark.isActive ? 'bg-red-9 text-red-3' : 'bg-red-1 text-red-8'">
             <template #avatar>
               <q-icon name="eva-alert-triangle-outline" />
             </template>
@@ -308,7 +315,7 @@
       >
         <!-- Overview Tab -->
         <q-tab-panel
-          class="q-pa-sm"
+          class="q-pa-none q-pa-md-sm"
           name="overview"
         >
           <PlanOverviewTab
@@ -325,7 +332,7 @@
         <!-- Edit Tab -->
         <q-tab-panel
           v-if="isEditMode"
-          class="q-pa-sm"
+          class="q-pa-none q-pa-md-sm"
           name="edit"
         >
           <q-form
@@ -397,7 +404,7 @@
                       outlined
                       readonly
                       :rules="[(val: string) => !!val || 'End date is required']"
-                      hint="Calculated automatically based on template duration"
+                      hint="Auto-calculated from template"
                     />
                   </div>
                 </div>
@@ -418,7 +425,9 @@
                   <q-btn
                     flat
                     :icon="allCategoriesExpanded ? 'eva-collapse-outline' : 'eva-expand-outline'"
-                    :label="allCategoriesExpanded ? 'Collapse All' : 'Expand All'"
+                    :label="
+                      $q.screen.lt.md ? '' : allCategoriesExpanded ? 'Collapse All' : 'Expand All'
+                    "
                     color="primary"
                     no-caps
                     @click="toggleAllCategories"
@@ -426,7 +435,9 @@
                 </div>
 
                 <div v-if="planCategoryGroups.length === 0">
-                  <q-banner class="bg-grey-1 text-grey-7">
+                  <q-banner
+                    :class="$q.dark.isActive ? 'bg-grey-9 text-grey-3' : 'bg-grey-1 text-grey-7'"
+                  >
                     <template #avatar>
                       <q-icon name="eva-info-outline" />
                     </template>
@@ -486,7 +497,9 @@
                   v-if="hasDuplicateItems && planItems.length > 0"
                   class="q-mt-md"
                 >
-                  <q-banner class="bg-red-1 text-red-8">
+                  <q-banner
+                    :class="$q.dark.isActive ? 'bg-red-9 text-red-3' : 'bg-red-1 text-red-8'"
+                  >
                     <template #avatar>
                       <q-icon name="eva-alert-triangle-outline" />
                     </template>
@@ -552,6 +565,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useQuasar } from 'quasar'
 import type { QForm } from 'quasar'
 
 import DetailPageLayout from 'src/layouts/DetailPageLayout.vue'
@@ -580,6 +594,7 @@ const plansStore = usePlansStore()
 const categoriesStore = useCategoriesStore()
 const notificationsStore = useNotificationStore()
 const templatesStore = useTemplatesStore()
+const $q = useQuasar()
 
 // Plan composables
 const {
@@ -721,8 +736,8 @@ const editActions = computed<ActionBarAction[]>(() => [
   {
     key: 'save',
     icon: 'eva-save-outline',
-    label: 'Save',
-    color: 'positive',
+    label: isNewPlan.value ? 'Create' : 'Save',
+    color: isNewPlan.value ? 'primary' : 'positive',
     priority: 'primary',
     handler: handleSavePlan,
   },

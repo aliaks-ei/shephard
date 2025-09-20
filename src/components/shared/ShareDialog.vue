@@ -3,7 +3,6 @@
     :model-value="modelValue"
     transition-show="scale"
     transition-hide="scale"
-    persistent
     :maximized="$q.screen.xs"
     :full-width="$q.screen.xs"
     :full-height="$q.screen.xs"

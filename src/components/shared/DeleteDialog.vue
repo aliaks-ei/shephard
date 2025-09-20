@@ -1,7 +1,6 @@
 <template>
   <q-dialog
     :model-value="modelValue"
-    persistent
     @update:model-value="emit('update:modelValue', $event)"
   >
     <q-card>
