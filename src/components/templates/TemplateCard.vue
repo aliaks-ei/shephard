@@ -1,8 +1,9 @@
 <template>
   <q-card
     class="full-height"
-    flat
-    bordered
+    :flat="readonly"
+    :bordered="readonly"
+    :class="readonly ? '' : 'shadow-1'"
   >
     <q-item
       class="full-height q-pa-md"
@@ -43,7 +44,6 @@
               flat
               round
               size="sm"
-              dense
               icon="eva-more-vertical-outline"
               class="text-grey-7"
               @click.stop

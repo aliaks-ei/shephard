@@ -30,11 +30,7 @@
         :key="category.id"
         class="col-12 col-sm-6 col-md-4 col-lg-3"
       >
-        <q-card
-          flat
-          bordered
-          class="full-height"
-        >
+        <q-card class="full-height shadow-1 overflow-hidden">
           <q-item
             clickable
             class="q-pa-md full-height"
@@ -93,10 +89,11 @@
                 {{ category.templates.length === 1 ? 'template' : 'templates' }}
               </div>
             </q-item-section>
+            <div
+              class="absolute-bottom"
+              :style="{ backgroundColor: category.color, height: '4px' }"
+            ></div>
           </q-item>
-
-          <!-- Color strip at bottom -->
-          <div :style="{ backgroundColor: category.color, height: '4px' }"></div>
         </q-card>
       </div>
     </div>
@@ -119,6 +116,7 @@
           color="primary"
           label="Clear Search"
           unelevated
+          no-caps
           @click="searchQuery = ''"
         />
       </q-card-section>

@@ -24,7 +24,7 @@ export const useNotificationStore = defineStore('notification', () => {
     positive: {
       type: 'positive',
       icon: 'eva-checkmark-circle-outline',
-      timeout: 3000,
+      timeout: 300000,
     },
     negative: {
       type: 'negative',

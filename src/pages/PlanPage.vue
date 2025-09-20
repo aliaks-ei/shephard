@@ -90,13 +90,10 @@
           v-if="selectedTemplate"
           class="q-mt-lg"
         >
-          <div class="text-body2 text-grey-6 q-mb-sm">Selected Template:</div>
+          <div class="text-subtitle2 q-mb-sm">Selected Template:</div>
           <TemplateCard
             :template="selectedTemplate"
             readonly
-            @edit="() => {}"
-            @share="() => {}"
-            @delete="() => {}"
           />
         </div>
       </q-card>
@@ -153,6 +150,7 @@
                           label="Close"
                           color="primary"
                           flat
+                          no-caps
                         />
                       </div>
                     </q-date>
@@ -200,6 +198,7 @@
             :icon="allCategoriesExpanded ? 'eva-collapse-outline' : 'eva-expand-outline'"
             :label="allCategoriesExpanded ? 'Collapse All' : 'Expand All'"
             color="primary"
+            no-caps
             @click="toggleAllCategories"
           />
         </div>
@@ -213,7 +212,10 @@
           </q-banner>
         </div>
 
-        <div v-else>
+        <div
+          class="q-mb-lg"
+          v-else
+        >
           <PlanCategory
             v-for="group in planCategoryGroups"
             :key="group.categoryId"
@@ -305,7 +307,10 @@
         class="q-mt-md"
       >
         <!-- Overview Tab -->
-        <q-tab-panel name="overview">
+        <q-tab-panel
+          class="q-pa-sm"
+          name="overview"
+        >
           <PlanOverviewTab
             :plan="currentPlan"
             :is-owner="isOwner"
@@ -320,6 +325,7 @@
         <!-- Edit Tab -->
         <q-tab-panel
           v-if="isEditMode"
+          class="q-pa-sm"
           name="edit"
         >
           <q-form
@@ -327,168 +333,170 @@
             @submit="handleSavePlan"
           >
             <!-- Plan Information for editing existing plan -->
-            <q-card
-              flat
-              bordered
-              class="q-pa-lg q-mb-lg"
-            >
-              <div class="text-h6 q-mb-md">
-                <q-icon
-                  name="eva-info-outline"
-                  class="q-mr-sm"
-                />
-                Plan Information
-              </div>
-
-              <q-input
-                v-model="form.name"
-                label="Plan Name"
-                outlined
-                :rules="[(val: string) => !!val || 'Plan name is required']"
-                class="q-mb-md"
-              />
-
-              <div class="row q-col-gutter-md">
-                <div class="col-12 col-sm-6">
-                  <q-input
-                    v-model="form.startDate"
-                    label="Start Date"
-                    outlined
-                    :rules="startDateRules"
-                    @update:model-value="updateEndDate"
-                  >
-                    <template #append>
-                      <q-icon
-                        name="eva-calendar-outline"
-                        class="cursor-pointer"
-                      >
-                        <q-popup-proxy
-                          cover
-                          transition-show="scale"
-                          transition-hide="scale"
-                        >
-                          <q-date
-                            v-model="form.startDate"
-                            mask="YYYY-MM-DD"
-                            @update:model-value="onStartDateChange"
-                          >
-                            <div class="row items-center justify-end">
-                              <q-btn
-                                v-close-popup
-                                label="Close"
-                                color="primary"
-                                flat
-                              />
-                            </div>
-                          </q-date>
-                        </q-popup-proxy>
-                      </q-icon>
-                    </template>
-                  </q-input>
-                </div>
-                <div class="col-12 col-sm-6">
-                  <q-input
-                    v-model="form.endDate"
-                    label="End Date"
-                    outlined
-                    readonly
-                    :rules="[(val: string) => !!val || 'End date is required']"
-                    hint="Calculated automatically based on template duration"
+            <q-card flat>
+              <q-card-section>
+                <div class="text-h6 q-mb-md">
+                  <q-icon
+                    name="eva-info-outline"
+                    class="q-mr-sm"
                   />
+                  Plan Information
                 </div>
-              </div>
+
+                <q-input
+                  v-model="form.name"
+                  label="Plan Name"
+                  outlined
+                  :rules="[(val: string) => !!val || 'Plan name is required']"
+                  class="q-mb-md"
+                />
+
+                <div class="row q-col-gutter-md">
+                  <div class="col-12 col-sm-6">
+                    <q-input
+                      v-model="form.startDate"
+                      label="Start Date"
+                      outlined
+                      :rules="startDateRules"
+                      @update:model-value="updateEndDate"
+                    >
+                      <template #append>
+                        <q-icon
+                          name="eva-calendar-outline"
+                          class="cursor-pointer"
+                        >
+                          <q-popup-proxy
+                            cover
+                            transition-show="scale"
+                            transition-hide="scale"
+                          >
+                            <q-date
+                              v-model="form.startDate"
+                              mask="YYYY-MM-DD"
+                              @update:model-value="onStartDateChange"
+                            >
+                              <div class="row items-center justify-end">
+                                <q-btn
+                                  v-close-popup
+                                  label="Close"
+                                  color="primary"
+                                  flat
+                                  no-caps
+                                />
+                              </div>
+                            </q-date>
+                          </q-popup-proxy>
+                        </q-icon>
+                      </template>
+                    </q-input>
+                  </div>
+                  <div class="col-12 col-sm-6">
+                    <q-input
+                      v-model="form.endDate"
+                      label="End Date"
+                      outlined
+                      readonly
+                      :rules="[(val: string) => !!val || 'End date is required']"
+                      hint="Calculated automatically based on template duration"
+                    />
+                  </div>
+                </div>
+              </q-card-section>
             </q-card>
 
             <!-- Plan Items for editing existing plan -->
-            <q-card
-              flat
-              bordered
-              class="q-pa-lg"
-            >
-              <div class="row items-center justify-between q-mb-lg">
-                <div class="text-h6">
-                  <q-icon
-                    name="eva-list-outline"
-                    class="q-mr-sm"
-                  />
-                  Plan Items
-                </div>
-                <q-btn
-                  flat
-                  :icon="allCategoriesExpanded ? 'eva-collapse-outline' : 'eva-expand-outline'"
-                  :label="allCategoriesExpanded ? 'Collapse All' : 'Expand All'"
-                  color="primary"
-                  @click="toggleAllCategories"
-                />
-              </div>
-
-              <div v-if="planCategoryGroups.length === 0">
-                <q-banner class="bg-grey-1 text-grey-7">
-                  <template #avatar>
-                    <q-icon name="eva-info-outline" />
-                  </template>
-                  No items in this plan
-                </q-banner>
-              </div>
-
-              <div v-else>
-                <PlanCategory
-                  v-for="group in planCategoryGroups"
-                  :key="group.categoryId"
-                  :category-id="group.categoryId"
-                  :category-name="getCategoryName(group.categoryId)"
-                  :category-color="group.categoryColor"
-                  :category-icon="getCategoryIcon(group.categoryId)"
-                  :items="group.items"
-                  :currency="planCurrency"
-                  :default-expanded="allCategoriesExpanded"
-                  @update-item="handleUpdateItem"
-                  @remove-item="handleRemoveItem"
-                  @add-item="handleAddItem"
-                />
-              </div>
-
-              <div v-if="planCategoryGroups.length > 0">
-                <q-separator class="q-mb-lg" />
-                <div class="row items-center justify-between">
-                  <div
-                    class="text-h6"
-                    style="display: flex; align-items: center"
-                  >
+            <q-card flat>
+              <q-card-section>
+                <div class="row items-center justify-between q-mb-lg">
+                  <div class="text-h6">
                     <q-icon
-                      name="eva-credit-card-outline"
+                      name="eva-list-outline"
                       class="q-mr-sm"
                     />
-                    Total Amount
+                    Plan Items
                   </div>
-                  <div
-                    :class="[
-                      'text-primary text-weight-bold',
-                      $q.screen.lt.md ? 'text-h5' : 'text-h4',
-                    ]"
-                  >
-                    {{ formattedTotalAmount }}
-                  </div>
+                  <q-btn
+                    flat
+                    :icon="allCategoriesExpanded ? 'eva-collapse-outline' : 'eva-expand-outline'"
+                    :label="allCategoriesExpanded ? 'Collapse All' : 'Expand All'"
+                    color="primary"
+                    no-caps
+                    @click="toggleAllCategories"
+                  />
                 </div>
-                <div class="text-body2 text-grey-6">
-                  Total across {{ planCategoryGroups.length }}
-                  {{ planCategoryGroups.length === 1 ? 'category' : 'categories' }}
-                </div>
-              </div>
 
-              <div
-                v-if="hasDuplicateItems && planItems.length > 0"
-                class="q-mt-md"
-              >
-                <q-banner class="bg-red-1 text-red-8">
-                  <template #avatar>
-                    <q-icon name="eva-alert-triangle-outline" />
-                  </template>
-                  <div>
-                    You have duplicate item names within the same category. Please use unique names.
+                <div v-if="planCategoryGroups.length === 0">
+                  <q-banner class="bg-grey-1 text-grey-7">
+                    <template #avatar>
+                      <q-icon name="eva-info-outline" />
+                    </template>
+                    No items in this plan
+                  </q-banner>
+                </div>
+
+                <div
+                  class="q-mb-lg"
+                  v-else
+                >
+                  <PlanCategory
+                    v-for="group in planCategoryGroups"
+                    :key="group.categoryId"
+                    :category-id="group.categoryId"
+                    :category-name="getCategoryName(group.categoryId)"
+                    :category-color="group.categoryColor"
+                    :category-icon="getCategoryIcon(group.categoryId)"
+                    :items="group.items"
+                    :currency="planCurrency"
+                    :default-expanded="allCategoriesExpanded"
+                    @update-item="handleUpdateItem"
+                    @remove-item="handleRemoveItem"
+                    @add-item="handleAddItem"
+                  />
+                </div>
+
+                <div v-if="planCategoryGroups.length > 0">
+                  <q-separator class="q-mb-lg" />
+                  <div class="row items-center justify-between">
+                    <div
+                      class="text-h6"
+                      style="display: flex; align-items: center"
+                    >
+                      <q-icon
+                        name="eva-credit-card-outline"
+                        class="q-mr-sm"
+                      />
+                      Total Amount
+                    </div>
+                    <div
+                      :class="[
+                        'text-primary text-weight-bold',
+                        $q.screen.lt.md ? 'text-h5' : 'text-h4',
+                      ]"
+                    >
+                      {{ formattedTotalAmount }}
+                    </div>
                   </div>
-                </q-banner>
-              </div>
+                  <div class="text-body2 text-grey-6">
+                    Total across {{ planCategoryGroups.length }}
+                    {{ planCategoryGroups.length === 1 ? 'category' : 'categories' }}
+                  </div>
+                </div>
+
+                <div
+                  v-if="hasDuplicateItems && planItems.length > 0"
+                  class="q-mt-md"
+                >
+                  <q-banner class="bg-red-1 text-red-8">
+                    <template #avatar>
+                      <q-icon name="eva-alert-triangle-outline" />
+                    </template>
+                    <div>
+                      You have duplicate item names within the same category. Please use unique
+                      names.
+                    </div>
+                  </q-banner>
+                </div>
+              </q-card-section>
             </q-card>
           </q-form>
         </q-tab-panel>
@@ -496,86 +504,6 @@
     </div>
 
     <!-- Legacy read-only view (for backward compatibility) -->
-    <div v-else>
-      <q-card
-        flat
-        bordered
-        class="q-pa-lg q-mb-lg"
-      >
-        <div class="text-h6 q-mb-md">
-          <q-icon
-            name="eva-info-outline"
-            class="q-mr-sm"
-          />
-          Plan Information
-        </div>
-
-        <div class="row q-col-gutter-md">
-          <div class="col-12 col-sm-6">
-            <div class="text-caption text-grey-6">Plan Name</div>
-            <div class="text-body1">{{ form.name }}</div>
-          </div>
-          <div class="col-12 col-sm-6">
-            <div class="text-caption text-grey-6">Status</div>
-            <q-chip
-              v-if="currentPlan"
-              :color="getStatusColor(currentPlan)"
-              :icon="getStatusIcon(currentPlan)"
-              text-color="white"
-              class="q-mt-xs"
-            >
-              {{ getStatusText(currentPlan) }}
-            </q-chip>
-          </div>
-          <div class="col-12 col-sm-6">
-            <div class="text-caption text-grey-6">Date Range</div>
-            <div class="text-body1">{{ formatDateRange(form.startDate, form.endDate) }}</div>
-          </div>
-          <div class="col-12 col-sm-6">
-            <div class="text-caption text-grey-6">Total Amount</div>
-            <div class="text-body1 text-primary text-weight-bold">
-              {{ formattedTotalAmount }}
-            </div>
-          </div>
-        </div>
-      </q-card>
-
-      <!-- Read-only items -->
-      <q-card
-        flat
-        bordered
-        class="q-pa-lg"
-      >
-        <div class="text-h6 q-mb-lg">
-          <q-icon
-            name="eva-list-outline"
-            class="q-mr-sm"
-          />
-          Plan Items
-        </div>
-
-        <div
-          v-if="planCategoryGroups.length === 0"
-          class="text-center text-grey-6 q-py-lg"
-        >
-          No items in this plan
-        </div>
-
-        <div v-else>
-          <PlanCategory
-            v-for="group in planCategoryGroups"
-            :key="group.categoryId"
-            :category-id="group.categoryId"
-            :category-name="getCategoryName(group.categoryId)"
-            :category-color="group.categoryColor"
-            :category-icon="getCategoryIcon(group.categoryId)"
-            :items="group.items"
-            :currency="planCurrency"
-            readonly
-          />
-        </div>
-      </q-card>
-    </div>
 
     <!-- Dialogs Slot -->
     <template #dialogs>
@@ -643,14 +571,7 @@ import { usePlanItems } from 'src/composables/usePlanItems'
 import { useDetailPageState } from 'src/composables/useDetailPageState'
 import { useEditablePage } from 'src/composables/useEditablePage'
 import { formatCurrency } from 'src/utils/currency'
-import {
-  calculateEndDate,
-  getPlanStatus,
-  getStatusText,
-  getStatusColor,
-  getStatusIcon,
-  formatDateRange,
-} from 'src/utils/plans'
+import { calculateEndDate, getPlanStatus } from 'src/utils/plans'
 import type { TemplateWithItems } from 'src/api'
 import type { PlanItemUI } from 'src/types'
 
@@ -735,7 +656,6 @@ const banners = computed(() => {
 
 const { openDialog, closeDialog, getDialogState } = useEditablePage()
 
-// Local state
 const planForm = ref()
 const planEditForm = ref()
 const selectedTemplate = ref<TemplateWithItems | null>(null)
@@ -744,7 +664,6 @@ const allCategoriesExpanded = ref(false)
 const showCancelDialog = ref(false)
 const showDeleteDialog = ref(false)
 const selectedCategory = ref<{ categoryId: string } | null>(null)
-// Remove local activeTab state - now using router-based currentTab from usePlan
 const showExpenseDialog = ref(false)
 
 const form = ref({
@@ -753,11 +672,9 @@ const form = ref({
   endDate: '',
 })
 
-// Error states for validation
 const templateError = ref(false)
 const templateErrorMessage = ref('')
 
-// Computed properties
 const currentPlanStatus = computed(() => {
   if (!currentPlan.value) return ''
   return getPlanStatus(currentPlan.value)
@@ -795,13 +712,11 @@ const startDateRules = computed(() => [
   },
 ])
 
-// Dialog states
 const isShareDialogOpen = computed({
   get: () => getDialogState('share'),
   set: (value: boolean) => (value ? openDialog('share') : closeDialog('share')),
 })
 
-// Action Bar Actions for edit mode and new plans
 const editActions = computed<ActionBarAction[]>(() => [
   {
     key: 'save',
@@ -854,7 +769,6 @@ const editActions = computed<ActionBarAction[]>(() => [
   },
 ])
 
-// Action Bar Actions for overview tab
 const overviewActions = computed<ActionBarAction[]>(() => [
   {
     key: 'add-expense',
@@ -901,7 +815,10 @@ const actionBarActions = computed<ActionBarAction[]>(() => {
 // Actions visibility based on context
 const actionsVisible = computed(() => {
   return (
-    (isEditMode.value && (isNewPlan.value || canEditPlanData.value)) ||
+    (isEditMode.value &&
+      (isNewPlan.value ||
+        canEditPlanData.value ||
+        (!isOwner.value && currentTab.value === 'edit'))) ||
     (!isNewPlan.value && currentTab.value === 'overview')
   )
 })

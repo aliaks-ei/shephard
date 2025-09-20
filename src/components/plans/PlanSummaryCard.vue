@@ -1,9 +1,5 @@
 <template>
-  <q-card
-    flat
-    bordered
-    class="q-mb-lg"
-  >
+  <q-card flat>
     <q-card-section>
       <div class="row items-center justify-between q-mb-md">
         <div>

@@ -96,6 +96,7 @@
         <q-btn
           flat
           label="Cancel"
+          no-caps
           @click="$emit('update:modelValue', false)"
         />
       </q-card-actions>

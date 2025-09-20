@@ -85,12 +85,15 @@
                 :icon="allCategoriesExpanded ? 'eva-collapse-outline' : 'eva-expand-outline'"
                 :label="allCategoriesExpanded ? 'Collapse All' : 'Expand All'"
                 color="primary"
+                no-caps
                 @click="toggleAllCategories"
               />
               <q-btn
+                v-if="!$q.screen.lt.md"
                 icon="eva-plus-outline"
                 label="Add"
                 color="primary"
+                no-caps
                 @click="openDialog('category')"
               />
             </div>
@@ -146,6 +149,7 @@
               icon="eva-plus-outline"
               label="Add Your First Category"
               unelevated
+              no-caps
               @click="openDialog('category')"
             />
           </div>
@@ -481,6 +485,15 @@ const isShareDialogOpen = computed({
 
 // Action Bar Actions
 const actionBarActions = computed<ActionBarAction[]>(() => [
+  {
+    key: 'add-category',
+    icon: 'eva-plus-outline',
+    label: 'Category',
+    color: 'primary',
+    priority: 'primary',
+    visible: isEditMode.value,
+    handler: () => openDialog('category'),
+  },
   {
     key: 'save',
     icon: 'eva-save-outline',

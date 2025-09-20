@@ -5,26 +5,29 @@
       :key="n"
       class="col-12 col-sm-6 col-lg-4 col-xl-3"
     >
-      <q-card
-        flat
-        bordered
-      >
+      <q-card class="shadow-1">
         <q-card-section>
           <q-skeleton
             type="text"
             width="60%"
             height="24px"
-            class="q-mb-sm"
+            class="q-mb-lg"
           />
           <q-skeleton
             type="text"
-            width="40%"
+            width="30%"
             height="16px"
-            class="q-mb-md"
+            class="q-mb-xs"
           />
           <q-skeleton
             type="text"
             width="80%"
+            height="48px"
+            class="q-mb-xs"
+          />
+          <q-skeleton
+            type="text"
+            width="60%"
             height="16px"
           />
         </q-card-section>

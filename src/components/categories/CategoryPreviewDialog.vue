@@ -140,6 +140,7 @@
         <q-btn
           label="Close"
           flat
+          no-caps
           @click="closeDialog"
         />
       </q-card-actions>

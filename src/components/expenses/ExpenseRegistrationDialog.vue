@@ -50,6 +50,7 @@
             :rules="[(val: string) => !!val || 'Plan is required']"
             @update:model-value="onPlanSelected"
             :class="didAutoSelectPlan && selectedPlan ? 'q-mb-none' : 'q-mb-md'"
+            :display-value="planDisplayValue"
           >
             <template #option="scope">
               <q-item v-bind="scope.itemProps">
@@ -209,6 +210,7 @@
                         label="Close"
                         color="primary"
                         flat
+                        no-caps
                       />
                     </div>
                   </q-date>
@@ -236,6 +238,7 @@
           <q-btn
             label="Cancel"
             flat
+            no-caps
             @click="closeDialog"
             :disable="isLoading"
           />
@@ -244,6 +247,7 @@
             type="submit"
             color="primary"
             unelevated
+            no-caps
             :loading="isLoading"
           />
         </q-card-actions>
@@ -329,6 +333,13 @@ const planOptions = computed(() => {
 const selectedPlan = computed(() => {
   if (!form.value.planId) return null
   return plansStore.plans.find((p) => p.id === form.value.planId) || null
+})
+
+const planDisplayValue = computed(() => {
+  const id = form.value.planId
+  if (!id) return ''
+  const plan = plansStore.plans.find((p) => p.id === id)
+  return plan?.name || ''
 })
 
 const categoryOptions = computed(() => {

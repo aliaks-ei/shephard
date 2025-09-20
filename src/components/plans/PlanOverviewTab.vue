@@ -9,77 +9,76 @@
     />
 
     <!-- Category Budget Cards Grid -->
-    <div class="q-mb-lg">
-      <div class="text-h6 q-mb-md">
-        <q-icon
-          name="eva-pie-chart-outline"
-          class="q-mr-sm"
-        />
-        Budget by Category
-      </div>
-
-      <div
-        v-if="isLoadingExpenses"
-        class="row q-col-gutter-md"
-      >
-        <div
-          v-for="i in 4"
-          :key="i"
-          class="col-12 col-sm-6 col-md-4"
-        >
-          <q-card
-            flat
-            bordered
-          >
-            <q-card-section>
-              <q-skeleton
-                type="text"
-                width="60%"
-                class="q-mb-sm"
-              />
-              <q-skeleton
-                type="QAvatar"
-                size="100px"
-                class="q-mx-auto q-my-md"
-              />
-              <q-skeleton
-                type="rect"
-                height="20px"
-              />
-            </q-card-section>
-          </q-card>
-        </div>
-      </div>
-
-      <div
-        v-else-if="categoryBudgets.length === 0"
-        class="text-center text-grey-6 q-py-lg"
-      >
-        <q-icon
-          name="eva-folder-outline"
-          size="48px"
-          class="q-mb-md"
-        />
-        <div>No categories in this plan yet</div>
-      </div>
-
-      <div
-        v-else
-        class="row q-col-gutter-md"
-      >
-        <div
-          v-for="category in categoryBudgets"
-          :key="category.categoryId"
-          class="col-12 col-sm-6 col-md-4"
-        >
-          <CategoryBudgetCard
-            :category="category"
-            :currency="planCurrency"
-            @click="openCategoryModal(category)"
+    <q-card flat>
+      <q-card-section>
+        <div class="text-h6 q-mb-md">
+          <q-icon
+            name="eva-pie-chart-outline"
+            class="q-mr-sm"
           />
+          Budget by Category
         </div>
-      </div>
-    </div>
+
+        <div
+          v-if="isLoadingExpenses"
+          class="row q-col-gutter-md"
+        >
+          <div
+            v-for="i in 4"
+            :key="i"
+            class="col-12 col-sm-6 col-md-4"
+          >
+            <q-card class="shadow-1">
+              <q-card-section>
+                <q-skeleton
+                  type="text"
+                  width="60%"
+                  class="q-mb-sm"
+                />
+                <q-skeleton
+                  type="QAvatar"
+                  size="100px"
+                  class="q-mx-auto q-my-md"
+                />
+                <q-skeleton
+                  type="rect"
+                  height="20px"
+                />
+              </q-card-section>
+            </q-card>
+          </div>
+        </div>
+
+        <div
+          v-else-if="categoryBudgets.length === 0"
+          class="text-center text-grey-6 q-py-lg"
+        >
+          <q-icon
+            name="eva-folder-outline"
+            size="48px"
+            class="q-mb-md"
+          />
+          <div>No categories in this plan yet</div>
+        </div>
+
+        <div
+          v-else
+          class="row q-col-gutter-md"
+        >
+          <div
+            v-for="category in categoryBudgets"
+            :key="category.categoryId"
+            class="col-12 col-sm-6 col-md-4"
+          >
+            <CategoryBudgetCard
+              :category="category"
+              :currency="planCurrency"
+              @click="openCategoryModal(category)"
+            />
+          </div>
+        </div>
+      </q-card-section>
+    </q-card>
 
     <!-- Recent Expenses Section -->
     <RecentExpensesList
@@ -104,7 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import PlanSummaryCard from './PlanSummaryCard.vue'
 import CategoryBudgetCard from './CategoryBudgetCard.vue'
 import RecentExpensesList from './RecentExpensesList.vue'
@@ -152,11 +151,12 @@ const planCurrency = computed((): CurrencyCode => {
 
 const planId = computed(() => props.plan?.id || '')
 
-// Use the plan overview composable
 const { categoryBudgets, recentExpenses, totalBudget, totalSpent, loadOverviewData } =
-  usePlanOverview(planId.value, props.plan)
+  usePlanOverview(
+    planId,
+    computed(() => props.plan),
+  )
 
-// Category expenses for modal
 const categoryExpenses = computed(() => {
   if (!selectedCategory.value) return []
   return expensesStore.sortedExpenses.filter(
@@ -164,7 +164,6 @@ const categoryExpenses = computed(() => {
   )
 })
 
-// Methods
 function openCategoryModal(category: CategoryBudget) {
   selectedCategory.value = category
   showCategoryModal.value = true
@@ -175,12 +174,10 @@ function emitOpenExpenseDialog() {
   emit('open-expense-dialog', selectedCategory.value?.categoryId)
 }
 
-// Refresh selected category data when category budgets change
 watch(
   categoryBudgets,
   (newBudgets) => {
     if (selectedCategory.value) {
-      // Find updated category data
       const updatedCategory = newBudgets.find(
         (budget) => budget.categoryId === selectedCategory.value?.categoryId,
       )
@@ -191,18 +188,6 @@ watch(
   },
   { deep: true },
 )
-
-// Load data when component mounts or plan changes
-onMounted(async () => {
-  if (props.plan) {
-    isLoadingExpenses.value = true
-    try {
-      await loadOverviewData()
-    } finally {
-      isLoadingExpenses.value = false
-    }
-  }
-})
 
 watch(
   () => props.plan?.id,
@@ -216,5 +201,6 @@ watch(
       }
     }
   },
+  { immediate: true },
 )
 </script>

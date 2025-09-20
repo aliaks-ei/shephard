@@ -24,12 +24,14 @@
           flat
           :label="cancelLabel"
           :disabled="isDeleting"
+          no-caps
           @click="emit('update:modelValue', false)"
         />
         <q-btn
           color="negative"
           :label="confirmLabel"
           :loading="isDeleting"
+          no-caps
           @click="emit('confirm')"
         />
       </q-card-actions>

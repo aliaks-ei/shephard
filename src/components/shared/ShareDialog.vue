@@ -163,12 +163,14 @@
         <q-btn
           label="Cancel"
           flat
+          no-caps
           @click="closeDialog"
         />
         <q-btn
           label="Share"
           color="primary"
           unelevated
+          no-caps
           :loading="isLoading || isSharing"
           :disable="selectedUsers.length === 0"
           @click="handleShare"

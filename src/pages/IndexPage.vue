@@ -29,7 +29,7 @@
         <div class="col-12 col-md-8 col-lg-6">
           <div class="row q-col-gutter-md">
             <div class="col-12 col-sm-6">
-              <q-card>
+              <q-card class="shadow-1">
                 <q-item
                   clickable
                   @click="openExpenseDialog"
@@ -48,7 +48,7 @@
               </q-card>
             </div>
             <div class="col-12 col-sm-6">
-              <q-card>
+              <q-card class="shadow-1">
                 <q-item
                   clickable
                   to="/plans"
@@ -70,7 +70,7 @@
 
           <div class="row q-col-gutter-md q-mt-xs">
             <div class="col-12 col-sm-4">
-              <q-card class="full-height">
+              <q-card class="full-height shadow-1">
                 <q-item
                   clickable
                   to="/templates"
@@ -89,7 +89,7 @@
               </q-card>
             </div>
             <div class="col-12 col-sm-4">
-              <q-card class="full-height">
+              <q-card class="full-height shadow-1">
                 <q-item
                   clickable
                   to="/categories"
@@ -108,7 +108,7 @@
               </q-card>
             </div>
             <div class="col-12 col-sm-4">
-              <q-card class="full-height">
+              <q-card class="full-height shadow-1">
                 <q-item
                   clickable
                   to="/settings"
@@ -141,11 +141,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useNotificationStore } from 'src/stores/notification'
 import { usePlansStore } from 'src/stores/plans'
 import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 
-const notificationStore = useNotificationStore()
 const plansStore = usePlansStore()
 
 const showExpenseDialog = ref(false)
@@ -159,7 +157,6 @@ function openExpenseDialog() {
 }
 
 function onExpenseCreated() {
-  notificationStore.showSuccess('Expense registered successfully!')
   showExpenseDialog.value = false
 }
 </script>

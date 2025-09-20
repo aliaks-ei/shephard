@@ -92,6 +92,7 @@
             label="Add Expense"
             icon="eva-plus-outline"
             unelevated
+            no-caps
             class="full-width"
             @click="openExpenseDialog"
           />
@@ -186,6 +187,7 @@
             label="Add First Expense"
             icon="eva-plus-outline"
             unelevated
+            no-caps
             @click="openExpenseDialog"
           />
         </div>

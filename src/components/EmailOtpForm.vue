@@ -34,6 +34,7 @@
       color="primary"
       class="full-width"
       :loading="isLoading"
+      no-caps
     />
   </q-form>
 </template>
