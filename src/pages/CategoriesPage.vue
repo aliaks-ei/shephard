@@ -23,7 +23,8 @@
     <!-- Categories Grid -->
     <div
       v-else-if="filteredCategories.length > 0"
-      class="row q-col-gutter-md"
+      class="row"
+      :class="$q.screen.lt.md ? 'q-col-gutter-sm' : 'q-col-gutter-md'"
     >
       <div
         v-for="category in filteredCategories"

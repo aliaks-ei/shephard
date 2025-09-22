@@ -6,6 +6,7 @@
     :is-loading="isPlanLoading"
     :actions="actionBarActions"
     :actions-visible="actionsVisible"
+    :show-read-only-badge="isReadOnlyMode"
     @back="goBack"
   >
     <!-- For new plans, show the creation form directly without tabs -->
@@ -662,7 +663,7 @@ const banners = computed(() => {
       type: 'readonly',
       class: 'bg-orange-1 text-orange-8',
       icon: 'eva-eye-outline',
-      message: `You're viewing this ${pageConfig.entityName.toLowerCase()} in read-only mode. Contact the owner for edit access.`,
+      message: `Read-only access. Contact the owner to edit.`,
     })
   }
 

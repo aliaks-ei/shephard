@@ -6,6 +6,7 @@
     :is-loading="isTemplateLoading"
     :actions="actionBarActions"
     :actions-visible="isEditMode"
+    :show-read-only-badge="isReadOnlyMode"
     @back="goBack"
   >
     <!-- Main Content -->
@@ -198,46 +199,47 @@
       <q-card
         flat
         bordered
-        class="q-pa-md q-mb-lg"
+        :class="$q.screen.lt.md ? 'q-pa-md q-mb-md' : 'q-px-md q-pt-md q-mb-lg'"
       >
-        <div class="q-mb-lg">
-          <div class="text-h6 q-mb-md">
-            <q-icon
-              name="eva-info-outline"
-              class="q-mr-sm"
+        <div
+          class="row"
+          :class="$q.screen.lt.md ? 'q-col-gutter-sm' : 'q-col-gutter-md'"
+        >
+          <div class="col-12 col-sm-8">
+            <div class="text-h6 q-mb-md">
+              <q-icon
+                name="eva-info-outline"
+                class="q-mr-sm"
+              />
+              Basic Information
+            </div>
+            <q-input
+              v-model="form.name"
+              label="Template Name"
+              outlined
+              readonly
+              no-error-icon
+              :hide-bottom-space="$q.screen.lt.md"
+              :class="$q.screen.lt.md ? 'q-mb-sm' : 'q-mb-md'"
             />
-            Basic Information
           </div>
-
-          <q-input
-            v-model="form.name"
-            label="Template Name"
-            outlined
-            readonly
-            no-error-icon
-            :class="$q.screen.lt.md ? 'q-mb-sm' : 'q-mb-md'"
-          />
-        </div>
-
-        <q-separator class="q-mb-lg" />
-
-        <div class="q-mb-lg">
-          <div class="text-h6 q-mb-md">
-            <q-icon
-              name="eva-calendar-outline"
-              class="q-mr-sm"
+          <div class="col-12 col-sm">
+            <div class="text-h6 q-mb-md">
+              <q-icon
+                name="eva-calendar-outline"
+                class="q-mr-sm"
+              />
+              Duration
+            </div>
+            <q-chip
+              :label="form.duration"
+              color="primary"
+              text-color="primary"
+              class="text-capitalize"
+              :ripple="false"
+              outline
             />
-            Duration
           </div>
-
-          <q-chip
-            :label="form.duration"
-            color="primary"
-            text-color="primary"
-            class="text-capitalize"
-            :ripple="false"
-            outline
-          />
         </div>
       </q-card>
 
@@ -264,6 +266,20 @@
                 class="q-ml-sm"
               />
             </div>
+
+            <div class="row q-gutter-sm">
+              <q-btn
+                v-if="templateItems.length > 0"
+                flat
+                :icon="allCategoriesExpanded ? 'eva-collapse-outline' : 'eva-expand-outline'"
+                :label="
+                  $q.screen.lt.md ? '' : allCategoriesExpanded ? 'Collapse All' : 'Expand All'
+                "
+                color="primary"
+                no-caps
+                @click="toggleAllCategories"
+              />
+            </div>
           </div>
 
           <div v-if="templateItems.length > 0">
@@ -278,6 +294,7 @@
               :subtotal="group.subtotal"
               :currency="templateCurrency"
               :readonly="true"
+              :default-expanded="allCategoriesExpanded"
               @update-item="updateTemplateItem"
               @remove-item="removeTemplateItem"
             />
@@ -426,11 +443,27 @@ const pageConfig = {
   viewIcon: 'eva-eye-outline',
 }
 
-const { pageTitle, pageIcon, banners } = useDetailPageState(
+const { pageTitle, pageIcon } = useDetailPageState(
   pageConfig,
   isNewTemplate.value,
   isReadOnlyMode.value,
 )
+
+// Custom banners with template-specific logic
+const banners = computed(() => {
+  const bannersList = []
+
+  if (isReadOnlyMode.value) {
+    bannersList.push({
+      type: 'readonly',
+      class: 'bg-orange-1 text-orange-8',
+      icon: 'eva-eye-outline',
+      message: `Read-only access. Contact the owner to edit.`,
+    })
+  }
+
+  return bannersList
+})
 
 const { openDialog, closeDialog, getDialogState } = useEditablePage()
 

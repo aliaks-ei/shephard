@@ -88,6 +88,19 @@
                   class="q-mr-sm"
                 />
                 {{ pageTitle }}
+                <q-badge
+                  v-if="showReadOnlyBadge"
+                  color="orange"
+                  text-color="white"
+                  class="q-ml-sm"
+                  outline
+                >
+                  <q-icon
+                    name="eva-eye-outline"
+                    class="q-mr-xs"
+                  />
+                  view only
+                </q-badge>
               </div>
             </q-toolbar-title>
 
@@ -181,6 +194,7 @@ const props = defineProps<{
   isLoading?: boolean
   actions?: ActionBarAction[]
   actionsVisible?: boolean
+  showReadOnlyBadge?: boolean
 }>()
 
 const $q = useQuasar()
