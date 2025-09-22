@@ -1,139 +1,130 @@
 <template>
-  <div class="row justify-center q-pa-md">
+  <div class="row justify-center q-pa-sm q-pa-md-md">
     <div class="col-12 col-md-10 col-lg-8 col-xl-6">
       <div class="q-mb-md">
         <div class="row items-center">
-          <div class="col-auto q-mr-lg">
+          <div class="col-auto q-mr-md">
             <UserAvatar
               :avatar-url="userStore.userProfile?.avatarUrl"
               :name-initial="userStore.userProfile?.nameInitial"
-              size="100px"
+              :size="$q.screen.lt.md ? '80px' : '100px'"
             />
           </div>
           <div class="col">
-            <div class="text-h4 q-mb-xs">
+            <div :class="$q.screen.lt.md ? 'text-h5' : 'text-h4'">
               {{ userStore.userProfile?.displayName }}
             </div>
-            <div class="text-subtitle1">{{ userStore.userProfile?.email }}</div>
+            <div class="text-subtitle1 text-grey-6">{{ userStore.userProfile?.email }}</div>
           </div>
         </div>
       </div>
 
-      <div class="q-mt-lg q-mb-xl">
-        <h5 class="q-mt-none q-mb-md text-primary">Preferences</h5>
-        <q-separator class="q-mb-md separator" />
+      <q-card
+        flat
+        bordered
+        class="q-my-lg"
+      >
+        <q-card-section>
+          <h5 class="text-h6 q-mt-none q-mb-md">Preferences</h5>
+          <q-separator class="q-mb-md separator" />
 
-        <q-list>
-          <q-item class="q-pa-sm card-bg q-mb-sm">
-            <q-item-section avatar>
-              <q-icon
-                name="eva-credit-card-outline"
-                color="primary"
-                size="md"
-              />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label class="text-primary">Currency</q-item-label>
-              <q-item-label caption> Select your preferred currency </q-item-label>
-            </q-item-section>
-            <q-item-section side>
-              <q-select
-                :model-value="selectedCurrency"
-                :options="currencyOptions"
-                dense
-                outlined
-                emit-value
-                @update:model-value="updatePreference('currency', $event)"
-              />
-            </q-item-section>
-          </q-item>
+          <q-list>
+            <q-item class="q-pa-sm q-mb-sm">
+              <q-item-section avatar>
+                <q-icon
+                  name="eva-credit-card-outline"
+                  color="primary"
+                  size="md"
+                />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>Currency</q-item-label>
+                <q-item-label caption> Select your preferred currency </q-item-label>
+              </q-item-section>
+              <q-item-section side>
+                <q-select
+                  :model-value="selectedCurrency"
+                  :options="currencyOptions"
+                  dense
+                  outlined
+                  emit-value
+                  @update:model-value="updatePreference('currency', $event)"
+                />
+              </q-item-section>
+            </q-item>
 
-          <!-- NOTE: Push notifications are not implemented yet -->
-          <!-- <q-item class="q-pa-sm card-bg q-mb-sm">
-            <q-item-section avatar>
-              <q-icon
-                name="eva-bell-outline"
-                color="primary"
-                size="md"
-              />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label class="text-primary">Notifications</q-item-label>
-              <q-item-label caption> Enable push notifications </q-item-label>
-            </q-item-section>
-            <q-item-section side>
-              <q-toggle
-                color="primary"
-                :model-value="userStore.preferences.arePushNotificationsEnabled"
-                @update:model-value="updatePreference('pushNotificationsEnabled', $event)"
-              />
-            </q-item-section>
-          </q-item> -->
+            <q-item class="q-pa-sm">
+              <q-item-section avatar>
+                <q-icon
+                  :name="userStore.preferences.isDark ? 'eva-moon-outline' : 'eva-sun-outline'"
+                  color="primary"
+                  size="md"
+                />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>Dark Mode</q-item-label>
+                <q-item-label caption> Toggle between light and dark theme </q-item-label>
+              </q-item-section>
+              <q-item-section side>
+                <q-toggle
+                  color="primary"
+                  :model-value="userStore.preferences.isDark"
+                  @update:model-value="updatePreference('darkMode', $event)"
+                />
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-card-section>
+      </q-card>
 
-          <q-item class="q-pa-sm card-bg">
-            <q-item-section avatar>
-              <q-icon
-                :name="userStore.preferences.isDark ? 'eva-moon-outline' : 'eva-sun-outline'"
-                color="primary"
-                size="md"
-              />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label class="text-primary">Dark Mode</q-item-label>
-              <q-item-label caption> Toggle between light and dark theme </q-item-label>
-            </q-item-section>
-            <q-item-section side>
-              <q-toggle
-                color="primary"
-                :model-value="userStore.preferences.isDark"
-                @update:model-value="updatePreference('darkMode', $event)"
-              />
-            </q-item-section>
-          </q-item>
-        </q-list>
-      </div>
+      <q-card
+        flat
+        bordered
+        class="q-mb-lg"
+      >
+        <q-card-section>
+          <h5 class="text-h6 q-mt-none q-mb-md">Account Information</h5>
+          <q-separator class="q-mb-md separator" />
 
-      <div class="q-mb-xl">
-        <h5 class="q-mt-none q-mb-md text-primary">Account Information</h5>
-        <q-separator class="q-mb-md separator" />
+          <div class="row q-col-gutter-sm">
+            <InfoItem
+              icon="eva-email-outline"
+              label="Email"
+              :value="userStore.userProfile?.email"
+            />
 
-        <div class="row q-col-gutter-md q-col-gutter-y-xs">
-          <InfoItem
-            icon="eva-email-outline"
-            label="Email"
-            :value="userStore.userProfile?.email"
-          />
+            <InfoItem
+              v-if="userStore.userProfile?.displayName"
+              icon="eva-person-outline"
+              label="Full Name"
+              :value="userStore.userProfile.displayName"
+            />
 
-          <InfoItem
-            v-if="userStore.userProfile?.displayName"
-            icon="eva-person-outline"
-            label="Full Name"
-            :value="userStore.userProfile.displayName"
-          />
+            <InfoItem
+              v-if="userStore.userProfile?.authProvider"
+              icon="eva-log-in-outline"
+              label="Sign-in Provider"
+              :value="userStore.userProfile.authProvider"
+            />
 
-          <InfoItem
-            v-if="userStore.userProfile?.authProvider"
-            icon="eva-log-in-outline"
-            label="Sign-in Provider"
-            :value="userStore.userProfile.authProvider"
-          />
+            <InfoItem
+              v-if="userStore.userProfile?.createdAt"
+              icon="eva-calendar-outline"
+              label="Joined On"
+              :value="userStore.userProfile.formattedCreatedAt"
+            />
+          </div>
+        </q-card-section>
+      </q-card>
 
-          <InfoItem
-            v-if="userStore.userProfile?.createdAt"
-            icon="eva-calendar-outline"
-            label="Joined On"
-            :value="userStore.userProfile.formattedCreatedAt"
-          />
-        </div>
-      </div>
-
-      <div class="q-mt-xl text-center">
+      <div class="text-center">
         <q-btn
           color="negative"
           text-color="white"
           icon="eva-log-out-outline"
           label="Sign Out"
           padding="sm lg"
+          no-caps
           :loading="isSigningOut"
           @click="handleSignOut"
         />
@@ -144,6 +135,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
 
 import UserAvatar from 'src/components/UserAvatar.vue'
@@ -152,6 +144,7 @@ import { useUserStore } from 'src/stores/user'
 
 const userStore = useUserStore()
 const router = useRouter()
+const $q = useQuasar()
 
 const isSigningOut = ref(false)
 

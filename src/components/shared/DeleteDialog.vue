@@ -1,15 +1,20 @@
 <template>
   <q-dialog
     :model-value="modelValue"
-    persistent
+    :maximized="$q.screen.xs"
+    :full-width="$q.screen.xs"
+    :full-height="$q.screen.xs"
     @update:model-value="emit('update:modelValue', $event)"
   >
-    <q-card>
+    <q-card
+      class="column"
+      :class="$q.screen.lt.md ? 'full-height' : ''"
+    >
       <q-card-section>
         <div class="text-h6">{{ title }}</div>
       </q-card-section>
 
-      <q-card-section class="q-pt-none">
+      <q-card-section class="q-pt-none col">
         <q-banner class="bg-red-1 text-red-8 q-mb-md">
           <template #avatar>
             <q-icon name="eva-alert-triangle-outline" />
@@ -19,17 +24,22 @@
         {{ confirmationMessage }}
       </q-card-section>
 
-      <q-card-actions align="right">
+      <q-card-actions
+        align="right"
+        class="q-mt-auto"
+      >
         <q-btn
           flat
           :label="cancelLabel"
           :disabled="isDeleting"
+          no-caps
           @click="emit('update:modelValue', false)"
         />
         <q-btn
           color="negative"
           :label="confirmLabel"
           :loading="isDeleting"
+          no-caps
           @click="emit('confirm')"
         />
       </q-card-actions>
@@ -38,6 +48,10 @@
 </template>
 
 <script setup lang="ts">
+import { useQuasar } from 'quasar'
+
+const $q = useQuasar()
+
 interface DeleteDialogProps {
   modelValue: boolean
   title: string

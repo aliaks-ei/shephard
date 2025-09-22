@@ -16,7 +16,7 @@
 
     <div
       v-else-if="hasItems"
-      class="column q-col-gutter-xl"
+      class="column q-col-gutter-md"
     >
       <div v-if="filteredAndSortedOwnedItems.length > 0">
         <PlansGroup

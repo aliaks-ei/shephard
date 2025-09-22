@@ -6,6 +6,7 @@
     :is-loading="isTemplateLoading"
     :actions="actionBarActions"
     :actions-visible="isEditMode"
+    :show-read-only-badge="isReadOnlyMode"
     @back="goBack"
   >
     <!-- Main Content -->
@@ -14,53 +15,240 @@
       ref="formRef"
       @submit="saveTemplate"
     >
+      <!-- Basic Information Card -->
       <q-card
         flat
         bordered
-        class="q-pa-lg"
+        :class="$q.screen.lt.md ? 'q-pa-md q-mb-md' : 'q-px-md q-pt-md q-mb-lg'"
       >
-        <div class="q-mb-md">
-          <div class="row q-gutter-md">
-            <div class="col-12 col-sm-8">
-              <div class="text-h6 q-mb-md">
-                <q-icon
-                  name="eva-info-outline"
-                  class="q-mr-sm"
-                />
-                Basic Information
-              </div>
-              <q-input
-                v-model="form.name"
-                label="Template Name"
-                outlined
-                :rules="nameRules"
-                :error="nameError"
-                :error-message="nameErrorMessage"
-                @update:model-value="clearNameError"
+        <div
+          class="row"
+          :class="$q.screen.lt.md ? 'q-col-gutter-sm' : 'q-col-gutter-md'"
+        >
+          <div class="col-12 col-sm-8">
+            <div class="text-h6 q-mb-md">
+              <q-icon
+                name="eva-info-outline"
+                class="q-mr-sm"
               />
+              Basic Information
             </div>
-            <div class="col-12 col-sm">
-              <div class="text-h6 q-mb-md">
-                <q-icon
-                  name="eva-calendar-outline"
-                  class="q-mr-sm"
-                />
-                Duration
-              </div>
-              <q-select
-                v-model="form.duration"
-                :options="durationSelectOptions"
-                outlined
-                emit-value
-                map-options
-                style="min-width: 120px"
+            <q-input
+              v-model="form.name"
+              label="Template Name"
+              outlined
+              no-error-icon
+              :hide-bottom-space="$q.screen.lt.md"
+              :rules="nameRules"
+              :error="nameError"
+              :error-message="nameErrorMessage"
+              :class="$q.screen.lt.md ? 'q-mb-sm' : 'q-mb-md'"
+              @update:model-value="clearNameError"
+            />
+          </div>
+          <div class="col-12 col-sm">
+            <div class="text-h6 q-mb-md">
+              <q-icon
+                name="eva-calendar-outline"
+                class="q-mr-sm"
               />
+              Duration
             </div>
+            <q-select
+              v-model="form.duration"
+              :options="durationSelectOptions"
+              outlined
+              emit-value
+              map-options
+              style="min-width: 120px"
+            />
+          </div>
+        </div>
+      </q-card>
+
+      <!-- Categories Card -->
+      <q-card
+        flat
+        bordered
+        class="q-pa-md"
+      >
+        <div class="row items-center justify-between q-mb-md">
+          <div class="text-h6">
+            <q-icon
+              name="eva-grid-outline"
+              class="q-mr-sm"
+            />
+            Categories
+            <q-chip
+              v-if="templateItems.length > 0"
+              :label="templateItems.length"
+              color="primary"
+              text-color="white"
+              size="sm"
+              class="q-ml-sm"
+            />
+          </div>
+
+          <div class="row q-gutter-sm">
+            <q-btn
+              v-if="templateItems.length > 0"
+              flat
+              :icon="allCategoriesExpanded ? 'eva-collapse-outline' : 'eva-expand-outline'"
+              :label="$q.screen.lt.md ? '' : allCategoriesExpanded ? 'Collapse All' : 'Expand All'"
+              color="primary"
+              no-caps
+              @click="toggleAllCategories"
+            />
+            <q-btn
+              v-if="!$q.screen.lt.md"
+              icon="eva-plus-outline"
+              label="Add category"
+              color="primary"
+              no-caps
+              @click="openDialog('category')"
+            />
           </div>
         </div>
 
-        <q-separator class="q-mb-lg" />
+        <q-banner
+          v-if="templateItems.length > 0 && hasDuplicateItems"
+          :class="$q.dark.isActive ? 'bg-orange-9 text-orange-3' : 'bg-orange-1 text-orange-8'"
+          class="q-mb-md"
+          rounded
+        >
+          <template #avatar>
+            <q-icon name="eva-alert-triangle-outline" />
+          </template>
+          You have duplicate item names within the same category. Please use unique names for each
+          item.
+        </q-banner>
 
+        <div v-if="templateItems.length > 0">
+          <TemplateCategory
+            v-for="group in enrichedCategories"
+            :key="group.categoryId"
+            :ref="(el: unknown) => setCategoryRef(el, group.categoryId)"
+            :category-id="group.categoryId"
+            :category-name="group.categoryName"
+            :category-color="group.categoryColor"
+            :category-icon="group.categoryIcon"
+            :items="group.items"
+            :subtotal="group.subtotal"
+            :currency="templateCurrency"
+            :readonly="false"
+            :default-expanded="getCategoryExpanded(group.categoryId)"
+            @update-item="updateTemplateItem"
+            @remove-item="removeTemplateItem"
+            @add-item="handleAddTemplateItem"
+          />
+        </div>
+
+        <div
+          v-else
+          class="text-center q-py-xl"
+        >
+          <q-icon
+            name="eva-grid-outline"
+            size="4rem"
+            class="text-grey-4 q-mb-md"
+          />
+          <div class="text-h6 q-mb-sm text-grey-6">No categories yet</div>
+          <div class="text-body2 text-grey-5 q-mb-lg">
+            Start building your template by adding named items with categories and amounts
+          </div>
+          <q-btn
+            color="primary"
+            icon="eva-plus-outline"
+            label="Add Your First Category"
+            unelevated
+            no-caps
+            @click="openDialog('category')"
+          />
+        </div>
+
+        <div v-if="templateItems.length > 0">
+          <q-separator :class="$q.screen.lt.md ? 'q-my-md' : 'q-my-lg'" />
+          <div class="row items-center justify-between">
+            <div
+              class="text-h6"
+              style="display: flex; align-items: center"
+            >
+              <q-icon
+                name="eva-credit-card-outline"
+                class="q-mr-sm"
+              />
+              Total Amount
+            </div>
+            <div
+              :class="['text-primary text-weight-bold', $q.screen.lt.md ? 'text-h6' : 'text-h5']"
+            >
+              {{ formattedTotalAmount }}
+            </div>
+          </div>
+          <div class="text-caption text-grey-6">
+            Total across {{ templateItems.length }}
+            {{ templateItems.length === 1 ? 'category' : 'categories' }}
+          </div>
+        </div>
+      </q-card>
+    </q-form>
+
+    <!-- Read-only view -->
+    <div v-else>
+      <!-- Basic Information Card -->
+      <q-card
+        flat
+        bordered
+        :class="$q.screen.lt.md ? 'q-pa-md q-mb-md' : 'q-px-md q-pt-md q-mb-lg'"
+      >
+        <div
+          class="row"
+          :class="$q.screen.lt.md ? 'q-col-gutter-sm' : 'q-col-gutter-md'"
+        >
+          <div class="col-12 col-sm-8">
+            <div class="text-h6 q-mb-md">
+              <q-icon
+                name="eva-info-outline"
+                class="q-mr-sm"
+              />
+              Basic Information
+            </div>
+            <q-input
+              v-model="form.name"
+              label="Template Name"
+              outlined
+              readonly
+              no-error-icon
+              :hide-bottom-space="$q.screen.lt.md"
+              :class="$q.screen.lt.md ? 'q-mb-sm' : 'q-mb-md'"
+            />
+          </div>
+          <div class="col-12 col-sm">
+            <div class="text-h6 q-mb-md">
+              <q-icon
+                name="eva-calendar-outline"
+                class="q-mr-sm"
+              />
+              Duration
+            </div>
+            <q-chip
+              :label="form.duration"
+              color="primary"
+              text-color="primary"
+              class="text-capitalize"
+              :ripple="false"
+              outline
+            />
+          </div>
+        </div>
+      </q-card>
+
+      <!-- Categories Card -->
+      <q-card
+        flat
+        bordered
+        class="q-pa-md"
+      >
         <div class="q-mb-lg">
           <div class="row items-center justify-between q-mb-md">
             <div class="text-h6">
@@ -81,38 +269,23 @@
 
             <div class="row q-gutter-sm">
               <q-btn
+                v-if="templateItems.length > 0"
                 flat
                 :icon="allCategoriesExpanded ? 'eva-collapse-outline' : 'eva-expand-outline'"
-                :label="allCategoriesExpanded ? 'Collapse All' : 'Expand All'"
+                :label="
+                  $q.screen.lt.md ? '' : allCategoriesExpanded ? 'Collapse All' : 'Expand All'
+                "
                 color="primary"
+                no-caps
                 @click="toggleAllCategories"
-              />
-              <q-btn
-                icon="eva-plus-outline"
-                label="Add"
-                color="primary"
-                @click="openDialog('category')"
               />
             </div>
           </div>
-
-          <q-banner
-            v-if="templateItems.length > 0 && hasDuplicateItems"
-            class="bg-orange-1 text-orange-8 q-mb-md"
-            rounded
-          >
-            <template #avatar>
-              <q-icon name="eva-alert-triangle-outline" />
-            </template>
-            You have duplicate item names within the same category. Please use unique names for each
-            item.
-          </q-banner>
 
           <div v-if="templateItems.length > 0">
             <TemplateCategory
               v-for="group in enrichedCategories"
               :key="group.categoryId"
-              :ref="(el: unknown) => setCategoryRef(el, group.categoryId)"
               :category-id="group.categoryId"
               :category-name="group.categoryName"
               :category-color="group.categoryColor"
@@ -120,11 +293,10 @@
               :items="group.items"
               :subtotal="group.subtotal"
               :currency="templateCurrency"
-              :readonly="false"
-              :default-expanded="getCategoryExpanded(group.categoryId)"
+              :readonly="true"
+              :default-expanded="allCategoriesExpanded"
               @update-item="updateTemplateItem"
               @remove-item="removeTemplateItem"
-              @add-item="handleAddTemplateItem"
             />
           </div>
 
@@ -137,17 +309,10 @@
               size="4rem"
               class="text-grey-4 q-mb-md"
             />
-            <div class="text-h6 q-mb-sm text-grey-6">No categories yet</div>
+            <div class="text-h6 q-mb-sm text-grey-6">No categories</div>
             <div class="text-body2 text-grey-5 q-mb-lg">
-              Start building your template by adding named items with categories and amounts
+              This template doesn't have any items yet
             </div>
-            <q-btn
-              color="primary"
-              icon="eva-plus-outline"
-              label="Add Your First Category"
-              unelevated
-              @click="openDialog('category')"
-            />
           </div>
         </div>
 
@@ -176,129 +341,7 @@
           </div>
         </div>
       </q-card>
-    </q-form>
-
-    <!-- Read-only view -->
-    <q-card
-      v-else
-      flat
-      bordered
-      class="q-pa-lg"
-    >
-      <div class="q-mb-lg">
-        <div class="text-h6 q-mb-md">
-          <q-icon
-            name="eva-info-outline"
-            class="q-mr-sm"
-          />
-          Basic Information
-        </div>
-
-        <q-input
-          v-model="form.name"
-          label="Template Name"
-          outlined
-          readonly
-          class="q-mb-md"
-        />
-      </div>
-
-      <q-separator class="q-mb-lg" />
-
-      <div class="q-mb-lg">
-        <div class="text-h6 q-mb-md">
-          <q-icon
-            name="eva-calendar-outline"
-            class="q-mr-sm"
-          />
-          Duration
-        </div>
-
-        <q-chip
-          :label="form.duration"
-          color="primary"
-          text-color="primary"
-          class="text-capitalize"
-          :ripple="false"
-          outline
-        />
-      </div>
-
-      <q-separator class="q-mb-lg" />
-
-      <div class="q-mb-lg">
-        <div class="row items-center justify-between q-mb-md">
-          <div class="text-h6">
-            <q-icon
-              name="eva-grid-outline"
-              class="q-mr-sm"
-            />
-            Categories
-            <q-chip
-              v-if="templateItems.length > 0"
-              :label="templateItems.length"
-              color="primary"
-              text-color="white"
-              size="sm"
-              class="q-ml-sm"
-            />
-          </div>
-        </div>
-
-        <div v-if="templateItems.length > 0">
-          <TemplateCategory
-            v-for="group in enrichedCategories"
-            :key="group.categoryId"
-            :category-id="group.categoryId"
-            :category-name="group.categoryName"
-            :category-color="group.categoryColor"
-            :category-icon="group.categoryIcon"
-            :items="group.items"
-            :subtotal="group.subtotal"
-            :currency="templateCurrency"
-            :readonly="true"
-            @update-item="updateTemplateItem"
-            @remove-item="removeTemplateItem"
-          />
-        </div>
-
-        <div
-          v-else
-          class="text-center q-py-xl"
-        >
-          <q-icon
-            name="eva-grid-outline"
-            size="4rem"
-            class="text-grey-4 q-mb-md"
-          />
-          <div class="text-h6 q-mb-sm text-grey-6">No categories</div>
-          <div class="text-body2 text-grey-5 q-mb-lg">This template doesn't have any items yet</div>
-        </div>
-      </div>
-
-      <div v-if="templateItems.length > 0">
-        <q-separator class="q-mb-lg" />
-        <div class="row items-center justify-between">
-          <div
-            class="text-h6"
-            style="display: flex; align-items: center"
-          >
-            <q-icon
-              name="eva-credit-card-outline"
-              class="q-mr-sm"
-            />
-            Total Amount
-          </div>
-          <div :class="['text-primary text-weight-bold', $q.screen.lt.md ? 'text-h5' : 'text-h4']">
-            {{ formattedTotalAmount }}
-          </div>
-        </div>
-        <div class="text-body2 text-grey-6">
-          Total across {{ templateItems.length }}
-          {{ templateItems.length === 1 ? 'category' : 'categories' }}
-        </div>
-      </div>
-    </q-card>
+    </div>
 
     <!-- Dialogs Slot -->
     <template #dialogs>
@@ -345,6 +388,7 @@ import ShareTemplateDialog from 'src/components/templates/ShareTemplateDialog.vu
 import DeleteDialog from 'src/components/shared/DeleteDialog.vue'
 import { useTemplatesStore } from 'src/stores/templates'
 import { useCategoriesStore } from 'src/stores/categories'
+import { useNotificationStore } from 'src/stores/notification'
 import { useTemplateItems } from 'src/composables/useTemplateItems'
 import { useError } from 'src/composables/useError'
 import { formatCurrency } from 'src/utils/currency'
@@ -357,6 +401,7 @@ import type { TemplateCategoryUI } from 'src/types'
 const router = useRouter()
 const templatesStore = useTemplatesStore()
 const categoriesStore = useCategoriesStore()
+const notificationsStore = useNotificationStore()
 const { handleError } = useError()
 
 const {
@@ -398,11 +443,27 @@ const pageConfig = {
   viewIcon: 'eva-eye-outline',
 }
 
-const { pageTitle, pageIcon, banners } = useDetailPageState(
+const { pageTitle, pageIcon } = useDetailPageState(
   pageConfig,
   isNewTemplate.value,
   isReadOnlyMode.value,
 )
+
+// Custom banners with template-specific logic
+const banners = computed(() => {
+  const bannersList = []
+
+  if (isReadOnlyMode.value) {
+    bannersList.push({
+      type: 'readonly',
+      class: 'bg-orange-1 text-orange-8',
+      icon: 'eva-eye-outline',
+      message: `Read-only access. Contact the owner to edit.`,
+    })
+  }
+
+  return bannersList
+})
 
 const { openDialog, closeDialog, getDialogState } = useEditablePage()
 
@@ -482,10 +543,19 @@ const isShareDialogOpen = computed({
 // Action Bar Actions
 const actionBarActions = computed<ActionBarAction[]>(() => [
   {
+    key: 'add-category',
+    icon: 'eva-plus-outline',
+    label: 'Category',
+    color: 'primary',
+    priority: 'primary',
+    visible: isEditMode.value,
+    handler: () => openDialog('category'),
+  },
+  {
     key: 'save',
     icon: 'eva-save-outline',
-    label: 'Save',
-    color: 'positive',
+    label: isNewTemplate.value ? 'Create' : 'Save',
+    color: isNewTemplate.value ? 'primary' : 'positive',
     priority: 'primary',
     loading: templatesStore.isLoading,
     handler: saveTemplate,
@@ -616,6 +686,9 @@ async function saveTemplate(): Promise<void> {
   }
 
   if (success) {
+    notificationsStore.showSuccess(
+      isNewTemplate.value ? 'Template created successfully' : 'Template updated successfully',
+    )
     goBack()
   }
 }

@@ -8,7 +8,10 @@
     :full-height="$q.screen.xs"
     @update:model-value="emit('update:modelValue', $event)"
   >
-    <q-card>
+    <q-card
+      class="column"
+      :class="$q.screen.lt.md ? 'full-height' : ''"
+    >
       <!-- Header -->
       <q-card-section class="row items-center q-pb-none">
         <h2 class="text-h6 q-my-none">Category Details</h2>
@@ -70,7 +73,7 @@
         </q-card-section>
 
         <!-- Templates List -->
-        <q-card-section class="q-pt-none">
+        <q-card-section class="q-pt-none col overflow-auto">
           <div class="text-subtitle1 text-weight-medium q-mb-md">
             <q-icon
               name="eva-list-outline"
@@ -120,26 +123,38 @@
           <q-card
             v-else
             flat
-            class="text-center q-py-xl bg-grey-1"
+            class="text-center q-py-lg"
+            :class="$q.dark.isActive ? 'bg-black-2 text-white' : 'bg-grey-1'"
           >
             <q-icon
               name="eva-grid-outline"
               size="3rem"
-              class="text-grey-4 q-mb-md"
+              :class="$q.dark.isActive ? 'text-grey-5 q-mb-md' : 'text-grey-4 q-mb-md'"
             />
-            <div class="text-body1 text-grey-6 q-mb-sm">No templates use this category yet</div>
-            <div class="text-body2 text-grey-5">Templates using this category will appear here</div>
+            <div
+              class="text-body1 q-mb-sm"
+              :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-6'"
+            >
+              No templates use this category yet
+            </div>
+            <div
+              class="text-body2"
+              :class="$q.dark.isActive ? 'text-grey-5' : 'text-grey-5'"
+            >
+              Templates using this category will appear here
+            </div>
           </q-card>
         </q-card-section>
       </div>
 
       <q-card-actions
         align="right"
-        class="q-pa-md"
+        class="q-pa-md q-mt-auto"
       >
         <q-btn
-          label="Close"
+          label="Cancel"
           flat
+          no-caps
           @click="closeDialog"
         />
       </q-card-actions>

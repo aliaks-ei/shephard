@@ -61,12 +61,21 @@ body {
 }
 
 // Global Dialog Styles - Consistent 480px width on desktop
-.q-dialog__inner .q-card {
+.q-dialog__inner > .q-card {
   width: 90vw;
   min-width: 300px;
 
   @media (min-width: $breakpoint-sm-min) {
     width: 480px;
     max-width: 90vw;
+  }
+}
+
+// Global Notification Styles - Full width on mobile
+.q-notification {
+  width: 100%;
+
+  @media (min-width: $breakpoint-sm-min) {
+    width: auto;
   }
 }

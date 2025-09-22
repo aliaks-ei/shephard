@@ -6,6 +6,7 @@
       :class="banner.class"
       class="q-mb-lg"
       rounded
+      dense
     >
       <template #avatar>
         <q-icon :name="banner.icon" />

@@ -2,7 +2,7 @@
   <div class="auth-callback-page q-pa-md">
     <div class="row justify-center items-center full-height">
       <div class="col-12 col-sm-8 col-md-6 col-lg-4 col-xl-3">
-        <q-card class="shadow-5 full-width">
+        <q-card class="shadow-1 full-width">
           <q-card-section class="bg-primary text-white text-center">
             <h1 class="text-h4">Welcome to Shephard</h1>
           </q-card-section>
@@ -32,6 +32,7 @@
                 label="Back to Login"
                 to="/auth"
                 class="q-mt-md"
+                no-caps
               />
             </div>
             <div
@@ -65,10 +66,7 @@ const error = ref<string | null>(null)
 
 onMounted(async () => {
   await userStore.initUser()
-
-  setTimeout(() => {
-    redirectToHomePage()
-  }, 1500)
+  await redirectToHomePage()
 
   isLoading.value = false
 })

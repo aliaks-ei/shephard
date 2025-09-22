@@ -10,6 +10,7 @@
       type="email"
       :disable="userStore.auth.isEmailSent"
       outlined
+      no-error-icon
       :rules="emailRules()"
       lazy-rules="ondemand"
     />
@@ -34,6 +35,7 @@
       color="primary"
       class="full-width"
       :loading="isLoading"
+      no-caps
     />
   </q-form>
 </template>

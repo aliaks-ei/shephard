@@ -3,7 +3,7 @@ import { Notify } from 'quasar'
 
 export default boot(() => {
   Notify.setDefaults({
-    position: 'bottom-left',
+    position: 'bottom-right',
     textColor: 'white',
   })
 })

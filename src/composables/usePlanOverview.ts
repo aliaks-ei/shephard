@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue'
+import { ref, computed, unref, type Ref } from 'vue'
 import { usePlansStore } from 'src/stores/plans'
 import { useExpensesStore } from 'src/stores/expenses'
 import { useCategoriesStore } from 'src/stores/categories'
@@ -15,7 +15,10 @@ interface CategoryBudget {
   expenseCount: number
 }
 
-export function usePlanOverview(planId: string, planArg?: PlanWithItems | null) {
+export function usePlanOverview(
+  planId: Ref<string> | string,
+  planArg?: Ref<PlanWithItems | null> | PlanWithItems | null,
+) {
   const plansStore = usePlansStore()
   const expensesStore = useExpensesStore()
   const categoriesStore = useCategoriesStore()
@@ -25,7 +28,8 @@ export function usePlanOverview(planId: string, planArg?: PlanWithItems | null) 
 
   // Load all required data for the overview
   async function loadOverviewData() {
-    if (!planId) return
+    const currentPlanId = unref(planId)
+    if (!currentPlanId) return
 
     isLoading.value = true
 
@@ -36,8 +40,8 @@ export function usePlanOverview(planId: string, planArg?: PlanWithItems | null) 
           : Promise.resolve()
 
       await Promise.all([
-        expensesStore.loadExpensesForPlan(planId),
-        expensesStore.loadExpenseSummaryForPlan(planId),
+        expensesStore.loadExpensesForPlan(currentPlanId),
+        expensesStore.loadExpenseSummaryForPlan(currentPlanId),
         maybeLoadCategories,
       ])
     } finally {
@@ -47,9 +51,11 @@ export function usePlanOverview(planId: string, planArg?: PlanWithItems | null) 
 
   // Get the current plan with items
   const currentPlanWithItems = computed<PlanWithItems | null>(() => {
-    if (planArg && planArg.id === planId) return planArg
+    const plan = unref(planArg)
+    const currentPlanId = unref(planId)
+    if (plan && plan.id === currentPlanId) return plan
     // Fallback to store (may not include items)
-    const fromStore = plansStore.plans.find((p) => p.id === planId)
+    const fromStore = plansStore.plans.find((p) => p.id === currentPlanId)
     return (fromStore as unknown as PlanWithItems) || null
   })
 

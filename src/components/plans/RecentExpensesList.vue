@@ -1,8 +1,5 @@
 <template>
-  <q-card
-    flat
-    bordered
-  >
+  <q-card flat>
     <q-card-section>
       <div class="row items-center justify-between q-mb-md">
         <div class="text-h6">
@@ -18,6 +15,7 @@
           dense
           color="primary"
           label="View All"
+          no-caps
           @click="$emit('view-all')"
         />
       </div>
@@ -85,6 +83,7 @@
           color="primary"
           label="Add First Expense"
           icon="eva-plus-outline"
+          no-caps
           @click="$emit('add-expense')"
         />
       </div>

@@ -1,7 +1,8 @@
 <template>
   <q-card
     flat
-    class="text-center q-py-xl"
+    bordered
+    class="text-center q-py-lg"
   >
     <q-card-section>
       <q-icon
@@ -24,6 +25,7 @@
           flat
           color="primary"
           label="Clear Search"
+          no-caps
           @click="emit('clearSearch')"
         />
 
@@ -32,6 +34,7 @@
           icon="eva-plus-outline"
           :label="createButtonLabel"
           unelevated
+          no-caps
           @click="emit('create')"
         />
       </div>

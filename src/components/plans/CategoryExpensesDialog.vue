@@ -8,7 +8,10 @@
     :full-width="$q.screen.xs"
     :full-height="$q.screen.xs"
   >
-    <q-card>
+    <q-card
+      class="column"
+      :class="$q.screen.lt.md ? 'full-height' : ''"
+    >
       <!-- Header -->
       <q-card-section class="row items-center q-pb-none">
         <div class="row items-center">
@@ -38,12 +41,17 @@
       <q-separator class="q-mt-md" />
 
       <!-- Category Summary -->
-      <q-card-section class="bg-grey-1">
+      <q-card-section :class="$q.dark.isActive ? 'bg-black-2' : 'bg-grey-1'">
         <!-- Budget Overview -->
         <div class="row q-col-gutter-md q-mb-md">
           <div class="col-4">
             <div class="text-center">
-              <div class="text-caption text-grey-6">Budget</div>
+              <div
+                class="text-caption"
+                :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-6'"
+              >
+                Budget
+              </div>
               <div class="text-h6 text-weight-bold">
                 {{ formatCurrency(category?.plannedAmount || 0, currency) }}
               </div>
@@ -51,7 +59,12 @@
           </div>
           <div class="col-4">
             <div class="text-center">
-              <div class="text-caption text-grey-6">Spent</div>
+              <div
+                class="text-caption"
+                :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-6'"
+              >
+                Spent
+              </div>
               <div class="text-h6 text-weight-bold text-primary">
                 {{ formatCurrency(category?.actualAmount || 0, currency) }}
               </div>
@@ -59,7 +72,12 @@
           </div>
           <div class="col-4">
             <div class="text-center">
-              <div class="text-caption text-grey-6">Remaining</div>
+              <div
+                class="text-caption"
+                :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-6'"
+              >
+                Remaining
+              </div>
               <div
                 class="text-h6 text-weight-bold"
                 :class="remainingColorClass"
@@ -73,7 +91,12 @@
         <!-- Progress Bar -->
         <div class="q-mb-md">
           <div class="row items-center justify-between q-mb-xs">
-            <div class="text-caption text-grey-6">Progress</div>
+            <div
+              class="text-caption"
+              :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-6'"
+            >
+              Progress
+            </div>
             <div class="text-caption text-weight-medium">{{ Math.round(progressPercentage) }}%</div>
           </div>
           <q-linear-progress
@@ -92,6 +115,7 @@
             label="Add Expense"
             icon="eva-plus-outline"
             unelevated
+            no-caps
             class="full-width"
             @click="openExpenseDialog"
           />
@@ -119,10 +143,7 @@
       </q-card-section>
 
       <!-- Scrollable Expenses Container -->
-      <q-card-section
-        class="q-pt-none overflow-auto"
-        style="max-height: 400px"
-      >
+      <q-card-section class="q-pt-none overflow-auto col">
         <q-list
           v-if="expenses.length > 0"
           separator
@@ -130,7 +151,7 @@
           <q-item
             v-for="expense in expenses"
             :key="expense.id"
-            class="q-px-none q-py-md"
+            class="q-px-none"
           >
             <q-item-section>
               <q-item-label class="text-weight-medium">
@@ -156,12 +177,12 @@
                   v-if="canEdit"
                   flat
                   round
-                  dense
+                  size="sm"
                   icon="eva-trash-2-outline"
                   color="negative"
                   @click="confirmDeleteExpense(expense)"
                 >
-                  <q-tooltip>Delete expense</q-tooltip>
+                  <q-tooltip v-if="!$q.screen.lt.md">Delete expense</q-tooltip>
                 </q-btn>
               </div>
             </q-item-section>
@@ -171,12 +192,13 @@
         <!-- Empty State -->
         <div
           v-else
-          class="text-center text-grey-6 q-py-xl"
+          class="text-center q-py-xl"
+          :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-6'"
         >
           <q-icon
             name="eva-shopping-cart-outline"
             size="64px"
-            class="q-mb-md"
+            :class="$q.dark.isActive ? 'text-grey-5 q-mb-md' : 'q-mb-md'"
           />
           <div class="text-h6 q-mb-sm">No expenses yet</div>
           <div class="text-body2 q-mb-lg">Start tracking your expenses in this category</div>
@@ -186,6 +208,7 @@
             label="Add First Expense"
             icon="eva-plus-outline"
             unelevated
+            no-caps
             @click="openExpenseDialog"
           />
         </div>
