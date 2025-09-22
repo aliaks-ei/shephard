@@ -1,9 +1,9 @@
 <template>
   <section>
-    <div class="q-pa-md">
+    <div class="q-pa-sm q-pa-md-md">
       <div class="row justify-center">
         <div class="col-12 col-md-8 col-lg-6">
-          <div class="text-center q-pa-lg">
+          <div class="text-center q-py-lg">
             <div class="row items-center justify-center q-gutter-md">
               <q-icon
                 name="eva-credit-card-outline"
@@ -24,12 +24,15 @@
       </div>
     </div>
 
-    <div class="q-px-md q-py-lg">
+    <div class="q-pa-sm q-pa-md-md">
       <div class="row justify-center">
         <div class="col-12 col-md-8 col-lg-6">
-          <div class="row q-col-gutter-md">
+          <div
+            class="row"
+            :class="$q.screen.lt.md ? 'q-col-gutter-sm' : 'q-col-gutter-md'"
+          >
             <div class="col-12 col-sm-6">
-              <q-card>
+              <q-card class="shadow-1">
                 <q-item
                   clickable
                   @click="openExpenseDialog"
@@ -48,7 +51,7 @@
               </q-card>
             </div>
             <div class="col-12 col-sm-6">
-              <q-card>
+              <q-card class="shadow-1">
                 <q-item
                   clickable
                   to="/plans"
@@ -68,9 +71,12 @@
             </div>
           </div>
 
-          <div class="row q-col-gutter-md q-mt-xs">
-            <div class="col-12 col-sm-4">
-              <q-card class="full-height">
+          <div
+            class="row q-mt-xs"
+            :class="$q.screen.lt.md ? 'q-col-gutter-sm' : 'q-col-gutter-md'"
+          >
+            <div class="col-4">
+              <q-card class="full-height shadow-1">
                 <q-item
                   clickable
                   to="/templates"
@@ -88,8 +94,8 @@
                 </q-item>
               </q-card>
             </div>
-            <div class="col-12 col-sm-4">
-              <q-card class="full-height">
+            <div class="col-4">
+              <q-card class="full-height shadow-1">
                 <q-item
                   clickable
                   to="/categories"
@@ -107,8 +113,8 @@
                 </q-item>
               </q-card>
             </div>
-            <div class="col-12 col-sm-4">
-              <q-card class="full-height">
+            <div class="col-4">
+              <q-card class="full-height shadow-1">
                 <q-item
                   clickable
                   to="/settings"
@@ -141,12 +147,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useNotificationStore } from 'src/stores/notification'
+import { useQuasar } from 'quasar'
 import { usePlansStore } from 'src/stores/plans'
 import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 
-const notificationStore = useNotificationStore()
 const plansStore = usePlansStore()
+const $q = useQuasar()
 
 const showExpenseDialog = ref(false)
 
@@ -159,7 +165,6 @@ function openExpenseDialog() {
 }
 
 function onExpenseCreated() {
-  notificationStore.showSuccess('Expense registered successfully!')
   showExpenseDialog.value = false
 }
 </script>

@@ -1,9 +1,5 @@
 <template>
-  <q-card
-    class="q-mb-md"
-    flat
-    bordered
-  >
+  <q-card class="q-mb-sm shadow-1">
     <q-expansion-item
       v-model="isExpanded"
       :label="categoryName"
@@ -13,7 +9,10 @@
       expanded-icon="eva-chevron-up-outline"
     >
       <template #header>
-        <q-item-section avatar>
+        <q-item-section
+          style="min-width: auto"
+          avatar
+        >
           <q-avatar
             :style="{ backgroundColor: categoryColor }"
             size="sm"
@@ -62,6 +61,7 @@
             color="primary"
             icon="eva-plus-outline"
             label="Add Item"
+            no-caps
             @click="$emit('add-item', categoryId, categoryColor)"
           />
         </div>

@@ -9,7 +9,10 @@
     :full-height="$q.screen.xs"
     @update:model-value="emit('update:modelValue', $event)"
   >
-    <q-card>
+    <q-card
+      class="column"
+      :class="$q.screen.lt.md ? 'full-height' : ''"
+    >
       <q-card-section class="row items-center q-pb-none">
         <div class="text-h6">
           <q-icon
@@ -31,10 +34,12 @@
       <q-separator class="q-mt-md" />
 
       <q-form
+        class="column"
+        style="flex-grow: 1"
         ref="formRef"
         @submit="handleSubmit"
       >
-        <q-card-section class="q-pt-md">
+        <q-card-section class="q-pt-md col overflow-auto">
           <!-- Plan Selection -->
           <q-select
             v-model="form.planId"
@@ -50,6 +55,7 @@
             :rules="[(val: string) => !!val || 'Plan is required']"
             @update:model-value="onPlanSelected"
             :class="didAutoSelectPlan && selectedPlan ? 'q-mb-none' : 'q-mb-md'"
+            :display-value="planDisplayValue"
           >
             <template #option="scope">
               <q-item v-bind="scope.itemProps">
@@ -85,11 +91,12 @@
             v-if="didAutoSelectPlan && selectedPlan"
             class="bg-blue-1 text-blue-8 q-mb-md"
             data-testid="auto-select-banner"
+            dense
           >
             <template #avatar>
               <q-icon name="eva-info-outline" />
             </template>
-            Recently used plan "{{ selectedPlan.name }}" has been selected for quick entry.
+            Most recently used plan selected.
           </q-banner>
 
           <!-- Category Selection -->
@@ -105,7 +112,7 @@
             :disable="!selectedPlan"
             :readonly="!!props.defaultCategoryId"
             :rules="[(val: string) => !!val || 'Category is required']"
-            class="q-mb-md"
+            class="q-mb-sm"
           >
             <template #option="scope">
               <q-item v-bind="scope.itemProps">
@@ -162,8 +169,9 @@
             v-model="form.name"
             label="Expense Name *"
             outlined
+            no-error-icon
             :rules="nameRules"
-            class="q-mb-md"
+            class="q-mb-sm"
           />
 
           <q-input
@@ -173,9 +181,10 @@
             step="0.01"
             min="0.01"
             outlined
+            no-error-icon
             :rules="amountRules"
             :suffix="selectedPlan?.currency || ''"
-            class="q-mb-md"
+            class="q-mb-sm"
           >
             <template #prepend>
               <q-icon name="eva-credit-card-outline" />
@@ -186,8 +195,9 @@
             v-model="form.expenseDate"
             label="Expense Date *"
             outlined
+            no-error-icon
             :rules="[(val: string) => !!val || 'Date is required']"
-            class="q-mb-md"
+            class="q-mb-sm"
           >
             <template #append>
               <q-icon
@@ -206,9 +216,10 @@
                     <div class="row items-center justify-end">
                       <q-btn
                         v-close-popup
-                        label="Close"
+                        label="Cancel"
                         color="primary"
                         flat
+                        no-caps
                       />
                     </div>
                   </q-date>
@@ -231,11 +242,12 @@
 
         <q-card-actions
           align="right"
-          class="q-pa-md"
+          class="q-pa-md q-mt-auto"
         >
           <q-btn
             label="Cancel"
             flat
+            no-caps
             @click="closeDialog"
             :disable="isLoading"
           />
@@ -244,6 +256,7 @@
             type="submit"
             color="primary"
             unelevated
+            no-caps
             :loading="isLoading"
           />
         </q-card-actions>
@@ -329,6 +342,13 @@ const planOptions = computed(() => {
 const selectedPlan = computed(() => {
   if (!form.value.planId) return null
   return plansStore.plans.find((p) => p.id === form.value.planId) || null
+})
+
+const planDisplayValue = computed(() => {
+  const id = form.value.planId
+  if (!id) return ''
+  const plan = plansStore.plans.find((p) => p.id === id)
+  return plan?.name || ''
 })
 
 const categoryOptions = computed(() => {

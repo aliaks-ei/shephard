@@ -20,6 +20,7 @@
             icon="eva-plus-outline"
             :label="createButtonLabel"
             unelevated
+            no-caps
             :class="$q.screen.xs ? 'full-width' : ''"
             @click="emit('create')"
           />

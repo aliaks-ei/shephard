@@ -109,6 +109,8 @@ export function usePlan() {
       await plansStore.savePlanItems(plan.id, items)
     }
 
+    await loadPlan()
+
     return true
   }
 

@@ -31,6 +31,7 @@
           placeholder="Search categories..."
           outlined
           dense
+          no-error-icon
           clearable
         >
           <template #prepend>
@@ -92,10 +93,14 @@
       </q-card-section>
 
       <!-- Fixed footer actions -->
-      <q-card-actions align="right">
+      <q-card-actions
+        align="right"
+        class="q-mt-auto"
+      >
         <q-btn
           flat
           label="Cancel"
+          no-caps
           @click="$emit('update:modelValue', false)"
         />
       </q-card-actions>

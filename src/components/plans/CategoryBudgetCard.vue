@@ -1,8 +1,5 @@
 <template>
-  <q-card
-    flat
-    bordered
-  >
+  <q-card class="shadow-1">
     <q-item
       class="column q-pa-md"
       clickable
@@ -37,13 +34,13 @@
             show-value
             :value="percentageUsed"
             :max="100"
-            size="100px"
+            :size="$q.screen.lt.md ? '72px' : '96px'"
             :thickness="0.2"
             :color="progressColor"
             track-color="grey-4"
             class="text-weight-bold"
           >
-            <span class="text-h6">{{ Math.round(percentageUsed) }}%</span>
+            <span class="text-subtitle2">{{ Math.round(percentageUsed) }}%</span>
           </q-circular-progress>
         </div>
 
@@ -69,7 +66,7 @@
 
           <div
             v-if="category.remainingAmount !== 0"
-            class="row justify-between text-caption q-mt-sm"
+            class="row justify-between text-caption"
           >
             <span class="text-grey-6">{{
               category.remainingAmount > 0 ? 'Remaining' : 'Over'

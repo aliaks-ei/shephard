@@ -39,6 +39,7 @@
         color="primary"
         label="Refresh"
         icon="eva-refresh-outline"
+        no-caps
         @click="refreshGoogleAuth"
       />
     </div>

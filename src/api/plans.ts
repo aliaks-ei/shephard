@@ -39,6 +39,7 @@ const planService = new BaseAPIService<
   itemsTableName: 'plan_items',
   uniqueConstraintName: 'unique_plan_name_per_user',
   entityTypeName: 'PLAN',
+  shareTableForeignKeyColumn: 'plan_id',
 })
 
 export async function getPlans(userId: string): Promise<PlanWithPermission[]> {

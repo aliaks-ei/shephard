@@ -13,8 +13,8 @@
       :color="action.color"
       :loading="action.loading"
       :disabled="action.loading"
-      outline
       no-caps
+      outline
       @click="handleActionClick(action)"
     />
   </div>

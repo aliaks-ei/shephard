@@ -1,9 +1,5 @@
 <template>
-  <q-card
-    flat
-    bordered
-    class="q-mb-lg"
-  >
+  <q-card flat>
     <q-card-section>
       <div class="row items-center justify-between q-mb-md">
         <div>
@@ -23,24 +19,33 @@
 
       <q-separator class="q-my-md" />
 
-      <div class="row q-col-gutter-md">
-        <div class="col-12 col-sm-4">
+      <div
+        class="row"
+        :class="$q.screen.lt.md ? 'q-col-gutter-xs' : 'q-col-gutter-md'"
+      >
+        <div class="col">
           <div class="text-caption text-grey-6">Total Budget</div>
-          <div class="text-h6 text-weight-bold">
+          <div
+            class="text-weight-bold"
+            :class="$q.screen.lt.md ? 'text-subtitle2' : 'text-h6'"
+          >
             {{ formatCurrency(totalBudget, currency) }}
           </div>
         </div>
-        <div class="col-12 col-sm-4">
+        <div class="col">
           <div class="text-caption text-grey-6">Total Spent</div>
-          <div class="text-h6 text-weight-bold text-primary">
+          <div
+            class="text-weight-bold text-primary"
+            :class="$q.screen.lt.md ? 'text-subtitle2' : 'text-h6'"
+          >
             {{ formatCurrency(totalSpent, currency) }}
           </div>
         </div>
-        <div class="col-12 col-sm-4">
+        <div class="col">
           <div class="text-caption text-grey-6">Remaining</div>
           <div
-            class="text-h6 text-weight-bold"
-            :class="remainingColorClass"
+            class="text-weight-bold"
+            :class="[remainingColorClass, $q.screen.lt.md ? 'text-subtitle2' : 'text-h6']"
           >
             {{ formatCurrency(remaining, currency) }}
           </div>
