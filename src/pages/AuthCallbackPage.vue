@@ -66,10 +66,7 @@ const error = ref<string | null>(null)
 
 onMounted(async () => {
   await userStore.initUser()
-
-  setTimeout(() => {
-    redirectToHomePage()
-  }, 1500)
+  await redirectToHomePage()
 
   isLoading.value = false
 })
