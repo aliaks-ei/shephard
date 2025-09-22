@@ -8,7 +8,10 @@
     :full-height="$q.screen.xs"
     @update:model-value="emit('update:modelValue', $event)"
   >
-    <q-card>
+    <q-card
+      class="column"
+      :class="$q.screen.lt.md ? 'full-height' : ''"
+    >
       <!-- Header -->
       <q-card-section class="row items-center q-pb-none">
         <h2 class="text-h6 q-my-none">Category Details</h2>
@@ -70,7 +73,7 @@
         </q-card-section>
 
         <!-- Templates List -->
-        <q-card-section class="q-pt-none">
+        <q-card-section class="q-pt-none col overflow-auto">
           <div class="text-subtitle1 text-weight-medium q-mb-md">
             <q-icon
               name="eva-list-outline"
@@ -146,10 +149,10 @@
 
       <q-card-actions
         align="right"
-        class="q-pa-md"
+        class="q-pa-md q-mt-auto"
       >
         <q-btn
-          label="Close"
+          label="Cancel"
           flat
           no-caps
           @click="closeDialog"

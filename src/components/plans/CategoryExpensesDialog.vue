@@ -8,7 +8,10 @@
     :full-width="$q.screen.xs"
     :full-height="$q.screen.xs"
   >
-    <q-card>
+    <q-card
+      class="column"
+      :class="$q.screen.lt.md ? 'full-height' : ''"
+    >
       <!-- Header -->
       <q-card-section class="row items-center q-pb-none">
         <div class="row items-center">
@@ -140,10 +143,7 @@
       </q-card-section>
 
       <!-- Scrollable Expenses Container -->
-      <q-card-section
-        class="q-pt-none overflow-auto"
-        :style="$q.screen.lt.md ? '' : 'max-height: 480px'"
-      >
+      <q-card-section class="q-pt-none overflow-auto col">
         <q-list
           v-if="expenses.length > 0"
           separator

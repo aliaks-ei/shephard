@@ -9,7 +9,10 @@
     :full-height="$q.screen.xs"
     @update:model-value="emit('update:modelValue', $event)"
   >
-    <q-card>
+    <q-card
+      class="column"
+      :class="$q.screen.lt.md ? 'full-height' : ''"
+    >
       <q-card-section class="row items-center q-pb-none">
         <div class="text-h6">
           <q-icon
@@ -31,10 +34,12 @@
       <q-separator class="q-mt-md" />
 
       <q-form
+        class="column"
+        style="flex-grow: 1"
         ref="formRef"
         @submit="handleSubmit"
       >
-        <q-card-section class="q-pt-md">
+        <q-card-section class="q-pt-md col overflow-auto">
           <!-- Plan Selection -->
           <q-select
             v-model="form.planId"
@@ -86,11 +91,12 @@
             v-if="didAutoSelectPlan && selectedPlan"
             class="bg-blue-1 text-blue-8 q-mb-md"
             data-testid="auto-select-banner"
+            dense
           >
             <template #avatar>
               <q-icon name="eva-info-outline" />
             </template>
-            Recently used plan "{{ selectedPlan.name }}" has been selected for quick entry.
+            Most recently used plan selected.
           </q-banner>
 
           <!-- Category Selection -->
@@ -106,7 +112,7 @@
             :disable="!selectedPlan"
             :readonly="!!props.defaultCategoryId"
             :rules="[(val: string) => !!val || 'Category is required']"
-            class="q-mb-md"
+            class="q-mb-sm"
           >
             <template #option="scope">
               <q-item v-bind="scope.itemProps">
@@ -165,7 +171,7 @@
             outlined
             no-error-icon
             :rules="nameRules"
-            class="q-mb-md"
+            class="q-mb-sm"
           />
 
           <q-input
@@ -178,7 +184,7 @@
             no-error-icon
             :rules="amountRules"
             :suffix="selectedPlan?.currency || ''"
-            class="q-mb-md"
+            class="q-mb-sm"
           >
             <template #prepend>
               <q-icon name="eva-credit-card-outline" />
@@ -191,7 +197,7 @@
             outlined
             no-error-icon
             :rules="[(val: string) => !!val || 'Date is required']"
-            class="q-mb-md"
+            class="q-mb-sm"
           >
             <template #append>
               <q-icon
@@ -210,7 +216,7 @@
                     <div class="row items-center justify-end">
                       <q-btn
                         v-close-popup
-                        label="Close"
+                        label="Cancel"
                         color="primary"
                         flat
                         no-caps
@@ -236,7 +242,7 @@
 
         <q-card-actions
           align="right"
-          class="q-pa-md"
+          class="q-pa-md q-mt-auto"
         >
           <q-btn
             label="Cancel"

@@ -8,7 +8,10 @@
     :full-height="$q.screen.xs"
     @update:model-value="emit('update:modelValue', $event)"
   >
-    <q-card>
+    <q-card
+      class="column"
+      :class="$q.screen.lt.md ? 'full-height' : ''"
+    >
       <q-card-section class="row items-center q-pb-none">
         <h2 class="text-h6 q-my-none">
           <q-icon
@@ -29,7 +32,7 @@
 
       <q-separator class="q-mt-md" />
 
-      <q-card-section class="q-pt-md">
+      <q-card-section class="q-pt-md col overflow-auto">
         <div class="q-mb-lg">
           <div class="text-subtitle2 q-mb-sm">
             <q-icon
@@ -157,7 +160,7 @@
 
       <q-card-actions
         align="right"
-        class="q-pa-md"
+        class="q-pa-md q-mt-auto"
       >
         <q-btn
           label="Cancel"

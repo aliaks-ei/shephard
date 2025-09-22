@@ -93,7 +93,10 @@
       </q-card-section>
 
       <!-- Fixed footer actions -->
-      <q-card-actions align="right">
+      <q-card-actions
+        align="right"
+        class="q-mt-auto"
+      >
         <q-btn
           flat
           label="Cancel"

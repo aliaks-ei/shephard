@@ -153,7 +153,7 @@
                       <div class="row items-center justify-end">
                         <q-btn
                           v-close-popup
-                          label="Close"
+                          label="Cancel"
                           color="primary"
                           flat
                           no-caps
@@ -397,7 +397,7 @@
                               <div class="row items-center justify-end">
                                 <q-btn
                                   v-close-popup
-                                  label="Close"
+                                  label="Cancel"
                                   color="primary"
                                   flat
                                   no-caps
