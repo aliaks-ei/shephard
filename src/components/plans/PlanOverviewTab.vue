@@ -86,6 +86,7 @@
       :currency="planCurrency"
       :is-loading="isLoadingExpenses"
       @add-expense="$emit('open-expense-dialog')"
+      @view-all="openAllExpensesDialog"
     />
 
     <!-- Category Expenses Modal -->
@@ -99,6 +100,16 @@
       @add-expense="emitOpenExpenseDialog"
       @refresh="loadOverviewData"
     />
+
+    <!-- All Expenses Modal -->
+    <AllExpensesDialog
+      v-model="showAllExpensesModal"
+      :expenses="expensesStore.sortedExpenses"
+      :currency="planCurrency"
+      :can-edit="isEditMode"
+      :plan-id="planId"
+      @refresh="loadOverviewData"
+    />
   </div>
 </template>
 
@@ -108,6 +119,7 @@ import PlanSummaryCard from './PlanSummaryCard.vue'
 import CategoryBudgetCard from './CategoryBudgetCard.vue'
 import RecentExpensesList from './RecentExpensesList.vue'
 import CategoryExpensesDialog from './CategoryExpensesDialog.vue'
+import AllExpensesDialog from './AllExpensesDialog.vue'
 import { usePlanOverview } from 'src/composables/usePlanOverview'
 import { useExpensesStore } from 'src/stores/expenses'
 import type { PlanWithItems } from 'src/api'
@@ -139,6 +151,7 @@ interface CategoryBudget {
 
 // Modal state
 const showCategoryModal = ref(false)
+const showAllExpensesModal = ref(false)
 const selectedCategory = ref<CategoryBudget | null>(null)
 
 // Loading state
@@ -172,6 +185,10 @@ function openCategoryModal(category: CategoryBudget) {
 function emitOpenExpenseDialog() {
   showCategoryModal.value = false
   emit('open-expense-dialog', selectedCategory.value?.categoryId)
+}
+
+function openAllExpensesDialog() {
+  showAllExpensesModal.value = true
 }
 
 watch(

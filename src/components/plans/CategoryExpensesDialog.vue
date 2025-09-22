@@ -182,7 +182,7 @@
                   color="negative"
                   @click="confirmDeleteExpense(expense)"
                 >
-                  <q-tooltip>Delete expense</q-tooltip>
+                  <q-tooltip v-if="!$q.screen.lt.md">Delete expense</q-tooltip>
                 </q-btn>
               </div>
             </q-item-section>

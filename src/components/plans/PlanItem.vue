@@ -47,7 +47,7 @@
         color="negative"
         @click="emit('remove')"
       >
-        <q-tooltip>Remove item</q-tooltip>
+        <q-tooltip v-if="!$q.screen.lt.md">Remove item</q-tooltip>
       </q-btn>
     </q-item-section>
   </q-item>

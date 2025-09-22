@@ -44,7 +44,7 @@
             color="negative"
             @click="showRemoveUserConfirmDialog(user)"
           >
-            <q-tooltip>Remove access</q-tooltip>
+            <q-tooltip v-if="!$q.screen.lt.md">Remove access</q-tooltip>
           </q-btn>
         </div>
       </q-item-section>
