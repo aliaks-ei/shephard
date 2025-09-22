@@ -9,7 +9,10 @@
       expanded-icon="eva-chevron-up-outline"
     >
       <template #header>
-        <q-item-section avatar>
+        <q-item-section
+          style="min-width: auto"
+          avatar
+        >
           <q-avatar
             :style="{ backgroundColor: categoryColor }"
             size="sm"

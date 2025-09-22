@@ -1,28 +1,31 @@
 <template>
-  <q-item class="q-py-sm q-px-none">
+  <q-item class="q-pb-xs q-pt-sm q-px-none">
     <q-item-section>
       <q-input
         ref="nameInputRef"
         :model-value="modelValue.name"
         :readonly="readonly"
         :rules="nameRules"
+        :dense="$q.screen.lt.md"
         class="q-px-none"
         label="Item name"
+        no-error-icon
         outlined
         item-aligned
         @update:model-value="updateName"
       />
     </q-item-section>
 
-    <q-item-section style="max-width: 150px">
+    <q-item-section :style="$q.screen.lt.md ? 'max-width: 80px' : 'max-width: 112px'">
       <q-input
         :model-value="modelValue.amount || undefined"
         :readonly="readonly"
         :rules="amountRules"
+        :dense="$q.screen.lt.md"
         :prefix="currencySymbol"
         type="number"
         min="0"
-        step="0.01"
+        step="1"
         label="Amount"
         class="q-px-none"
         outlined
@@ -39,6 +42,7 @@
       <q-btn
         flat
         round
+        :size="$q.screen.lt.md ? 'sm' : 'md'"
         dense
         icon="eva-trash-2-outline"
         color="negative"

@@ -10,6 +10,7 @@
       type="email"
       :disable="userStore.auth.isEmailSent"
       outlined
+      no-error-icon
       :rules="emailRules()"
       lazy-rules="ondemand"
     />

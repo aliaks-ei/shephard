@@ -142,7 +142,7 @@
       <!-- Scrollable Expenses Container -->
       <q-card-section
         class="q-pt-none overflow-auto"
-        style="max-height: 400px"
+        :style="$q.screen.lt.md ? '' : 'max-height: 480px'"
       >
         <q-list
           v-if="expenses.length > 0"
@@ -151,7 +151,7 @@
           <q-item
             v-for="expense in expenses"
             :key="expense.id"
-            class="q-px-none q-py-md"
+            class="q-px-none"
           >
             <q-item-section>
               <q-item-label class="text-weight-medium">
@@ -177,7 +177,7 @@
                   v-if="canEdit"
                   flat
                   round
-                  dense
+                  size="sm"
                   icon="eva-trash-2-outline"
                   color="negative"
                   @click="confirmDeleteExpense(expense)"

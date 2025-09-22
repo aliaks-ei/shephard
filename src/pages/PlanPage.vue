@@ -116,16 +116,21 @@
           v-model="form.name"
           label="Plan Name"
           outlined
+          no-error-icon
           :rules="[(val: string) => !!val || 'Plan name is required']"
-          class="q-mb-md"
+          :class="$q.screen.lt.md ? 'q-mb-sm' : 'q-mb-md'"
         />
 
-        <div class="row q-col-gutter-md">
+        <div
+          class="row"
+          :class="$q.screen.lt.md ? 'q-col-gutter-sm' : 'q-col-gutter-md'"
+        >
           <div class="col-12 col-sm-6">
             <q-input
               v-model="form.startDate"
               label="Start Date"
               outlined
+              no-error-icon
               :rules="startDateRules"
               @update:model-value="updateEndDate"
             >
@@ -163,6 +168,7 @@
             <q-input
               v-model="form.endDate"
               label="End Date"
+              no-error-icon
               outlined
               readonly
               :rules="[(val: string) => !!val || 'End date is required']"
@@ -284,8 +290,8 @@
     <div v-else-if="!isNewPlan">
       <q-tabs
         :model-value="currentTab"
-        dense
         no-caps
+        inline-label
         align="justify"
         active-color="primary"
         indicator-color="primary"
@@ -354,16 +360,21 @@
                   v-model="form.name"
                   label="Plan Name"
                   outlined
+                  no-error-icon
                   :rules="[(val: string) => !!val || 'Plan name is required']"
-                  class="q-mb-md"
+                  :class="$q.screen.lt.md ? 'q-mb-sm' : 'q-mb-md'"
                 />
 
-                <div class="row q-col-gutter-md">
+                <div
+                  class="row"
+                  :class="$q.screen.lt.md ? 'q-col-gutter-sm' : 'q-col-gutter-md'"
+                >
                   <div class="col-12 col-sm-6">
                     <q-input
                       v-model="form.startDate"
                       label="Start Date"
                       outlined
+                      no-error-icon
                       :rules="startDateRules"
                       @update:model-value="updateEndDate"
                     >
@@ -403,6 +414,7 @@
                       label="End Date"
                       outlined
                       readonly
+                      no-error-icon
                       :rules="[(val: string) => !!val || 'End date is required']"
                       hint="Auto-calculated from template"
                     />
@@ -468,10 +480,7 @@
                 <div v-if="planCategoryGroups.length > 0">
                   <q-separator class="q-mb-lg" />
                   <div class="row items-center justify-between">
-                    <div
-                      class="text-h6"
-                      style="display: flex; align-items: center"
-                    >
+                    <div class="row items-center text-h6">
                       <q-icon
                         name="eva-credit-card-outline"
                         class="q-mr-sm"
@@ -481,7 +490,7 @@
                     <div
                       :class="[
                         'text-primary text-weight-bold',
-                        $q.screen.lt.md ? 'text-h5' : 'text-h4',
+                        $q.screen.lt.md ? 'text-h6' : 'text-h5',
                       ]"
                     >
                       {{ formattedTotalAmount }}

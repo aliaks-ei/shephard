@@ -1,10 +1,7 @@
 <template>
   <div :class="{ 'mobile-content-spacing': isMobile && hasActions }">
     <!-- Mobile: Full width toolbar -->
-    <div
-      v-if="isMobile"
-      class="q-pa-sm"
-    >
+    <div v-if="isMobile">
       <q-toolbar class="q-mb-sm q-px-none">
         <q-btn
           flat

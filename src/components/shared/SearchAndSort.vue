@@ -13,6 +13,7 @@
             debounce="300"
             outlined
             clearable
+            no-error-icon
             @update:model-value="emit('update:searchQuery', $event?.toString() ?? '')"
           >
             <template #prepend>

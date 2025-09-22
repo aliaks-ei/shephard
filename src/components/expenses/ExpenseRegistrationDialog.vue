@@ -163,6 +163,7 @@
             v-model="form.name"
             label="Expense Name *"
             outlined
+            no-error-icon
             :rules="nameRules"
             class="q-mb-md"
           />
@@ -174,6 +175,7 @@
             step="0.01"
             min="0.01"
             outlined
+            no-error-icon
             :rules="amountRules"
             :suffix="selectedPlan?.currency || ''"
             class="q-mb-md"
@@ -187,6 +189,7 @@
             v-model="form.expenseDate"
             label="Expense Date *"
             outlined
+            no-error-icon
             :rules="[(val: string) => !!val || 'Date is required']"
             class="q-mb-md"
           >

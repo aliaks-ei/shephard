@@ -31,6 +31,7 @@
           placeholder="Search categories..."
           outlined
           dense
+          no-error-icon
           clearable
         >
           <template #prepend>
