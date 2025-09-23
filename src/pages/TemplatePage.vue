@@ -126,8 +126,8 @@
         <div v-if="templateItems.length > 0">
           <TemplateCategory
             v-for="group in enrichedCategories"
-            :key="group.categoryId"
-            :ref="(el: unknown) => setCategoryRef(el, group.categoryId)"
+            :key="`${group.categoryId}-${allCategoriesExpanded}`"
+            :ref="(el) => setCategoryRef(el, group.categoryId)"
             :category-id="group.categoryId"
             :category-name="group.categoryName"
             :category-color="group.categoryColor"
@@ -136,7 +136,7 @@
             :subtotal="group.subtotal"
             :currency="templateCurrency"
             :readonly="false"
-            :default-expanded="getCategoryExpanded(group.categoryId)"
+            :default-expanded="allCategoriesExpanded || group.categoryId === lastAddedCategoryId"
             @update-item="updateTemplateItem"
             @remove-item="removeTemplateItem"
             @add-item="handleAddTemplateItem"
@@ -285,7 +285,7 @@
           <div v-if="templateItems.length > 0">
             <TemplateCategory
               v-for="group in enrichedCategories"
-              :key="group.categoryId"
+              :key="`${group.categoryId}-${allCategoriesExpanded}`"
               :category-id="group.categoryId"
               :category-name="group.categoryName"
               :category-color="group.categoryColor"
@@ -390,19 +390,17 @@ import { useTemplatesStore } from 'src/stores/templates'
 import { useCategoriesStore } from 'src/stores/categories'
 import { useNotificationStore } from 'src/stores/notification'
 import { useTemplateItems } from 'src/composables/useTemplateItems'
-import { useError } from 'src/composables/useError'
 import { formatCurrency } from 'src/utils/currency'
 import { useTemplate } from 'src/composables/useTemplate'
 import { useDetailPageState } from 'src/composables/useDetailPageState'
 import { useEditablePage } from 'src/composables/useEditablePage'
 import type { Category } from 'src/api'
-import type { TemplateCategoryUI } from 'src/types'
+import type { TemplateCategoryUI, TemplateItemUI } from 'src/types'
 
 const router = useRouter()
 const templatesStore = useTemplatesStore()
 const categoriesStore = useCategoriesStore()
 const notificationsStore = useNotificationStore()
-const { handleError } = useError()
 
 const {
   isTemplateLoading,
@@ -432,7 +430,6 @@ const {
   getUsedCategoryIds,
 } = useTemplateItems()
 
-// Page state configuration
 const pageConfig = {
   entityName: 'Template',
   entityNamePlural: 'Templates',
@@ -449,7 +446,6 @@ const { pageTitle, pageIcon } = useDetailPageState(
   isReadOnlyMode.value,
 )
 
-// Custom banners with template-specific logic
 const banners = computed(() => {
   const bannersList = []
 
@@ -467,7 +463,6 @@ const banners = computed(() => {
 
 const { openDialog, closeDialog, getDialogState } = useEditablePage()
 
-// Local state
 const categoryRefs = ref<Map<string, InstanceType<typeof TemplateCategory>>>(new Map())
 const lastAddedCategoryId = ref<string | null>(null)
 const allCategoriesExpanded = ref(false)
@@ -478,11 +473,9 @@ const form = ref({
   duration: 'monthly' as string,
 })
 
-// Error states for validation
 const nameError = ref(false)
 const nameErrorMessage = ref('')
 
-// Computed properties
 const formattedTotalAmount = computed(() =>
   formatCurrency(totalAmount.value, templateCurrency.value),
 )
@@ -618,10 +611,6 @@ async function onCategorySelected(category: Category): Promise<void> {
   focusLastItem(category.id)
 }
 
-function getCategoryExpanded(categoryId: string): boolean {
-  return allCategoriesExpanded.value || categoryId === lastAddedCategoryId.value
-}
-
 function toggleAllCategories(): void {
   allCategoriesExpanded.value = !allCategoriesExpanded.value
   if (allCategoriesExpanded.value) {
@@ -638,33 +627,75 @@ function clearNameError(): void {
   nameErrorMessage.value = ''
 }
 
+function getFirstInvalidItem(): { categoryId: string; item: TemplateItemUI } | null {
+  for (const item of templateItems.value) {
+    if (!item.name.trim() || item.amount <= 0) {
+      return { categoryId: item.categoryId, item }
+    }
+  }
+  return null
+}
+
+async function scrollToFirstInvalidField(): Promise<void> {
+  const firstInvalidItem = getFirstInvalidItem()
+  if (!firstInvalidItem) return
+
+  const categoryRef = categoryRefs.value.get(firstInvalidItem.categoryId)
+  if (!categoryRef) return
+
+  const categoryElement = categoryRef.$el
+  if (!categoryElement) return
+
+  categoryElement.scrollIntoView({
+    behavior: 'smooth',
+    block: 'center',
+  })
+
+  await nextTick()
+  lastAddedCategoryId.value = firstInvalidItem.categoryId
+  categoryRef.focusFirstInvalidItem()
+}
+
 async function saveTemplate(): Promise<void> {
-  // Clear previous errors
+  lastAddedCategoryId.value = null
   clearNameError()
+
+  let hasFormErrors = false
+  let hasItemErrors = false
 
   if (!form.value.name || form.value.name.trim().length === 0) {
     nameError.value = true
     nameErrorMessage.value = 'Template name is required'
-    handleError('TEMPLATES.NAME_VALIDATION_FAILED', new Error('Template name is required'))
-    return
+    hasFormErrors = true
   }
 
   if (formRef.value?.validate) {
     const isFormValid = await formRef.value.validate()
-    if (!isFormValid) return
+    if (!isFormValid) {
+      hasFormErrors = true
+    }
   }
 
   if (!isValidForSave.value) {
+    hasItemErrors = true
+
     if (!hasValidItems.value) {
-      handleError('TEMPLATE_ITEMS.VALIDATION_FAILED', new Error('No valid items'))
+      await scrollToFirstInvalidField()
     } else if (hasDuplicateItems.value) {
-      handleError(
-        'TEMPLATE_ITEMS.DUPLICATE_NAME_CATEGORY',
-        new Error('Duplicate name and category combination'),
+      notificationsStore.showError(
+        'You have duplicate item names within the same category. Please use unique names.',
       )
+
+      allCategoriesExpanded.value = true
+      await nextTick()
     }
-    return
   }
+
+  if (hasFormErrors) {
+    notificationsStore.showError('Please fix the form errors before saving')
+  }
+
+  if (hasFormErrors || hasItemErrors) return
 
   let success = false
   const templateItems = getTemplateItemsForSave()
