@@ -16,10 +16,13 @@ import {
 import { getPlanItems, updatePlanItemCompletion, type PlanItem } from 'src/api/plans'
 import { useError } from 'src/composables/useError'
 import { useUserStore } from 'src/stores/user'
+import { usePlansStore } from 'src/stores/plans'
+import { canAddExpensesToPlan } from 'src/utils/plans'
 
 export const useExpensesStore = defineStore('expenses', () => {
   const { handleError } = useError()
   const userStore = useUserStore()
+  const plansStore = usePlansStore()
 
   const expenses = ref<ExpenseWithCategory[]>([])
   const expenseSummary = ref<PlanExpenseSummary[]>([])
@@ -92,6 +95,25 @@ export const useExpensesStore = defineStore('expenses', () => {
 
   async function addExpense(expenseData: Omit<ExpenseInsert, 'user_id'>) {
     if (!userId.value) return
+
+    // Check if user has permission to add expenses to this plan
+    const plan = plansStore.plans.find((p) => p.id === expenseData.plan_id)
+    if (!plan) {
+      handleError('EXPENSES.PLAN_NOT_FOUND', new Error('Plan not found'), {
+        planId: expenseData.plan_id,
+      })
+      return
+    }
+
+    const isOwner = plan.owner_id === userId.value
+    if (!canAddExpensesToPlan(plan, isOwner)) {
+      handleError(
+        'EXPENSES.PERMISSION_DENIED',
+        new Error('You do not have permission to add expenses to this plan'),
+        { planId: expenseData.plan_id },
+      )
+      return
+    }
 
     isLoading.value = true
 

@@ -539,7 +539,7 @@ import { usePlansStore } from 'src/stores/plans'
 import { useCategoriesStore } from 'src/stores/categories'
 import { useNotificationStore } from 'src/stores/notification'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
-import { formatDateRange, getStatusColor } from 'src/utils/plans'
+import { formatDateRange, getStatusColor, getPlanStatus } from 'src/utils/plans'
 import { getPlanItems, updatePlanItemCompletion } from 'src/api/plans'
 import PlanItemSelector from './PlanItemSelector.vue'
 import type { QForm } from 'quasar'
@@ -600,10 +600,10 @@ const form = ref<ExpenseRegistrationForm>({
 })
 
 const mostRecentlyUsedPlan = computed(() => {
-  if (!plansStore.activePlans.length) return null
+  if (!plansStore.plansForExpenses.length) return null
 
   // Sort by updated_at descending (most recent first)
-  const sortedPlans = [...plansStore.activePlans].sort((a, b) => {
+  const sortedPlans = [...plansStore.plansForExpenses].sort((a, b) => {
     const dateA = a.updated_at ? new Date(a.updated_at).getTime() : 0
     const dateB = b.updated_at ? new Date(b.updated_at).getTime() : 0
     return dateB - dateA
@@ -613,10 +613,10 @@ const mostRecentlyUsedPlan = computed(() => {
 })
 
 const planOptions = computed(() => {
-  return plansStore.activePlans.map((plan) => ({
+  return plansStore.plansForExpenses.map((plan) => ({
     label: plan.name,
     value: plan.id,
-    status: plan.status,
+    status: getPlanStatus(plan),
     startDate: plan.start_date,
     endDate: plan.end_date,
     currency: plan.currency,

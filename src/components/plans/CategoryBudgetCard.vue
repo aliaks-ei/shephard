@@ -1,5 +1,5 @@
 <template>
-  <q-card class="shadow-1">
+  <q-card class="shadow-1 full-height">
     <q-item
       class="column q-pa-md"
       clickable

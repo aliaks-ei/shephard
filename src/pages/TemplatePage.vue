@@ -6,7 +6,7 @@
     :is-loading="isTemplateLoading"
     :actions="actionBarActions"
     :actions-visible="isEditMode"
-    :show-read-only-badge="isReadOnlyMode"
+    :show-read-only-badge="!isEditMode"
     @back="goBack"
   >
     <!-- Main Content -->
@@ -407,7 +407,6 @@ const {
   isNewTemplate,
   routeTemplateId,
   isOwner,
-  isReadOnlyMode,
   isEditMode,
   templateCurrency,
   createNewTemplateWithItems,
@@ -443,13 +442,13 @@ const pageConfig = {
 const { pageTitle, pageIcon } = useDetailPageState(
   pageConfig,
   isNewTemplate.value,
-  isReadOnlyMode.value,
+  !isEditMode.value,
 )
 
 const banners = computed(() => {
   const bannersList = []
 
-  if (isReadOnlyMode.value) {
+  if (!isEditMode.value) {
     bannersList.push({
       type: 'readonly',
       class: 'bg-orange-1 text-orange-8',

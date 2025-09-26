@@ -6,7 +6,7 @@
     :is-loading="isPlanLoading"
     :actions="actionBarActions"
     :actions-visible="actionsVisible"
-    :show-read-only-badge="isReadOnlyMode"
+    :show-read-only-badge="!isEditMode"
     @back="goBack"
   >
     <!-- For new plans, show the creation form directly without tabs -->
@@ -304,6 +304,7 @@
           icon="eva-pie-chart-outline"
         />
         <q-tab
+          v-if="isEditMode"
           name="items"
           label="Items"
           icon="eva-checkmark-square-2-outline"
@@ -344,6 +345,7 @@
 
         <!-- Items Tracking Tab -->
         <q-tab-panel
+          v-if="isEditMode"
           class="q-pa-none q-pa-md-sm"
           name="items"
         >
@@ -634,7 +636,6 @@ const {
   isNewPlan,
   currentTab,
   isOwner,
-  isReadOnlyMode,
   isEditMode,
   canEditPlanData,
   planCurrency,
@@ -669,17 +670,13 @@ const pageConfig = {
   viewIcon: 'eva-eye-outline',
 }
 
-const { pageTitle, pageIcon } = useDetailPageState(
-  pageConfig,
-  isNewPlan.value,
-  isReadOnlyMode.value,
-)
+const { pageTitle, pageIcon } = useDetailPageState(pageConfig, isNewPlan.value, !isEditMode.value)
 
 // Custom banners with plan-specific logic
 const banners = computed(() => {
   const bannersList = []
 
-  if (isReadOnlyMode.value) {
+  if (!isEditMode.value) {
     bannersList.push({
       type: 'readonly',
       class: 'bg-orange-1 text-orange-8',
@@ -887,7 +884,7 @@ const actionBarActions = computed<ActionBarAction[]>(() => {
   if (currentTab.value === 'overview') {
     return overviewActions.value
   }
-  if (currentTab.value === 'items') {
+  if (currentTab.value === 'items' && isEditMode.value) {
     return itemsActions.value
   }
   return editActions.value
@@ -900,7 +897,8 @@ const actionsVisible = computed(() => {
       (isNewPlan.value ||
         canEditPlanData.value ||
         (!isOwner.value && currentTab.value === 'edit'))) ||
-    (!isNewPlan.value && (currentTab.value === 'overview' || currentTab.value === 'items'))
+    (!isNewPlan.value &&
+      (currentTab.value === 'overview' || (currentTab.value === 'items' && isEditMode.value)))
   )
 })
 

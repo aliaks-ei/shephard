@@ -67,6 +67,27 @@ export function canEditPlan(plan: Plan, isOwner: boolean): boolean {
 }
 
 /**
+ * Check if expenses can be added to a plan based on status and permissions
+ */
+export function canAddExpensesToPlan(
+  plan: Plan & { permission_level?: string },
+  isOwner: boolean,
+): boolean {
+  // Cancelled and completed plans cannot have expenses added
+  if (plan.status === 'cancelled' || getPlanStatus(plan) === 'completed') {
+    return false
+  }
+
+  // If user is the owner, they can always add expenses to active/pending plans
+  if (isOwner) {
+    return true
+  }
+
+  // For shared plans, user needs edit permission to add expenses
+  return plan.permission_level === 'edit'
+}
+
+/**
  * Get days remaining for active plans
  */
 export function getDaysRemaining(plan: Plan): number | null {
