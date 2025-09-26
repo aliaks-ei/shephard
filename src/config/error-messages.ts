@@ -59,6 +59,7 @@ export type ErrorMessageKey =
   | 'EXPENSES.LOAD_CATEGORY_FAILED'
   | 'EXPENSES.LOAD_PLAN_ITEMS_FAILED'
   | 'EXPENSES.PLAN_NOT_FOUND'
+  | 'EXPENSES.PLAN_ITEM_NOT_FOUND'
   | 'EXPENSES.PERMISSION_DENIED'
   | 'UNKNOWN'
 
@@ -393,6 +394,12 @@ export const ERROR_MESSAGES: Record<ErrorMessageKey, ErrorMessageConfig> = {
   'EXPENSES.PLAN_NOT_FOUND': {
     message:
       "The plan you're trying to add an expense to could not be found. Please refresh and try again.",
+    notify: true,
+    log: true,
+  },
+  'EXPENSES.PLAN_ITEM_NOT_FOUND': {
+    message:
+      "The plan item you're trying to link to this expense could not be found. Please refresh and try again.",
     notify: true,
     log: true,
   },
