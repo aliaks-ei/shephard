@@ -20,37 +20,7 @@
         </div>
 
         <div
-          v-if="isLoadingExpenses"
-          class="row q-col-gutter-md"
-        >
-          <div
-            v-for="i in 4"
-            :key="i"
-            class="col-12 col-sm-6 col-md-4"
-          >
-            <q-card class="shadow-1">
-              <q-card-section>
-                <q-skeleton
-                  type="text"
-                  width="60%"
-                  class="q-mb-sm"
-                />
-                <q-skeleton
-                  type="QAvatar"
-                  size="100px"
-                  class="q-mx-auto q-my-md"
-                />
-                <q-skeleton
-                  type="rect"
-                  height="20px"
-                />
-              </q-card-section>
-            </q-card>
-          </div>
-        </div>
-
-        <div
-          v-else-if="categoryBudgets.length === 0"
+          v-if="categoryBudgets.length === 0"
           class="text-center text-grey-6 q-py-lg"
         >
           <q-icon
@@ -84,9 +54,11 @@
     <RecentExpensesList
       :expenses="recentExpenses"
       :currency="planCurrency"
-      :is-loading="isLoadingExpenses"
+      :is-loading="false"
+      :can-edit="isEditMode"
       @add-expense="$emit('open-expense-dialog')"
       @view-all="openAllExpensesDialog"
+      @refresh="$emit('refresh')"
     />
 
     <!-- Category Expenses Modal -->
@@ -98,7 +70,7 @@
       :can-edit="isEditMode"
       :plan-id="planId"
       @add-expense="emitOpenExpenseDialog"
-      @refresh="loadOverviewData"
+      @refresh="$emit('refresh')"
     />
 
     <!-- All Expenses Modal -->
@@ -108,7 +80,7 @@
       :currency="planCurrency"
       :can-edit="isEditMode"
       :plan-id="planId"
-      @refresh="loadOverviewData"
+      @refresh="$emit('refresh')"
     />
   </div>
 </template>
@@ -134,6 +106,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'refresh'): void
   (e: 'open-expense-dialog', categoryId?: string): void
+  (e: 'view-items'): void
 }>()
 
 const expensesStore = useExpensesStore()
@@ -149,26 +122,20 @@ interface CategoryBudget {
   expenseCount: number
 }
 
-// Modal state
 const showCategoryModal = ref(false)
 const showAllExpensesModal = ref(false)
 const selectedCategory = ref<CategoryBudget | null>(null)
 
-// Loading state
-const isLoadingExpenses = ref(false)
-
-// Computed properties
 const planCurrency = computed((): CurrencyCode => {
   return (props.plan?.currency as CurrencyCode) || 'USD'
 })
 
 const planId = computed(() => props.plan?.id || '')
 
-const { categoryBudgets, recentExpenses, totalBudget, totalSpent, loadOverviewData } =
-  usePlanOverview(
-    planId,
-    computed(() => props.plan),
-  )
+const { categoryBudgets, recentExpenses, totalBudget, totalSpent } = usePlanOverview(
+  planId,
+  computed(() => props.plan),
+)
 
 const categoryExpenses = computed(() => {
   if (!selectedCategory.value) return []
@@ -204,20 +171,5 @@ watch(
     }
   },
   { deep: true },
-)
-
-watch(
-  () => props.plan?.id,
-  async (newId) => {
-    if (newId) {
-      isLoadingExpenses.value = true
-      try {
-        await loadOverviewData()
-      } finally {
-        isLoadingExpenses.value = false
-      }
-    }
-  },
-  { immediate: true },
 )
 </script>

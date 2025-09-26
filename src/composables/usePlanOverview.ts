@@ -26,29 +26,6 @@ export function usePlanOverview(
   // Local state
   const isLoading = ref(false)
 
-  // Load all required data for the overview
-  async function loadOverviewData() {
-    const currentPlanId = unref(planId)
-    if (!currentPlanId) return
-
-    isLoading.value = true
-
-    try {
-      const maybeLoadCategories =
-        categoriesStore.categories.length === 0
-          ? categoriesStore.loadCategories()
-          : Promise.resolve()
-
-      await Promise.all([
-        expensesStore.loadExpensesForPlan(currentPlanId),
-        expensesStore.loadExpenseSummaryForPlan(currentPlanId),
-        maybeLoadCategories,
-      ])
-    } finally {
-      isLoading.value = false
-    }
-  }
-
   // Get the current plan with items
   const currentPlanWithItems = computed<PlanWithItems | null>(() => {
     const plan = unref(planArg)
@@ -174,7 +151,6 @@ export function usePlanOverview(
 
   return {
     isLoading,
-    loadOverviewData,
     totalBudget,
     totalSpent,
     remainingBudget,

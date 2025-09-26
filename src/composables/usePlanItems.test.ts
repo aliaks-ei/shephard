@@ -78,6 +78,7 @@ describe('plan items manager mapping', () => {
           amount: 5,
           created_at: '2024-01-01',
           updated_at: '2024-01-02',
+          is_completed: false,
         },
       ],
     }

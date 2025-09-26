@@ -211,6 +211,7 @@ describe('CRUD flows', () => {
           amount: 1,
           created_at: 'c',
           updated_at: 'u',
+          is_completed: false,
         },
       ],
     }

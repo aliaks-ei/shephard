@@ -304,9 +304,14 @@
           icon="eva-pie-chart-outline"
         />
         <q-tab
+          name="items"
+          label="Items"
+          icon="eva-checkmark-square-2-outline"
+        />
+        <q-tab
           v-if="isEditMode"
           name="edit"
-          label="Edit Plan"
+          label="Edit"
           icon="eva-edit-outline"
         />
       </q-tabs>
@@ -333,6 +338,21 @@
             @open-expense-dialog="
               (categoryId?: string) => openExpenseRegistrationFromCategory(categoryId)
             "
+            @view-items="() => switchTab('items')"
+          />
+        </q-tab-panel>
+
+        <!-- Items Tracking Tab -->
+        <q-tab-panel
+          class="q-pa-none q-pa-md-sm"
+          name="items"
+        >
+          <PlanItemsTrackingTab
+            :plan="currentPlan"
+            :can-edit="isEditMode"
+            :currency="planCurrency"
+            @add-expense="openExpenseRegistrationFromItem"
+            @refresh="refreshPlanData"
           />
         </q-tab-panel>
 
@@ -575,7 +595,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useQuasar } from 'quasar'
 import type { QForm } from 'quasar'
 
 import DetailPageLayout from 'src/layouts/DetailPageLayout.vue'
@@ -585,11 +604,13 @@ import SharePlanDialog from 'src/components/plans/SharePlanDialog.vue'
 import TemplateCard from 'src/components/templates/TemplateCard.vue'
 import DeleteDialog from 'src/components/shared/DeleteDialog.vue'
 import PlanOverviewTab from 'src/components/plans/PlanOverviewTab.vue'
+import PlanItemsTrackingTab from 'src/components/plans/PlanItemsTrackingTab.vue'
 import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 import { usePlansStore } from 'src/stores/plans'
 import { useCategoriesStore } from 'src/stores/categories'
 import { useNotificationStore } from 'src/stores/notification'
 import { useTemplatesStore } from 'src/stores/templates'
+import { useExpensesStore } from 'src/stores/expenses'
 import { usePlan } from 'src/composables/usePlan'
 import { usePlanItems } from 'src/composables/usePlanItems'
 import { useDetailPageState } from 'src/composables/useDetailPageState'
@@ -604,7 +625,7 @@ const plansStore = usePlansStore()
 const categoriesStore = useCategoriesStore()
 const notificationsStore = useNotificationStore()
 const templatesStore = useTemplatesStore()
-const $q = useQuasar()
+const expensesStore = useExpensesStore()
 
 // Plan composables
 const {
@@ -688,7 +709,7 @@ const selectedTemplateOption = ref<string | null>(null)
 const allCategoriesExpanded = ref(false)
 const showCancelDialog = ref(false)
 const showDeleteDialog = ref(false)
-const selectedCategory = ref<{ categoryId: string } | null>(null)
+const selectedCategory = ref<{ categoryId: string; itemId?: string } | null>(null)
 const showExpenseDialog = ref(false)
 
 const form = ref({
@@ -826,6 +847,38 @@ const overviewActions = computed<ActionBarAction[]>(() => [
   },
 ])
 
+const itemsActions = computed<ActionBarAction[]>(() => [
+  {
+    key: 'add-expense',
+    icon: 'eva-plus-circle-outline',
+    label: 'Add Expense',
+    color: 'primary',
+    priority: 'primary',
+    visible: isEditMode.value,
+    handler: openExpenseRegistration,
+  },
+  {
+    key: 'edit',
+    icon: 'eva-edit-outline',
+    label: 'Edit',
+    color: 'info',
+    priority: 'primary',
+    visible: isEditMode.value && canEditPlanData.value,
+    handler: () => {
+      switchTab('edit')
+    },
+  },
+  {
+    key: 'share',
+    icon: 'eva-share-outline',
+    label: 'Share',
+    color: 'info',
+    priority: 'secondary',
+    visible: isOwner.value,
+    handler: () => openDialog('share'),
+  },
+])
+
 // Current Action Bar actions based on context
 const actionBarActions = computed<ActionBarAction[]>(() => {
   if (isNewPlan.value) {
@@ -833,6 +886,9 @@ const actionBarActions = computed<ActionBarAction[]>(() => {
   }
   if (currentTab.value === 'overview') {
     return overviewActions.value
+  }
+  if (currentTab.value === 'items') {
+    return itemsActions.value
   }
   return editActions.value
 })
@@ -844,7 +900,7 @@ const actionsVisible = computed(() => {
       (isNewPlan.value ||
         canEditPlanData.value ||
         (!isOwner.value && currentTab.value === 'edit'))) ||
-    (!isNewPlan.value && currentTab.value === 'overview')
+    (!isNewPlan.value && (currentTab.value === 'overview' || currentTab.value === 'items'))
   )
 })
 
@@ -1029,6 +1085,22 @@ function openExpenseRegistrationFromCategory(categoryId?: string): void {
   showExpenseDialog.value = true
 }
 
+function openExpenseRegistrationFromItem(categoryId?: string, itemId?: string): void {
+  selectedCategory.value = categoryId ? { categoryId, ...(itemId && { itemId }) } : null
+  showExpenseDialog.value = true
+}
+
+async function loadPlanExpenses(planId: string): Promise<void> {
+  try {
+    await Promise.all([
+      expensesStore.loadExpensesForPlan(planId),
+      expensesStore.loadExpenseSummaryForPlan(planId),
+    ])
+  } catch (error) {
+    console.error('Error loading plan expenses:', error)
+  }
+}
+
 async function refreshPlanData(): Promise<void> {
   if (!isNewPlan.value && currentPlan.value) {
     const plan = await loadPlan()
@@ -1037,6 +1109,9 @@ async function refreshPlanData(): Promise<void> {
       form.value.startDate = plan.start_date
       form.value.endDate = plan.end_date
       loadPlanItems(plan)
+
+      // Load expenses for all tabs
+      await loadPlanExpenses(currentPlan.value.id)
     }
   }
 }
@@ -1044,7 +1119,13 @@ async function refreshPlanData(): Promise<void> {
 function switchTab(tabName: string): void {
   if (!currentPlan.value || isNewPlan.value) return
 
-  const routeName = tabName === 'edit' ? 'plan-edit' : 'plan-overview'
+  let routeName = 'plan-overview'
+  if (tabName === 'edit') {
+    routeName = 'plan-edit'
+  } else if (tabName === 'items') {
+    routeName = 'plan-items'
+  }
+
   router.push({
     name: routeName,
     params: { id: currentPlan.value.id },
@@ -1066,6 +1147,9 @@ onMounted(async () => {
         form.value.startDate = plan.start_date
         form.value.endDate = plan.end_date
         loadPlanItems(plan)
+
+        // Load expenses for all tabs
+        await loadPlanExpenses(plan.id)
       }
     }
   } finally {

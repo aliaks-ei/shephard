@@ -1,11 +1,15 @@
 ---
-description: Quality assurance checks and validation steps
+description: Run linting, formatting and test checks before completing the work
 globs:
-alwaysApply: true
+alwaysApply: false
+when:
+  integration: slack
 ---
 
-Before considering work complete, ensure all quality checks pass. These checks maintain code quality, security, and functionality standards. Run following check:
+Before considering yourself done, make sure there are no linting or formatting issues, and that unit tests pass entirely.
 
-1. `npm run lint`
-2. `npm run format`
-3. `npm run type-check`
+Here are the commands you should run:
+
+1. `npm run lint` – finds linting issues. If the command terminates with no linting issues surfaced, you're good to go.
+2. `npm run format` – reformats the code to follow our prettier formatting rules. You should just run it before running type check.
+3. `npm run type-check` – run type checking. If the command terminates with no type issues surfaced, you're good to go.
