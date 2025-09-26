@@ -166,19 +166,11 @@ describe('ownership and permissions', () => {
 })
 
 describe('read-only mode detection', () => {
-  it('allows editing for new templates', () => {
-    mockRoute.value = { name: 'new-template', params: {} }
-
-    const { isReadOnlyMode } = useTemplate()
-
-    expect(isReadOnlyMode.value).toBe(false)
-  })
-
   it('allows editing for template owners', () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
-    const { currentTemplate, isReadOnlyMode } = useTemplate()
+    const { currentTemplate, isEditMode } = useTemplate()
 
     currentTemplate.value = {
       id: 'template-1',
@@ -192,14 +184,14 @@ describe('read-only mode detection', () => {
       template_items: [],
     }
 
-    expect(isReadOnlyMode.value).toBe(false)
+    expect(isEditMode.value).toBe(false)
   })
 
   it('enforces read-only for view permission', () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
-    const { currentTemplate, isReadOnlyMode } = useTemplate()
+    const { currentTemplate, isEditMode } = useTemplate()
 
     currentTemplate.value = {
       id: 'template-1',
@@ -214,14 +206,14 @@ describe('read-only mode detection', () => {
       permission_level: 'view',
     }
 
-    expect(isReadOnlyMode.value).toBe(true)
+    expect(isEditMode.value).toBe(true)
   })
 
   it('allows editing for edit permission', () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
-    const { currentTemplate, isReadOnlyMode } = useTemplate()
+    const { currentTemplate, isEditMode } = useTemplate()
 
     currentTemplate.value = {
       id: 'template-1',
@@ -236,7 +228,7 @@ describe('read-only mode detection', () => {
       permission_level: 'edit',
     }
 
-    expect(isReadOnlyMode.value).toBe(false)
+    expect(isEditMode.value).toBe(false)
   })
 })
 
@@ -631,7 +623,7 @@ describe('reactivity', () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
-    const { currentTemplate, isReadOnlyMode, isEditMode } = useTemplate()
+    const { currentTemplate, isEditMode } = useTemplate()
 
     currentTemplate.value = {
       id: 'template-1',
@@ -648,13 +640,11 @@ describe('reactivity', () => {
 
     await nextTick()
 
-    expect(isReadOnlyMode.value).toBe(true)
     expect(isEditMode.value).toBe(false)
 
     currentTemplate.value.permission_level = 'edit'
     await nextTick()
 
-    expect(isReadOnlyMode.value).toBe(false)
     expect(isEditMode.value).toBe(true)
   })
 
@@ -821,13 +811,12 @@ describe('integration scenarios', () => {
 
     templatesStore.loadTemplateWithItems = vi.fn().mockResolvedValue(sharedTemplate)
 
-    const { isOwner, isEditMode, isReadOnlyMode, templateCurrency, loadTemplate } = useTemplate()
+    const { isOwner, isEditMode, templateCurrency, loadTemplate } = useTemplate()
 
     const loadResult = await loadTemplate()
     expect(loadResult).toEqual(sharedTemplate)
     expect(isOwner.value).toBe(false)
     expect(isEditMode.value).toBe(false)
-    expect(isReadOnlyMode.value).toBe(true)
     expect(templateCurrency.value).toBe('GBP')
   })
 })

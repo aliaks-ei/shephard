@@ -23,6 +23,7 @@ import {
 } from 'src/api'
 import { useError } from 'src/composables/useError'
 import { useUserStore } from 'src/stores/user'
+import { canAddExpensesToPlan } from 'src/utils/plans'
 import type { CurrencyCode } from 'src/utils/currency'
 
 export const usePlansStore = defineStore('plans', () => {
@@ -40,6 +41,12 @@ export const usePlansStore = defineStore('plans', () => {
   const ownedPlans = computed(() => plans.value.filter((p) => p.owner_id === userId.value))
   const sharedPlans = computed(() => plans.value.filter((p) => p.owner_id !== userId.value))
   const activePlans = computed(() => plans.value.filter((p) => p.status === 'active'))
+  const plansForExpenses = computed(() =>
+    plans.value.filter((p) => {
+      const isOwner = p.owner_id === userId.value
+      return canAddExpensesToPlan(p, isOwner)
+    }),
+  )
 
   async function loadPlans() {
     if (!userId.value) return
@@ -306,6 +313,7 @@ export const usePlansStore = defineStore('plans', () => {
     ownedPlans,
     sharedPlans,
     activePlans,
+    plansForExpenses,
     loadPlans,
     loadPlanWithItems,
     addPlan,
