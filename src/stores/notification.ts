@@ -30,11 +30,31 @@ export const useNotificationStore = defineStore('notification', () => {
       type: 'negative',
       icon: 'eva-alert-triangle-outline',
       timeout: 5000,
+      actions: [
+        {
+          icon: 'eva-close-outline',
+          color: 'white',
+          round: true,
+          dense: true,
+          size: 'sm',
+          handler: () => {},
+        },
+      ],
     },
     warning: {
       type: 'warning',
       icon: 'eva-alert-triangle-outline',
       timeout: 4000,
+      actions: [
+        {
+          icon: 'eva-close-outline',
+          color: 'white',
+          round: true,
+          dense: true,
+          size: 'sm',
+          handler: () => {},
+        },
+      ],
     },
   }
 

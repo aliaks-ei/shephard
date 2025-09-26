@@ -41,6 +41,11 @@ const routes: RouteRecordRaw[] = [
             name: 'plan-overview',
           },
           {
+            path: 'items',
+            component: () => import('pages/PlanPage.vue'),
+            name: 'plan-items',
+          },
+          {
             path: 'edit',
             component: () => import('pages/PlanPage.vue'),
             name: 'plan-edit',

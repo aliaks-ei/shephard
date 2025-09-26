@@ -46,6 +46,7 @@ export type Database = {
           plan_id: string
           updated_at: string | null
           user_id: string
+          plan_item_id: string | null
         }
         Insert: {
           amount: number
@@ -57,6 +58,7 @@ export type Database = {
           plan_id: string
           updated_at?: string | null
           user_id: string
+          plan_item_id?: string | null
         }
         Update: {
           amount?: number
@@ -68,6 +70,7 @@ export type Database = {
           plan_id?: string
           updated_at?: string | null
           user_id?: string
+          plan_item_id?: string | null
         }
         Relationships: [
           {
@@ -95,6 +98,7 @@ export type Database = {
           name: string
           plan_id: string
           updated_at: string | null
+          is_completed: boolean
         }
         Insert: {
           amount: number
@@ -104,6 +108,7 @@ export type Database = {
           name: string
           plan_id: string
           updated_at?: string | null
+          is_completed?: boolean
         }
         Update: {
           amount?: number
@@ -113,6 +118,7 @@ export type Database = {
           name?: string
           plan_id?: string
           updated_at?: string | null
+          is_completed?: boolean
         }
         Relationships: [
           {

@@ -72,7 +72,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, watch } from 'vue'
+import { ref, computed, nextTick, watch, watchEffect } from 'vue'
 import TemplateItem from './TemplateItem.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import type { TemplateItemUI } from 'src/types'
@@ -133,6 +133,21 @@ async function focusLastItem(): Promise<void> {
   }
 }
 
+async function focusFirstInvalidItem(): Promise<void> {
+  await nextTick()
+
+  const invalidItemIndex = props.items.findIndex((item) => !item.name.trim() || item.amount <= 0)
+
+  if (invalidItemIndex >= 0 && itemRefs.value[invalidItemIndex]) {
+    itemRefs.value[invalidItemIndex].focusNameInput()
+    return
+  }
+
+  if (props.items.length > 0 && itemRefs.value[0]) {
+    itemRefs.value[0].focusNameInput()
+  }
+}
+
 watch(
   () => props.items.length,
   (newLength, oldLength) => {
@@ -142,14 +157,12 @@ watch(
   },
 )
 
-watch(
-  () => props.defaultExpanded,
-  (newValue) => {
-    isExpanded.value = newValue
-  },
-)
+watchEffect(() => {
+  isExpanded.value = props.defaultExpanded
+})
 
 defineExpose({
   focusLastItem,
+  focusFirstInvalidItem,
 })
 </script>

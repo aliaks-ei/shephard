@@ -18,6 +18,7 @@ export function usePlan() {
   const routePlanId = computed(() => (typeof route.params.id === 'string' ? route.params.id : null))
   const currentTab = computed(() => {
     if (route.name === 'plan-overview') return 'overview'
+    if (route.name === 'plan-items') return 'items'
     if (route.name === 'plan-edit') return 'edit'
     return 'overview' // default
   })
@@ -48,7 +49,7 @@ export function usePlan() {
       return userStore.preferences.currency as CurrencyCode
     }
 
-    return currentPlan.value?.currency as CurrencyCode
+    return (currentPlan.value?.currency || userStore.preferences.currency) as CurrencyCode
   })
 
   async function createNewPlanWithItems(

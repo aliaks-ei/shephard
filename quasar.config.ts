@@ -57,7 +57,7 @@ export default defineConfig((ctx) => {
       // rawDefine: {}
       // ignorePublicFolder: true,
       minify: ctx.prod, // Enable minification in production
-      // polyfillModulePreload: true,
+      polyfillModulePreload: true,
       // distDir
 
       extendViteConf(viteConf) {
@@ -254,6 +254,7 @@ export default defineConfig((ctx) => {
         // Optimize caching strategies
         cfg.skipWaiting = true
         cfg.clientsClaim = true
+        cfg.cleanupOutdatedCaches = true
 
         // Cache optimization
         cfg.runtimeCaching = [
