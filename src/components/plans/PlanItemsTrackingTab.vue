@@ -332,7 +332,7 @@ async function toggleItemCompletion(item: PlanItem, value?: boolean) {
       )
 
       if (expensesToDelete.length === 0) {
-        notificationStore.showWarning('No expenses found to remove for this item')
+        notificationStore.showError('No expenses found to remove for this item')
         return
       }
 
