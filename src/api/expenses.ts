@@ -4,7 +4,6 @@ import { BaseAPIService } from './base'
 export type Expense = Tables<'expenses'>
 export type ExpenseInsert = TablesInsert<'expenses'>
 export type ExpenseUpdate = TablesUpdate<'expenses'>
-
 export type ExpenseWithCategory = Expense & {
   categories: Tables<'categories'>
 }

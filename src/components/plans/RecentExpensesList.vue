@@ -61,10 +61,26 @@
             </q-item-label>
           </q-item-section>
 
-          <q-item-section side>
-            <q-item-label class="text-weight-bold">
-              {{ formatCurrency(expense.amount, currency) }}
-            </q-item-label>
+          <q-item-section
+            side
+            class="items-end"
+          >
+            <div class="row items-center q-gutter-sm">
+              <q-item-label class="text-weight-bold text-primary">
+                {{ formatCurrency(expense.amount, currency) }}
+              </q-item-label>
+              <q-btn
+                v-if="canEdit"
+                flat
+                round
+                size="sm"
+                icon="eva-trash-2-outline"
+                color="negative"
+                @click="confirmDeleteExpense(expense)"
+              >
+                <q-tooltip v-if="!$q.screen.lt.md">Delete expense</q-tooltip>
+              </q-btn>
+            </div>
           </q-item-section>
         </q-item>
       </q-list>
@@ -93,22 +109,29 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { Dialog } from 'quasar'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import { useCategoriesStore } from 'src/stores/categories'
+import { useExpensesStore } from 'src/stores/expenses'
+import { useNotificationStore } from 'src/stores/notification'
 import type { ExpenseWithCategory } from 'src/api'
 
 const props = defineProps<{
   expenses: ExpenseWithCategory[]
   currency: CurrencyCode
   isLoading: boolean
+  canEdit?: boolean
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   (e: 'view-all'): void
   (e: 'add-expense'): void
+  (e: 'refresh'): void
 }>()
 
 const categoriesStore = useCategoriesStore()
+const expensesStore = useExpensesStore()
+const notificationStore = useNotificationStore()
 
 // Show only the 5 most recent expenses
 const displayedExpenses = computed(() => {
@@ -148,5 +171,20 @@ function formatDate(dateString: string): string {
       year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined,
     }).format(date)
   }
+}
+
+function confirmDeleteExpense(expense: ExpenseWithCategory) {
+  Dialog.create({
+    title: 'Delete Expense',
+    message: `Are you sure you want to delete "${expense.name}"?`,
+    cancel: true,
+    persistent: true,
+  }).onOk(() => {
+    void (async () => {
+      await expensesStore.removeExpense(expense.id)
+      notificationStore.showSuccess('Expense deleted successfully')
+      emit('refresh')
+    })()
+  })
 }
 </script>

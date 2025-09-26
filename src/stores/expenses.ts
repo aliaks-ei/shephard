@@ -13,6 +13,7 @@ import {
   type ExpenseUpdate,
   type PlanExpenseSummary,
 } from 'src/api'
+import { getPlanItems, updatePlanItemCompletion, type PlanItem } from 'src/api/plans'
 import { useError } from 'src/composables/useError'
 import { useUserStore } from 'src/stores/user'
 
@@ -162,9 +163,24 @@ export const useExpensesStore = defineStore('expenses', () => {
     isLoading.value = true
 
     try {
+      // Find the expense to get the plan_item_id before deleting
+      const expenseToDelete = expenses.value.find((e) => e.id === expenseId)
+      const planItemId = expenseToDelete?.plan_item_id
+
       await deleteExpense(expenseId)
 
       expenses.value = expenses.value.filter((e) => e.id !== expenseId)
+
+      // Handle plan item completion synchronization
+      if (planItemId) {
+        // Check if there are any remaining expenses linked to this plan item
+        const remainingExpenses = expenses.value.filter((e) => e.plan_item_id === planItemId)
+
+        // If no remaining expenses, mark the plan item as incomplete
+        if (remainingExpenses.length === 0) {
+          await updatePlanItemCompletion(planItemId, false)
+        }
+      }
 
       if (currentPlanId.value) {
         await loadExpenseSummaryForPlan(currentPlanId.value)
@@ -206,6 +222,35 @@ export const useExpensesStore = defineStore('expenses', () => {
     }
   }
 
+  function getExpensesForPlanItem(planItemId: string): ExpenseWithCategory[] {
+    return expenses.value.filter((expense) => expense.plan_item_id === planItemId)
+  }
+
+  async function getPlanItemTrackingData(planId: string): Promise<PlanItem[]> {
+    try {
+      return await getPlanItems(planId)
+    } catch (error) {
+      handleError('EXPENSES.LOAD_PLAN_ITEMS_FAILED', error, { planId })
+      return []
+    }
+  }
+
+  function getItemCompletionStatus(planItem: PlanItem): {
+    isCompleted: boolean
+    remainingAmount: number
+    progress: number
+  } {
+    const isCompleted = planItem.is_completed
+    const remainingAmount = planItem.is_completed ? 0 : planItem.amount
+    const progress = planItem.is_completed ? 1 : 0
+
+    return {
+      isCompleted,
+      remainingAmount,
+      progress,
+    }
+  }
+
   function reset() {
     expenses.value = []
     expenseSummary.value = []
@@ -229,6 +274,9 @@ export const useExpensesStore = defineStore('expenses', () => {
     removeExpense,
     loadExpensesByDateRange,
     loadExpensesByCategory,
+    getExpensesForPlanItem,
+    getPlanItemTrackingData,
+    getItemCompletionStatus,
     reset,
   }
 })

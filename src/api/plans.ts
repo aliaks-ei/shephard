@@ -10,7 +10,7 @@ export type PlanShareInsert = TablesInsert<'plan_shares'>
 export type PlanItem = Tables<'plan_items'>
 export type PlanItemInsert = TablesInsert<'plan_items'>
 export type PlanWithItems = Plan & {
-  plan_items: Tables<'plan_items'>[]
+  plan_items: PlanItem[]
 }
 
 export type PlanWithPermission = Plan & {
@@ -96,6 +96,38 @@ export async function updatePlanSharePermission(
   permission: 'view' | 'edit',
 ): Promise<void> {
   return planService.updateSharePermission(planId, userId, permission)
+}
+
+export async function getPlanItems(planId: string): Promise<PlanItem[]> {
+  const { data, error } = await planService.supabase
+    .from('plan_items')
+    .select('*')
+    .eq('plan_id', planId)
+    .order('created_at', { ascending: true })
+
+  if (error) throw error
+
+  return data || []
+}
+
+export async function updatePlanItemCompletion(
+  itemId: string,
+  isCompleted: boolean,
+): Promise<void> {
+  const { error } = await planService.supabase
+    .from('plan_items')
+    .update({ is_completed: isCompleted })
+    .eq('id', itemId)
+
+  if (error) throw error
+}
+
+export async function getPlanItemsByCategory(
+  planId: string,
+  categoryId: string,
+): Promise<PlanItem[]> {
+  const allItems = await getPlanItems(planId)
+  return allItems.filter((item) => item.category_id === categoryId)
 }
 
 export { searchUsersByEmail }

@@ -57,6 +57,7 @@ export type ErrorMessageKey =
   | 'EXPENSES.DUPLICATE_NAME'
   | 'EXPENSES.LOAD_DATE_RANGE_FAILED'
   | 'EXPENSES.LOAD_CATEGORY_FAILED'
+  | 'EXPENSES.LOAD_PLAN_ITEMS_FAILED'
   | 'UNKNOWN'
 
 interface ErrorMessageConfig {
@@ -379,6 +380,11 @@ export const ERROR_MESSAGES: Record<ErrorMessageKey, ErrorMessageConfig> = {
   },
   'EXPENSES.LOAD_CATEGORY_FAILED': {
     message: "We couldn't load expenses for that category. Please try again.",
+    notify: true,
+    log: true,
+  },
+  'EXPENSES.LOAD_PLAN_ITEMS_FAILED': {
+    message: "We couldn't load plan items for tracking. Please refresh or try again later.",
     notify: true,
     log: true,
   },
