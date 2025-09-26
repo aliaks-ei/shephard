@@ -83,7 +83,6 @@ describe('computed state', () => {
     await nextTick()
     expect(p.isOwner.value).toBe(true)
     expect(p.isEditMode.value).toBe(true)
-    expect(p.isReadOnlyMode.value).toBe(false)
   })
 
   it('computes currentTab based on route name', async () => {
@@ -121,7 +120,6 @@ describe('computed state', () => {
       plan_items: [],
       permission_level: 'view',
     }
-    expect(p.isReadOnlyMode.value).toBe(true)
     expect(p.isEditMode.value).toBe(false)
   })
 

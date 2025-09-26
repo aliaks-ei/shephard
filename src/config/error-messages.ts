@@ -58,6 +58,8 @@ export type ErrorMessageKey =
   | 'EXPENSES.LOAD_DATE_RANGE_FAILED'
   | 'EXPENSES.LOAD_CATEGORY_FAILED'
   | 'EXPENSES.LOAD_PLAN_ITEMS_FAILED'
+  | 'EXPENSES.PLAN_NOT_FOUND'
+  | 'EXPENSES.PERMISSION_DENIED'
   | 'UNKNOWN'
 
 interface ErrorMessageConfig {
@@ -385,6 +387,18 @@ export const ERROR_MESSAGES: Record<ErrorMessageKey, ErrorMessageConfig> = {
   },
   'EXPENSES.LOAD_PLAN_ITEMS_FAILED': {
     message: "We couldn't load plan items for tracking. Please refresh or try again later.",
+    notify: true,
+    log: true,
+  },
+  'EXPENSES.PLAN_NOT_FOUND': {
+    message:
+      "The plan you're trying to add an expense to could not be found. Please refresh and try again.",
+    notify: true,
+    log: true,
+  },
+  'EXPENSES.PERMISSION_DENIED': {
+    message:
+      "You don't have permission to add expenses to this plan. Contact the plan owner for edit access.",
     notify: true,
     log: true,
   },

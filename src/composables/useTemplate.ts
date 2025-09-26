@@ -22,12 +22,6 @@ export function useTemplate() {
     return currentTemplate.value.owner_id === userStore.userProfile.id
   })
 
-  const isReadOnlyMode = computed(() => {
-    if (isNewTemplate.value) return false
-    if (isOwner.value) return false
-    return currentTemplate.value?.permission_level === 'view'
-  })
-
   const isEditMode = computed(() => {
     if (isNewTemplate.value) return true
     if (isOwner.value) return true
@@ -111,7 +105,6 @@ export function useTemplate() {
     isNewTemplate,
     routeTemplateId,
     isOwner,
-    isReadOnlyMode,
     isEditMode,
     templateCurrency,
     createNewTemplateWithItems,

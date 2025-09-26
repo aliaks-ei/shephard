@@ -22,7 +22,10 @@
         </q-toolbar-title>
       </q-toolbar>
 
-      <PageBanners :banners="banners || []" />
+      <PageBanners
+        v-if="!isLoading"
+        :banners="banners || []"
+      />
 
       <div v-if="isLoading">
         <div class="q-pa-lg">
@@ -89,7 +92,7 @@
                 />
                 {{ pageTitle }}
                 <q-badge
-                  v-if="showReadOnlyBadge"
+                  v-if="showReadOnlyBadge && !isLoading"
                   color="orange"
                   text-color="white"
                   class="q-ml-sm"
@@ -114,7 +117,10 @@
             />
           </q-toolbar>
 
-          <PageBanners :banners="banners || []" />
+          <PageBanners
+            v-if="!isLoading"
+            :banners="banners || []"
+          />
 
           <div v-if="isLoading">
             <div class="q-pa-lg">

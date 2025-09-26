@@ -27,12 +27,6 @@ export function usePlan() {
     return currentPlan.value.owner_id === userStore.userProfile.id
   })
 
-  const isReadOnlyMode = computed(() => {
-    if (isNewPlan.value) return false
-    if (isOwner.value) return false
-    return currentPlan.value?.permission_level === 'view'
-  })
-
   const isEditMode = computed(() => {
     if (isNewPlan.value) return true
     if (isOwner.value) return true
@@ -140,7 +134,6 @@ export function usePlan() {
     routePlanId,
     currentTab,
     isOwner,
-    isReadOnlyMode,
     isEditMode,
     canEditPlanData,
     planCurrency,
