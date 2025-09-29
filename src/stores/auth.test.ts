@@ -23,7 +23,6 @@ vi.mock('src/composables/useError', () => ({
 }))
 
 vi.mock('src/api/auth', () => ({
-  getCurrentSession: vi.fn(),
   signInWithIdToken: vi.fn(),
   sendOtpToEmail: vi.fn(),
   verifyEmailOtp: vi.fn(),
@@ -88,40 +87,6 @@ describe('Auth Store', () => {
       expect(authStore.isEmailSent).toBe(false)
       expect(authStore.emailError).toBeNull()
       expect(authStore.isAuthenticated).toBe(false)
-    })
-  })
-
-  describe('init()', () => {
-    it('should load session and set user when successful', async () => {
-      const mockUser = { id: 'test-user-id', email: 'test@example.com' } as User
-      const mockSession = {
-        user: mockUser,
-        access_token: 'test-token',
-        refresh_token: 'refresh-token',
-        expires_in: 3600,
-        token_type: 'bearer',
-      } as Session
-
-      vi.mocked(authApi.getCurrentSession).mockResolvedValue(mockSession)
-
-      await authStore.init()
-
-      expect(authApi.getCurrentSession).toHaveBeenCalled()
-      expect(authStore.session).toEqual(mockSession)
-      expect(authStore.user).toEqual(mockSession.user)
-      expect(authStore.isLoading).toBe(false)
-    })
-
-    it('should handle errors and set loading to false', async () => {
-      const mockError = new Error('Failed to get session')
-      vi.mocked(authApi.getCurrentSession).mockRejectedValue(mockError)
-
-      await authStore.init()
-
-      expect(mockHandleError).toHaveBeenCalledWith('AUTH.INIT_FAILED', mockError)
-      expect(authStore.isLoading).toBe(false)
-      expect(authStore.user).toBeNull()
-      expect(authStore.session).toBeNull()
     })
   })
 

@@ -133,56 +133,6 @@ describe('User Store', () => {
   })
 
   describe('Methods', () => {
-    describe('initUser()', () => {
-      it('should initialize user when authenticated', async () => {
-        const mockInit = vi.fn().mockResolvedValue(undefined)
-        const mockLoadPreferences = vi.fn().mockResolvedValue(undefined)
-
-        vi.mocked(useAuthStore).mockReturnValue({
-          user: mockUser,
-          isAuthenticated: true,
-          isLoading: false,
-          init: mockInit,
-        } as unknown as ReturnType<typeof useAuthStore>)
-
-        vi.mocked(usePreferencesStore).mockReturnValue({
-          preferences: mockPreferences,
-          isLoading: false,
-          loadPreferences: mockLoadPreferences,
-        } as unknown as ReturnType<typeof usePreferencesStore>)
-
-        const userStore = useUserStore()
-        await userStore.initUser()
-
-        expect(mockInit).toHaveBeenCalled()
-        expect(mockLoadPreferences).toHaveBeenCalled()
-      })
-
-      it('should not load preferences when not authenticated', async () => {
-        const mockInit = vi.fn().mockResolvedValue(undefined)
-        const mockLoadPreferences = vi.fn().mockResolvedValue(undefined)
-
-        vi.mocked(useAuthStore).mockReturnValue({
-          user: null,
-          isAuthenticated: false,
-          isLoading: false,
-          init: mockInit,
-        } as unknown as ReturnType<typeof useAuthStore>)
-
-        vi.mocked(usePreferencesStore).mockReturnValue({
-          preferences: null,
-          isLoading: false,
-          loadPreferences: mockLoadPreferences,
-        } as unknown as ReturnType<typeof usePreferencesStore>)
-
-        const userStore = useUserStore()
-        await userStore.initUser()
-
-        expect(mockInit).toHaveBeenCalled()
-        expect(mockLoadPreferences).not.toHaveBeenCalled()
-      })
-    })
-
     describe('updateUserPreferences()', () => {
       it('should update user preferences', async () => {
         const mockUpdatePreferences = vi.fn().mockResolvedValue(undefined)

@@ -4,7 +4,6 @@ import { ref, computed } from 'vue'
 import { useNonce } from 'src/composables/useNonce'
 import { useError } from 'src/composables/useError'
 import {
-  getCurrentSession,
   signInWithIdToken,
   sendOtpToEmail,
   verifyEmailOtp,
@@ -30,35 +29,27 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = computed(() => !!user.value)
 
-  async function init() {
-    try {
-      const currentSession = await getCurrentSession()
-
-      if (!currentSession || !currentSession.expires_at) {
-        session.value = null
-        user.value = null
-        return
-      }
-
-      const now = Math.floor(Date.now() / 1000)
-
-      if (currentSession.expires_at < now) {
-        session.value = null
-        user.value = null
-        return
-      }
-
+  const ready = new Promise<void>((resolve) => {
+    onAuthStateChange(async (event, currentSession) => {
+      const previousUserId = user.value?.id
       session.value = currentSession
-      user.value = currentSession.user
-    } catch (error) {
-      handleError('AUTH.INIT_FAILED', error)
+      user.value = currentSession?.user ?? null
 
-      session.value = null
-      user.value = null
-    } finally {
-      isLoading.value = false
-    }
-  }
+      if (
+        (event === 'INITIAL_SESSION' && currentSession) ||
+        (event === 'SIGNED_IN' && user.value?.id !== previousUserId)
+      ) {
+        await preferencesStore.loadPreferences()
+      } else if (event === 'SIGNED_OUT') {
+        preferencesStore.reset()
+      }
+
+      if (event === 'INITIAL_SESSION') {
+        isLoading.value = false
+        resolve()
+      }
+    })
+  })
 
   async function signInWithGoogle(response: GoogleSignInResponse) {
     if (!currentNonce.value) {
@@ -109,11 +100,6 @@ export const useAuthStore = defineStore('auth', () => {
   async function signOut() {
     try {
       await signOutUser()
-
-      session.value = null
-      user.value = null
-
-      preferencesStore.reset()
     } catch (error) {
       const context = user.value?.id ? { userId: user.value.id } : undefined
       handleError('AUTH.SIGNOUT_FAILED', error, context)
@@ -138,21 +124,6 @@ export const useAuthStore = defineStore('auth', () => {
     emailError.value = null
   }
 
-  onAuthStateChange(async (event, currentSession) => {
-    const previousUserId = user.value?.id
-
-    session.value = currentSession
-    user.value = currentSession?.user ?? null
-
-    if (
-      event !== 'INITIAL_SESSION' &&
-      currentSession?.user &&
-      currentSession.user.id !== previousUserId
-    ) {
-      await preferencesStore.loadPreferences()
-    }
-  })
-
   return {
     user,
     session,
@@ -160,8 +131,8 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated,
     isEmailSent,
     emailError,
+    ready,
 
-    init,
     signOut,
     updateProfile,
     signInWithGoogle,

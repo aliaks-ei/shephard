@@ -51,11 +51,6 @@ beforeEach(() => {
   mockRoute.query = {}
 })
 
-it('should initialize user on mount', () => {
-  const { userStore } = createWrapper()
-  expect(userStore.initUser).toHaveBeenCalledOnce()
-})
-
 it('should redirect to home page after successful authentication', async () => {
   createWrapper()
   await flushPromises()

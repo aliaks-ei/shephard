@@ -54,18 +54,15 @@
 </template>
 
 <script setup lang="ts">
-import { useUserStore } from 'src/stores/user'
 import { onMounted, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 
-const userStore = useUserStore()
 const router = useRouter()
 const route = useRoute()
 const isLoading = ref(true)
 const error = ref<string | null>(null)
 
 onMounted(async () => {
-  await userStore.initUser()
   await redirectToHomePage()
 
   isLoading.value = false

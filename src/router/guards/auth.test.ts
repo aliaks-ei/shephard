@@ -6,7 +6,6 @@ import type { RouteLocationNormalized } from 'vue-router'
 type MockUserStore = {
   isLoading: boolean
   isAuthenticated: boolean
-  initUser: () => Promise<void>
 }
 
 vi.mock('src/stores/user', () => ({
@@ -33,25 +32,12 @@ describe('authGuard', () => {
     mockUserStore = {
       isLoading: false,
       isAuthenticated: false,
-      initUser: vi.fn().mockResolvedValue(undefined),
     } as unknown as MockUserStore
 
     vi.mocked(useUserStore).mockReturnValue(
       mockUserStore as unknown as ReturnType<typeof useUserStore>,
     )
     mockNext.mockClear()
-  })
-
-  it('should proceed even if store is loading (no initUser in guard)', () => {
-    mockUserStore.isLoading = true
-
-    const to: RouteLocationNormalized = getTo('/dashboard', true)
-    const from: RouteLocationNormalized = {} as RouteLocationNormalized
-
-    authGuard(to, from, mockNext)
-
-    expect(mockUserStore.initUser).not.toHaveBeenCalled()
-    expect(mockNext).toHaveBeenCalled()
   })
 
   it('should redirect to auth page if route requires auth and user is not authenticated', () => {
@@ -110,7 +96,6 @@ describe('authGuard', () => {
 
     authGuard(to, from, mockNext)
 
-    expect(mockUserStore.initUser).not.toHaveBeenCalled()
     expect(mockNext).toHaveBeenCalledWith()
   })
 })
