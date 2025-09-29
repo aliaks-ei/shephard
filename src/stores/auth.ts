@@ -34,10 +34,27 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const currentSession = await getCurrentSession()
 
+      if (!currentSession || !currentSession.expires_at) {
+        session.value = null
+        user.value = null
+        return
+      }
+
+      const now = Math.floor(Date.now() / 1000)
+
+      if (currentSession.expires_at < now) {
+        session.value = null
+        user.value = null
+        return
+      }
+
       session.value = currentSession
-      user.value = currentSession?.user ?? null
+      user.value = currentSession.user
     } catch (error) {
       handleError('AUTH.INIT_FAILED', error)
+
+      session.value = null
+      user.value = null
     } finally {
       isLoading.value = false
     }

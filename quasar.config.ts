@@ -92,9 +92,9 @@ export default defineConfig((ctx) => {
           viteConf.build.minify = 'terser'
           viteConf.build.terserOptions = {
             compress: {
-              drop_console: true, // Remove console.log in production
+              drop_console: false, // Keep console logs for debugging production issues
               drop_debugger: true,
-              pure_funcs: ['console.log', 'console.info'],
+              pure_funcs: [], // Don't remove any function calls to preserve error logging
             },
             mangle: {
               safari10: true,
