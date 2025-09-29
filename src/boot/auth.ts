@@ -16,7 +16,6 @@ export default defineBoot(async ({ router }) => {
     try {
       await userStore.initUser()
     } catch (e) {
-      // Defensive logging: prevent silent boot aborts in production
       console.error('[boot/auth] initUser failed', e)
     }
 

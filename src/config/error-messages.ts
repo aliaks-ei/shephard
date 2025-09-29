@@ -126,7 +126,7 @@ export const ERROR_MESSAGES: Record<ErrorMessageKey, ErrorMessageConfig> = {
   },
   'USER.PREFERENCES_LOAD_FAILED': {
     message: "We couldn't load your settings. Please try again or check your connection.",
-    throw: true,
+    throw: false,
     notify: true,
     log: true,
   },
