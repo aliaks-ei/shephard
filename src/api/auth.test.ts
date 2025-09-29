@@ -1,7 +1,6 @@
 import { vi, beforeEach, it, expect } from 'vitest'
 import type { Session } from '@supabase/supabase-js'
 import {
-  getCurrentSession,
   signInWithIdToken,
   sendOtpToEmail,
   verifyEmailOtp,
@@ -17,24 +16,6 @@ const mockSupabase = mockSupabaseModule()
 
 beforeEach(() => {
   vi.clearAllMocks()
-})
-
-// getCurrentSession tests
-it('getCurrentSession should return session when successful', async () => {
-  const { mockSession } = setupSuccessfulAuthMocks(mockSupabase)
-  const getSessionSpy = vi.spyOn(mockSupabase.auth, 'getSession')
-  const result = await getCurrentSession()
-
-  expect(getSessionSpy).toHaveBeenCalled()
-  expect(result).toEqual(mockSession)
-})
-
-it('getCurrentSession should throw error when unsuccessful', async () => {
-  setupAuthErrorMocks(mockSupabase, 'Failed to get session')
-  const getSessionSpy = vi.spyOn(mockSupabase.auth, 'getSession')
-
-  await expect(getCurrentSession()).rejects.toThrow('Failed to get session')
-  expect(getSessionSpy).toHaveBeenCalled()
 })
 
 // signInWithIdToken tests

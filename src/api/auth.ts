@@ -5,34 +5,19 @@ import type {
   AuthOtpResponse,
   UserResponse,
   AuthChangeEvent,
+  User,
 } from '@supabase/supabase-js'
 
 export type { Session }
 
-export async function getCurrentSession(): Promise<Session | null> {
-  const { data, error } = await supabase.auth.getSession()
+export async function getCurrentUser(): Promise<User | null> {
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser()
 
   if (error) throw error
-
-  if (data.session) {
-    const expiresAt = data.session.expires_at
-    const now = Math.floor(Date.now() / 1000)
-
-    if (expiresAt && expiresAt < now) {
-      console.warn('Session expired, attempting to refresh...')
-
-      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
-
-      if (refreshError) {
-        console.error('Failed to refresh expired session:', refreshError)
-        return null
-      }
-
-      return refreshData.session
-    }
-  }
-
-  return data.session
+  return user
 }
 
 export async function signInWithIdToken(params: {

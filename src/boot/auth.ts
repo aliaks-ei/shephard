@@ -1,7 +1,7 @@
 import { defineBoot } from '#q-app/wrappers'
-import { useUserStore } from 'src/stores/user'
+import { useAuthStore } from 'src/stores/auth'
 
-export default defineBoot(async ({ router }) => {
+export default defineBoot(async () => {
   try {
     window.handleGoogleSignIn = (response) => {
       if (window.vueGoogleCallback) {
@@ -11,22 +11,8 @@ export default defineBoot(async ({ router }) => {
       }
     }
 
-    const userStore = useUserStore()
-
-    try {
-      await userStore.initUser()
-    } catch (e) {
-      console.error('[boot/auth] initUser failed', e)
-    }
-
-    try {
-      const current = router.currentRoute.value
-      if (current.meta?.requiresAuth && !userStore.isAuthenticated) {
-        await router.replace({ path: '/auth', query: { redirectTo: current.fullPath } })
-      }
-    } catch (e) {
-      console.error('[boot/auth] post-init navigation failed', e)
-    }
+    const authStore = useAuthStore()
+    await authStore.ready
   } catch (e) {
     console.error('[boot/auth] unexpected boot error', e)
   }
