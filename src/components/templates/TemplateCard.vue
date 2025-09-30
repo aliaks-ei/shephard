@@ -37,7 +37,7 @@
             </div>
           </div>
           <div
-            v-if="!readonly"
+            v-if="!readonly && isOwner"
             class="col-2 text-right"
           >
             <q-btn
@@ -51,7 +51,6 @@
               <TemplateCardMenu
                 :is-owner="isOwner"
                 :permission-level="template.permission_level"
-                @edit="emit('edit', template.id)"
                 @share="emit('share', template.id)"
                 @delete="showDeleteDialog"
               />
@@ -62,7 +61,6 @@
         <div class="q-mt-md">
           <div class="row items-end justify-between">
             <div class="col">
-              <div class="text-caption text-grey-6 q-mb-xs">Total Amount</div>
               <div class="text-h5 text-weight-bold text-primary">
                 {{ formatAmount(template.total) }}
               </div>
@@ -80,6 +78,11 @@
                 />
                 {{ template.duration }}
               </q-badge>
+            </div>
+          </div>
+          <div class="row items-center">
+            <div class="col">
+              <div class="text-caption text-grey-6">Total amount</div>
             </div>
           </div>
         </div>

@@ -7,20 +7,6 @@
   >
     <q-list separator>
       <q-item
-        clickable
-        @click="emit('edit')"
-      >
-        <q-item-section side>
-          <q-icon
-            :name="getMenuActionIcon()"
-            size="18px"
-          />
-        </q-item-section>
-        <q-item-section>
-          <q-item-label>{{ getMenuActionText() }}</q-item-label>
-        </q-item-section>
-      </q-item>
-      <q-item
         v-if="isOwner"
         clickable
         @click="emit('share')"
@@ -77,7 +63,6 @@
 import { computed } from 'vue'
 
 const emit = defineEmits<{
-  (e: 'edit'): void
   (e: 'share'): void
   (e: 'delete'): void
   (e: 'cancel'): void
@@ -97,15 +82,12 @@ const canCancel = computed(() => {
   return props.planStatus === 'active'
 })
 
-function getMenuActionText(): string {
-  if (props.isOwner) return 'Edit Plan'
-  if (props.permissionLevel === 'edit') return 'Edit Plan'
-  return 'View Plan'
-}
+// Menu should only be visible if the user is the owner
+const hasActions = computed(() => {
+  return props.isOwner
+})
 
-function getMenuActionIcon(): string {
-  if (props.isOwner) return 'eva-edit-outline'
-  if (props.permissionLevel === 'edit') return 'eva-edit-outline'
-  return 'eva-eye-outline'
-}
+defineExpose({
+  hasActions,
+})
 </script>
