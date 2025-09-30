@@ -2,27 +2,30 @@
   <q-dialog
     :model-value="modelValue"
     @update:model-value="$emit('update:modelValue', $event)"
-    transition-show="scale"
-    transition-hide="scale"
+    :transition-show="$q.screen.lt.md ? 'slide-up' : 'scale'"
+    :transition-hide="$q.screen.lt.md ? 'slide-down' : 'scale'"
     :maximized="$q.screen.xs"
     :full-width="$q.screen.xs"
     :full-height="$q.screen.xs"
   >
     <q-card
-      class="column"
+      class="column no-wrap"
       :class="$q.screen.lt.md ? 'full-height' : ''"
-      :style="$q.screen.gt.sm ? { width: '700px', maxHeight: '80vh' } : ''"
     >
       <!-- Header -->
-      <q-card-section class="row items-center q-pb-none">
+      <q-card-section class="row items-center">
         <div class="row items-center">
           <q-icon
             name="eva-list-outline"
-            size="32px"
-            color="primary"
+            :size="$q.screen.lt.md ? '24px' : '32px'"
             class="q-mr-sm"
           />
-          <h2 class="text-h6 q-my-none">Expense History</h2>
+          <h2
+            class="q-my-none"
+            :class="$q.screen.lt.md ? 'text-subtitle2' : 'text-h6'"
+          >
+            Expense History
+          </h2>
         </div>
         <q-space />
         <q-btn
@@ -30,11 +33,12 @@
           flat
           round
           dense
+          :size="$q.screen.lt.md ? 'sm' : 'md'"
           @click="$emit('update:modelValue', false)"
         />
       </q-card-section>
 
-      <q-separator class="q-mt-md" />
+      <q-separator />
 
       <!-- Virtual Scroll Container -->
       <q-card-section class="q-pt-none overflow-auto col">

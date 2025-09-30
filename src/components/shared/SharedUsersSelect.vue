@@ -8,6 +8,7 @@
     use-chips
     multiple
     outlined
+    :dense="$q.screen.lt.md"
     :loading="loading"
     @filter="filterUsers"
     @update:model-value="emit('update:model-value', $event)"

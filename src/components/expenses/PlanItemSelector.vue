@@ -1,11 +1,12 @@
 <template>
   <div>
-    <div class="text-h6 q-mb-xs">
+    <div class="row items-center q-mb-xs">
       <q-icon
         name="eva-checkmark-square-2-outline"
         class="q-mr-sm"
+        size="20px"
       />
-      Quick Select Items
+      <h2 class="text-h6 q-my-none">Quick Select Items</h2>
     </div>
 
     <div class="text-grey-7 text-caption q-mb-lg">

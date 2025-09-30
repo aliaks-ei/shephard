@@ -1,6 +1,8 @@
 <template>
   <q-dialog
     :model-value="modelValue"
+    :transition-show="$q.screen.lt.md ? 'slide-up' : 'scale'"
+    :transition-hide="$q.screen.lt.md ? 'slide-down' : 'scale'"
     :maximized="$q.screen.xs"
     :full-width="$q.screen.xs"
     :full-height="$q.screen.xs"
@@ -11,7 +13,7 @@
       :class="$q.screen.lt.md ? 'full-height' : ''"
     >
       <q-card-section>
-        <div class="text-h6">{{ title }}</div>
+        <h2 class="text-h6">{{ title }}</h2>
       </q-card-section>
 
       <q-card-section class="q-pt-none col">
