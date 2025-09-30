@@ -1,8 +1,8 @@
 <template>
   <q-dialog
     :model-value="modelValue"
-    transition-show="scale"
-    transition-hide="scale"
+    :transition-show="$q.screen.lt.md ? 'slide-up' : 'scale'"
+    :transition-hide="$q.screen.lt.md ? 'slide-down' : 'scale'"
     :maximized="$q.screen.xs"
     :full-width="$q.screen.xs"
     :full-height="$q.screen.xs"
@@ -12,12 +12,16 @@
       class="column"
       :class="$q.screen.lt.md ? 'full-height' : ''"
     >
-      <q-card-section class="row items-center q-pb-none">
-        <h2 class="text-h6 q-my-none">
-          <q-icon
-            name="eva-share-outline"
-            class="q-mr-sm"
-          />
+      <q-card-section class="row items-center">
+        <q-icon
+          name="eva-share-outline"
+          :size="$q.screen.lt.md ? '20px' : '24px'"
+          class="q-mr-sm"
+        />
+        <h2
+          class="q-my-none"
+          :class="$q.screen.lt.md ? 'text-subtitle2' : 'text-h6'"
+        >
           Share {{ entityName }}
         </h2>
         <q-space />
@@ -26,11 +30,12 @@
           flat
           round
           dense
+          :size="$q.screen.lt.md ? 'sm' : 'md'"
           @click="closeDialog"
         />
       </q-card-section>
 
-      <q-separator class="q-mt-md" />
+      <q-separator />
 
       <q-card-section class="q-pt-md col overflow-auto">
         <div class="q-mb-lg">

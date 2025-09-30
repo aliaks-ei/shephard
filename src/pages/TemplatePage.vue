@@ -26,12 +26,13 @@
           :class="$q.screen.lt.md ? 'q-col-gutter-sm' : 'q-col-gutter-md'"
         >
           <div class="col-12 col-sm-8">
-            <div class="text-h6 q-mb-md">
+            <div class="row items-center q-mb-md">
               <q-icon
                 name="eva-info-outline"
                 class="q-mr-sm"
+                size="20px"
               />
-              Basic Information
+              <h2 class="text-h6 q-my-none">Basic Information</h2>
             </div>
             <q-input
               v-model="form.name"
@@ -47,12 +48,13 @@
             />
           </div>
           <div class="col-12 col-sm">
-            <div class="text-h6 q-mb-md">
+            <div class="row items-center q-mb-md">
               <q-icon
                 name="eva-calendar-outline"
                 class="q-mr-sm"
+                size="20px"
               />
-              Duration
+              <h2 class="text-h6 q-my-none">Duration</h2>
             </div>
             <q-select
               v-model="form.duration"
@@ -73,12 +75,13 @@
         class="q-pa-md"
       >
         <div class="row items-center justify-between q-mb-md">
-          <div class="text-h6">
+          <div class="row items-center">
             <q-icon
               name="eva-grid-outline"
               class="q-mr-sm"
+              size="20px"
             />
-            Categories
+            <h2 class="text-h6 q-my-none">Categories</h2>
             <q-chip
               v-if="templateItems.length > 0"
               :label="templateItems.length"
@@ -169,15 +172,13 @@
         <div v-if="templateItems.length > 0">
           <q-separator :class="$q.screen.lt.md ? 'q-my-md' : 'q-my-lg'" />
           <div class="row items-center justify-between">
-            <div
-              class="text-h6"
-              style="display: flex; align-items: center"
-            >
+            <div class="row items-center">
               <q-icon
                 name="eva-credit-card-outline"
                 class="q-mr-sm"
+                size="20px"
               />
-              Total Amount
+              <h2 class="text-h6 q-my-none">Total Amount</h2>
             </div>
             <div
               :class="['text-primary text-weight-bold', $q.screen.lt.md ? 'text-h6' : 'text-h5']"
@@ -206,12 +207,13 @@
           :class="$q.screen.lt.md ? 'q-col-gutter-sm' : 'q-col-gutter-md'"
         >
           <div class="col-12 col-sm-8">
-            <div class="text-h6 q-mb-md">
+            <div class="row items-center q-mb-md">
               <q-icon
                 name="eva-info-outline"
                 class="q-mr-sm"
+                size="20px"
               />
-              Basic Information
+              <h2 class="text-h6 q-my-none">Basic Information</h2>
             </div>
             <q-input
               v-model="form.name"
@@ -224,12 +226,13 @@
             />
           </div>
           <div class="col-12 col-sm">
-            <div class="text-h6 q-mb-md">
+            <div class="row items-center q-mb-md">
               <q-icon
                 name="eva-calendar-outline"
                 class="q-mr-sm"
+                size="24px"
               />
-              Duration
+              <h2 class="text-h6 q-my-none">Duration</h2>
             </div>
             <q-chip
               :label="form.duration"
@@ -251,12 +254,13 @@
       >
         <div class="q-mb-lg">
           <div class="row items-center justify-between q-mb-md">
-            <div class="text-h6">
+            <div class="row items-center">
               <q-icon
                 name="eva-grid-outline"
                 class="q-mr-sm"
+                size="20px"
               />
-              Categories
+              <h2 class="text-h6 q-my-none">Categories</h2>
               <q-chip
                 v-if="templateItems.length > 0"
                 :label="templateItems.length"
@@ -319,15 +323,13 @@
         <div v-if="templateItems.length > 0">
           <q-separator class="q-mb-lg" />
           <div class="row items-center justify-between">
-            <div
-              class="text-h6"
-              style="display: flex; align-items: center"
-            >
+            <div class="row items-center">
               <q-icon
                 name="eva-credit-card-outline"
                 class="q-mr-sm"
+                size="20px"
               />
-              Total Amount
+              <h2 class="text-h6 q-my-none">Total Amount</h2>
             </div>
             <div
               :class="['text-primary text-weight-bold', $q.screen.lt.md ? 'text-h5' : 'text-h4']"

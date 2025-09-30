@@ -2,26 +2,30 @@
   <div class="row justify-center q-pa-sm q-pa-md-md">
     <div class="col-12 col-md-10 col-lg-8 col-xl-6">
       <!-- Header Section -->
-      <div class="row items-center q-col-gutter-sm q-col-gutter-md-md q-mb-lg">
-        <div class="col-12 col-sm col-grow">
-          <h1 class="text-h4 text-weight-medium q-mb-sm q-mt-none">
+      <div
+        class="row items-center"
+        :class="$q.screen.lt.md ? 'q-col-gutter-sm q-mb-md' : 'q-col-gutter-md q-mb-lg'"
+      >
+        <div class="col col-grow">
+          <h1
+            :class="$q.screen.xs ? 'text-h5' : 'text-h4'"
+            class="text-weight-medium q-my-none"
+          >
             {{ title }}
           </h1>
-          <p class="text-body2 text-grey-6 q-mb-none">
+          <p class="text-body2 text-grey-6 q-mb-none gt-xs">
             {{ description }}
           </p>
         </div>
         <div
           v-if="showCreateButton"
-          class="col-12 col-sm-auto"
+          class="col-auto"
         >
           <q-btn
             color="primary"
-            icon="eva-plus-outline"
             :label="createButtonLabel"
             unelevated
             no-caps
-            :class="$q.screen.xs ? 'full-width' : ''"
             @click="emit('create')"
           />
         </div>

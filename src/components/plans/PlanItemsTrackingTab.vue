@@ -7,12 +7,13 @@
         <div class="row items-center q-col-gutter-md">
           <!-- Title -->
           <div class="col-12 col-md-4">
-            <div class="text-h6">
+            <div class="row items-center">
               <q-icon
                 name="eva-checkmark-square-2-outline"
                 class="q-mr-sm"
+                size="20px"
               />
-              Items Progress
+              <h2 class="text-h6 q-my-none">Items Progress</h2>
             </div>
           </div>
 

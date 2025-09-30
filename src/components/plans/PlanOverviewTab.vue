@@ -11,12 +11,13 @@
     <!-- Category Budget Cards Grid -->
     <q-card flat>
       <q-card-section>
-        <div class="text-h6 q-mb-md">
+        <div class="row items-center q-mb-md">
           <q-icon
             name="eva-pie-chart-outline"
             class="q-mr-sm"
+            size="24px"
           />
-          Budget by Category
+          <h2 class="text-h6 q-my-none">Budget by Category</h2>
         </div>
 
         <div

@@ -1,8 +1,8 @@
 <template>
   <q-dialog
     :model-value="modelValue"
-    transition-show="scale"
-    transition-hide="scale"
+    :transition-show="$q.screen.lt.md ? 'slide-up' : 'scale'"
+    :transition-hide="$q.screen.lt.md ? 'slide-down' : 'scale'"
     :maximized="$q.screen.xs"
     :full-width="$q.screen.xs"
     :full-height="$q.screen.xs"
@@ -13,19 +13,30 @@
       :class="$q.screen.lt.md ? 'full-height' : ''"
     >
       <!-- Header -->
-      <q-card-section class="row items-center q-pb-none">
-        <h2 class="text-h6 q-my-none">Category Details</h2>
+      <q-card-section class="row items-center">
+        <q-icon
+          name="eva-grid-outline"
+          :size="$q.screen.lt.md ? '24px' : '32px'"
+          class="q-mr-sm"
+        />
+        <h2
+          class="q-my-none"
+          :class="$q.screen.lt.md ? 'text-subtitle2' : 'text-h6'"
+        >
+          Category Details
+        </h2>
         <q-space />
         <q-btn
           icon="eva-close-outline"
           flat
           round
           dense
+          :size="$q.screen.lt.md ? 'sm' : 'md'"
           @click="closeDialog"
         />
       </q-card-section>
 
-      <q-separator class="q-mt-md" />
+      <q-separator />
 
       <div v-if="category">
         <!-- Hero Section -->

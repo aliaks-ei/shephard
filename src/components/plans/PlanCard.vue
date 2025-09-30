@@ -7,7 +7,7 @@
     >
       <q-item-section class="justify-between">
         <div class="row items-start justify-between">
-          <div class="col-10">
+          <div class="col-auto">
             <h3 class="text-h6 text-weight-bold q-mt-none q-mb-xs">
               {{ plan.name }}
             </h3>
@@ -28,7 +28,10 @@
               </q-badge>
             </div>
           </div>
-          <div class="col-2 text-right">
+          <div
+            v-if="isOwner"
+            class="col-auto text-right"
+          >
             <q-btn
               flat
               round
@@ -41,7 +44,6 @@
                 :is-owner="isOwner"
                 :permission-level="plan.permission_level"
                 :plan-status="planStatus"
-                @edit="emit('edit', plan.id)"
                 @share="emit('share', plan.id)"
                 @delete="showDeleteDialog"
                 @cancel="showCancelDialog"
@@ -50,11 +52,10 @@
           </div>
         </div>
 
-        <div class="q-mt-md">
+        <div class="q-mt-lg">
           <div class="row items-end justify-between">
             <div class="col">
-              <div class="text-caption text-grey-6 q-mb-xs">Total Amount</div>
-              <div class="text-h5 text-weight-bold text-primary">
+              <div class="text-h6 text-weight-bold text-primary">
                 {{ formatAmount(plan.total) }}
               </div>
             </div>
@@ -71,7 +72,7 @@
             </div>
           </div>
 
-          <div class="row items-center q-mt-sm">
+          <div class="row items-center">
             <div class="col">
               <div class="text-caption text-grey-6">
                 {{ formatDateRange(plan.start_date, plan.end_date) }}

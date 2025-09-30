@@ -2,12 +2,13 @@
   <q-card flat>
     <q-card-section>
       <div class="row items-center justify-between q-mb-md">
-        <div class="text-h6">
+        <div class="row items-center">
           <q-icon
             name="eva-clock-outline"
             class="q-mr-sm"
+            size="20px"
           />
-          Recent Expenses
+          <h2 class="text-h6 q-my-none">Recent Expenses</h2>
         </div>
         <q-btn
           v-if="expenses.length > 5"
