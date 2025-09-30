@@ -111,12 +111,7 @@ export const useExpensesStore = defineStore('expenses', () => {
 
       return newExpense
     } catch (error) {
-      if (error instanceof Error && error.name === 'DUPLICATE_EXPENSE_NAME') {
-        handleError('EXPENSES.DUPLICATE_NAME', error)
-      } else if (
-        error instanceof Error &&
-        error.message.includes('violates foreign key constraint')
-      ) {
+      if (error instanceof Error && error.message.includes('violates foreign key constraint')) {
         // Handle database foreign key constraint violations
         if (error.message.includes('expenses_plan_id_fkey')) {
           handleError('EXPENSES.PLAN_NOT_FOUND', error, { planId: expenseData.plan_id })
@@ -161,11 +156,7 @@ export const useExpensesStore = defineStore('expenses', () => {
 
       return updatedExpense
     } catch (error) {
-      if (error instanceof Error && error.name === 'DUPLICATE_EXPENSE_NAME') {
-        handleError('EXPENSES.DUPLICATE_NAME', error)
-      } else {
-        handleError('EXPENSES.UPDATE_FAILED', error, { expenseId })
-      }
+      handleError('EXPENSES.UPDATE_FAILED', error, { expenseId })
     } finally {
       isLoading.value = false
     }

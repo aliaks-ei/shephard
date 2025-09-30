@@ -2,8 +2,8 @@
   <q-dialog
     :model-value="modelValue"
     persistent
-    transition-show="scale"
-    transition-hide="scale"
+    :transition-show="$q.screen.lt.md ? 'slide-up' : 'scale'"
+    :transition-hide="$q.screen.lt.md ? 'slide-down' : 'scale'"
     :maximized="$q.screen.xs"
     :full-width="$q.screen.xs"
     :full-height="$q.screen.xs"
@@ -12,23 +12,27 @@
     <q-card
       class="column no-wrap"
       :class="$q.screen.lt.md ? 'full-height' : ''"
-      :style="$q.screen.gt.xs ? 'height: 80vh; max-height: 700px; min-height: 500px' : ''"
     >
       <!-- Fixed Header -->
       <q-card-section class="row items-center">
-        <div class="text-h6">
-          <q-icon
-            name="eva-plus-circle-outline"
-            class="q-mr-sm"
-          />
+        <q-icon
+          name="eva-plus-circle-outline"
+          :size="$q.screen.lt.md ? '24px' : '32px'"
+          class="q-mr-sm"
+        />
+        <h2
+          class="q-my-none"
+          :class="$q.screen.lt.md ? 'text-subtitle2' : 'text-h6'"
+        >
           Register New Expense
-        </div>
+        </h2>
         <q-space />
         <q-btn
           icon="eva-close-outline"
           flat
           round
           dense
+          :size="$q.screen.lt.md ? 'sm' : 'md'"
           @click="closeDialog"
         />
       </q-card-section>
@@ -162,12 +166,13 @@
             <q-slide-transition>
               <div v-show="quickSelectPhase === 'finalize'">
                 <q-card-section>
-                  <div class="text-h6 q-mb-md">
+                  <div class="row items-center q-mb-md">
                     <q-icon
                       name="eva-clipboard-outline"
                       class="q-mr-sm"
+                      size="20px"
                     />
-                    Review & Finalize
+                    <h2 class="text-h6 q-my-none">Review & Finalize</h2>
                   </div>
 
                   <!-- Selected Plan Info -->
@@ -498,7 +503,6 @@
         <q-card-actions
           align="right"
           class="q-pa-md"
-          style="border-top: 1px solid rgba(0, 0, 0, 0.12)"
         >
           <q-btn
             label="Cancel"
@@ -644,14 +648,17 @@ const categoryOptions = computed(() => {
     .filter((category) => summary.some((s) => s.category_id === category.id))
     .map((category) => {
       const categoryData = summary.find((s) => s.category_id === category.id)
+      const plannedAmount = categoryData?.planned_amount || 0
+      const actualAmount = categoryData?.actual_amount || 0
+
       return {
         label: category.name,
         value: category.id,
         color: category.color,
         icon: category.icon,
-        plannedAmount: categoryData?.planned_amount || 0,
-        actualAmount: categoryData?.actual_amount || 0,
-        remainingAmount: 0, // Simplified - no remaining amount tracking
+        plannedAmount,
+        actualAmount,
+        remainingAmount: plannedAmount - actualAmount,
       }
     })
 })
@@ -671,10 +678,6 @@ const budgetWarning = computed(() => {
 
   if (newRemaining < 0) {
     return `This expense will exceed the category budget by ${formatCurrency(Math.abs(newRemaining), currency)}`
-  }
-
-  if (newRemaining < category.plannedAmount * 0.1) {
-    return `This expense will leave only ${formatCurrency(newRemaining, currency)} remaining in this category`
   }
 
   return ''

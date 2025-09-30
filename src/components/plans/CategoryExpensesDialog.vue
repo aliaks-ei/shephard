@@ -2,8 +2,8 @@
   <q-dialog
     :model-value="modelValue"
     @update:model-value="$emit('update:modelValue', $event)"
-    transition-show="scale"
-    transition-hide="scale"
+    :transition-show="$q.screen.lt.md ? 'slide-up' : 'scale'"
+    :transition-hide="$q.screen.lt.md ? 'slide-down' : 'scale'"
     :maximized="$q.screen.xs"
     :full-width="$q.screen.xs"
     :full-height="$q.screen.xs"
@@ -13,20 +13,25 @@
       :class="$q.screen.lt.md ? 'full-height' : ''"
     >
       <!-- Header -->
-      <q-card-section class="row items-center q-pb-none">
+      <q-card-section class="row items-center">
         <div class="row items-center">
           <q-avatar
             :style="{ backgroundColor: category?.categoryColor }"
-            size="32px"
+            :size="$q.screen.lt.md ? '24px' : '32px'"
             text-color="white"
             class="q-mr-sm"
           >
             <q-icon
               :name="category?.categoryIcon"
-              size="18px"
+              :size="$q.screen.lt.md ? '14px' : '18px'"
             />
           </q-avatar>
-          <h2 class="text-h6 q-my-none">{{ category?.categoryName }}</h2>
+          <h2
+            class="q-my-none"
+            :class="$q.screen.lt.md ? 'text-subtitle2' : 'text-h6'"
+          >
+            {{ category?.categoryName }}
+          </h2>
         </div>
         <q-space />
         <q-btn
@@ -34,11 +39,12 @@
           flat
           round
           dense
+          :size="$q.screen.lt.md ? 'sm' : 'md'"
           @click="$emit('update:modelValue', false)"
         />
       </q-card-section>
 
-      <q-separator class="q-mt-md" />
+      <q-separator />
 
       <!-- Category Summary -->
       <q-card-section :class="$q.dark.isActive ? 'bg-black-2' : 'bg-grey-1'">
@@ -124,12 +130,13 @@
 
       <!-- Expenses List -->
       <q-card-section class="q-pb-none">
-        <div class="text-h6 q-mb-md">
+        <div class="row items-center q-mb-md">
           <q-icon
             name="eva-list-outline"
             class="q-mr-sm"
+            size="20px"
           />
-          Expenses
+          <h2 class="text-h6 q-my-none">Expenses</h2>
           <q-chip
             v-if="expenses.length > 0"
             color="primary"

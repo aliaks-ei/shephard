@@ -18,7 +18,7 @@ export type PlanExpenseSummary = {
 
 const expenseService = new BaseAPIService<'expenses', Expense, ExpenseInsert, ExpenseUpdate>({
   tableName: 'expenses',
-  uniqueConstraintName: 'unique_expense_name_per_plan_category',
+  uniqueConstraintName: '',
   entityTypeName: 'EXPENSE',
 })
 

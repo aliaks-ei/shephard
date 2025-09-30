@@ -1,6 +1,8 @@
 <template>
   <q-dialog
     :model-value="modelValue"
+    :transition-show="$q.screen.lt.md ? 'slide-up' : 'scale'"
+    :transition-hide="$q.screen.lt.md ? 'slide-down' : 'scale'"
     :maximized="$q.screen.xs"
     :full-width="$q.screen.xs"
     :full-height="$q.screen.xs"
@@ -10,8 +12,16 @@
       <!-- Fixed header section -->
       <q-card-section class="row items-center q-pb-none">
         <div class="col">
-          <h2 class="text-h6 q-my-none">Select Category</h2>
-          <p class="text-body2 text-grey-6 q-my-none">
+          <h2
+            class="q-my-none"
+            :class="$q.screen.lt.md ? 'text-subtitle2' : 'text-h6'"
+          >
+            Select Category
+          </h2>
+          <p
+            class="text-grey-6 q-my-none"
+            :class="$q.screen.lt.md ? 'text-caption' : 'text-body2'"
+          >
             Choose from available predefined categories
           </p>
         </div>
@@ -20,12 +30,13 @@
           flat
           round
           dense
+          :size="$q.screen.lt.md ? 'sm' : 'md'"
           @click="$emit('update:modelValue', false)"
         />
       </q-card-section>
 
       <!-- Fixed search section -->
-      <q-card-section class="q-pt-md q-pb-none">
+      <q-card-section>
         <q-input
           v-model="searchQuery"
           placeholder="Search categories..."
@@ -40,11 +51,11 @@
         </q-input>
       </q-card-section>
 
-      <q-separator class="q-mt-md" />
+      <q-separator />
 
       <!-- Scrollable content section -->
       <q-card-section class="col q-pt-none scroll">
-        <q-list>
+        <q-list class="full-height">
           <div v-if="filteredCategories.length > 0">
             <q-item
               v-for="category in filteredCategories"
@@ -67,13 +78,13 @@
               <q-item-section>
                 <q-item-label>{{ category.name }}</q-item-label>
               </q-item-section>
-              <q-item-section side>
-                <q-icon name="eva-chevron-right-outline" />
-              </q-item-section>
             </q-item>
           </div>
 
-          <div v-else>
+          <div
+            class="flex items-center justify-center full-height"
+            v-else
+          >
             <div class="text-center q-py-md">
               <q-icon
                 name="eva-grid-outline"

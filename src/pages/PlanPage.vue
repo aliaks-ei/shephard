@@ -22,12 +22,13 @@
         bordered
         class="q-pa-md q-mb-lg"
       >
-        <div class="text-h6 q-mb-md">
+        <div class="row items-center q-mb-xs">
           <q-icon
             name="eva-file-text-outline"
             class="q-mr-sm"
+            size="24px"
           />
-          Select Template
+          <h2 class="text-h6 q-my-none">Select Template</h2>
         </div>
 
         <div class="text-body2 text-grey-6 q-mb-md">
@@ -105,12 +106,13 @@
         bordered
         class="q-pa-md q-mb-lg"
       >
-        <div class="text-h6 q-mb-md">
+        <div class="row items-center q-mb-md">
           <q-icon
             name="eva-info-outline"
             class="q-mr-sm"
+            size="24px"
           />
-          Plan Information
+          <h2 class="text-h6 q-my-none">Plan Information</h2>
         </div>
 
         <q-input
@@ -371,12 +373,13 @@
             <!-- Plan Information for editing existing plan -->
             <q-card flat>
               <q-card-section>
-                <div class="text-h6 q-mb-md">
+                <div class="row items-center q-mb-md">
                   <q-icon
                     name="eva-info-outline"
                     class="q-mr-sm"
+                    size="24px"
                   />
-                  Plan Information
+                  <h2 class="text-h6 q-my-none">Plan Information</h2>
                 </div>
 
                 <q-input
@@ -503,12 +506,13 @@
                 <div v-if="planCategoryGroups.length > 0">
                   <q-separator class="q-mb-lg" />
                   <div class="row items-center justify-between">
-                    <div class="row items-center text-h6">
+                    <div class="row items-center">
                       <q-icon
                         name="eva-credit-card-outline"
                         class="q-mr-sm"
+                        size="20px"
                       />
-                      Total Amount
+                      <h2 class="text-h6 q-my-none">Total Amount</h2>
                     </div>
                     <div
                       :class="[
