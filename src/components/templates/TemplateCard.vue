@@ -12,7 +12,7 @@
     >
       <q-item-section class="justify-between">
         <div class="row items-start justify-between">
-          <div class="col-10">
+          <div class="col-auto">
             <h3 class="text-h6 text-weight-bold q-mt-none q-mb-xs">
               {{ template.name }}
             </h3>
@@ -38,7 +38,7 @@
           </div>
           <div
             v-if="!readonly && isOwner"
-            class="col-2 text-right"
+            class="col-auto text-right"
           >
             <q-btn
               flat
@@ -58,10 +58,10 @@
           </div>
         </div>
 
-        <div class="q-mt-md">
+        <div class="q-mt-lg">
           <div class="row items-end justify-between">
             <div class="col">
-              <div class="text-h5 text-weight-bold text-primary">
+              <div class="text-h6 text-weight-bold text-primary">
                 {{ formatAmount(template.total) }}
               </div>
             </div>

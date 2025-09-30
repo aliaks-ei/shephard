@@ -13,7 +13,7 @@
       :class="$q.screen.lt.md ? 'full-height' : ''"
     >
       <q-card-section>
-        <h2 class="text-h6">{{ title }}</h2>
+        <h2 class="text-h6 q-my-none">{{ title }}</h2>
       </q-card-section>
 
       <q-card-section class="q-pt-none col">

@@ -33,8 +33,11 @@
             :dense="$q.screen.lt.md"
             :display-value="displayValue"
             :hide-dropdown-icon="$q.screen.lt.md"
+            option-label="label"
+            option-value="value"
             outlined
             emit-value
+            map-options
             @update:model-value="emit('update:sortBy', $event)"
           >
             <template
