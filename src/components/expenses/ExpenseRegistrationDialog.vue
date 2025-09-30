@@ -644,14 +644,17 @@ const categoryOptions = computed(() => {
     .filter((category) => summary.some((s) => s.category_id === category.id))
     .map((category) => {
       const categoryData = summary.find((s) => s.category_id === category.id)
+      const plannedAmount = categoryData?.planned_amount || 0
+      const actualAmount = categoryData?.actual_amount || 0
+
       return {
         label: category.name,
         value: category.id,
         color: category.color,
         icon: category.icon,
-        plannedAmount: categoryData?.planned_amount || 0,
-        actualAmount: categoryData?.actual_amount || 0,
-        remainingAmount: 0, // Simplified - no remaining amount tracking
+        plannedAmount,
+        actualAmount,
+        remainingAmount: plannedAmount - actualAmount,
       }
     })
 })
@@ -671,10 +674,6 @@ const budgetWarning = computed(() => {
 
   if (newRemaining < 0) {
     return `This expense will exceed the category budget by ${formatCurrency(Math.abs(newRemaining), currency)}`
-  }
-
-  if (newRemaining < category.plannedAmount * 0.1) {
-    return `This expense will leave only ${formatCurrency(newRemaining, currency)} remaining in this category`
   }
 
   return ''
