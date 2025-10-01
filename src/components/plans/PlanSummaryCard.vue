@@ -56,7 +56,7 @@
         :value="overallProgress"
         :color="progressColor"
         size="8px"
-        class="q-mt-md"
+        class="q-mt-sm"
       />
 
       <div class="text-caption text-grey-6 q-mt-xs">
@@ -89,16 +89,18 @@ const overallProgress = computed(() => {
 
 const progressColor = computed(() => {
   const percentage = overallProgress.value * 100
-  if (percentage > 100) return 'negative'
-  if (percentage > 90) return 'warning'
-  if (percentage > 70) return 'orange'
-  return 'primary'
+  if (percentage < 100) return 'primary'
+  if (percentage === 100) return 'positive'
+  if (percentage <= 110) return 'warning'
+  return 'negative'
 })
 
 const remainingColorClass = computed(() => {
-  if (remaining.value < 0) return 'text-negative'
-  if (remaining.value < props.totalBudget * 0.1) return 'text-warning'
-  return 'text-positive'
+  const percentage = overallProgress.value * 100
+  if (percentage < 100) return 'text-primary'
+  if (percentage === 100) return 'text-positive'
+  if (percentage <= 110) return 'text-warning'
+  return 'text-negative'
 })
 
 const statusText = computed(() => {

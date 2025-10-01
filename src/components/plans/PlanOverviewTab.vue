@@ -34,7 +34,8 @@
 
         <div
           v-else
-          class="row q-col-gutter-md"
+          class="row"
+          :class="$q.screen.lt.md ? 'q-col-gutter-sm' : 'q-col-gutter-md'"
         >
           <div
             v-for="category in categoryBudgets"
