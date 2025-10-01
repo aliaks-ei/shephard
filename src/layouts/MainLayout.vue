@@ -2,66 +2,66 @@
   <q-layout view="lHh Lpr fff">
     <q-inner-loading
       :showing="userStore.isLoading"
-      label="Initializing..."
-      label-class="text-primary"
-      label-style="font-size: 1.1em"
+      label="Setting up your profile..."
+      color="primary"
     />
 
-    <q-header elevated>
-      <q-toolbar>
-        <q-btn
-          v-if="!$q.screen.gt.sm"
-          icon="eva-menu-outline"
-          aria-label="Menu"
-          flat
-          round
-          @click="toggleLeftDrawer"
-        />
-        <q-toolbar-title>
+    <template v-if="!userStore.isLoading">
+      <q-header elevated>
+        <q-toolbar>
           <q-btn
-            class="text-h6"
-            label="Shephard"
-            to="/"
+            v-if="!$q.screen.gt.sm"
+            icon="eva-menu-outline"
+            aria-label="Menu"
             flat
-            no-caps
+            round
+            @click="toggleLeftDrawer"
           />
-        </q-toolbar-title>
+          <q-toolbar-title>
+            <q-btn
+              class="text-h6"
+              label="Shephard"
+              to="/"
+              flat
+              no-caps
+            />
+          </q-toolbar-title>
 
-        <UserDropdownMenu v-if="!userStore.isLoading" />
-      </q-toolbar>
-    </q-header>
+          <UserDropdownMenu />
+        </q-toolbar>
+      </q-header>
 
-    <q-drawer
-      v-if="!userStore.isLoading"
-      v-model="leftDrawerOpen"
-      class="q-py-md"
-      bordered
-      behavior="mobile"
-    >
-      <NavigationDrawer :items="navigationItems" />
-    </q-drawer>
-
-    <q-page-container class="page-container">
-      <q-page
-        class="shadow-1"
-        padding
+      <q-drawer
+        v-model="leftDrawerOpen"
+        class="q-py-md"
+        bordered
+        behavior="mobile"
       >
-        <router-view v-if="!userStore.isLoading" />
-      </q-page>
+        <NavigationDrawer :items="navigationItems" />
+      </q-drawer>
 
-      <q-page-sticky
-        v-if="$q.screen.gt.sm && !userStore.isLoading"
-        position="left"
-        class="navigation-sticky-bg"
-        expand
-      >
-        <NavigationDrawer
-          class="fit q-py-xl q-px-sm"
-          :items="navigationItems"
-          is-mini-mode
-        />
-      </q-page-sticky>
-    </q-page-container>
+      <q-page-container class="page-container">
+        <q-page
+          class="shadow-1"
+          padding
+        >
+          <router-view />
+        </q-page>
+
+        <q-page-sticky
+          v-if="$q.screen.gt.sm"
+          position="left"
+          class="navigation-sticky-bg"
+          expand
+        >
+          <NavigationDrawer
+            class="fit q-py-xl q-px-sm"
+            :items="navigationItems"
+            is-mini-mode
+          />
+        </q-page-sticky>
+      </q-page-container>
+    </template>
   </q-layout>
 </template>
 

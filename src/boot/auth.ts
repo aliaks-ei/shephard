@@ -1,7 +1,7 @@
 import { defineBoot } from '#q-app/wrappers'
 import { useAuthStore } from 'src/stores/auth'
 
-export default defineBoot(async () => {
+export default defineBoot(() => {
   try {
     window.handleGoogleSignIn = (response) => {
       if (window.vueGoogleCallback) {
@@ -12,7 +12,10 @@ export default defineBoot(async () => {
     }
 
     const authStore = useAuthStore()
-    await authStore.ready
+
+    authStore.ready.catch((error) => {
+      console.error('[boot/auth] auth initialization error', error)
+    })
   } catch (e) {
     console.error('[boot/auth] unexpected boot error', e)
   }
