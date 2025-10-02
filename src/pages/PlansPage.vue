@@ -14,34 +14,15 @@
 
     <ListPageSkeleton v-if="areItemsLoading" />
 
-    <div
+    <PlansGroup
       v-else-if="hasItems"
-      class="column q-col-gutter-md"
-    >
-      <div v-if="filteredAndSortedOwnedItems.length > 0">
-        <PlansGroup
-          title="My Plans"
-          :plans="filteredAndSortedOwnedItems"
-          @edit="viewItem"
-          @delete="handleDeletePlan"
-          @share="openShareDialog"
-          @cancel="cancelPlan"
-        />
-      </div>
-
-      <div v-if="filteredAndSortedSharedItems.length > 0">
-        <PlansGroup
-          title="Shared with Me"
-          :plans="filteredAndSortedSharedItems"
-          chip-color="secondary"
-          hide-shared-badge
-          @edit="viewItem"
-          @delete="handleDeletePlan"
-          @share="openShareDialog"
-          @cancel="cancelPlan"
-        />
-      </div>
-    </div>
+      title="My Plans"
+      :plans="allFilteredAndSortedItems"
+      @edit="viewItem"
+      @delete="handleDeletePlan"
+      @share="openShareDialog"
+      @cancel="cancelPlan"
+    />
 
     <EmptyState
       v-else
@@ -87,8 +68,7 @@ const {
   searchQuery,
   sortBy,
   areItemsLoading,
-  filteredAndSortedOwnedItems,
-  filteredAndSortedSharedItems,
+  allFilteredAndSortedItems,
   hasItems,
   sortOptions,
   emptyStateConfig,

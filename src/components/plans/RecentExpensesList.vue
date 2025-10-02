@@ -179,10 +179,18 @@ function formatDate(dateString: string): string {
 
 function confirmDeleteExpense(expense: ExpenseWithCategory) {
   Dialog.create({
-    title: 'Delete Expense',
+    title: 'Delete Expense?',
     message: `Are you sure you want to delete "${expense.name}"?`,
-    cancel: true,
     persistent: true,
+    ok: {
+      label: 'Delete',
+      color: 'negative',
+      unelevated: true,
+    },
+    cancel: {
+      label: 'Cancel',
+      flat: true,
+    },
   }).onOk(() => {
     void (async () => {
       await expensesStore.removeExpense(expense.id)
