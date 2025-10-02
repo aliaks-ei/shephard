@@ -1,7 +1,7 @@
 <template>
   <q-card class="shadow-1 full-height">
     <q-item
-      class="column q-pa-md"
+      class="column full-height q-pa-md"
       clickable
       @click="$emit('click', category)"
     >
@@ -45,7 +45,7 @@
       </div>
 
       <!-- Metrics Section -->
-      <q-item-section>
+      <q-item-section style="flex-grow: 0">
         <div class="row items-start">
           <!-- Circular Progress: Right side on desktop -->
           <q-circular-progress

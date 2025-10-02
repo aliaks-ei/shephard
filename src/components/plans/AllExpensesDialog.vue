@@ -54,15 +54,18 @@
               class="q-px-none q-py-sm"
               :class="index > 0 ? 'q-border-top' : ''"
             >
-              <q-item-section avatar>
+              <q-item-section
+                style="min-width: auto"
+                avatar
+              >
                 <q-avatar
                   :style="{ backgroundColor: getCategoryColor(expense.category_id) }"
-                  size="36px"
+                  size="32px"
                   text-color="white"
                 >
                   <q-icon
                     :name="getCategoryIcon(expense.category_id)"
-                    size="20px"
+                    size="16px"
                   />
                 </q-avatar>
               </q-item-section>
@@ -160,10 +163,18 @@ function formatDate(dateString: string): string {
 
 function confirmDeleteExpense(expense: ExpenseWithCategory) {
   Dialog.create({
-    title: 'Delete Expense',
+    title: 'Delete Expense?',
     message: `Are you sure you want to delete "${expense.name}"?`,
-    cancel: true,
     persistent: true,
+    ok: {
+      label: 'Delete',
+      color: 'negative',
+      unelevated: true,
+    },
+    cancel: {
+      label: 'Cancel',
+      flat: true,
+    },
   }).onOk(() => {
     void (async () => {
       await expensesStore.removeExpense(expense.id)

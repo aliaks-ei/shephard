@@ -40,15 +40,18 @@
           :key="expense.id"
           class="q-px-none"
         >
-          <q-item-section avatar>
+          <q-item-section
+            style="min-width: auto"
+            avatar
+          >
             <q-avatar
               :style="{ backgroundColor: getCategoryColor(expense.category_id) }"
-              size="36px"
+              size="32px"
               text-color="white"
             >
               <q-icon
                 :name="getCategoryIcon(expense.category_id)"
-                size="18px"
+                size="16px"
               />
             </q-avatar>
           </q-item-section>

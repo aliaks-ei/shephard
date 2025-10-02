@@ -71,7 +71,7 @@
               >
                 Spent
               </div>
-              <div class="text-h6 text-weight-bold text-primary">
+              <div class="text-h6 text-weight-bold text-info">
                 {{ formatCurrency(category?.actualAmount || 0, currency) }}
               </div>
             </div>

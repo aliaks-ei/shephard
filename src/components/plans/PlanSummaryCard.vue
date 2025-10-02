@@ -35,7 +35,7 @@
         <div class="col">
           <div class="text-caption text-grey-6">Total Spent</div>
           <div
-            class="text-weight-bold text-primary"
+            class="text-weight-bold text-info"
             :class="$q.screen.lt.md ? 'text-subtitle2' : 'text-h6'"
           >
             {{ formatCurrency(totalSpent, currency) }}
