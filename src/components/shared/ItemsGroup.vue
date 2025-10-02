@@ -16,7 +16,10 @@
     </div>
   </div>
 
-  <div class="row q-col-gutter-md">
+  <div
+    class="row"
+    :class="$q.screen.lt.md ? 'q-col-gutter-sm' : 'q-col-gutter-md'"
+  >
     <div
       v-for="item in items"
       :key="item.id"

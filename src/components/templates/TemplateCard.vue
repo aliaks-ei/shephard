@@ -12,35 +12,36 @@
     >
       <q-item-section class="justify-between">
         <div class="row items-start justify-between">
-          <div class="col-auto">
+          <div class="col">
             <h3 class="text-h6 text-weight-bold q-mt-none q-mb-xs">
               {{ template.name }}
             </h3>
-            <div
-              v-if="!readonly"
-              class="row items-center q-gutter-xs"
-            >
-              <q-badge
-                v-for="badge in templateBadges"
-                :key="badge.text"
-                :color="badge.color"
-                class="q-px-sm q-py-xs"
-                outline
-              >
-                <q-icon
-                  :name="badge.icon"
-                  class="q-mr-xs"
-                  size="12px"
-                />
-                {{ badge.text }}
-              </q-badge>
-            </div>
           </div>
           <div
-            v-if="!readonly && isOwner"
-            class="col-auto text-right"
+            v-if="!readonly"
+            class="col-auto row items-center q-gutter-xs"
           >
+            <!-- View only indicator -->
+            <q-icon
+              v-if="isViewOnly"
+              name="eva-lock-outline"
+              size="16px"
+              class="text-warning"
+            >
+              <q-tooltip>View only</q-tooltip>
+            </q-icon>
+            <!-- Shared with me indicator -->
+            <q-icon
+              v-if="!isOwner"
+              name="eva-people-outline"
+              size="16px"
+              class="text-info"
+            >
+              <q-tooltip>Shared with me</q-tooltip>
+            </q-icon>
+            <!-- Menu button -->
             <q-btn
+              v-if="isOwner"
               flat
               round
               size="sm"
@@ -109,7 +110,6 @@ import TemplateCardMenu from './TemplateCardMenu.vue'
 import DeleteDialog from 'src/components/shared/DeleteDialog.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import { useUserStore } from 'src/stores/user'
-import { getPermissionText, getPermissionColor, getPermissionIcon } from 'src/utils/templates'
 import type { TemplateWithPermission } from 'src/api'
 
 const emit = defineEmits<{
@@ -135,32 +135,7 @@ const userStore = useUserStore()
 const isDeleteDialogOpen = ref(false)
 
 const isOwner = computed(() => props.template.owner_id === userStore.userProfile?.id)
-const hasShares = computed(() => isOwner.value && !!props.template.is_shared)
-const templateBadges = computed(() => {
-  const badges: {
-    text: string
-    color: string
-    icon: string
-  }[] = []
-
-  if (isOwner.value && hasShares.value && !props.hideSharedBadge) {
-    badges.push({
-      text: 'shared',
-      color: 'info',
-      icon: 'eva-people-outline',
-    })
-  }
-
-  if (props.template.permission_level) {
-    badges.push({
-      text: getPermissionText(props.template.permission_level),
-      color: getPermissionColor(props.template.permission_level),
-      icon: getPermissionIcon(props.template.permission_level),
-    })
-  }
-
-  return badges
-})
+const isViewOnly = computed(() => props.template.permission_level === 'view')
 
 function formatAmount(amount: number | null | undefined): string {
   const currency = props.template.currency as CurrencyCode

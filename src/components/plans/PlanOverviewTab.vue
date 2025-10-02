@@ -34,7 +34,8 @@
 
         <div
           v-else
-          class="row q-col-gutter-md"
+          class="row"
+          :class="$q.screen.lt.md ? 'q-col-gutter-sm' : 'q-col-gutter-md'"
         >
           <div
             v-for="category in categoryBudgets"
@@ -70,6 +71,7 @@
       :currency="planCurrency"
       :can-edit="isEditMode"
       :plan-id="planId"
+      :plan-items="categoryPlanItems"
       @add-expense="emitOpenExpenseDialog"
       @refresh="$emit('refresh')"
     />
@@ -142,6 +144,13 @@ const categoryExpenses = computed(() => {
   if (!selectedCategory.value) return []
   return expensesStore.sortedExpenses.filter(
     (e) => e.category_id === selectedCategory.value?.categoryId,
+  )
+})
+
+const categoryPlanItems = computed(() => {
+  if (!selectedCategory.value || !props.plan?.plan_items) return []
+  return props.plan.plan_items.filter(
+    (item) => item.category_id === selectedCategory.value?.categoryId,
   )
 })
 

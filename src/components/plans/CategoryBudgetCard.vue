@@ -1,12 +1,16 @@
 <template>
   <q-card class="shadow-1 full-height">
     <q-item
-      class="column q-pa-md"
+      class="column full-height q-pa-md"
       clickable
       @click="$emit('click', category)"
     >
-      <div class="row items-center">
-        <q-item-section thumbnail>
+      <!-- Category Header -->
+      <div class="row items-center full-width q-mb-md no-wrap">
+        <q-item-section
+          class="q-pr-sm q-mr-xs"
+          thumbnail
+        >
           <q-avatar
             :style="{ backgroundColor: category.categoryColor }"
             size="32px"
@@ -18,73 +22,93 @@
             />
           </q-avatar>
         </q-item-section>
-        <div class="column">
-          <strong class="text-weight-medium">{{ category.categoryName }}</strong>
-          <span
-            caption
-            class="text-caption text-grey-6 q-mt-none"
-          >
+        <div class="column col-grow overflow-hidden">
+          <strong class="text-weight-medium ellipsis">{{ category.categoryName }}</strong>
+          <span class="text-caption text-grey-6 q-mt-none">
             {{ category.expenseCount }} {{ category.expenseCount === 1 ? 'expense' : 'expenses' }}
           </span>
         </div>
+        <!-- Circular Progress: Top-right on mobile -->
+        <q-circular-progress
+          v-if="$q.screen.lt.md"
+          show-value
+          :value="Math.min(percentageUsed, 999)"
+          :max="100"
+          size="48px"
+          :thickness="0.15"
+          :color="progressColor"
+          track-color="grey-4"
+          class="q-ml-md flex-shrink-0"
+        >
+          <span class="text-caption text-weight-bold">{{ Math.round(percentageUsed) }}%</span>
+        </q-circular-progress>
       </div>
-      <q-item-section>
-        <div class="row items-center justify-center q-my-md">
+
+      <!-- Metrics Section -->
+      <q-item-section style="flex-grow: 0">
+        <div class="row items-start">
+          <!-- Circular Progress: Right side on desktop -->
           <q-circular-progress
+            v-if="$q.screen.gt.sm"
             show-value
-            :value="percentageUsed"
+            :value="Math.min(percentageUsed, 999)"
             :max="100"
-            :size="$q.screen.lt.md ? '72px' : '96px'"
-            :thickness="0.2"
+            size="52px"
+            :thickness="0.17"
             :color="progressColor"
             track-color="grey-4"
-            class="text-weight-bold"
+            class="text-weight-bold q-mr-md"
           >
-            <span class="text-subtitle2">{{ Math.round(percentageUsed) }}%</span>
+            <span class="text-caption text-weight-bold">{{ Math.round(percentageUsed) }}%</span>
           </q-circular-progress>
-        </div>
 
-        <div>
-          <div class="row justify-between text-caption q-mb-xs">
-            <span class="text-grey-6">Spent</span>
-            <span class="text-weight-bold">
-              {{ formatCurrency(category.actualAmount, currency) }}
-            </span>
-          </div>
+          <!-- Details Section -->
+          <div class="col">
+            <div class="row justify-between text-caption">
+              <span class="text-grey-6">Spent</span>
+              <span class="text-weight-bold">
+                {{ formatCurrency(category.actualAmount, currency) }}
+              </span>
+            </div>
 
-          <q-linear-progress
-            :value="percentageUsed / 100"
-            :color="progressColor"
-            size="4px"
-            class="q-my-xs"
-          />
+            <q-linear-progress
+              :value="Math.min(percentageUsed / 100, 9.99)"
+              :color="progressColor"
+              size="4px"
+              class="q-my-xs"
+            />
 
-          <div class="row justify-between text-caption q-mt-xs">
-            <span class="text-grey-6">Budget</span>
-            <span>{{ formatCurrency(category.plannedAmount, currency) }}</span>
-          </div>
+            <div class="row justify-between text-caption">
+              <span class="text-grey-6">Budget</span>
+              <span>{{ formatCurrency(category.plannedAmount, currency) }}</span>
+            </div>
 
-          <div
-            v-if="category.remainingAmount !== 0"
-            class="row justify-between text-caption"
-          >
-            <span class="text-grey-6">{{
-              category.remainingAmount > 0 ? 'Remaining' : 'Over'
-            }}</span>
-            <span
-              class="text-weight-bold"
-              :class="category.remainingAmount >= 0 ? 'text-positive' : 'text-negative'"
+            <div
+              v-if="category.remainingAmount !== 0"
+              class="row justify-between text-caption"
             >
-              {{ formatCurrency(Math.abs(category.remainingAmount), currency) }}
-            </span>
+              <span class="text-grey-6">{{
+                category.remainingAmount > 0 ? 'Remaining' : 'Over'
+              }}</span>
+              <span
+                class="text-weight-bold"
+                :class="remainingAmountColor"
+              >
+                {{ formatCurrency(Math.abs(category.remainingAmount), currency) }}
+              </span>
+            </div>
           </div>
         </div>
       </q-item-section>
-      <q-item-section side>
+
+      <!-- Status Badge -->
+      <q-item-section
+        v-if="statusBadge"
+        side
+      >
         <q-badge
-          v-if="isOverBudget"
-          color="negative"
-          label="Over Budget"
+          :color="statusBadge.color"
+          :label="statusBadge.label"
         />
       </q-item-section>
     </q-item>
@@ -117,16 +141,44 @@ defineEmits<{
 
 const percentageUsed = computed(() => {
   if (props.category.plannedAmount === 0) return 0
-  return Math.min((props.category.actualAmount / props.category.plannedAmount) * 100, 999)
+  return (props.category.actualAmount / props.category.plannedAmount) * 100
 })
 
-const isOverBudget = computed(() => props.category.remainingAmount < 0)
-
+// Color logic: Primary (< 100%), Green (100%), Warning (101-110%), Negative (> 110%)
 const progressColor = computed(() => {
   const percentage = percentageUsed.value
-  if (percentage > 100) return 'negative'
-  if (percentage > 90) return 'warning'
-  if (percentage > 70) return 'orange'
-  return 'primary'
+  if (percentage < 100) return 'primary'
+  if (percentage === 100) return 'positive'
+  if (percentage <= 110) return 'warning'
+  return 'negative'
+})
+
+const remainingAmountColor = computed(() => {
+  const percentage = percentageUsed.value
+  if (percentage < 100) return 'text-primary'
+  if (percentage === 100) return 'text-positive'
+  if (percentage <= 110) return 'text-warning'
+  return 'text-negative'
+})
+
+const statusBadge = computed(() => {
+  const percentage = percentageUsed.value
+
+  // No badge when under or at budget
+  if (percentage <= 100) return null
+
+  // Warning badge when 101-110%
+  if (percentage <= 110) {
+    return {
+      color: 'warning',
+      label: 'Warning',
+    }
+  }
+
+  // Over budget badge when > 110%
+  return {
+    color: 'negative',
+    label: 'Over Budget',
+  }
 })
 </script>

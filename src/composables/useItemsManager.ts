@@ -12,6 +12,13 @@ export interface ItemsConfig<T extends BaseItemUI> {
   createItemForSave: (item: T) => { name: string; category_id: string; amount: number }
 }
 
+export type ItemForSave = {
+  id?: string
+  name: string
+  category_id: string
+  amount: number
+}
+
 export function useItemsManager<T extends BaseItemUI>(config: ItemsConfig<T>) {
   const categoriesStore = useCategoriesStore()
 
@@ -149,10 +156,15 @@ export function useItemsManager<T extends BaseItemUI>(config: ItemsConfig<T>) {
     items.value = [...loadedItems]
   }
 
-  function getItemsForSave() {
+  function getItemsForSave(): ItemForSave[] {
     return items.value
       .filter((item) => item.name.trim() && item.categoryId && item.amount > 0)
-      .map((item) => config.createItemForSave(item))
+      .map((item) => {
+        const baseItem = config.createItemForSave(item)
+        // Include ID only if it's not a temporary ID (doesn't start with 'temp_')
+        const isExistingItem = !item.id.startsWith('temp_')
+        return isExistingItem ? { id: item.id, ...baseItem } : baseItem
+      })
   }
 
   function clearItems(): void {

@@ -1,29 +1,25 @@
 <template>
-  <div class="row q-col-gutter-lg">
+  <div
+    class="row"
+    :class="$q.screen.lt.md ? 'q-col-gutter-sm' : 'q-col-gutter-md'"
+  >
     <div
       v-for="n in count"
       :key="n"
-      class="col-12 col-sm-6 col-lg-4 col-xl-3"
+      class="col-12 col-sm-6 col-md-4"
     >
       <q-card class="shadow-1">
         <q-card-section>
           <q-skeleton
             type="text"
             width="60%"
-            height="24px"
+            height="36px"
             class="q-mb-lg"
           />
           <q-skeleton
             type="text"
-            width="30%"
-            height="16px"
-            class="q-mb-xs"
-          />
-          <q-skeleton
-            type="text"
             width="80%"
-            height="48px"
-            class="q-mb-xs"
+            height="24px"
           />
           <q-skeleton
             type="text"

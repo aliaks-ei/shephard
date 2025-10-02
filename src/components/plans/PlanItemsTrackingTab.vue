@@ -177,11 +177,16 @@
                   v-for="item in group.items"
                   :key="item.id"
                   clickable
-                  class="q-pa-sm"
+                  :dense="$q.screen.lt.md"
                   @click="toggleItemCompletion(item)"
+                  class="q-px-sm"
                   :class="item.is_completed ? 'text-strike' : ''"
                 >
-                  <q-item-section avatar>
+                  <q-item-section
+                    class="q-pr-sm"
+                    style="min-width: auto"
+                    avatar
+                  >
                     <q-checkbox
                       :model-value="item.is_completed"
                       @update:model-value="(value) => toggleItemCompletion(item, value)"

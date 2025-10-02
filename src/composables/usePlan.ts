@@ -52,8 +52,8 @@ export function usePlan() {
     startDate: string,
     endDate: string,
     total: number,
-    planItems: { name: string; category_id: string; amount: number }[],
-  ): Promise<boolean> {
+    planItems: Array<{ id?: string; name: string; category_id: string; amount: number }>,
+  ): Promise<PlanWithItems | null> {
     const plan = await plansStore.addPlan({
       template_id: templateId,
       name,
@@ -62,16 +62,21 @@ export function usePlan() {
       total,
     })
 
-    if (!plan) return false
+    if (!plan) return null
 
     const items = planItems.map((item) => ({
-      ...item,
+      name: item.name,
+      category_id: item.category_id,
+      amount: item.amount,
       plan_id: plan.id,
     }))
 
     await plansStore.savePlanItems(plan.id, items)
 
-    return true
+    // Load the full plan with items and update currentPlan
+    currentPlan.value = await plansStore.loadPlanWithItems(plan.id)
+
+    return currentPlan.value
   }
 
   async function updateExistingPlanWithItems(
@@ -79,9 +84,9 @@ export function usePlan() {
     startDate: string,
     endDate: string,
     total: number,
-    planItems: { name: string; category_id: string; amount: number }[],
-  ): Promise<boolean> {
-    if (!routePlanId.value || !currentPlan.value) return false
+    planItems: Array<{ id?: string; name: string; category_id: string; amount: number }>,
+  ): Promise<PlanWithItems | null> {
+    if (!routePlanId.value || !currentPlan.value) return null
 
     const plan = await plansStore.editPlan(routePlanId.value, {
       name,
@@ -90,23 +95,54 @@ export function usePlan() {
       total,
     })
 
-    if (!plan) return false
+    if (!plan) return null
 
-    const existingItemIds = currentPlan.value.plan_items.map((item) => item.id)
-    await plansStore.removePlanItems(existingItemIds)
+    // Separate items into existing (to update) and new (to create)
+    const itemsToUpdate = planItems.filter((item) => item.id)
+    const itemsToCreate = planItems.filter((item) => !item.id)
 
-    const items = planItems.map((item) => ({
-      ...item,
-      plan_id: plan.id,
-    }))
+    // Find items to delete (items that existed before but are no longer in planItems)
+    const newItemIds = new Set(itemsToUpdate.map((item) => item.id))
+    const itemsToDelete = currentPlan.value.plan_items
+      .filter((existingItem) => !newItemIds.has(existingItem.id))
+      .map((item) => item.id)
 
-    if (items.length > 0) {
-      await plansStore.savePlanItems(plan.id, items)
+    // Execute all operations
+    const operations: Promise<unknown>[] = []
+
+    // Update existing items
+    if (itemsToUpdate.length > 0) {
+      operations.push(
+        plansStore.updatePlanItems(
+          plan.id,
+          itemsToUpdate as Array<{ id: string; name: string; category_id: string; amount: number }>,
+        ),
+      )
     }
 
+    // Create new items
+    if (itemsToCreate.length > 0) {
+      const newItems = itemsToCreate.map((item) => ({
+        name: item.name,
+        category_id: item.category_id,
+        amount: item.amount,
+        plan_id: plan.id,
+      }))
+      operations.push(plansStore.savePlanItems(plan.id, newItems))
+    }
+
+    // Delete removed items
+    if (itemsToDelete.length > 0) {
+      operations.push(plansStore.removePlanItems(itemsToDelete))
+    }
+
+    // Wait for all operations to complete
+    await Promise.all(operations)
+
+    // Reload the plan to get fresh data
     await loadPlan()
 
-    return true
+    return currentPlan.value
   }
 
   async function loadPlan(): Promise<PlanWithItems | null> {

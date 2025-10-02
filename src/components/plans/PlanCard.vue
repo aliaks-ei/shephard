@@ -7,32 +7,33 @@
     >
       <q-item-section class="justify-between">
         <div class="row items-start justify-between">
-          <div class="col-auto">
+          <div class="col">
             <h3 class="text-h6 text-weight-bold q-mt-none q-mb-xs">
               {{ plan.name }}
             </h3>
-            <div class="row items-center q-gutter-xs">
-              <q-badge
-                v-for="badge in planBadges"
-                :key="badge.text"
-                :color="badge.color"
-                class="q-px-sm q-py-xs"
-                outline
-              >
-                <q-icon
-                  :name="badge.icon"
-                  class="q-mr-xs"
-                  size="12px"
-                />
-                {{ badge.text }}
-              </q-badge>
-            </div>
           </div>
-          <div
-            v-if="isOwner"
-            class="col-auto text-right"
-          >
+          <div class="col-auto row items-center q-gutter-xs">
+            <!-- View only indicator -->
+            <q-icon
+              v-if="isViewOnly"
+              name="eva-lock-outline"
+              size="16px"
+              class="text-warning"
+            >
+              <q-tooltip>View only</q-tooltip>
+            </q-icon>
+            <!-- Shared with me indicator -->
+            <q-icon
+              v-if="!isOwner"
+              name="eva-people-outline"
+              size="16px"
+              class="text-info"
+            >
+              <q-tooltip>Shared with me</q-tooltip>
+            </q-icon>
+            <!-- Menu button -->
             <q-btn
+              v-if="isOwner"
               flat
               round
               size="sm"
@@ -121,7 +122,6 @@ import {
   getStatusIcon,
   formatDateRange,
 } from 'src/utils/plans'
-import { getPermissionText, getPermissionColor, getPermissionIcon } from 'src/utils/templates'
 import type { PlanWithPermission } from 'src/api'
 
 const emit = defineEmits<{
@@ -147,34 +147,8 @@ const isDeleteDialogOpen = ref(false)
 const isCancelDialogOpen = ref(false)
 
 const isOwner = computed(() => props.plan.owner_id === userStore.userProfile?.id)
-const hasShares = computed(() => isOwner.value && !!props.plan.is_shared)
 const planStatus = computed(() => getPlanStatus(props.plan))
-
-const planBadges = computed(() => {
-  const badges: {
-    text: string
-    color: string
-    icon: string
-  }[] = []
-
-  if (isOwner.value && hasShares.value && !props.hideSharedBadge) {
-    badges.push({
-      text: 'shared',
-      color: 'info',
-      icon: 'eva-people-outline',
-    })
-  }
-
-  if (props.plan.permission_level) {
-    badges.push({
-      text: getPermissionText(props.plan.permission_level),
-      color: getPermissionColor(props.plan.permission_level),
-      icon: getPermissionIcon(props.plan.permission_level),
-    })
-  }
-
-  return badges
-})
+const isViewOnly = computed(() => props.plan.permission_level === 'view')
 
 function formatAmount(amount: number | null | undefined): string {
   const currency = props.plan.currency as CurrencyCode
