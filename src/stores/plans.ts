@@ -13,6 +13,7 @@ import {
   updatePlanSharePermission,
   createPlanItems,
   deletePlanItems,
+  batchUpdatePlanItems,
   searchUsersByEmail,
   type PlanInsert,
   type PlanUpdate,
@@ -293,6 +294,31 @@ export const usePlansStore = defineStore('plans', () => {
     }
   }
 
+  async function updatePlanItems(
+    planId: string,
+    items: Array<{ id: string; name: string; category_id: string; amount: number }>,
+  ) {
+    if (!userId.value) return
+
+    isLoading.value = true
+
+    try {
+      // Add plan_id to each item for batch upsert
+      const itemsWithPlanId = items.map((item) => ({
+        ...item,
+        plan_id: planId,
+      }))
+
+      // Use batch update for efficiency - single request instead of N requests
+      const updatedItems = await batchUpdatePlanItems(itemsWithPlanId)
+      return updatedItems
+    } catch (error) {
+      handleError('PLANS.UPDATE_ITEMS_FAILED', error)
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   function reset() {
     plans.value = []
     sharedUsers.value = []
@@ -327,6 +353,7 @@ export const usePlansStore = defineStore('plans', () => {
     searchUsers,
     clearUserSearch,
     savePlanItems,
+    updatePlanItems,
     removePlanItems,
     reset,
   }

@@ -48,6 +48,7 @@ export type ErrorMessageKey =
   | 'PLANS.ALREADY_SHARED'
   | 'PLANS.SEARCH_USERS_FAILED'
   | 'PLANS.SAVE_ITEMS_FAILED'
+  | 'PLANS.UPDATE_ITEMS_FAILED'
   | 'PLANS.DELETE_ITEMS_FAILED'
   | 'EXPENSES.LOAD_FAILED'
   | 'EXPENSES.LOAD_SUMMARY_FAILED'
@@ -335,6 +336,11 @@ export const ERROR_MESSAGES: Record<ErrorMessageKey, ErrorMessageConfig> = {
   },
   'PLANS.SAVE_ITEMS_FAILED': {
     message: "We couldn't save the plan items. Please try again.",
+    notify: true,
+    log: true,
+  },
+  'PLANS.UPDATE_ITEMS_FAILED': {
+    message: "We couldn't update the plan items. Please try again.",
     notify: true,
     log: true,
   },
