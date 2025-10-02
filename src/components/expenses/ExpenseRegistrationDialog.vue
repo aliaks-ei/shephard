@@ -72,8 +72,9 @@
         <q-tab-panels
           v-model="currentMode"
           animated
-          transition-prev="fade"
-          transition-next="fade"
+          :swipeable="$q.screen.lt.md"
+          :transition-prev="$q.screen.lt.md ? 'slide-right' : 'fade'"
+          :transition-next="$q.screen.lt.md ? 'slide-left' : 'fade'"
           class="col overflow-auto"
           style="flex: 1; min-height: 0"
         >

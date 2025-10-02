@@ -14,32 +14,14 @@
 
     <ListPageSkeleton v-if="areItemsLoading" />
 
-    <div
+    <TemplatesGroup
       v-else-if="hasItems"
-      class="column q-col-gutter-md"
-    >
-      <div v-if="filteredAndSortedOwnedItems.length > 0">
-        <TemplatesGroup
-          title="My Templates"
-          :templates="filteredAndSortedOwnedItems"
-          @edit="viewItem"
-          @delete="deleteItem"
-          @share="openShareDialog"
-        />
-      </div>
-
-      <div v-if="filteredAndSortedSharedItems.length > 0">
-        <TemplatesGroup
-          title="Shared with Me"
-          :templates="filteredAndSortedSharedItems"
-          chip-color="secondary"
-          hide-shared-badge
-          @edit="viewItem"
-          @delete="deleteItem"
-          @share="openShareDialog"
-        />
-      </div>
-    </div>
+      title="My Templates"
+      :templates="allFilteredAndSortedItems"
+      @edit="viewItem"
+      @delete="deleteItem"
+      @share="openShareDialog"
+    />
 
     <EmptyState
       v-else
@@ -84,8 +66,7 @@ const {
   searchQuery,
   sortBy,
   areItemsLoading,
-  filteredAndSortedOwnedItems,
-  filteredAndSortedSharedItems,
+  allFilteredAndSortedItems,
   hasItems,
   sortOptions,
   emptyStateConfig,

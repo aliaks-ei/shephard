@@ -1,8 +1,9 @@
-import { useItemsManager, type CategoryGroup } from './useItemsManager'
+import { useItemsManager, type CategoryGroup, type ItemForSave } from './useItemsManager'
 import type { PlanWithItems } from 'src/api'
 import type { PlanItemUI } from 'src/types'
 
 export type PlanCategoryGroup = CategoryGroup<PlanItemUI>
+export type { ItemForSave }
 
 export function usePlanItems() {
   const itemsManager = useItemsManager<PlanItemUI>({

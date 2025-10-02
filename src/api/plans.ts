@@ -122,6 +122,38 @@ export async function updatePlanItemCompletion(
   if (error) throw error
 }
 
+export async function updatePlanItem(
+  itemId: string,
+  updates: { name?: string; category_id?: string; amount?: number },
+): Promise<PlanItem> {
+  const { data, error } = await planService.supabase
+    .from('plan_items')
+    .update(updates)
+    .eq('id', itemId)
+    .select()
+    .single()
+
+  if (error) throw error
+
+  return data
+}
+
+export async function batchUpdatePlanItems(
+  items: Array<{ id: string; plan_id: string; name: string; category_id: string; amount: number }>,
+): Promise<PlanItem[]> {
+  const { data, error } = await planService.supabase
+    .from('plan_items')
+    .upsert(items, {
+      onConflict: 'id',
+      ignoreDuplicates: false,
+    })
+    .select()
+
+  if (error) throw error
+
+  return data || []
+}
+
 export async function getPlanItemsByCategory(
   planId: string,
   categoryId: string,

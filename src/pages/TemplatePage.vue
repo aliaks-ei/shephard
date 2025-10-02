@@ -187,8 +187,8 @@
             </div>
           </div>
           <div class="text-caption text-grey-6">
-            Total across {{ templateItems.length }}
-            {{ templateItems.length === 1 ? 'category' : 'categories' }}
+            Total across {{ enrichedCategories.length }}
+            {{ enrichedCategories.length === 1 ? 'category' : 'categories' }}
           </div>
         </div>
       </q-card>
