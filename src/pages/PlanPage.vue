@@ -292,13 +292,13 @@
     <!-- For existing plans, show tabs for Overview and Edit modes -->
     <div v-else-if="!isNewPlan">
       <q-tabs
-        :model-value="currentTab"
+        :model-value="activeTab"
         no-caps
         inline-label
         align="justify"
         active-color="primary"
         indicator-color="primary"
-        @update:model-value="switchTab"
+        @update:model-value="(val) => (activeTab = val)"
       >
         <q-tab
           name="overview"
@@ -322,10 +322,11 @@
       <q-separator />
 
       <q-tab-panels
-        :model-value="currentTab"
+        v-model="activeTab"
         animated
-        transition-prev="fade"
-        transition-next="fade"
+        :swipeable="$q.screen.lt.md"
+        :transition-prev="$q.screen.lt.md ? 'slide-right' : 'fade'"
+        :transition-next="$q.screen.lt.md ? 'slide-left' : 'fade'"
         class="q-mt-md"
       >
         <!-- Overview Tab -->
@@ -599,7 +600,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import type { QForm } from 'quasar'
 
@@ -648,6 +649,9 @@ const {
   loadPlan,
   cancelCurrentPlan,
 } = usePlan()
+
+// Local writable ref for tab panels (needed for swipeable)
+const activeTab = ref(currentTab.value)
 
 const {
   planItems,
@@ -1133,6 +1137,18 @@ function switchTab(tabName: string): void {
     params: { id: currentPlan.value.id },
   })
 }
+
+// Sync activeTab when route changes (currentTab is computed from route)
+watch(currentTab, (newTab) => {
+  activeTab.value = newTab
+})
+
+// Handle tab changes from swipe gesture
+watch(activeTab, (newTab) => {
+  if (newTab !== currentTab.value) {
+    switchTab(newTab)
+  }
+})
 
 onMounted(async () => {
   if (!isNewPlan.value) {

@@ -241,14 +241,12 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useQuasar, Dialog } from 'quasar'
+import { Dialog } from 'quasar'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import { useExpensesStore } from 'src/stores/expenses'
 import { useNotificationStore } from 'src/stores/notification'
 import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 import type { ExpenseWithCategory } from 'src/api'
-
-const $q = useQuasar()
 
 interface CategoryData {
   categoryId: string
