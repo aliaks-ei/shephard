@@ -1022,7 +1022,7 @@ async function handleSavePlan(): Promise<void> {
 
 async function savePlan(): Promise<void> {
   const planItemsForSave = getPlanItemsForSave()
-  const success = isNewPlan.value
+  const savedPlan = isNewPlan.value
     ? await createNewPlanWithItems(
         selectedTemplate.value!.id,
         form.value.name,
@@ -1039,11 +1039,16 @@ async function savePlan(): Promise<void> {
         planItemsForSave,
       )
 
-  if (success) {
+  if (savedPlan) {
     notificationsStore.showSuccess(
       isNewPlan.value ? 'Plan created successfully' : 'Plan updated successfully',
     )
-    router.push({ name: 'plan-overview', params: { id: currentPlan.value?.id } })
+
+    if (isNewPlan.value) {
+      router.push({ name: 'plans' })
+    } else {
+      router.push({ name: 'plan-overview', params: { id: savedPlan.id } })
+    }
   }
 }
 

@@ -53,7 +53,7 @@ export function usePlan() {
     endDate: string,
     total: number,
     planItems: { name: string; category_id: string; amount: number }[],
-  ): Promise<boolean> {
+  ): Promise<PlanWithItems | null> {
     const plan = await plansStore.addPlan({
       template_id: templateId,
       name,
@@ -62,7 +62,7 @@ export function usePlan() {
       total,
     })
 
-    if (!plan) return false
+    if (!plan) return null
 
     const items = planItems.map((item) => ({
       ...item,
@@ -71,7 +71,10 @@ export function usePlan() {
 
     await plansStore.savePlanItems(plan.id, items)
 
-    return true
+    // Load the full plan with items and update currentPlan
+    currentPlan.value = await plansStore.loadPlanWithItems(plan.id)
+
+    return currentPlan.value
   }
 
   async function updateExistingPlanWithItems(
@@ -80,8 +83,8 @@ export function usePlan() {
     endDate: string,
     total: number,
     planItems: { name: string; category_id: string; amount: number }[],
-  ): Promise<boolean> {
-    if (!routePlanId.value || !currentPlan.value) return false
+  ): Promise<PlanWithItems | null> {
+    if (!routePlanId.value || !currentPlan.value) return null
 
     const plan = await plansStore.editPlan(routePlanId.value, {
       name,
@@ -90,7 +93,7 @@ export function usePlan() {
       total,
     })
 
-    if (!plan) return false
+    if (!plan) return null
 
     const existingItemIds = currentPlan.value.plan_items.map((item) => item.id)
     await plansStore.removePlanItems(existingItemIds)
@@ -106,7 +109,7 @@ export function usePlan() {
 
     await loadPlan()
 
-    return true
+    return currentPlan.value
   }
 
   async function loadPlan(): Promise<PlanWithItems | null> {
