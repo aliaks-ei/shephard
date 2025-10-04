@@ -8,11 +8,10 @@
     :is-sharing="templatesStore.isSharing"
     :is-searching-users="templatesStore.isSearchingUsers"
     @update:model-value="emit('update:modelValue', $event)"
-    @shared="emit('shared')"
     @load-shared-users="templatesStore.loadTemplateShares"
-    @share-with-user="templatesStore.shareTemplateWithUser"
-    @update-user-permission="templatesStore.updateUserPermission"
-    @remove-user-access="templatesStore.unshareTemplateWithUser"
+    @share-with-user="handleShareWithUser"
+    @update-user-permission="handleUpdateUserPermission"
+    @remove-user-access="handleRemoveUserAccess"
     @search-users="templatesStore.searchUsers"
     @clear-user-search="templatesStore.clearUserSearch"
   />
@@ -33,4 +32,24 @@ const emit = defineEmits<{
 }>()
 
 const templatesStore = useTemplatesStore()
+
+async function handleShareWithUser(templateId: string, email: string, permission: 'view' | 'edit') {
+  const result = await templatesStore.shareTemplateWithUser(templateId, email, permission)
+
+  if (result.success) {
+    emit('shared')
+  }
+}
+
+async function handleUpdateUserPermission(
+  templateId: string,
+  userId: string,
+  permission: 'view' | 'edit',
+) {
+  await templatesStore.updateUserPermission(templateId, userId, permission)
+}
+
+async function handleRemoveUserAccess(templateId: string, userId: string) {
+  await templatesStore.unshareTemplateWithUser(templateId, userId)
+}
 </script>

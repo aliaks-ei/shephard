@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import { useUserStore } from 'src/stores/user'
 import { useTemplatesStore } from 'src/stores/templates'
 import type { CurrencyCode, TemplateWithItems } from 'src/api'
+import type { ActionResult } from 'src/types'
 
 export function useTemplate() {
   const route = useRoute()
@@ -41,23 +42,23 @@ export function useTemplate() {
     duration: string,
     total: number,
     templateItems: { name: string; category_id: string; amount: number }[],
-  ): Promise<boolean> {
-    const template = await templatesStore.addTemplate({
+  ): Promise<ActionResult> {
+    const templateResult = await templatesStore.addTemplate({
       name,
       duration,
       total,
     })
 
-    if (!template) return false
+    if (!templateResult.success || !templateResult.data) return { success: false }
 
     const items = templateItems.map((item) => ({
       ...item,
-      template_id: template.id,
+      template_id: templateResult.data!.id,
     }))
 
-    await templatesStore.addItemsToTemplate(items)
+    const itemsResult = await templatesStore.addItemsToTemplate(items)
 
-    return true
+    return itemsResult
   }
 
   async function updateExistingTemplateWithItems(
@@ -65,30 +66,33 @@ export function useTemplate() {
     duration: string,
     total: number,
     templateItems: { name: string; category_id: string; amount: number }[],
-  ): Promise<boolean> {
-    if (!routeTemplateId.value || !currentTemplate.value) return false
+  ): Promise<ActionResult> {
+    if (!routeTemplateId.value || !currentTemplate.value) return { success: false }
 
-    const template = await templatesStore.editTemplate(routeTemplateId.value, {
+    const templateResult = await templatesStore.editTemplate(routeTemplateId.value, {
       name,
       duration,
       total,
     })
 
-    if (!template) return false
+    if (!templateResult.success || !templateResult.data) return { success: false }
 
     const existingItemIds = currentTemplate.value.template_items.map((item) => item.id)
-    await templatesStore.removeItemsFromTemplate(existingItemIds)
+    const removeResult = await templatesStore.removeItemsFromTemplate(existingItemIds)
+
+    if (!removeResult.success) return { success: false }
 
     const items = templateItems.map((item) => ({
       ...item,
-      template_id: template.id,
+      template_id: templateResult.data!.id,
     }))
 
     if (items.length > 0) {
-      await templatesStore.addItemsToTemplate(items)
+      const addResult = await templatesStore.addItemsToTemplate(items)
+      return addResult
     }
 
-    return true
+    return { success: true }
   }
 
   async function loadTemplate(): Promise<TemplateWithItems | null> {

@@ -23,7 +23,7 @@ export function useTemplates() {
       defaultSort: 'name',
       filterAndSortFn: filterAndSortTemplates,
       deleteFn: async (id: string) => {
-        await templatesStore.removeTemplate(id)
+        return await templatesStore.removeTemplate(id)
       },
     },
     () => templatesStore.templates,

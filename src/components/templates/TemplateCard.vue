@@ -60,7 +60,7 @@
         </div>
 
         <div class="q-mt-lg">
-          <div class="row items-end justify-between">
+          <div class="row items-center justify-between">
             <div class="col">
               <div class="text-h6 text-weight-bold text-primary">
                 {{ formatAmount(template.total) }}
@@ -70,11 +70,12 @@
               <q-badge
                 color="primary"
                 text-color="white"
-                class="q-px-sm q-py-xs"
+                class="q-py-xs"
+                size="sm"
               >
                 <q-icon
                   name="eva-clock-outline"
-                  size="14px"
+                  size="12px"
                   class="q-mr-xs"
                 />
                 {{ template.duration }}

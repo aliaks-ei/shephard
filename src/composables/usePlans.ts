@@ -23,7 +23,7 @@ export function usePlans() {
       defaultSort: 'created_at',
       filterAndSortFn: filterAndSortPlans,
       deleteFn: async (id: string) => {
-        await plansStore.removePlan(id)
+        return await plansStore.removePlan(id)
       },
     },
     () => plansStore.plans,

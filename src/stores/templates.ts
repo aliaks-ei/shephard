@@ -24,6 +24,7 @@ import {
 import { useError } from 'src/composables/useError'
 import { useUserStore } from 'src/stores/user'
 import type { CurrencyCode } from 'src/utils/currency'
+import type { ActionResult } from 'src/types'
 
 export const useTemplatesStore = defineStore('templates', () => {
   const { handleError } = useError()
@@ -74,8 +75,10 @@ export const useTemplatesStore = defineStore('templates', () => {
     }
   }
 
-  async function addTemplate(templateData: Omit<TemplateInsert, 'owner_id' | 'currency'>) {
-    if (!userId.value) return
+  async function addTemplate(
+    templateData: Omit<TemplateInsert, 'owner_id' | 'currency'>,
+  ): Promise<ActionResult<TemplateWithPermission>> {
+    if (!userId.value) return { success: false }
 
     isLoading.value = true
 
@@ -89,7 +92,7 @@ export const useTemplatesStore = defineStore('templates', () => {
         currency: userCurrency,
       })
 
-      return newTemplate
+      return { success: true, data: newTemplate }
     } catch (error) {
       // Handle specific duplicate name error
       if (error instanceof Error && error.name === 'DUPLICATE_TEMPLATE_NAME') {
@@ -97,18 +100,22 @@ export const useTemplatesStore = defineStore('templates', () => {
       } else {
         handleError('TEMPLATES.CREATE_FAILED', error)
       }
+      return { success: false }
     } finally {
       isLoading.value = false
     }
   }
 
-  async function editTemplate(templateId: string, updates: TemplateUpdate) {
+  async function editTemplate(
+    templateId: string,
+    updates: TemplateUpdate,
+  ): Promise<ActionResult<TemplateWithPermission>> {
     isLoading.value = true
 
     try {
       const updatedTemplate = await updateTemplate(templateId, updates)
 
-      return updatedTemplate
+      return { success: true, data: updatedTemplate }
     } catch (error) {
       // Handle specific duplicate name error
       if (error instanceof Error && error.name === 'DUPLICATE_TEMPLATE_NAME') {
@@ -116,50 +123,55 @@ export const useTemplatesStore = defineStore('templates', () => {
       } else {
         handleError('TEMPLATES.UPDATE_FAILED', error, { templateId })
       }
+      return { success: false }
     } finally {
       isLoading.value = false
     }
   }
 
-  async function removeTemplate(templateId: string) {
+  async function removeTemplate(templateId: string): Promise<ActionResult> {
     isLoading.value = true
 
     try {
       await deleteTemplate(templateId)
 
       templates.value = templates.value.filter((t) => t.id !== templateId)
+      return { success: true }
     } catch (error) {
       handleError('TEMPLATES.DELETE_FAILED', error, { templateId })
+      return { success: false }
     } finally {
       isLoading.value = false
     }
   }
 
-  async function addItemsToTemplate(items: TemplateItemInsert[]) {
+  async function addItemsToTemplate(items: TemplateItemInsert[]): Promise<ActionResult> {
     try {
-      const newItems = await createTemplateItems(items)
+      await createTemplateItems(items)
 
-      return newItems
+      return { success: true }
     } catch (error) {
       handleError('TEMPLATE_ITEMS.CREATE_FAILED', error)
+      return { success: false }
     }
   }
 
-  async function removeItemsFromTemplate(ids: string[]) {
+  async function removeItemsFromTemplate(ids: string[]): Promise<ActionResult> {
     try {
       await deleteTemplateItems(ids)
+      return { success: true }
     } catch (error) {
       handleError('TEMPLATE_ITEMS.DELETE_FAILED', error)
+      return { success: false }
     }
   }
 
-  async function loadTemplateShares(templateId: string) {
+  async function loadTemplateShares(templateId: string): Promise<void> {
     isSharing.value = true
 
     try {
       const data = await getTemplateSharedUsers(templateId)
       sharedUsers.value = data
-      return data
     } catch (error) {
       handleError('TEMPLATES.LOAD_SHARES_FAILED', error, { templateId })
     } finally {
@@ -171,8 +183,8 @@ export const useTemplatesStore = defineStore('templates', () => {
     templateId: string,
     userEmail: string,
     permission: 'view' | 'edit',
-  ) {
-    if (!userId.value) return
+  ): Promise<ActionResult> {
+    if (!userId.value) return { success: false }
 
     isSharing.value = true
 
@@ -180,14 +192,19 @@ export const useTemplatesStore = defineStore('templates', () => {
       await shareTemplate(templateId, userEmail, permission, userId.value)
 
       await Promise.all([loadTemplateShares(templateId), loadTemplates()])
+      return { success: true }
     } catch (error) {
       handleError('TEMPLATES.SHARE_FAILED', error, { templateId, userEmail })
+      return { success: false }
     } finally {
       isSharing.value = false
     }
   }
 
-  async function unshareTemplateWithUser(templateId: string, targetUserId: string) {
+  async function unshareTemplateWithUser(
+    templateId: string,
+    targetUserId: string,
+  ): Promise<ActionResult> {
     isSharing.value = true
 
     try {
@@ -198,8 +215,10 @@ export const useTemplatesStore = defineStore('templates', () => {
 
       // Refresh templates to update share counts
       await loadTemplates()
+      return { success: true }
     } catch (error) {
       handleError('TEMPLATES.UNSHARE_FAILED', error, { templateId, targetUserId })
+      return { success: false }
     } finally {
       isSharing.value = false
     }
@@ -209,27 +228,29 @@ export const useTemplatesStore = defineStore('templates', () => {
     templateId: string,
     targetUserId: string,
     permission: 'view' | 'edit',
-  ) {
+  ): Promise<ActionResult> {
     isSharing.value = true
 
     try {
       await updateSharePermission(templateId, targetUserId, permission)
 
       const userIndex = sharedUsers.value.findIndex((user) => user.user_id === targetUserId)
-      if (userIndex === -1 || !sharedUsers.value[userIndex]) return
+      if (userIndex === -1 || !sharedUsers.value[userIndex]) return { success: false }
 
       sharedUsers.value[userIndex].permission_level = permission
+      return { success: true }
     } catch (error) {
       handleError('TEMPLATES.UPDATE_PERMISSION_FAILED', error, { templateId, targetUserId })
+      return { success: false }
     } finally {
       isSharing.value = false
     }
   }
 
-  async function searchUsers(query: string) {
+  async function searchUsers(query: string): Promise<void> {
     if (!query.trim()) {
       userSearchResults.value = []
-      return []
+      return
     }
 
     isSearchingUsers.value = true
@@ -237,10 +258,8 @@ export const useTemplatesStore = defineStore('templates', () => {
     try {
       const results = await searchUsersByEmail(query)
       userSearchResults.value = results
-      return results
     } catch (error) {
       handleError('USERS.SEARCH_FAILED', error, { query })
-      return []
     } finally {
       isSearchingUsers.value = false
     }

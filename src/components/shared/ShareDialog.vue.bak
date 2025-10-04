@@ -201,27 +201,6 @@ const $q = useQuasar()
 
 type SharedUser = TemplateSharedUser
 
-interface ShareDialogProps {
-  entityId: string
-  entityName: string
-  modelValue: boolean
-  sharedUsers: SharedUser[]
-  userSearchResults: UserSearchResult[]
-  isSharing: boolean
-  isSearchingUsers: boolean
-}
-
-const props = defineProps<ShareDialogProps>()
-
-const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void
-  (e: 'share-with-user', entityId: string, email: string, permission: 'view' | 'edit'): void
-  (e: 'update-user-permission', entityId: string, userId: string, permission: 'view' | 'edit'): void
-  (e: 'remove-user-access', entityId: string, userId: string): void
-  (e: 'load-shared-users', entityId: string): void
-  (e: 'search-users', query: string): void
-  (e: 'clear-user-search'): void
-}>()
 
 const userStore = useUserStore()
 
@@ -239,10 +218,10 @@ const currentUserId = computed(() => userStore.userProfile?.id)
 
 const debouncedSearch = useDebounceFn((query: string) => {
   if (!query.trim()) {
-    emit('clear-user-search')
+    props.clearUserSearch()
     return
   }
-  emit('search-users', query)
+  props.searchUsers(query)
 }, 300)
 
 function closeDialog() {
@@ -253,39 +232,56 @@ function reset() {
   selectedPermission.value = 'view'
   selectedUsers.value = []
   isLoadingShares.value = false
-  emit('clear-user-search')
+  props.clearUserSearch()
 }
 
-function handleShare() {
+async function handleShare() {
   if (selectedUsers.value.length === 0) return
 
-  // Emit share event for each selected user
-  selectedUsers.value.forEach((user) => {
-    emit('share-with-user', props.entityId, user.email, selectedPermission.value)
-  })
+  isLoading.value = true
 
-  selectedUsers.value = []
-  emit('clear-user-search')
+  try {
+    // Share with each user and await results
+    const sharePromises = selectedUsers.value.map((user) =>
+      props.shareWithUser(props.entityId, user.email, selectedPermission.value),
+    )
+
+    const results = await Promise.all(sharePromises)
+
+    // Check if all shares succeeded
+    const allSucceeded = results.every((result) => result.success)
+
+    if (allSucceeded) {
+      selectedUsers.value = []
+      props.clearUserSearch()
+      emit('shared')
+    }
+    // Errors already shown by store methods
+  } finally {
+    isLoading.value = false
+  }
 }
 
-function handleUpdateUserPermission(userId: string, permission: 'view' | 'edit') {
-  emit('update-user-permission', props.entityId, userId, permission)
+async function handleUpdateUserPermission(userId: string, permission: 'view' | 'edit') {
+  await props.updateUserPermission(props.entityId, userId, permission)
+  // Error notification already shown by store
 }
 
-function handleRemoveUserAccess(userId: string) {
-  emit('remove-user-access', props.entityId, userId)
+async function handleRemoveUserAccess(userId: string) {
+  await props.removeUserAccess(props.entityId, userId)
+  // Error notification already shown by store
 }
 
 watch(
   () => props.modelValue,
-  (isOpen) => {
+  async (isOpen) => {
     if (!isOpen || !props.entityId) {
       reset()
       return
     }
 
     isLoadingShares.value = true
-    emit('load-shared-users', props.entityId)
+    await props.loadSharedUsers(props.entityId)
     isLoadingShares.value = false
   },
   { immediate: true },
