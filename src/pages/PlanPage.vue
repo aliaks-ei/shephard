@@ -195,12 +195,13 @@
         class="q-pa-md q-mb-lg"
       >
         <div class="row items-center justify-between q-mb-lg">
-          <div class="text-h6">
+          <div class="row items-center">
             <q-icon
               name="eva-list-outline"
               class="q-mr-sm"
+              size="20px"
             />
-            Plan Items
+            <h2 class="text-h6 q-my-none">Plan Items</h2>
           </div>
           <q-btn
             v-if="planCategoryGroups.length > 0"
@@ -251,15 +252,13 @@
         <div v-if="planCategoryGroups.length > 0">
           <q-separator class="q-mb-lg" />
           <div class="row items-center justify-between">
-            <div
-              class="text-h6"
-              style="display: flex; align-items: center"
-            >
+            <div class="row items-center">
               <q-icon
                 name="eva-credit-card-outline"
                 class="q-mr-sm"
+                size="20px"
               />
-              Total Amount
+              <h3 class="text-h6 q-my-none">Total Amount</h3>
             </div>
             <div
               :class="['text-primary text-weight-bold', $q.screen.lt.md ? 'text-h5' : 'text-h4']"
@@ -454,12 +453,13 @@
             <q-card flat>
               <q-card-section>
                 <div class="row items-center justify-between q-mb-lg">
-                  <div class="text-h6">
+                  <div class="row items-center">
                     <q-icon
                       name="eva-list-outline"
                       class="q-mr-sm"
+                      size="20px"
                     />
-                    Plan Items
+                    <h2 class="text-h6 q-my-none">Plan Items</h2>
                   </div>
                   <q-btn
                     flat

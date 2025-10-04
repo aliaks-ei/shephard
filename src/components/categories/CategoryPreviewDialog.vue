@@ -49,16 +49,11 @@
             }"
             style="display: inline-block"
           >
-            <q-avatar
-              :style="{ backgroundColor: category.color }"
-              size="64px"
-              text-color="white"
-            >
-              <q-icon
-                :name="category.icon"
-                size="32px"
-              />
-            </q-avatar>
+            <CategoryIcon
+              :color="category.color"
+              :icon="category.icon"
+              size="lg"
+            />
           </div>
 
           <div class="text-h5 text-weight-medium q-mb-sm">
@@ -176,6 +171,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
+import CategoryIcon from './CategoryIcon.vue'
 import type { CategoryWithStats } from 'src/api'
 
 const $q = useQuasar()

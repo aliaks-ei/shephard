@@ -67,13 +67,11 @@
                 style="min-width: auto"
                 avatar
               >
-                <q-avatar
+                <CategoryIcon
+                  :color="category.color"
+                  :icon="category.icon"
                   size="sm"
-                  :style="{ backgroundColor: category.color }"
-                  text-color="white"
-                >
-                  <q-icon :name="category.icon" />
-                </q-avatar>
+                />
               </q-item-section>
               <q-item-section>
                 <q-item-label>{{ category.name }}</q-item-label>
@@ -122,6 +120,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useQuasar } from 'quasar'
+import CategoryIcon from './CategoryIcon.vue'
 import type { Category } from 'src/api'
 
 const $q = useQuasar()

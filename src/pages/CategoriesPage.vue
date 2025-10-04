@@ -42,16 +42,11 @@
               v-if="$q.screen.xs"
               avatar
             >
-              <q-avatar
-                :style="{ backgroundColor: category.color }"
-                size="40px"
-                text-color="white"
-              >
-                <q-icon
-                  :name="category.icon"
-                  size="20px"
-                />
-              </q-avatar>
+              <CategoryIcon
+                :color="category.color"
+                :icon="category.icon"
+                size="sm"
+              />
             </q-item-section>
 
             <q-item-section v-if="$q.screen.xs">
@@ -67,28 +62,23 @@
             <!-- Desktop Layout: Centered vertical layout -->
             <q-item-section
               v-if="!$q.screen.xs"
-              class="column items-center text-center q-py-lg"
+              class="column items-center text-center"
             >
-              <q-avatar
-                :style="{ backgroundColor: category.color }"
-                size="48px"
-                text-color="white"
+              <CategoryIcon
+                :color="category.color"
+                :icon="category.icon"
+                size="md"
                 class="q-mb-md"
-              >
-                <q-icon
-                  :name="category.icon"
-                  size="24px"
-                />
-              </q-avatar>
+              />
 
-              <div class="text-weight-medium text-body1 q-mb-xs">
+              <h3 class="text-weight-medium text-body1 q-my-none">
                 {{ category.name }}
-              </div>
+              </h3>
 
-              <div class="text-caption text-grey-7">
+              <p class="text-caption text-grey-7 q-mb-none">
                 {{ category.templates.length }}
                 {{ category.templates.length === 1 ? 'template' : 'templates' }}
-              </div>
+              </p>
             </q-item-section>
             <div
               class="absolute-bottom"
@@ -136,6 +126,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useCategoriesStore } from 'src/stores/categories'
+import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import ListPageLayout from 'src/layouts/ListPageLayout.vue'
 import SearchAndSort from 'src/components/shared/SearchAndSort.vue'
 import ListPageSkeleton from 'src/components/shared/ListPageSkeleton.vue'
@@ -150,7 +141,10 @@ const sortBy = ref('name')
 const showPreviewDialog = ref(false)
 const selectedCategory = ref<CategoryWithStats | null>(null)
 
-const sortOptions = [{ label: 'Name', value: 'name' }]
+const sortOptions = [
+  { label: 'Name', value: 'name' },
+  { label: 'Usage', value: 'usage' },
+]
 
 const filteredCategories = computed(() => {
   let categories = [...categoriesStore.categories]
@@ -162,6 +156,8 @@ const filteredCategories = computed(() => {
 
   if (sortBy.value === 'name') {
     categories.sort((a, b) => a.name.localeCompare(b.name))
+  } else if (sortBy.value === 'usage') {
+    categories.sort((a, b) => b.templates.length - a.templates.length)
   }
 
   return categories

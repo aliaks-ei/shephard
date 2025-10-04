@@ -10,7 +10,7 @@
       <q-header elevated>
         <q-toolbar>
           <q-btn
-            v-if="!$q.screen.gt.sm"
+            v-if="$q.screen.gt.sm"
             icon="eva-menu-outline"
             aria-label="Menu"
             flat
@@ -27,11 +27,12 @@
             />
           </q-toolbar-title>
 
-          <UserDropdownMenu />
+          <UserDropdownMenu v-if="$q.screen.gt.sm" />
         </q-toolbar>
       </q-header>
 
       <q-drawer
+        v-if="$q.screen.gt.sm"
         v-model="leftDrawerOpen"
         class="q-py-md"
         bordered
@@ -40,9 +41,12 @@
         <NavigationDrawer :items="navigationItems" />
       </q-drawer>
 
-      <q-page-container class="page-container">
+      <q-page-container
+        class="page-container"
+        :class="{ 'mobile-with-bottom-nav': showMobileBottomNav }"
+      >
         <q-page
-          class="shadow-1"
+          :class="$q.screen.gt.sm ? 'shadow-1' : ''"
           padding
         >
           <router-view />
@@ -60,21 +64,76 @@
             is-mini-mode
           />
         </q-page-sticky>
+
+        <MobileBottomNavigation
+          v-if="showMobileBottomNav"
+          @open-expense-dialog="showExpenseDialog = true"
+        />
       </q-page-container>
+
+      <ExpenseRegistrationDialog
+        v-model="showExpenseDialog"
+        auto-select-recent-plan
+      />
     </template>
   </q-layout>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { useQuasar } from 'quasar'
 
 import UserDropdownMenu from 'src/components/UserDropdownMenu.vue'
 import NavigationDrawer from 'src/components/NavigationDrawer.vue'
+import MobileBottomNavigation from 'src/components/MobileBottomNavigation.vue'
+import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 import { useUserStore } from 'src/stores/user'
+import { usePwaInstall } from 'src/composables/usePwaInstall'
+import { useNotificationStore } from 'src/stores/notification'
 
 const userStore = useUserStore()
+const route = useRoute()
+const $q = useQuasar()
+const { isInstallable, promptInstall, dismissInstall } = usePwaInstall()
+const notificationStore = useNotificationStore()
 
 const leftDrawerOpen = ref(false)
+const showExpenseDialog = ref(false)
+
+// Handle PWA install prompt
+watch(isInstallable, (installable) => {
+  if (installable) {
+    showPwaInstallNotification()
+  }
+})
+
+function showPwaInstallNotification() {
+  notificationStore.showNotification('Install Shephard for a better experience!', 'info', {
+    timeout: 0, // Persistent notification
+    actions: [
+      {
+        label: 'Install',
+        color: 'white',
+        handler: () => {
+          void promptInstall().then((result) => {
+            if (result === 'accepted') {
+              notificationStore.showSuccess('App installed successfully!')
+            }
+          })
+        },
+      },
+      {
+        label: 'Not now',
+        color: 'white',
+        handler: () => {
+          dismissInstall()
+        },
+      },
+    ],
+  })
+}
+
 const navigationItems = ref([
   {
     icon: 'eva-home-outline',
@@ -98,6 +157,15 @@ const navigationItems = ref([
   },
 ])
 
+const isDetailPage = computed(() => {
+  // Detail pages have :id parameter in route
+  return !!route.params.id
+})
+
+const showMobileBottomNav = computed(() => {
+  return $q.screen.lt.md && !isDetailPage.value
+})
+
 const toggleLeftDrawer = () => {
   leftDrawerOpen.value = !leftDrawerOpen.value
 }
@@ -106,6 +174,10 @@ const toggleLeftDrawer = () => {
 <style lang="scss" scoped>
 .navigation-sticky-bg {
   background-color: var(--bg-color);
+}
+
+.mobile-with-bottom-nav {
+  padding-bottom: 70px;
 }
 
 @media (min-width: 1024px) {

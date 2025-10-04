@@ -1,0 +1,80 @@
+<template>
+  <q-menu :offset="[0, 8]">
+    <q-list style="min-width: 220px">
+      <div class="text-center q-pt-md q-pb-md">
+        <UserAvatar
+          :avatar-url="userStore.userProfile?.avatarUrl"
+          :name-initial="userStore.userProfile?.nameInitial"
+          size="72px"
+        />
+        <p class="text-center q-mt-sm text-weight-bold text-h6 q-mb-none">
+          {{ userStore.userProfile?.displayName }}
+        </p>
+        <p class="text-center text-caption q-mb-none">
+          {{ userStore.userProfile?.email }}
+        </p>
+      </div>
+
+      <q-separator />
+
+      <q-item
+        clickable
+        to="/categories"
+        exact
+      >
+        <q-item-section avatar>
+          <q-icon
+            name="eva-grid-outline"
+            size="sm"
+          />
+        </q-item-section>
+        <q-item-section>Categories</q-item-section>
+      </q-item>
+
+      <q-item
+        clickable
+        to="/settings"
+        exact
+      >
+        <q-item-section avatar>
+          <q-icon
+            name="eva-settings-2-outline"
+            size="sm"
+          />
+        </q-item-section>
+        <q-item-section>Settings</q-item-section>
+      </q-item>
+
+      <q-separator />
+
+      <q-item
+        class="q-py-md text-negative"
+        clickable
+        @click="signOut"
+      >
+        <q-item-section avatar>
+          <q-icon
+            name="eva-log-out-outline"
+            size="sm"
+            color="negative"
+          />
+        </q-item-section>
+        <q-item-section>Sign Out</q-item-section>
+      </q-item>
+    </q-list>
+  </q-menu>
+</template>
+
+<script setup lang="ts">
+import { useRouter } from 'vue-router'
+import { useUserStore } from 'src/stores/user'
+import UserAvatar from './UserAvatar.vue'
+
+const userStore = useUserStore()
+const router = useRouter()
+
+const signOut = async () => {
+  await userStore.signOut()
+  router.push('/auth')
+}
+</script>

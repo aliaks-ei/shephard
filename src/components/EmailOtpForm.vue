@@ -1,6 +1,6 @@
 <template>
   <q-form
-    class="q-gutter-md q-mb-md"
+    class="q-mb-md"
     novalidate
     @submit.prevent="handleEmailSubmit"
   >

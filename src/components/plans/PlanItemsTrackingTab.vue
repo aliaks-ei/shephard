@@ -138,13 +138,11 @@
                 style="min-width: auto"
                 avatar
               >
-                <q-avatar
-                  :style="{ backgroundColor: group.categoryColor }"
+                <CategoryIcon
+                  :color="group.categoryColor"
+                  :icon="group.categoryIcon || 'eva-folder-outline'"
                   size="sm"
-                  text-color="white"
-                >
-                  <q-icon :name="group.categoryIcon || 'eva-folder-outline'" />
-                </q-avatar>
+                />
               </q-item-section>
 
               <q-item-section>
@@ -217,6 +215,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import { useCategoriesStore } from 'src/stores/categories'
 import { useExpensesStore } from 'src/stores/expenses'
 import { useNotificationStore } from 'src/stores/notification'

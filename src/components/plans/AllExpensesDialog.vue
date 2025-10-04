@@ -58,16 +58,11 @@
                 style="min-width: auto"
                 avatar
               >
-                <q-avatar
-                  :style="{ backgroundColor: getCategoryColor(expense.category_id) }"
-                  size="32px"
-                  text-color="white"
-                >
-                  <q-icon
-                    :name="getCategoryIcon(expense.category_id)"
-                    size="16px"
-                  />
-                </q-avatar>
+                <CategoryIcon
+                  :color="getCategoryColor(expense.category_id)"
+                  :icon="getCategoryIcon(expense.category_id)"
+                  size="sm"
+                />
               </q-item-section>
 
               <q-item-section>
@@ -114,6 +109,7 @@
 
 <script setup lang="ts">
 import { Dialog } from 'quasar'
+import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import { useExpensesStore } from 'src/stores/expenses'
 import { useNotificationStore } from 'src/stores/notification'
