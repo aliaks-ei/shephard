@@ -13,13 +13,11 @@
           style="min-width: auto"
           avatar
         >
-          <q-avatar
-            :style="{ backgroundColor: categoryColor }"
+          <CategoryIcon
+            :color="categoryColor"
+            :icon="categoryIcon"
             size="sm"
-            text-color="white"
-          >
-            <q-icon :name="categoryIcon" />
-          </q-avatar>
+          />
         </q-item-section>
 
         <q-item-section>
@@ -74,6 +72,7 @@
 <script setup lang="ts">
 import { ref, computed, nextTick, watch, watchEffect } from 'vue'
 import TemplateItem from './TemplateItem.vue'
+import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import type { TemplateItemUI } from 'src/types'
 

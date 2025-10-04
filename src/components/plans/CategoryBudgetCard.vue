@@ -24,16 +24,11 @@
           class="q-pr-sm"
           thumbnail
         >
-          <q-avatar
-            :style="{ backgroundColor: category.categoryColor }"
-            size="32px"
-            text-color="white"
-          >
-            <q-icon
-              :name="category.categoryIcon"
-              size="16px"
-            />
-          </q-avatar>
+          <CategoryIcon
+            :color="category.categoryColor"
+            :icon="category.categoryIcon"
+            size="sm"
+          />
         </q-item-section>
         <div class="column col-grow overflow-hidden">
           <div class="row items-center no-wrap">
@@ -129,6 +124,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 
 interface CategoryBudget {

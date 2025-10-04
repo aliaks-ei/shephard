@@ -1,45 +1,66 @@
 <template>
-  <div class="auth-page q-pa-md">
-    <div class="row justify-center items-center full-height">
-      <div class="col-12 col-sm-8 col-md-6 col-lg-4 col-xl-3">
-        <div class="column items-center">
-          <h1 class="text-h4 text-primary q-mb-xl">Welcome to Shephard</h1>
-          <q-card class="shadow-1 full-width">
-            <q-card-section class="bg-primary text-white text-center">
-              <h2 class="text-h5">Sign In</h2>
-            </q-card-section>
+  <div
+    class="row justify-center items-center q-pa-md"
+    style="min-height: 100vh"
+  >
+    <div class="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-4">
+      <q-card
+        flat
+        bordered
+        :class="$q.screen.lt.md ? 'q-pa-xs' : 'q-pa-md'"
+      >
+        <q-card-section class="text-center q-pb-none">
+          <!-- App Icon -->
+          <q-icon
+            name="eva-trending-up-outline"
+            size="56px"
+            color="primary"
+            class="q-mb-md"
+          />
 
-            <q-card-section class="q-pa-lg">
-              <p class="text-subtitle1 text-center q-mb-md">Please sign in to continue</p>
+          <!-- Welcome Heading -->
+          <h1
+            :class="$q.screen.lt.md ? 'text-h4' : 'text-h3'"
+            class="text-weight-medium q-mt-none q-mb-sm"
+          >
+            Welcome to Shephard
+          </h1>
 
-              <!-- Email OTP Authentication -->
-              <EmailOtpForm />
+          <!-- Subtitle -->
+          <p class="text-subtitle1 text-grey-7 q-mb-none">
+            Your smart expense management companion
+          </p>
+        </q-card-section>
 
-              <q-separator class="q-my-md" />
-              <p class="text-center q-mb-md">OR</p>
+        <q-card-section :class="$q.screen.lt.md ? 'q-pt-md' : 'q-pt-lg'">
+          <!-- Email OTP Authentication -->
+          <EmailOtpForm />
 
-              <!-- Google Authentication -->
-              <GoogleAuthButton />
-            </q-card-section>
-          </q-card>
-        </div>
-      </div>
+          <!-- Divider with OR -->
+          <div class="row items-center q-my-lg">
+            <div class="col">
+              <q-separator />
+            </div>
+            <div class="col-auto q-px-md">
+              <span class="text-body2 text-grey-6">OR</span>
+            </div>
+            <div class="col">
+              <q-separator />
+            </div>
+          </div>
+
+          <!-- Google Authentication -->
+          <GoogleAuthButton />
+        </q-card-section>
+      </q-card>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useQuasar } from 'quasar'
 import GoogleAuthButton from 'src/components/GoogleAuthButton.vue'
 import EmailOtpForm from 'src/components/EmailOtpForm.vue'
+
+const $q = useQuasar()
 </script>
-
-<style scoped>
-.auth-page {
-  min-height: 100vh;
-}
-
-.auth-card {
-  max-width: 380px;
-  width: 100%;
-}
-</style>

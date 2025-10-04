@@ -80,7 +80,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 
@@ -89,13 +89,50 @@ import NavigationDrawer from 'src/components/NavigationDrawer.vue'
 import MobileBottomNavigation from 'src/components/MobileBottomNavigation.vue'
 import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 import { useUserStore } from 'src/stores/user'
+import { usePwaInstall } from 'src/composables/usePwaInstall'
+import { useNotificationStore } from 'src/stores/notification'
 
 const userStore = useUserStore()
 const route = useRoute()
 const $q = useQuasar()
+const { isInstallable, promptInstall, dismissInstall } = usePwaInstall()
+const notificationStore = useNotificationStore()
 
 const leftDrawerOpen = ref(false)
 const showExpenseDialog = ref(false)
+
+// Handle PWA install prompt
+watch(isInstallable, (installable) => {
+  if (installable) {
+    showPwaInstallNotification()
+  }
+})
+
+function showPwaInstallNotification() {
+  notificationStore.showNotification('Install Shephard for a better experience!', 'info', {
+    timeout: 0, // Persistent notification
+    actions: [
+      {
+        label: 'Install',
+        color: 'white',
+        handler: () => {
+          void promptInstall().then((result) => {
+            if (result === 'accepted') {
+              notificationStore.showSuccess('App installed successfully!')
+            }
+          })
+        },
+      },
+      {
+        label: 'Not now',
+        color: 'white',
+        handler: () => {
+          dismissInstall()
+        },
+      },
+    ],
+  })
+}
 
 const navigationItems = ref([
   {
