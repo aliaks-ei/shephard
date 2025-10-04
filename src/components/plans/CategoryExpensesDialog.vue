@@ -12,17 +12,12 @@
       <!-- Header -->
       <q-card-section class="row items-center">
         <div class="row items-center">
-          <q-avatar
-            :style="{ backgroundColor: category?.categoryColor }"
-            :size="$q.screen.lt.md ? '24px' : '32px'"
-            text-color="white"
+          <CategoryIcon
+            :color="category?.categoryColor || '#666'"
+            :icon="category?.categoryIcon || 'eva-folder-outline'"
+            size="sm"
             class="q-mr-sm"
-          >
-            <q-icon
-              :name="category?.categoryIcon"
-              :size="$q.screen.lt.md ? '14px' : '18px'"
-            />
-          </q-avatar>
+          />
           <h2
             class="q-my-none"
             :class="$q.screen.lt.md ? 'text-subtitle2' : 'text-h6'"
@@ -82,7 +77,7 @@
                 class="text-caption"
                 :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-6'"
               >
-                Remaining
+                {{ (category?.remainingAmount || 0) >= 0 ? 'Remaining' : 'Over' }}
               </div>
               <div
                 class="text-body1 text-weight-bold"
@@ -314,6 +309,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { Dialog, useQuasar } from 'quasar'
+import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import { useExpensesStore } from 'src/stores/expenses'
 import { useNotificationStore } from 'src/stores/notification'

@@ -42,12 +42,12 @@
           </div>
         </div>
         <div class="col">
-          <div class="text-caption text-grey-6">Remaining</div>
+          <div class="text-caption text-grey-6">{{ remaining >= 0 ? 'Remaining' : 'Over' }}</div>
           <div
             class="text-weight-bold"
             :class="[remainingColorClass, $q.screen.lt.md ? 'text-subtitle2' : 'text-h6']"
           >
-            {{ formatCurrency(remaining, currency) }}
+            {{ formatCurrency(Math.abs(remaining), currency) }}
           </div>
         </div>
       </div>

@@ -1,11 +1,12 @@
 <template>
   <div class="row items-center justify-between q-mb-md">
-    <div class="row items-center text-h6 text-weight-medium">
+    <div class="row items-center">
       <q-icon
         :name="icon"
         class="q-mr-sm"
+        size="20px"
       />
-      {{ title }}
+      <h2 class="text-h6 text-weight-medium q-my-none">{{ title }}</h2>
       <q-chip
         :label="items.length"
         :color="chipColor"

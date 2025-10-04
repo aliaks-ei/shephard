@@ -113,13 +113,11 @@
               style="min-width: auto"
               avatar
             >
-              <q-avatar
-                :style="{ backgroundColor: group.categoryColor }"
+              <CategoryIcon
+                :color="group.categoryColor"
+                :icon="group.categoryIcon || 'eva-folder-outline'"
                 size="sm"
-                text-color="white"
-              >
-                <q-icon :name="group.categoryIcon || 'eva-folder-outline'" />
-              </q-avatar>
+              />
             </q-item-section>
 
             <q-item-section>
@@ -201,6 +199,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
+import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import { useCategoriesStore } from 'src/stores/categories'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import type { PlanItem } from 'src/api/plans'

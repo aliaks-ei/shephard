@@ -1,5 +1,5 @@
 [build]
-  publish = "dist/spa"
+  publish = "dist/pwa"
 
 [[redirects]]
   from = "/*"

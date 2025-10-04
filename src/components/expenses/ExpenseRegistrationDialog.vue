@@ -374,16 +374,11 @@
                 <template #option="scope">
                   <q-item v-bind="scope.itemProps">
                     <q-item-section avatar>
-                      <q-avatar
-                        :style="{ backgroundColor: scope.opt.color }"
-                        size="32px"
-                        text-color="white"
-                      >
-                        <q-icon
-                          :name="scope.opt.icon"
-                          size="16px"
-                        />
-                      </q-avatar>
+                      <CategoryIcon
+                        :color="scope.opt.color"
+                        :icon="scope.opt.icon"
+                        size="sm"
+                      />
                     </q-item-section>
                     <q-item-section>
                       <q-item-label>{{ scope.opt.label }}</q-item-label>
@@ -546,6 +541,7 @@ import { useNotificationStore } from 'src/stores/notification'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import { formatDateRange, getStatusColor, getPlanStatus } from 'src/utils/plans'
 import { getPlanItems, updatePlanItemCompletion } from 'src/api/plans'
+import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import PlanItemSelector from './PlanItemSelector.vue'
 import type { QForm } from 'quasar'
 import type { PlanItem } from 'src/api/plans'
