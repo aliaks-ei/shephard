@@ -1022,7 +1022,7 @@ async function handleSavePlan(): Promise<void> {
 
 async function savePlan(): Promise<void> {
   const planItemsForSave = getPlanItemsForSave()
-  const savedPlan = isNewPlan.value
+  const result = isNewPlan.value
     ? await createNewPlanWithItems(
         selectedTemplate.value!.id,
         form.value.name,
@@ -1039,33 +1039,40 @@ async function savePlan(): Promise<void> {
         planItemsForSave,
       )
 
-  if (savedPlan) {
+  if (result.success) {
     notificationsStore.showSuccess(
       isNewPlan.value ? 'Plan created successfully' : 'Plan updated successfully',
     )
 
     if (isNewPlan.value) {
       router.push({ name: 'plans' })
-    } else {
-      router.push({ name: 'plan-overview', params: { id: savedPlan.id } })
+    } else if (result.data) {
+      router.push({ name: 'plan-overview', params: { id: result.data.id } })
     }
   }
+  // Error notification already shown by store
 }
 
 async function cancelPlan(): Promise<void> {
-  await cancelCurrentPlan()
-  showCancelDialog.value = false
-  notificationsStore.showSuccess('Plan cancelled successfully')
-  goBack()
+  const result = await cancelCurrentPlan()
+
+  if (result.success) {
+    showCancelDialog.value = false
+    notificationsStore.showSuccess('Plan cancelled successfully')
+    goBack()
+  }
 }
 
 async function deletePlan(): Promise<void> {
   if (!currentPlan.value) return
 
-  await plansStore.removePlan(currentPlan.value.id)
-  showDeleteDialog.value = false
-  notificationsStore.showSuccess('Plan deleted successfully')
-  goBack()
+  const result = await plansStore.removePlan(currentPlan.value.id)
+
+  if (result.success) {
+    showDeleteDialog.value = false
+    notificationsStore.showSuccess('Plan deleted successfully')
+    goBack()
+  }
 }
 
 function onPlanShared(): void {

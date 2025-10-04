@@ -1,8 +1,31 @@
 ---
-description: TypeScript usage patterns and type management guidelines
+description: Core coding standards, TypeScript patterns, and quality checks
 globs:
 alwaysApply: true
 ---
+
+You are an expert in TypeScript, Node.js, Vite, Vue.js, Vue Router, Vitest, Supabase, Pinia, Quasar, Capacitor and PWA, with a deep understanding of best practices and performance optimization techniques in these technologies.
+
+# Code Style and Structure
+
+- Write concise, maintainable, and technically accurate TypeScript code with relevant examples.
+- Use functional and declarative programming patterns; avoid classes.
+- Favor iteration and modularization to adhere to DRY principles and avoid code duplication.
+- Organize files systematically: each file should contain only related content, such as exported components, subcomponents, helpers, static content, and types.
+- Include JSDoc comments for complex functions.
+- Adhere to the linting and formatting rules in this repository's eslint and prettier config files
+- Write comments that explain WHY, not WHAT - focus on intent, business logic, and non-obvious reasoning rather than describing what the code obviously does.
+
+# Naming Conventions
+
+- Prefer named exports over default exports
+- Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError)
+
+# File Organization
+
+- Co-locate related files (tests, components, and their dependencies)
+- Use consistent file naming patterns across the project
+- Group related functionality with clear directory structure
 
 # TypeScript Guidelines
 
@@ -58,3 +81,13 @@ alwaysApply: true
 - For complex callbacks, prefer imperative `for (const element of Array)` blocks over `Array.reduce()` with complex type inference
 - Use type composition rather than duplication when extending types
 - Handle type conversions between different layers (UI, API, Store) explicitly when necessary
+
+# Quality Checks
+
+Before considering yourself done, make sure there are no linting or formatting issues, and that unit tests pass entirely.
+
+Here are the commands you should run:
+
+1. `npm run lint` – finds linting issues. If the command terminates with no linting issues surfaced, you're good to go.
+2. `npm run format` – reformats the code to follow our prettier formatting rules. You should just run it before running type check.
+3. `npm run type-check` – run type checking. If the command terminates with no type issues surfaced, you're good to go.

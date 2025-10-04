@@ -5,6 +5,7 @@ import { useUserStore } from 'src/stores/user'
 import { usePlansStore } from 'src/stores/plans'
 import { canEditPlan } from 'src/utils/plans'
 import type { CurrencyCode, PlanWithItems } from 'src/api'
+import type { ActionResult } from 'src/types'
 
 export function usePlan() {
   const route = useRoute()
@@ -53,8 +54,8 @@ export function usePlan() {
     endDate: string,
     total: number,
     planItems: Array<{ id?: string; name: string; category_id: string; amount: number }>,
-  ): Promise<PlanWithItems | null> {
-    const plan = await plansStore.addPlan({
+  ): Promise<ActionResult<PlanWithItems>> {
+    const planResult = await plansStore.addPlan({
       template_id: templateId,
       name,
       start_date: startDate,
@@ -62,21 +63,25 @@ export function usePlan() {
       total,
     })
 
-    if (!plan) return null
+    if (!planResult.success || !planResult.data) return { success: false }
 
     const items = planItems.map((item) => ({
       name: item.name,
       category_id: item.category_id,
       amount: item.amount,
-      plan_id: plan.id,
+      plan_id: planResult.data!.id,
     }))
 
-    await plansStore.savePlanItems(plan.id, items)
+    const itemsResult = await plansStore.savePlanItems(planResult.data.id, items)
+
+    if (!itemsResult.success) return { success: false }
 
     // Load the full plan with items and update currentPlan
-    currentPlan.value = await plansStore.loadPlanWithItems(plan.id)
+    currentPlan.value = await plansStore.loadPlanWithItems(planResult.data.id)
 
-    return currentPlan.value
+    if (!currentPlan.value) return { success: false }
+
+    return { success: true, data: currentPlan.value }
   }
 
   async function updateExistingPlanWithItems(
@@ -85,17 +90,17 @@ export function usePlan() {
     endDate: string,
     total: number,
     planItems: Array<{ id?: string; name: string; category_id: string; amount: number }>,
-  ): Promise<PlanWithItems | null> {
-    if (!routePlanId.value || !currentPlan.value) return null
+  ): Promise<ActionResult<PlanWithItems>> {
+    if (!routePlanId.value || !currentPlan.value) return { success: false }
 
-    const plan = await plansStore.editPlan(routePlanId.value, {
+    const planResult = await plansStore.editPlan(routePlanId.value, {
       name,
       start_date: startDate,
       end_date: endDate,
       total,
     })
 
-    if (!plan) return null
+    if (!planResult.success || !planResult.data) return { success: false }
 
     // Separate items into existing (to update) and new (to create)
     const itemsToUpdate = planItems.filter((item) => item.id)
@@ -107,14 +112,14 @@ export function usePlan() {
       .filter((existingItem) => !newItemIds.has(existingItem.id))
       .map((item) => item.id)
 
-    // Execute all operations
-    const operations: Promise<unknown>[] = []
+    // Execute all operations and check their results
+    const operations: Array<Promise<ActionResult>> = []
 
     // Update existing items
     if (itemsToUpdate.length > 0) {
       operations.push(
         plansStore.updatePlanItems(
-          plan.id,
+          planResult.data.id,
           itemsToUpdate as Array<{ id: string; name: string; category_id: string; amount: number }>,
         ),
       )
@@ -126,9 +131,9 @@ export function usePlan() {
         name: item.name,
         category_id: item.category_id,
         amount: item.amount,
-        plan_id: plan.id,
+        plan_id: planResult.data!.id,
       }))
-      operations.push(plansStore.savePlanItems(plan.id, newItems))
+      operations.push(plansStore.savePlanItems(planResult.data.id, newItems))
     }
 
     // Delete removed items
@@ -137,12 +142,19 @@ export function usePlan() {
     }
 
     // Wait for all operations to complete
-    await Promise.all(operations)
+    const results = await Promise.all(operations)
+
+    // Check if any operation failed
+    if (results.some((result) => !result.success)) {
+      return { success: false }
+    }
 
     // Reload the plan to get fresh data
     await loadPlan()
 
-    return currentPlan.value
+    if (!currentPlan.value) return { success: false }
+
+    return { success: true, data: currentPlan.value }
   }
 
   async function loadPlan(): Promise<PlanWithItems | null> {
@@ -153,14 +165,16 @@ export function usePlan() {
     return currentPlan.value
   }
 
-  async function cancelCurrentPlan(): Promise<void> {
-    if (!routePlanId.value) return
+  async function cancelCurrentPlan(): Promise<ActionResult> {
+    if (!routePlanId.value) return { success: false }
 
-    await plansStore.cancelPlan(routePlanId.value)
+    const result = await plansStore.cancelPlan(routePlanId.value)
 
-    if (currentPlan.value) {
+    if (result.success && currentPlan.value) {
       currentPlan.value.status = 'cancelled'
     }
+
+    return result
   }
 
   return {

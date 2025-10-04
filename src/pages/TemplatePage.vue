@@ -698,18 +698,18 @@ async function saveTemplate(): Promise<void> {
 
   if (hasFormErrors || hasItemErrors) return
 
-  let success = false
   const templateItems = getTemplateItemsForSave()
 
+  let result
   if (isNewTemplate.value) {
-    success = await createNewTemplateWithItems(
+    result = await createNewTemplateWithItems(
       form.value.name.trim(),
       form.value.duration,
       totalAmount.value,
       templateItems,
     )
   } else {
-    success = await updateExistingTemplateWithItems(
+    result = await updateExistingTemplateWithItems(
       form.value.name.trim(),
       form.value.duration,
       totalAmount.value,
@@ -717,12 +717,13 @@ async function saveTemplate(): Promise<void> {
     )
   }
 
-  if (success) {
+  if (result.success) {
     notificationsStore.showSuccess(
       isNewTemplate.value ? 'Template created successfully' : 'Template updated successfully',
     )
     goBack()
   }
+  // Error notification already shown by store
 }
 
 async function loadCurrentTemplate(): Promise<void> {
@@ -739,12 +740,17 @@ async function loadCurrentTemplate(): Promise<void> {
 async function deleteTemplate(): Promise<void> {
   if (!routeTemplateId.value) return
 
-  await templatesStore.removeTemplate(routeTemplateId.value)
-  showDeleteDialog.value = false
-  goBack()
+  const result = await templatesStore.removeTemplate(routeTemplateId.value)
+
+  if (result.success) {
+    showDeleteDialog.value = false
+    notificationsStore.showSuccess('Template deleted successfully')
+    goBack()
+  }
 }
 
 function onTemplateShared(): void {
+  notificationsStore.showSuccess('Template shared successfully')
   templatesStore.loadTemplates()
   closeDialog('share')
 }

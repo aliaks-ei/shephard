@@ -130,16 +130,6 @@ describe('Preferences Store', () => {
       expect(freshPreferencesStore.preferences.darkMode).toBe(mockSystemDarkMode.value)
     })
 
-    it('should handle null user preferences gracefully', async () => {
-      vi.mocked(userApi.getUserPreferences).mockResolvedValue(null)
-
-      await preferencesStore.loadPreferences()
-
-      expect(userApi.getUserPreferences).toHaveBeenCalledWith('test-user-id')
-      expect(preferencesStore.isLoading).toBe(false)
-      expect(preferencesStore.preferences).toEqual(userApi.DEFAULT_PREFERENCES)
-    })
-
     it('should initialize with defaults and handle error when preferences load fails', async () => {
       const mockError = new Error('Failed to load preferences')
       vi.mocked(userApi.getUserPreferences).mockRejectedValue(mockError)

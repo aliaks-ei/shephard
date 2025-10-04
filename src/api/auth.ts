@@ -78,7 +78,7 @@ export async function updateUserPreferences(updates: {
 }
 
 export function onAuthStateChange(
-  callback: (event: AuthChangeEvent, session: Session | null) => Promise<void>,
-) {
+  callback: (event: AuthChangeEvent, session: Session | null) => void | Promise<void>,
+): void {
   supabase.auth.onAuthStateChange(callback)
 }

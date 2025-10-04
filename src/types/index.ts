@@ -7,3 +7,7 @@ export type {
   PlanItemUI,
   PlanCategoryUI,
 } from './ui'
+
+export type ActionResult<T = void> = T extends void
+  ? { success: boolean }
+  : { success: boolean; data?: T }

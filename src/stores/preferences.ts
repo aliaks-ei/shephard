@@ -48,10 +48,11 @@ export const usePreferencesStore = defineStore('preferences', () => {
     }
 
     isLoading.value = true
+    // Ensure immediate usable defaults before network
+    initializeWithDefaults()
 
     try {
       const userPreferences = await getUserPreferences(authStore.user.id)
-      if (!userPreferences) return
 
       preferences.value = {
         darkMode: userPreferences.darkMode ?? DEFAULT_PREFERENCES.darkMode,
@@ -61,7 +62,6 @@ export const usePreferencesStore = defineStore('preferences', () => {
       }
     } catch (err) {
       handleError('USER.PREFERENCES_LOAD_FAILED', err, { userId: authStore.user?.id })
-      initializeWithDefaults()
     } finally {
       isLoading.value = false
     }

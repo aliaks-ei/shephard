@@ -1,7 +1,9 @@
 import { defineBoot } from '#q-app/wrappers'
+import { watch } from 'vue'
 import { useAuthStore } from 'src/stores/auth'
+import { usePreferencesStore } from 'src/stores/preferences'
 
-export default defineBoot(() => {
+export default defineBoot(async () => {
   try {
     window.handleGoogleSignIn = (response) => {
       if (window.vueGoogleCallback) {
@@ -12,10 +14,19 @@ export default defineBoot(() => {
     }
 
     const authStore = useAuthStore()
+    const preferencesStore = usePreferencesStore()
 
-    authStore.ready.catch((error) => {
-      console.error('[boot/auth] auth initialization error', error)
-    })
+    await authStore.ready
+
+    watch(
+      () => authStore.user,
+      (newUser, oldUser) => {
+        if (newUser && newUser.id !== oldUser?.id) {
+          preferencesStore.loadPreferences()
+        }
+      },
+      { immediate: true },
+    )
   } catch (e) {
     console.error('[boot/auth] unexpected boot error', e)
   }

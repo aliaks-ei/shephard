@@ -4,11 +4,24 @@
       class="column full-height q-pa-md"
       clickable
       @click="$emit('click', category)"
+      style="position: relative"
     >
+      <!-- Status Icon: Desktop - Top Right -->
+      <q-icon
+        v-if="$q.screen.gt.sm && statusIcon"
+        :name="statusIcon.icon"
+        :color="statusIcon.color"
+        size="20px"
+        class="absolute-top-right"
+        style="top: 12px; right: 12px"
+      >
+        <q-tooltip>{{ statusTooltip }}</q-tooltip>
+      </q-icon>
+
       <!-- Category Header -->
       <div class="row items-center full-width q-mb-md no-wrap">
         <q-item-section
-          class="q-pr-sm q-mr-xs"
+          class="q-pr-sm"
           thumbnail
         >
           <q-avatar
@@ -23,7 +36,17 @@
           </q-avatar>
         </q-item-section>
         <div class="column col-grow overflow-hidden">
-          <strong class="text-weight-medium ellipsis">{{ category.categoryName }}</strong>
+          <div class="row items-center no-wrap">
+            <strong class="text-weight-medium ellipsis">{{ category.categoryName }}</strong>
+            <!-- Status Icon: Mobile - Next to Title -->
+            <q-icon
+              v-if="$q.screen.lt.md && statusIcon"
+              :name="statusIcon.icon"
+              :color="statusIcon.color"
+              size="16px"
+              class="q-ml-xs flex-shrink-0"
+            />
+          </div>
           <span class="text-caption text-grey-6 q-mt-none">
             {{ category.expenseCount }} {{ category.expenseCount === 1 ? 'expense' : 'expenses' }}
           </span>
@@ -100,17 +123,6 @@
           </div>
         </div>
       </q-item-section>
-
-      <!-- Status Badge -->
-      <q-item-section
-        v-if="statusBadge"
-        side
-      >
-        <q-badge
-          :color="statusBadge.color"
-          :label="statusBadge.label"
-        />
-      </q-item-section>
     </q-item>
   </q-card>
 </template>
@@ -161,24 +173,32 @@ const remainingAmountColor = computed(() => {
   return 'text-negative'
 })
 
-const statusBadge = computed(() => {
+const statusIcon = computed(() => {
   const percentage = percentageUsed.value
 
-  // No badge when under or at budget
+  // No icon when under or at budget
   if (percentage <= 100) return null
 
-  // Warning badge when 101-110%
+  // Warning icon when 101-110%
   if (percentage <= 110) {
     return {
+      icon: 'eva-alert-triangle-outline',
       color: 'warning',
-      label: 'Warning',
     }
   }
 
-  // Over budget badge when > 110%
+  // Over budget icon when > 110%
   return {
+    icon: 'eva-alert-circle-outline',
     color: 'negative',
-    label: 'Over Budget',
   }
+})
+
+const statusTooltip = computed(() => {
+  const percentage = percentageUsed.value
+
+  if (percentage <= 100) return ''
+  if (percentage <= 110) return 'Budget Warning: Approaching limit'
+  return 'Over Budget: Exceeded by more than 10%'
 })
 </script>

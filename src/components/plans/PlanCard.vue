@@ -54,7 +54,7 @@
         </div>
 
         <div class="q-mt-lg">
-          <div class="row items-end justify-between">
+          <div class="row items-center justify-between">
             <div class="col">
               <div class="text-h6 text-weight-bold text-primary">
                 {{ formatAmount(plan.total) }}
@@ -65,8 +65,8 @@
                 :color="getStatusColor(plan)"
                 :icon="getStatusIcon(plan)"
                 text-color="white"
-                class="q-px-sm q-py-xs"
                 size="sm"
+                square
               >
                 {{ getStatusText(plan) }}
               </q-chip>
