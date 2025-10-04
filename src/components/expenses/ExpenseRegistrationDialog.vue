@@ -878,6 +878,7 @@ async function handleQuickSelectSubmit() {
     closeDialog()
   } catch (error) {
     console.error('Error registering expenses:', error)
+    notificationStore.showError('Failed to register expenses. Please try again.')
   }
 }
 
@@ -915,6 +916,7 @@ async function handleCustomEntrySubmit() {
     closeDialog()
   } catch (error) {
     console.error('Error registering expense:', error)
+    notificationStore.showError('Failed to register expense. Please try again.')
   }
 }
 

@@ -14,8 +14,6 @@ alwaysApply: true
 - API functions should be pure data fetchers with single responsibility.
 - API functions must throw errors directly rather than returning error objects.
 - API functions should return data directly, not wrapped in `{data, error}` objects.
-- Use precise TypeScript return types (e.g., `AuthResponse['data']` instead of `AuthResponse`).
-- Functions that don't return data should have `void` return type.
 
 ## Store-API Integration
 
@@ -64,7 +62,6 @@ async function saveData() {
 - Pass relevant context information (userId, component, action, etc.) to provide better debugging information
 - Keep UI components clean by avoiding direct error handling or error state management.
 - For composables, let errors propagate to calling stores rather than handling them internally.
-- Use asynchronous functions with clear return types including possible error states.
 - Maintain a centralized error message system in `src/config/error-messages.ts` for consistent messaging.
 - In catch blocks after calling error handling methods, don't use return statement no matter the function.
 

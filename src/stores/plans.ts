@@ -24,6 +24,7 @@ import {
 } from 'src/api'
 import { useError } from 'src/composables/useError'
 import { useUserStore } from 'src/stores/user'
+import type { ActionResult } from 'src/types'
 import { canAddExpensesToPlan } from 'src/utils/plans'
 import type { CurrencyCode } from 'src/utils/currency'
 
@@ -80,8 +81,10 @@ export const usePlansStore = defineStore('plans', () => {
     }
   }
 
-  async function addPlan(planData: Omit<PlanInsert, 'owner_id' | 'currency' | 'status'>) {
-    if (!userId.value) return
+  async function addPlan(
+    planData: Omit<PlanInsert, 'owner_id' | 'currency' | 'status'>,
+  ): Promise<ActionResult<PlanWithPermission>> {
+    if (!userId.value) return { success: false }
 
     isLoading.value = true
 
@@ -93,20 +96,24 @@ export const usePlansStore = defineStore('plans', () => {
         currency: userCurrency,
       })
 
-      return newPlan
+      return { success: true, data: newPlan }
     } catch (error) {
       if (error instanceof Error && error.name === 'DUPLICATE_PLAN_NAME') {
         handleError('PLANS.DUPLICATE_NAME', error)
       } else {
         handleError('PLANS.CREATE_FAILED', error)
       }
+      return { success: false }
     } finally {
       isLoading.value = false
     }
   }
 
-  async function editPlan(planId: string, updates: PlanUpdate) {
-    if (!userId.value) return
+  async function editPlan(
+    planId: string,
+    updates: PlanUpdate,
+  ): Promise<ActionResult<PlanWithPermission>> {
+    if (!userId.value) return { success: false }
 
     isLoading.value = true
 
@@ -117,60 +124,67 @@ export const usePlansStore = defineStore('plans', () => {
         plans.value[index] = { ...plans.value[index], ...updatedPlan }
       }
 
-      return updatedPlan
+      return { success: true, data: updatedPlan }
     } catch (error) {
       if (error instanceof Error && error.name === 'DUPLICATE_PLAN_NAME') {
         handleError('PLANS.DUPLICATE_NAME', error)
       } else {
         handleError('PLANS.UPDATE_FAILED', error, { planId })
       }
+      return { success: false }
     } finally {
       isLoading.value = false
     }
   }
 
-  async function removePlan(planId: string) {
-    if (!userId.value) return
+  async function removePlan(planId: string): Promise<ActionResult> {
+    if (!userId.value) return { success: false }
 
     isLoading.value = true
 
     try {
       await deletePlan(planId)
       plans.value = plans.value.filter((p) => p.id !== planId)
+      return { success: true }
     } catch (error) {
       handleError('PLANS.DELETE_FAILED', error, { planId })
+      return { success: false }
     } finally {
       isLoading.value = false
     }
   }
 
-  async function cancelPlan(planId: string) {
-    if (!userId.value) return
+  async function cancelPlan(planId: string): Promise<ActionResult> {
+    if (!userId.value) return { success: false }
 
     try {
-      await editPlan(planId, { status: 'cancelled' } as PlanUpdate)
+      const result = await editPlan(planId, { status: 'cancelled' } as PlanUpdate)
+      return result
     } catch (error) {
       handleError('PLANS.CANCEL_FAILED', error, { planId })
+      return { success: false }
     }
   }
 
-  async function loadSharedUsers(planId: string) {
+  async function loadSharedUsers(planId: string): Promise<void> {
     isLoading.value = true
 
     try {
       const users = await getPlanSharedUsers(planId)
       sharedUsers.value = users
-      return users
     } catch (error) {
       handleError('PLANS.LOAD_SHARED_USERS_FAILED', error, { planId })
-      return []
     } finally {
       isLoading.value = false
     }
   }
 
-  async function sharePlanWithUser(planId: string, userEmail: string, permission: 'view' | 'edit') {
-    if (!userId.value) return
+  async function sharePlanWithUser(
+    planId: string,
+    userEmail: string,
+    permission: 'view' | 'edit',
+  ): Promise<ActionResult> {
+    if (!userId.value) return { success: false }
 
     isSharing.value = true
 
@@ -183,6 +197,7 @@ export const usePlansStore = defineStore('plans', () => {
       }
 
       await loadSharedUsers(planId)
+      return { success: true }
     } catch (error) {
       if (error instanceof Error && error.message.includes('User not found')) {
         handleError('PLANS.USER_NOT_FOUND', error, { userEmail })
@@ -191,13 +206,14 @@ export const usePlansStore = defineStore('plans', () => {
       } else {
         handleError('PLANS.SHARE_FAILED', error, { planId, userEmail })
       }
+      return { success: false }
     } finally {
       isSharing.value = false
     }
   }
 
-  async function unsharePlanWithUser(planId: string, targetUserId: string) {
-    if (!userId.value) return
+  async function unsharePlanWithUser(planId: string, targetUserId: string): Promise<ActionResult> {
+    if (!userId.value) return { success: false }
 
     isSharing.value = true
 
@@ -212,8 +228,10 @@ export const usePlansStore = defineStore('plans', () => {
           plans.value[planIndex].is_shared = false
         }
       }
+      return { success: true }
     } catch (error) {
       handleError('PLANS.UNSHARE_FAILED', error, { planId, targetUserId })
+      return { success: false }
     } finally {
       isSharing.value = false
     }
@@ -223,8 +241,8 @@ export const usePlansStore = defineStore('plans', () => {
     planId: string,
     targetUserId: string,
     permission: 'view' | 'edit',
-  ) {
-    if (!userId.value) return
+  ): Promise<ActionResult> {
+    if (!userId.value) return { success: false }
 
     isSharing.value = true
 
@@ -235,14 +253,16 @@ export const usePlansStore = defineStore('plans', () => {
       if (userIndex !== -1 && sharedUsers.value[userIndex]) {
         sharedUsers.value[userIndex].permission_level = permission
       }
+      return { success: true }
     } catch (error) {
       handleError('PLANS.UPDATE_PERMISSION_FAILED', error, { planId, targetUserId, permission })
+      return { success: false }
     } finally {
       isSharing.value = false
     }
   }
 
-  async function searchUsers(query: string) {
+  async function searchUsers(query: string): Promise<void> {
     if (!query.trim()) {
       clearUserSearch()
       return
@@ -265,30 +285,33 @@ export const usePlansStore = defineStore('plans', () => {
     isSearchingUsers.value = false
   }
 
-  async function savePlanItems(planId: string, items: PlanItemInsert[]) {
-    if (!userId.value) return
+  async function savePlanItems(planId: string, items: PlanItemInsert[]): Promise<ActionResult> {
+    if (!userId.value) return { success: false }
 
     isLoading.value = true
 
     try {
-      const savedItems = await createPlanItems(items)
-      return savedItems
+      await createPlanItems(items)
+      return { success: true }
     } catch (error) {
       handleError('PLANS.SAVE_ITEMS_FAILED', error, { planId })
+      return { success: false }
     } finally {
       isLoading.value = false
     }
   }
 
-  async function removePlanItems(itemIds: string[]) {
-    if (!userId.value) return
+  async function removePlanItems(itemIds: string[]): Promise<ActionResult> {
+    if (!userId.value) return { success: false }
 
     isLoading.value = true
 
     try {
       await deletePlanItems(itemIds)
+      return { success: true }
     } catch (error) {
       handleError('PLANS.DELETE_ITEMS_FAILED', error, { itemIds: itemIds.join(', ') })
+      return { success: false }
     } finally {
       isLoading.value = false
     }
@@ -297,8 +320,8 @@ export const usePlansStore = defineStore('plans', () => {
   async function updatePlanItems(
     planId: string,
     items: Array<{ id: string; name: string; category_id: string; amount: number }>,
-  ) {
-    if (!userId.value) return
+  ): Promise<ActionResult> {
+    if (!userId.value) return { success: false }
 
     isLoading.value = true
 
@@ -310,10 +333,11 @@ export const usePlansStore = defineStore('plans', () => {
       }))
 
       // Use batch update for efficiency - single request instead of N requests
-      const updatedItems = await batchUpdatePlanItems(itemsWithPlanId)
-      return updatedItems
+      await batchUpdatePlanItems(itemsWithPlanId)
+      return { success: true }
     } catch (error) {
       handleError('PLANS.UPDATE_ITEMS_FAILED', error)
+      return { success: false }
     } finally {
       isLoading.value = false
     }

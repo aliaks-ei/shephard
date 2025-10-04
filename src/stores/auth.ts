@@ -11,7 +11,6 @@ import {
   updateUserPreferences,
   onAuthStateChange,
 } from 'src/api/auth'
-import { supabase } from 'src/lib/supabase/client'
 import { usePreferencesStore } from './preferences'
 import type { Session } from 'src/api/auth'
 import type { User } from 'src/api/user'
@@ -33,45 +32,28 @@ export const useAuthStore = defineStore('auth', () => {
   const ready = new Promise<void>((resolve) => {
     let resolved = false
 
-    const initializeSession = async () => {
-      try {
-        const {
-          data: { session: initialSession },
-        } = await supabase.auth.getSession()
+    onAuthStateChange((event, currentSession) => {
+      session.value = currentSession
+      user.value = currentSession?.user ?? null
 
-        session.value = initialSession
-        user.value = initialSession?.user ?? null
+      if (event === 'SIGNED_OUT') {
+        preferencesStore.reset()
+      }
 
-        if (initialSession) {
-          await preferencesStore.loadPreferences()
-        }
-      } finally {
+      // The first auth event resolves the ready promise
+      if (!resolved) {
         isLoading.value = false
         resolved = true
         resolve()
       }
-    }
-
-    onAuthStateChange(async (event, currentSession) => {
-      const previousUserId = user.value?.id
-      session.value = currentSession
-      user.value = currentSession?.user ?? null
-
-      // Handle sign in (when a new user signs in or a different user)
-      if (event === 'SIGNED_IN' && user.value?.id !== previousUserId) {
-        await preferencesStore.loadPreferences()
-      } else if (event === 'SIGNED_OUT') {
-        preferencesStore.reset()
-      }
     })
-
-    initializeSession()
 
     // Fallback timeout to prevent infinite loading (5 seconds)
     setTimeout(() => {
       if (!resolved) {
         console.warn('[Auth] Initialization timeout - proceeding without session')
         isLoading.value = false
+        resolved = true
         resolve()
       }
     }, 5000)

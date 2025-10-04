@@ -16,6 +16,7 @@ import {
 import { getPlanItems, updatePlanItemCompletion, type PlanItem } from 'src/api/plans'
 import { useError } from 'src/composables/useError'
 import { useUserStore } from 'src/stores/user'
+import type { ActionResult } from 'src/types'
 
 export const useExpensesStore = defineStore('expenses', () => {
   const { handleError } = useError()
@@ -90,8 +91,10 @@ export const useExpensesStore = defineStore('expenses', () => {
     }
   }
 
-  async function addExpense(expenseData: Omit<ExpenseInsert, 'user_id'>) {
-    if (!userId.value) return
+  async function addExpense(
+    expenseData: Omit<ExpenseInsert, 'user_id'>,
+  ): Promise<ActionResult<ExpenseWithCategory>> {
+    if (!userId.value) return { success: false }
 
     isLoading.value = true
 
@@ -109,7 +112,7 @@ export const useExpensesStore = defineStore('expenses', () => {
         ])
       }
 
-      return newExpense
+      return { success: true, data: newExpense as ExpenseWithCategory }
     } catch (error) {
       if (error instanceof Error && error.message.includes('violates foreign key constraint')) {
         // Handle database foreign key constraint violations
@@ -125,13 +128,17 @@ export const useExpensesStore = defineStore('expenses', () => {
       } else {
         handleError('EXPENSES.CREATE_FAILED', error)
       }
+      return { success: false }
     } finally {
       isLoading.value = false
     }
   }
 
-  async function editExpense(expenseId: string, updates: ExpenseUpdate) {
-    if (!userId.value) return
+  async function editExpense(
+    expenseId: string,
+    updates: ExpenseUpdate,
+  ): Promise<ActionResult<ExpenseWithCategory>> {
+    if (!userId.value) return { success: false }
 
     isLoading.value = true
 
@@ -154,16 +161,17 @@ export const useExpensesStore = defineStore('expenses', () => {
         await loadExpenseSummaryForPlan(currentPlanId.value)
       }
 
-      return updatedExpense
+      return { success: true, data: updatedExpense as ExpenseWithCategory }
     } catch (error) {
       handleError('EXPENSES.UPDATE_FAILED', error, { expenseId })
+      return { success: false }
     } finally {
       isLoading.value = false
     }
   }
 
-  async function removeExpense(expenseId: string) {
-    if (!userId.value) return
+  async function removeExpense(expenseId: string): Promise<ActionResult> {
+    if (!userId.value) return { success: false }
 
     isLoading.value = true
 
@@ -190,8 +198,11 @@ export const useExpensesStore = defineStore('expenses', () => {
       if (currentPlanId.value) {
         await loadExpenseSummaryForPlan(currentPlanId.value)
       }
+
+      return { success: true }
     } catch (error) {
       handleError('EXPENSES.DELETE_FAILED', error, { expenseId })
+      return { success: false }
     } finally {
       isLoading.value = false
     }

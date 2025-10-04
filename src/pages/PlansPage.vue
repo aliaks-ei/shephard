@@ -86,8 +86,11 @@ function handleDeletePlan(plan: PlanWithPermission): void {
 }
 
 async function cancelPlan(plan: PlanWithPermission): Promise<void> {
-  await plansStore.cancelPlan(plan.id)
-  notificationsStore.showSuccess('Plan cancelled successfully')
+  const result = await plansStore.cancelPlan(plan.id)
+
+  if (result.success) {
+    notificationsStore.showSuccess('Plan cancelled successfully')
+  }
 }
 
 function openShareDialog(planId: string): void {

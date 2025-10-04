@@ -31,10 +31,10 @@ async function getUserById(userId: string): Promise<Tables<'users'> | null> {
   return data
 }
 
-export async function getUserPreferences(userId: string): Promise<UserPreferences | null> {
+export async function getUserPreferences(userId: string): Promise<UserPreferences> {
   const user = await getUserById(userId)
 
-  if (!user?.preferences) return null
+  if (!user?.preferences) return { ...DEFAULT_PREFERENCES }
 
   return user.preferences as UserPreferences
 }

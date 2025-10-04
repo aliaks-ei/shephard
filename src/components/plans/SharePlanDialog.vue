@@ -8,11 +8,10 @@
     :is-sharing="plansStore.isSharing"
     :is-searching-users="plansStore.isSearchingUsers"
     @update:model-value="emit('update:modelValue', $event)"
-    @shared="emit('shared')"
     @load-shared-users="plansStore.loadSharedUsers"
-    @share-with-user="plansStore.sharePlanWithUser"
-    @update-user-permission="plansStore.updateUserPermission"
-    @remove-user-access="plansStore.unsharePlanWithUser"
+    @share-with-user="handleShareWithUser"
+    @update-user-permission="handleUpdateUserPermission"
+    @remove-user-access="handleRemoveUserAccess"
     @search-users="plansStore.searchUsers"
     @clear-user-search="plansStore.clearUserSearch"
   />
@@ -33,4 +32,24 @@ const emit = defineEmits<{
 }>()
 
 const plansStore = usePlansStore()
+
+async function handleShareWithUser(planId: string, email: string, permission: 'view' | 'edit') {
+  const result = await plansStore.sharePlanWithUser(planId, email, permission)
+
+  if (result.success) {
+    emit('shared')
+  }
+}
+
+async function handleUpdateUserPermission(
+  planId: string,
+  userId: string,
+  permission: 'view' | 'edit',
+) {
+  await plansStore.updateUserPermission(planId, userId, permission)
+}
+
+async function handleRemoveUserAccess(planId: string, userId: string) {
+  await plansStore.unsharePlanWithUser(planId, userId)
+}
 </script>
