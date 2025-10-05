@@ -1,5 +1,6 @@
 import { Dark } from 'quasar'
-import { watch, ref, type Ref } from 'vue'
+import { watch, ref, computed, type Ref } from 'vue'
+import type { ThemePreference } from 'src/api/user'
 
 export type ThemeAdapter = {
   setDarkMode: (isDark: boolean) => void
@@ -12,9 +13,8 @@ export const QuasarThemeAdapter: ThemeAdapter = {
 }
 
 export function useTheme(
-  isDark: Ref<boolean | undefined>,
+  themePreference: Ref<ThemePreference>,
   options?: {
-    onSystemDarkModeChange?: (isSystemDark: boolean) => void
     adapter?: ThemeAdapter
   },
 ) {
@@ -29,17 +29,23 @@ export function useTheme(
 
       const handleSystemDarkModeChange = (e: MediaQueryListEvent) => {
         systemDarkMode.value = e.matches
-        options?.onSystemDarkModeChange?.(e.matches)
       }
 
       systemDarkModeListener.addEventListener('change', handleSystemDarkModeChange)
     }
   }
 
+  const isDark = computed(() => {
+    if (themePreference.value === 'system') {
+      return systemDarkMode.value
+    }
+    return themePreference.value === 'dark'
+  })
+
   watch(
     isDark,
     () => {
-      adapter.setDarkMode(!!isDark.value)
+      adapter.setDarkMode(isDark.value)
     },
     { immediate: true },
   )
@@ -48,5 +54,6 @@ export function useTheme(
 
   return {
     systemDarkMode,
+    isDark,
   }
 }

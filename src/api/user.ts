@@ -4,8 +4,10 @@ import type { Tables, TablesUpdate } from 'src/lib/supabase/types'
 
 export type { User }
 
+export type ThemePreference = 'system' | 'light' | 'dark'
+
 export type UserPreferences = Partial<{
-  darkMode: boolean
+  theme: ThemePreference
   pushNotificationsEnabled: boolean
   currency: string
 }>
@@ -13,7 +15,7 @@ export type UserPreferences = Partial<{
 export type CompleteUserPreferences = Required<UserPreferences>
 
 export const DEFAULT_PREFERENCES: CompleteUserPreferences = {
-  darkMode: false,
+  theme: 'light',
   pushNotificationsEnabled: false,
   currency: 'EUR',
 } as const

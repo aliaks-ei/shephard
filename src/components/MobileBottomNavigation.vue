@@ -8,8 +8,11 @@
       class="mobile-bottom-nav"
     >
       <div
-        class="full-width q-pa-sm shadow-up-1"
-        :class="$q.dark.isActive ? 'bg-dark text-white' : 'bg-white'"
+        class="full-width shadow-up-1 q-pt-sm q-px-sm q-pb-md"
+        :class="[
+          { 'pwa-standalone-padding': isInstalled },
+          $q.dark.isActive ? 'bg-dark text-white' : 'bg-white',
+        ]"
       >
         <div class="row q-gutter-xs items-end">
           <!-- Home -->
@@ -19,6 +22,7 @@
               label="Home"
               to="/"
               :color="isActive('/') ? 'primary' : undefined"
+              size="sm"
               flat
               stack
               dense
@@ -34,6 +38,7 @@
               label="Plans"
               to="/plans"
               :color="isActive('/plans') ? 'primary' : undefined"
+              size="sm"
               flat
               stack
               no-caps
@@ -42,14 +47,13 @@
             />
           </div>
 
-          <!-- Spacer for FAB -->
-          <div class="col relative-position">
+          <!-- Add Expense FAB -->
+          <div class="col text-center">
             <q-btn
-              fab
               icon="eva-plus-outline"
+              round
               color="primary"
-              class="absolute"
-              style="bottom: 36px; left: 50%; transform: translateX(-50%)"
+              size="md"
               @click="emit('open-expense-dialog')"
             />
           </div>
@@ -61,6 +65,7 @@
               label="Templates"
               to="/templates"
               :color="isActive('/templates') ? 'primary' : undefined"
+              size="sm"
               flat
               stack
               no-caps
@@ -69,21 +74,20 @@
             />
           </div>
 
-          <!-- User Avatar -->
-          <div class="col text-center">
+          <!-- Categories -->
+          <div class="col">
             <q-btn
+              icon="eva-grid-outline"
+              label="Categories"
+              to="/categories"
+              :color="isActive('/categories') ? 'primary' : undefined"
+              size="sm"
               flat
+              stack
               no-caps
-              class="q-pa-xs q-my-xs q-ml-md q-mr-md"
-            >
-              <UserAvatar
-                size="48px"
-                :avatar-url="userStore.userProfile?.avatarUrl"
-                :name-initial="userStore.userProfile?.nameInitial"
-              />
-
-              <MobileUserMenu />
-            </q-btn>
+              dense
+              class="full-width"
+            />
           </div>
         </div>
       </div>
@@ -94,9 +98,7 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
-import { useUserStore } from 'src/stores/user'
-import UserAvatar from './UserAvatar.vue'
-import MobileUserMenu from './MobileUserMenu.vue'
+import { usePwaInstall } from 'src/composables/usePwaInstall'
 
 const emit = defineEmits<{
   (e: 'open-expense-dialog'): void
@@ -113,7 +115,7 @@ withDefaults(
 
 const route = useRoute()
 const $q = useQuasar()
-const userStore = useUserStore()
+const { isInstalled } = usePwaInstall()
 
 const isActive = (itemTo: string) => {
   if (itemTo === '/') {
@@ -127,5 +129,9 @@ const isActive = (itemTo: string) => {
 <style scoped>
 .mobile-bottom-nav {
   z-index: 2000;
+}
+
+.pwa-standalone-padding {
+  padding-bottom: calc(8px + env(safe-area-inset-bottom, 16px));
 }
 </style>

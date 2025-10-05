@@ -3,6 +3,7 @@ import { ref, nextTick } from 'vue'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 import type { ThemeAdapter } from './useTheme'
 import { useTheme } from './useTheme'
+import type { ThemePreference } from 'src/api/user'
 
 // Mock Dark from Quasar before installing Quasar plugin
 vi.mock('quasar', () => {
@@ -48,90 +49,98 @@ describe('useTheme', () => {
     vi.clearAllMocks()
   })
 
-  it('should return systemDarkMode reactive ref', () => {
-    const isDark = ref<boolean | undefined>(false)
-    const { systemDarkMode } = useTheme(isDark)
+  it('should return systemDarkMode and isDark reactive refs', () => {
+    const theme = ref<ThemePreference>('light')
+    const { systemDarkMode, isDark } = useTheme(theme)
 
     expect(systemDarkMode).toBeDefined()
     expect(typeof systemDarkMode.value).toBe('boolean')
+    expect(isDark).toBeDefined()
+    expect(typeof isDark.value).toBe('boolean')
   })
 
-  it('should call adapter.setDarkMode with initial isDark value', () => {
-    const isDark = ref(true)
-    useTheme(isDark, { adapter: mockAdapter })
+  it('should set dark mode when theme is "dark"', () => {
+    const theme = ref<ThemePreference>('dark')
+    useTheme(theme, { adapter: mockAdapter })
 
     expect(mockAdapter.setDarkMode).toHaveBeenCalledWith(true)
   })
 
-  it('should call adapter.setDarkMode when isDark changes', async () => {
-    const isDark = ref(false)
-    useTheme(isDark, { adapter: mockAdapter })
+  it('should set light mode when theme is "light"', () => {
+    const theme = ref<ThemePreference>('light')
+    useTheme(theme, { adapter: mockAdapter })
+
+    expect(mockAdapter.setDarkMode).toHaveBeenCalledWith(false)
+  })
+
+  it('should use system preference when theme is "system"', () => {
+    mockMediaQueryList.matches = true
+    const theme = ref<ThemePreference>('system')
+    useTheme(theme, { adapter: mockAdapter })
+
+    expect(mockAdapter.setDarkMode).toHaveBeenCalledWith(true)
+  })
+
+  it('should call adapter.setDarkMode when theme preference changes', async () => {
+    const theme = ref<ThemePreference>('light')
+    useTheme(theme, { adapter: mockAdapter })
 
     expect(mockAdapter.setDarkMode).toHaveBeenCalledWith(false)
 
-    // Reset the mock to clearly see the next call
     vi.clearAllMocks()
 
-    // Change the value and wait for Vue to process the reactivity
-    isDark.value = true
+    theme.value = 'dark'
     await nextTick()
 
     expect(mockAdapter.setDarkMode).toHaveBeenCalledWith(true)
   })
 
-  it('should handle undefined isDark value by setting dark mode to false', () => {
-    const isDark = ref<boolean | undefined>(undefined)
-    useTheme(isDark, { adapter: mockAdapter })
-
-    expect(mockAdapter.setDarkMode).toHaveBeenCalledWith(false)
-  })
-
   it('should detect system dark mode', () => {
     mockMediaQueryList.matches = true
-    const isDark = ref(false)
-    const { systemDarkMode } = useTheme(isDark, { adapter: mockAdapter })
+    const theme = ref<ThemePreference>('light')
+    const { systemDarkMode } = useTheme(theme, { adapter: mockAdapter })
 
     expect(systemDarkMode.value).toBe(true)
     expect(window.matchMedia).toHaveBeenCalledWith('(prefers-color-scheme: dark)')
   })
 
   it('should set up listener for system dark mode changes', () => {
-    const isDark = ref(false)
-    useTheme(isDark)
+    const theme = ref<ThemePreference>('light')
+    useTheme(theme)
 
     expect(mockMediaQueryList.addEventListener).toHaveBeenCalledWith('change', expect.any(Function))
   })
 
-  it('should call onSystemDarkModeChange callback when system preference changes', () => {
-    const onSystemDarkModeChange = vi.fn()
-    const isDark = ref(false)
-    useTheme(isDark, { onSystemDarkModeChange })
-
-    // Extract the callback function that was registered
-    const changeListener = mockMediaQueryList.addEventListener.mock.calls[0]?.[1]
-    expect(changeListener).toBeDefined()
-
-    if (changeListener) {
-      // Simulate a change event
-      changeListener({ matches: true } as MediaQueryListEvent)
-      expect(onSystemDarkModeChange).toHaveBeenCalledWith(true)
-    }
-  })
-
   it('should update systemDarkMode when system preference changes', () => {
-    const isDark = ref(false)
-    const { systemDarkMode } = useTheme(isDark)
+    const theme = ref<ThemePreference>('light')
+    const { systemDarkMode } = useTheme(theme)
 
     expect(systemDarkMode.value).toBe(false)
 
-    // Extract the callback function that was registered
     const changeListener = mockMediaQueryList.addEventListener.mock.calls[0]?.[1]
     expect(changeListener).toBeDefined()
 
     if (changeListener) {
-      // Simulate a change event
       changeListener({ matches: true } as MediaQueryListEvent)
       expect(systemDarkMode.value).toBe(true)
+    }
+  })
+
+  it('should update dark mode when system preference changes and theme is "system"', async () => {
+    const theme = ref<ThemePreference>('system')
+    useTheme(theme, { adapter: mockAdapter })
+
+    expect(mockAdapter.setDarkMode).toHaveBeenCalledWith(false)
+
+    vi.clearAllMocks()
+
+    const changeListener = mockMediaQueryList.addEventListener.mock.calls[0]?.[1]
+    expect(changeListener).toBeDefined()
+
+    if (changeListener) {
+      changeListener({ matches: true } as MediaQueryListEvent)
+      await nextTick()
+      expect(mockAdapter.setDarkMode).toHaveBeenCalledWith(true)
     }
   })
 })

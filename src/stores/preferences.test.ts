@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createTestingPinia } from '@pinia/testing'
-import { ref } from 'vue'
+import { ref, type ComputedRef } from 'vue'
 import { usePreferencesStore } from './preferences'
 import { useAuthStore } from './auth'
 import * as userApi from 'src/api/user'
@@ -24,7 +24,7 @@ vi.mock('src/api/user', () => ({
   getUserPreferences: vi.fn(),
   saveUserPreferences: vi.fn(),
   DEFAULT_PREFERENCES: {
-    darkMode: false,
+    theme: 'light',
     pushNotificationsEnabled: false,
     currency: 'EUR',
   },
@@ -33,6 +33,7 @@ vi.mock('src/api/user', () => ({
 describe('Preferences Store', () => {
   const mockHandleError = vi.fn()
   const mockSystemDarkMode = ref(false)
+  const mockIsDark = ref(false)
   let mockUser: User | null = null
   let preferencesStore: ReturnType<typeof usePreferencesStore>
 
@@ -50,6 +51,7 @@ describe('Preferences Store', () => {
 
     vi.mocked(useTheme).mockReturnValue({
       systemDarkMode: mockSystemDarkMode,
+      isDark: mockIsDark as unknown as ComputedRef<boolean>,
     })
 
     vi.mocked(useAuthStore).mockReturnValue({
@@ -75,6 +77,7 @@ describe('Preferences Store', () => {
     it('should have correct initial state', () => {
       expect(preferencesStore.preferences).toEqual(userApi.DEFAULT_PREFERENCES)
       expect(preferencesStore.isLoading).toBe(false)
+      expect(preferencesStore.theme).toBe('light')
       expect(preferencesStore.isDark).toBe(false)
       expect(preferencesStore.arePushNotificationsEnabled).toBe(false)
       expect(preferencesStore.currency).toBe('EUR')
@@ -82,22 +85,17 @@ describe('Preferences Store', () => {
   })
 
   describe('initializeWithDefaults()', () => {
-    it('should initialize with defaults using system dark mode', () => {
-      mockSystemDarkMode.value = true
-
+    it('should initialize with default preferences', () => {
       preferencesStore.initializeWithDefaults()
 
-      expect(preferencesStore.preferences).toEqual({
-        ...userApi.DEFAULT_PREFERENCES,
-        darkMode: true,
-      })
+      expect(preferencesStore.preferences).toEqual(userApi.DEFAULT_PREFERENCES)
     })
   })
 
   describe('loadPreferences()', () => {
     it('should load user preferences successfully', async () => {
       const mockPreferences = {
-        darkMode: true,
+        theme: 'dark' as const,
         pushNotificationsEnabled: true,
         currency: 'USD',
       }
@@ -127,7 +125,7 @@ describe('Preferences Store', () => {
       await freshPreferencesStore.loadPreferences()
 
       expect(userApi.getUserPreferences).not.toHaveBeenCalled()
-      expect(freshPreferencesStore.preferences.darkMode).toBe(mockSystemDarkMode.value)
+      expect(freshPreferencesStore.preferences.theme).toBe('light')
     })
 
     it('should initialize with defaults and handle error when preferences load fails', async () => {
@@ -141,23 +139,23 @@ describe('Preferences Store', () => {
         userId: 'test-user-id',
       })
       expect(preferencesStore.isLoading).toBe(false)
-      expect(preferencesStore.preferences.darkMode).toBe(mockSystemDarkMode.value)
+      expect(preferencesStore.preferences.theme).toBe('light')
     })
   })
 
   describe('updatePreferences()', () => {
     it('should update preferences successfully', async () => {
-      const updates = { darkMode: true }
+      const updates = { theme: 'dark' as const }
 
       await preferencesStore.updatePreferences(updates)
 
       expect(preferencesStore.preferences).toEqual({
         ...userApi.DEFAULT_PREFERENCES,
-        darkMode: true,
+        theme: 'dark',
       })
       expect(userApi.saveUserPreferences).toHaveBeenCalledWith('test-user-id', {
         ...userApi.DEFAULT_PREFERENCES,
-        darkMode: true,
+        theme: 'dark',
       })
     })
 
@@ -174,7 +172,7 @@ describe('Preferences Store', () => {
 
       const freshPreferencesStore = usePreferencesStore()
 
-      await freshPreferencesStore.updatePreferences({ darkMode: true })
+      await freshPreferencesStore.updatePreferences({ theme: 'dark' })
 
       expect(userApi.saveUserPreferences).not.toHaveBeenCalled()
       expect(freshPreferencesStore.preferences).toEqual(userApi.DEFAULT_PREFERENCES)
@@ -184,11 +182,11 @@ describe('Preferences Store', () => {
       const mockError = new Error('Failed to save preferences')
       vi.mocked(userApi.saveUserPreferences).mockRejectedValue(mockError)
 
-      await preferencesStore.updatePreferences({ darkMode: true })
+      await preferencesStore.updatePreferences({ theme: 'dark' })
 
       expect(preferencesStore.preferences).toEqual({
         ...userApi.DEFAULT_PREFERENCES,
-        darkMode: true,
+        theme: 'dark',
       })
 
       expect(mockHandleError).toHaveBeenCalledWith('USER.PREFERENCES_SAVE_FAILED', mockError, {
@@ -199,7 +197,7 @@ describe('Preferences Store', () => {
 
   describe('reset()', () => {
     it('should reset preferences to defaults', () => {
-      preferencesStore.preferences.darkMode = true
+      preferencesStore.preferences.theme = 'dark'
       preferencesStore.preferences.pushNotificationsEnabled = true
       preferencesStore.isLoading = true
 
@@ -211,10 +209,18 @@ describe('Preferences Store', () => {
   })
 
   describe('Computed properties', () => {
-    it('isDark should reflect darkMode preference', () => {
+    it('theme should reflect theme preference', () => {
+      expect(preferencesStore.theme).toBe('light')
+
+      preferencesStore.preferences.theme = 'dark'
+
+      expect(preferencesStore.theme).toBe('dark')
+    })
+
+    it('isDark should come from useTheme', () => {
       expect(preferencesStore.isDark).toBe(false)
 
-      preferencesStore.preferences.darkMode = true
+      mockIsDark.value = true
 
       expect(preferencesStore.isDark).toBe(true)
     })
@@ -225,30 +231,6 @@ describe('Preferences Store', () => {
       preferencesStore.preferences.pushNotificationsEnabled = true
 
       expect(preferencesStore.arePushNotificationsEnabled).toBe(true)
-    })
-  })
-
-  describe('useTheme integration', () => {
-    it('should call system dark mode callback only when darkMode is undefined', () => {
-      const onSystemDarkModeChangeCallback =
-        vi.mocked(useTheme).mock.calls[0]?.[1]?.onSystemDarkModeChange
-
-      expect(onSystemDarkModeChangeCallback).toBeDefined()
-
-      onSystemDarkModeChangeCallback?.(true)
-      expect(preferencesStore.preferences.darkMode).toBe(false)
-
-      const mockPreferences = { darkMode: undefined, pushNotificationsEnabled: false }
-      const mockSetPreferences = vi.fn((value) => {
-        Object.assign(mockPreferences, value)
-      })
-
-      mockSetPreferences({
-        ...mockPreferences,
-        darkMode: true,
-      })
-
-      expect(mockPreferences.darkMode).toBe(true)
     })
   })
 })
