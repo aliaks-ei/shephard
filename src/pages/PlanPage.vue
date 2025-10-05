@@ -1168,9 +1168,14 @@ onMounted(async () => {
   }
 
   try {
-    await Promise.all([categoriesStore.loadCategories(), templatesStore.loadTemplates()])
+    // Always load categories
+    await categoriesStore.loadCategories()
 
-    if (!isNewPlan.value) {
+    // Only load templates when creating a new plan (for template selector)
+    if (isNewPlan.value) {
+      await templatesStore.loadTemplates()
+    } else {
+      // For existing plans, load the plan data and expenses
       const plan = await loadPlan()
       if (plan) {
         form.value.name = plan.name

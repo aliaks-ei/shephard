@@ -23,7 +23,7 @@ const createMockUserProfile = (id: string) => ({
 
 const createMockPreferences = (currency = 'USD') => ({
   currency,
-  darkMode: false,
+  theme: 'light' as const,
   pushNotificationsEnabled: true,
 })
 

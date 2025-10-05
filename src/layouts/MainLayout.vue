@@ -28,6 +28,18 @@
           </q-toolbar-title>
 
           <UserDropdownMenu v-if="$q.screen.gt.sm" />
+
+          <q-btn
+            v-else
+            round
+            flat
+            @click="showMobileUserDialog = true"
+          >
+            <UserAvatar
+              :avatar-url="userStore.userProfile?.avatarUrl"
+              :name-initial="userStore.userProfile?.nameInitial"
+            />
+          </q-btn>
         </q-toolbar>
       </q-header>
 
@@ -75,6 +87,8 @@
         v-model="showExpenseDialog"
         auto-select-recent-plan
       />
+
+      <MobileUserDialog v-model="showMobileUserDialog" />
     </template>
   </q-layout>
 </template>
@@ -85,6 +99,8 @@ import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 
 import UserDropdownMenu from 'src/components/UserDropdownMenu.vue'
+import UserAvatar from 'src/components/UserAvatar.vue'
+import MobileUserDialog from 'src/components/MobileUserDialog.vue'
 import NavigationDrawer from 'src/components/NavigationDrawer.vue'
 import MobileBottomNavigation from 'src/components/MobileBottomNavigation.vue'
 import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
@@ -100,6 +116,7 @@ const notificationStore = useNotificationStore()
 
 const leftDrawerOpen = ref(false)
 const showExpenseDialog = ref(false)
+const showMobileUserDialog = ref(false)
 
 // Handle PWA install prompt
 watch(isInstallable, (installable) => {

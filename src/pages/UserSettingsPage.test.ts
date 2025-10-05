@@ -47,7 +47,7 @@ function createWrapper() {
                 createdAt: '2023-01-01T00:00:00Z',
                 formattedCreatedAt: 'January 1, 2023',
                 preferences: {
-                  darkMode: false,
+                  theme: 'light',
                   pushNotificationsEnabled: true,
                   currency: 'EUR',
                 },
@@ -80,7 +80,7 @@ it('renders user profile information correctly', () => {
   expect(emailEl.text()).toBe('test@example.com')
 
   const toggles = wrapper.findAll('.q-toggle')
-  expect(toggles.length).toBe(2)
+  expect(toggles.length).toBe(1)
 
   const items = [
     { label: 'Email', value: 'test@example.com' },
@@ -114,7 +114,7 @@ it('does not render info items when profile data is missing', async () => {
     createdAt: undefined,
     formattedCreatedAt: '',
     preferences: {
-      darkMode: false,
+      theme: 'light',
       pushNotificationsEnabled: true,
       currency: 'EUR',
     },
@@ -147,24 +147,22 @@ it('updates push notification preference when toggle is clicked', async () => {
   })
 })
 
-it('updates dark mode preference when toggle is clicked', async () => {
+it('updates theme preference when select value changes', async () => {
   const { wrapper, userStore } = createWrapper()
 
   userStore.updateUserPreferences = vi.fn()
 
-  const toggles = wrapper.findAll('.q-toggle')
-  const darkModeToggle = toggles[1]
+  const selects = wrapper.findAllComponents({ name: 'QSelect' })
+  const themeSelect = selects[1]
 
-  if (!darkModeToggle) {
-    throw new Error('Dark mode toggle not found')
+  if (!themeSelect) {
+    throw new Error('Theme select not found')
   }
 
-  darkModeToggle.element.setAttribute('data-model-value', 'false')
-
-  await darkModeToggle.trigger('click')
+  await themeSelect.vm.$emit('update:model-value', 'dark')
 
   expect(userStore.updateUserPreferences).toHaveBeenCalledWith({
-    preferences: { darkMode: true },
+    preferences: { theme: 'dark' },
   })
 })
 
