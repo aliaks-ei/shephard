@@ -127,6 +127,6 @@ const isActive = (itemTo: string) => {
 }
 
 .mobile-bottom-nav-content {
-  padding-bottom: max(16px, calc(16px + env(safe-area-inset-bottom, 0px)));
+  padding-bottom: max(8px, calc(8px + env(safe-area-inset-bottom, 0px)));
 }
 </style>
