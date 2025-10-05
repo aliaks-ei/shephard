@@ -45,6 +45,8 @@
 html {
   background-color: $bg-color;
   color: $text-color;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
+    env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
 }
 
 body {
@@ -58,6 +60,8 @@ body {
     Georgia,
     'Times New Roman',
     serif;
+  min-height: 100vh;
+  min-height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
 }
 
 // Global Dialog Styles - Consistent 480px width on desktop

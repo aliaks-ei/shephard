@@ -8,11 +8,8 @@
       class="mobile-bottom-nav"
     >
       <div
-        class="full-width shadow-up-1 q-pt-sm q-px-sm q-pb-md"
-        :class="[
-          { 'pwa-standalone-padding': isInstalled },
-          $q.dark.isActive ? 'bg-dark text-white' : 'bg-white',
-        ]"
+        class="full-width shadow-up-1 q-pt-sm q-px-sm mobile-bottom-nav-content"
+        :class="[$q.dark.isActive ? 'bg-dark text-white' : 'bg-white']"
       >
         <div class="row q-gutter-xs items-end">
           <!-- Home -->
@@ -98,7 +95,6 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
-import { usePwaInstall } from 'src/composables/usePwaInstall'
 
 const emit = defineEmits<{
   (e: 'open-expense-dialog'): void
@@ -115,7 +111,6 @@ withDefaults(
 
 const route = useRoute()
 const $q = useQuasar()
-const { isInstalled } = usePwaInstall()
 
 const isActive = (itemTo: string) => {
   if (itemTo === '/') {
@@ -131,7 +126,7 @@ const isActive = (itemTo: string) => {
   z-index: 2000;
 }
 
-.pwa-standalone-padding {
-  padding-bottom: calc(8px + env(safe-area-inset-bottom, 16px));
+.mobile-bottom-nav-content {
+  padding-bottom: max(16px, calc(16px + env(safe-area-inset-bottom, 0px)));
 }
 </style>

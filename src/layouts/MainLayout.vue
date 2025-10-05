@@ -194,7 +194,7 @@ const toggleLeftDrawer = () => {
 }
 
 .mobile-with-bottom-nav {
-  padding-bottom: 70px;
+  padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
 }
 
 @media (min-width: 1024px) {
