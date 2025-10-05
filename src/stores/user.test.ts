@@ -37,7 +37,7 @@ describe('User Store', () => {
   }
 
   const mockPreferences: UserPreferences = {
-    darkMode: true,
+    theme: 'dark',
     pushNotificationsEnabled: false,
   }
 
@@ -150,7 +150,7 @@ describe('User Store', () => {
         } as unknown as ReturnType<typeof usePreferencesStore>)
 
         const userStore = useUserStore()
-        const updates = { preferences: { darkMode: false } }
+        const updates = { preferences: { theme: 'light' as const } }
 
         await userStore.updateUserPreferences(updates)
 

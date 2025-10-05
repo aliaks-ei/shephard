@@ -38,7 +38,7 @@ it('getUserPreferences should return preferences when user exists with preferenc
     data: {
       id: 'user-id',
       preferences: {
-        darkMode: true,
+        theme: 'dark',
         pushNotificationsEnabled: true,
       },
     },
@@ -58,12 +58,12 @@ it('getUserPreferences should return preferences when user exists with preferenc
   expect(mockSelect).toHaveBeenCalledWith('*')
   expect(mockEq).toHaveBeenCalledWith('id', userId)
   expect(result).toEqual({
-    darkMode: true,
+    theme: 'dark',
     pushNotificationsEnabled: true,
   })
 })
 
-it('getUserPreferences should return null when user exists but has no preferences', async () => {
+it('getUserPreferences should return default preferences when user exists but has no preferences', async () => {
   const mockMaybeSingle = vi.fn().mockResolvedValue({
     data: {
       id: 'user-id',
@@ -84,10 +84,10 @@ it('getUserPreferences should return null when user exists but has no preference
   expect(mockFrom).toHaveBeenCalledWith('users')
   expect(mockSelect).toHaveBeenCalledWith('*')
   expect(mockEq).toHaveBeenCalledWith('id', userId)
-  expect(result).toBeNull()
+  expect(result).toEqual(DEFAULT_PREFERENCES)
 })
 
-it('getUserPreferences should return null when user does not exist', async () => {
+it('getUserPreferences should return default preferences when user does not exist', async () => {
   const mockMaybeSingle = vi.fn().mockResolvedValue({
     data: null,
     error: null,
@@ -105,7 +105,7 @@ it('getUserPreferences should return null when user does not exist', async () =>
   expect(mockFrom).toHaveBeenCalledWith('users')
   expect(mockSelect).toHaveBeenCalledWith('*')
   expect(mockEq).toHaveBeenCalledWith('id', userId)
-  expect(result).toBeNull()
+  expect(result).toEqual(DEFAULT_PREFERENCES)
 })
 
 it('getUserPreferences should throw error when database query fails', async () => {
@@ -142,7 +142,7 @@ it('saveUserPreferences should update user preferences successfully', async () =
   mockSupabase.from.mockImplementation(mockFrom)
 
   const userId = 'user-id'
-  const preferences = { darkMode: true }
+  const preferences = { theme: 'dark' as const }
 
   await saveUserPreferences(userId, preferences)
 
@@ -184,7 +184,7 @@ it('saveUserPreferences should throw error when update fails', async () => {
 
 it('DEFAULT_PREFERENCES should have expected default values', () => {
   expect(DEFAULT_PREFERENCES).toEqual({
-    darkMode: false,
+    theme: 'light',
     pushNotificationsEnabled: false,
     currency: 'EUR',
   })

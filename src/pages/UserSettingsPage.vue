@@ -29,7 +29,7 @@
           <q-separator class="q-mb-md separator" />
 
           <q-list>
-            <q-item class="q-pa-sm q-mb-sm">
+            <q-item class="q-pa-sm">
               <q-item-section avatar>
                 <q-icon
                   name="eva-credit-card-outline"
@@ -56,20 +56,24 @@
             <q-item class="q-pa-sm">
               <q-item-section avatar>
                 <q-icon
-                  :name="userStore.preferences.isDark ? 'eva-moon-outline' : 'eva-sun-outline'"
+                  :name="themeIcon"
                   color="primary"
                   size="md"
                 />
               </q-item-section>
               <q-item-section>
-                <q-item-label>Dark Mode</q-item-label>
-                <q-item-label caption> Toggle between light and dark theme </q-item-label>
+                <q-item-label>Theme</q-item-label>
+                <q-item-label caption> Choose your preferred theme </q-item-label>
               </q-item-section>
               <q-item-section side>
-                <q-toggle
-                  color="primary"
-                  :model-value="userStore.preferences.isDark"
-                  @update:model-value="updatePreference('darkMode', $event)"
+                <q-select
+                  :model-value="selectedTheme"
+                  :options="themeOptions"
+                  dense
+                  outlined
+                  emit-value
+                  map-options
+                  @update:model-value="updatePreference('theme', $event)"
                 />
               </q-item-section>
             </q-item>
@@ -154,10 +158,24 @@ const currencyOptions = [
   { label: 'British Pound (GBP)', value: 'GBP' },
 ]
 
+const themeOptions = [
+  { label: 'System', value: 'system' },
+  { label: 'Light', value: 'light' },
+  { label: 'Dark', value: 'dark' },
+]
+
 const selectedCurrency = computed(() => userStore.preferences.currency)
+const selectedTheme = computed(() => userStore.preferences.theme)
+
+const themeIcon = computed(() => {
+  const theme = selectedTheme.value
+  if (theme === 'system') return 'eva-monitor-outline'
+  if (theme === 'dark') return 'eva-moon-outline'
+  return 'eva-sun-outline'
+})
 
 function updatePreference(
-  preferenceKey: 'pushNotificationsEnabled' | 'darkMode' | 'currency',
+  preferenceKey: 'pushNotificationsEnabled' | 'theme' | 'currency',
   value: boolean | string,
 ) {
   userStore.updateUserPreferences({

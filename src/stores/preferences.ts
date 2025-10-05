@@ -19,26 +19,14 @@ export const usePreferencesStore = defineStore('preferences', () => {
   const preferences = ref<CompleteUserPreferences>({ ...DEFAULT_PREFERENCES })
   const isLoading = ref(false)
 
-  const isDark = computed(() => preferences.value.darkMode)
+  const theme = computed(() => preferences.value.theme)
   const arePushNotificationsEnabled = computed(() => preferences.value.pushNotificationsEnabled)
   const currency = computed(() => preferences.value.currency)
 
-  const { systemDarkMode } = useTheme(isDark, {
-    onSystemDarkModeChange: (isSystemDark: boolean) => {
-      if (preferences.value.darkMode === undefined) {
-        preferences.value = {
-          ...preferences.value,
-          darkMode: isSystemDark,
-        }
-      }
-    },
-  })
+  const { isDark } = useTheme(theme)
 
   function initializeWithDefaults() {
-    preferences.value = {
-      ...DEFAULT_PREFERENCES,
-      darkMode: systemDarkMode.value,
-    }
+    preferences.value = { ...DEFAULT_PREFERENCES }
   }
 
   async function loadPreferences() {
@@ -55,7 +43,7 @@ export const usePreferencesStore = defineStore('preferences', () => {
       const userPreferences = await getUserPreferences(authStore.user.id)
 
       preferences.value = {
-        darkMode: userPreferences.darkMode ?? DEFAULT_PREFERENCES.darkMode,
+        theme: userPreferences.theme ?? DEFAULT_PREFERENCES.theme,
         pushNotificationsEnabled:
           userPreferences.pushNotificationsEnabled ?? DEFAULT_PREFERENCES.pushNotificationsEnabled,
         currency: userPreferences.currency ?? DEFAULT_PREFERENCES.currency,
@@ -90,6 +78,7 @@ export const usePreferencesStore = defineStore('preferences', () => {
   return {
     preferences,
     isLoading,
+    theme,
     isDark,
     arePushNotificationsEnabled,
     currency,
