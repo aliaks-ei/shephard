@@ -44,27 +44,23 @@
     />
 
     <template #dialogs>
-      <!-- Lazy Loaded Dialogs -->
-      <component
-        :is="CategorySelectionDialog"
-        v-if="showCategoryDialog"
+      <!-- Dialogs -->
+      <CategorySelectionDialog
         v-model="showCategoryDialog"
         :used-category-ids="getUsedCategoryIds()"
         :categories="categoriesStore.categories"
         @category-selected="onCategorySelected"
       />
 
-      <component
-        :is="ShareTemplateDialog"
-        v-if="isShareDialogOpen && routeTemplateId"
+      <ShareTemplateDialog
+        v-if="routeTemplateId"
         v-model="isShareDialogOpen"
         :template-id="routeTemplateId"
         @shared="onTemplateShared"
       />
 
-      <component
-        :is="DeleteDialog"
-        v-if="showDeleteDialog && !isNewTemplate"
+      <DeleteDialog
+        v-if="!isNewTemplate"
         v-model="showDeleteDialog"
         title="Delete Template"
         warning-message="This will permanently delete your template and all its data. This action cannot be undone."
@@ -79,13 +75,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick, defineAsyncComponent } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 
 import BaseItemFormPage from 'src/layouts/BaseItemFormPage.vue'
 import type { ActionBarAction } from 'src/components/shared/ActionBar.vue'
 import TemplateEditView from 'src/components/templates/TemplateEditView.vue'
 import TemplateReadOnlyView from 'src/components/templates/TemplateReadOnlyView.vue'
+import CategorySelectionDialog from 'src/components/categories/CategorySelectionDialog.vue'
+import ShareTemplateDialog from 'src/components/templates/ShareTemplateDialog.vue'
+import DeleteDialog from 'src/components/shared/DeleteDialog.vue'
 import { useTemplatesStore } from 'src/stores/templates'
 import { useCategoriesStore } from 'src/stores/categories'
 import { useNotificationStore } from 'src/stores/notification'
@@ -96,14 +95,6 @@ import { useEditablePage } from 'src/composables/useEditablePage'
 import { useCategoryRefs } from 'src/composables/useCategoryRefs'
 import { validateItemForm } from 'src/composables/useItemFormValidation'
 import type { Category } from 'src/api'
-
-const CategorySelectionDialog = defineAsyncComponent(
-  () => import('src/components/categories/CategorySelectionDialog.vue'),
-)
-const ShareTemplateDialog = defineAsyncComponent(
-  () => import('src/components/templates/ShareTemplateDialog.vue'),
-)
-const DeleteDialog = defineAsyncComponent(() => import('src/components/shared/DeleteDialog.vue'))
 
 const router = useRouter()
 const templatesStore = useTemplatesStore()

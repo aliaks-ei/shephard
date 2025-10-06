@@ -38,10 +38,9 @@
       @create="goToNew"
     />
 
-    <!-- Share Plan Dialog - Lazy Loaded -->
-    <component
-      :is="SharePlanDialog"
-      v-if="isShareDialogOpen && sharePlanId"
+    <!-- Share Plan Dialog -->
+    <SharePlanDialog
+      v-if="sharePlanId"
       v-model="isShareDialogOpen"
       :plan-id="sharePlanId"
       @shared="onPlanShared"
@@ -50,21 +49,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, defineAsyncComponent } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 
 import ListPageLayout from 'src/layouts/ListPageLayout.vue'
 import SearchAndSort from 'src/components/shared/SearchAndSort.vue'
 import ListPageSkeleton from 'src/components/shared/ListPageSkeleton.vue'
 import EmptyState from 'src/components/shared/EmptyState.vue'
 import PlansGroup from 'src/components/plans/PlansGroup.vue'
+import SharePlanDialog from 'src/components/plans/SharePlanDialog.vue'
 import { usePlansStore } from 'src/stores/plans'
 import { useNotificationStore } from 'src/stores/notification'
 import { usePlans } from 'src/composables/usePlans'
 import type { PlanWithPermission } from 'src/api'
-
-const SharePlanDialog = defineAsyncComponent(
-  () => import('src/components/plans/SharePlanDialog.vue'),
-)
 
 const plansStore = usePlansStore()
 const notificationsStore = useNotificationStore()

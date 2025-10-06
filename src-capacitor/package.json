@@ -1,8 +1,8 @@
 {
   "name": "shephard",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Smart expenses wallet",
-  "author": "Aliaksei Mazheika <aliaksei.mazheika@v7labs.com>",
+  "author": "Aliaksei Mazheika <aleksmozheiko94@gmail.com>",
   "private": true,
   "dependencies": {
     "@capacitor/app": "^6.0.0",

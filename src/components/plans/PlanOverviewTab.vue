@@ -63,10 +63,8 @@
       @refresh="$emit('refresh')"
     />
 
-    <!-- Category Expenses Modal - Lazy Loaded -->
-    <component
-      :is="CategoryExpensesDialog"
-      v-if="showCategoryModal"
+    <!-- Category Expenses Modal -->
+    <CategoryExpensesDialog
       v-model="showCategoryModal"
       :category="selectedCategory"
       :expenses="categoryExpenses"
@@ -78,10 +76,8 @@
       @refresh="$emit('refresh')"
     />
 
-    <!-- All Expenses Modal - Lazy Loaded -->
-    <component
-      :is="AllExpensesDialog"
-      v-if="showAllExpensesModal"
+    <!-- All Expenses Modal -->
+    <AllExpensesDialog
       v-model="showAllExpensesModal"
       :expenses="expensesStore.sortedExpenses"
       :currency="planCurrency"
@@ -93,16 +89,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, defineAsyncComponent } from 'vue'
+import { ref, computed, watch } from 'vue'
 import PlanSummaryCard from './PlanSummaryCard.vue'
 import CategoryBudgetCard from './CategoryBudgetCard.vue'
 import RecentExpensesList from './RecentExpensesList.vue'
+import CategoryExpensesDialog from './CategoryExpensesDialog.vue'
+import AllExpensesDialog from './AllExpensesDialog.vue'
 import { usePlanOverview } from 'src/composables/usePlanOverview'
 import { useExpensesStore } from 'src/stores/expenses'
 import type { PlanWithItems } from 'src/api'
-
-const CategoryExpensesDialog = defineAsyncComponent(() => import('./CategoryExpensesDialog.vue'))
-const AllExpensesDialog = defineAsyncComponent(() => import('./AllExpensesDialog.vue'))
 import type { CurrencyCode } from 'src/utils/currency'
 import type { CategoryBudget } from 'src/types'
 

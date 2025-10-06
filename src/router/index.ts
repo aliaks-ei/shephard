@@ -28,44 +28,5 @@ export default defineRouter(function (/* { store, ssrContext } */) {
   // Add global navigation guard
   Router.beforeEach(authGuard)
 
-  // Prefetch routes after navigation for better performance
-  Router.afterEach((to) => {
-    const prefetchRoutes = to.meta.prefetch as string[] | undefined
-    if (prefetchRoutes?.length) {
-      // Use requestIdleCallback for non-blocking prefetch
-      if ('requestIdleCallback' in window) {
-        requestIdleCallback(() => {
-          prefetchRoutes.forEach((route) => {
-            const resolved = Router.resolve(route)
-            resolved.matched.forEach((record) => {
-              // Trigger component loading for prefetch
-              const component = record.components?.default
-              // Check if component is a lazy-loaded function
-              if (component && 'then' in component && typeof component.then === 'function') {
-                // It's a Promise from dynamic import, trigger it
-                void component
-              }
-            })
-          })
-        })
-      } else {
-        // Fallback for browsers without requestIdleCallback
-        setTimeout(() => {
-          prefetchRoutes.forEach((route) => {
-            const resolved = Router.resolve(route)
-            resolved.matched.forEach((record) => {
-              const component = record.components?.default
-              // Check if component is a lazy-loaded function
-              if (component && 'then' in component && typeof component.then === 'function') {
-                // It's a Promise from dynamic import, trigger it
-                void component
-              }
-            })
-          })
-        }, 100)
-      }
-    }
-  })
-
   return Router
 })

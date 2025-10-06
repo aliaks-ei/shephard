@@ -259,6 +259,9 @@ export default defineConfig((ctx) => {
         // More aggressive navigation preload
         cfg.navigationPreload = true
 
+        // Exclude Netlify configuration files from precaching
+        cfg.globIgnores = ['**/_redirects', '**/.DS_Store']
+
         // Optimize runtime caching
         cfg.runtimeCaching = [
           // API responses with Network First strategy
