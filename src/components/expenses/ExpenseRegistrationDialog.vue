@@ -498,7 +498,7 @@
         <!-- Fixed Footer Actions -->
         <q-card-actions
           align="right"
-          class="q-pa-md"
+          class="q-pa-md safe-area-bottom"
         >
           <q-btn
             label="Cancel"

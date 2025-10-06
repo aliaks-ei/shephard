@@ -28,7 +28,7 @@
 
       <q-card-actions
         align="right"
-        class="q-mt-auto"
+        class="q-mt-auto safe-area-bottom"
       >
         <q-btn
           flat

@@ -165,7 +165,7 @@
 
       <q-card-actions
         align="right"
-        class="q-pa-md q-mt-auto"
+        class="q-pa-md q-mt-auto safe-area-bottom"
       >
         <q-btn
           label="Cancel"

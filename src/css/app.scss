@@ -83,3 +83,8 @@ body {
     width: auto;
   }
 }
+
+// Safe Area Bottom Padding - Reusable class for iOS PWA bottom spacing
+.safe-area-bottom {
+  padding-bottom: max(8px, calc(8px + env(safe-area-inset-bottom, 0px)));
+}

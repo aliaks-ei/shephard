@@ -215,7 +215,7 @@ const hasActions = computed(() => {
 <style lang="scss" scoped>
 .mobile-content-spacing {
   @media (max-width: 1023px) {
-    padding-bottom: 80px;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
   }
 }
 

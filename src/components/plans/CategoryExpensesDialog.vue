@@ -277,7 +277,10 @@
       <q-separator />
 
       <!-- Fixed Action Footer -->
-      <q-card-actions align="right">
+      <q-card-actions
+        align="right"
+        class="safe-area-bottom"
+      >
         <q-btn
           label="Close"
           flat

@@ -27,26 +27,26 @@
     :offset="[0, 0]"
   >
     <div
-      class="full-width q-pa-sm shadow-up-1"
+      class="full-width q-pa-sm shadow-up-1 safe-area-bottom"
       :class="$q.dark.isActive ? 'bg-dark text-white' : 'bg-white'"
     >
       <!-- All Actions in Single Row -->
-      <div class="row q-gutter-xs">
+      <div class="row q-gutter-xs justify-center">
         <div
           v-for="action in visibleActions"
           :key="action.key"
-          class="col"
+          class="col flex justify-center"
         >
           <q-btn
             :icon="action.icon"
             :color="action.color"
             :loading="action.loading"
+            :label="action.label"
             :disabled="action.loading"
+            size="sm"
             flat
             stack
-            :label="action.label"
             no-caps
-            class="full-width"
             @click="handleActionClick(action)"
           ></q-btn>
         </div>
