@@ -2,11 +2,6 @@ import { describe, it, expect } from 'vitest'
 import { useEditablePage } from './useEditablePage'
 
 describe('useEditablePage', () => {
-  it('is not loading by default', () => {
-    const { isLoading } = useEditablePage()
-    expect(isLoading.value).toBe(false)
-  })
-
   it('has empty dialog states by default', () => {
     const { getDialogState } = useEditablePage()
     expect(getDialogState('test')).toBe(false)

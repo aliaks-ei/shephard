@@ -52,15 +52,21 @@ export function useCategoryRefs<T extends BaseItemUI>(items: Ref<T[]>) {
     categoryRef.focusFirstInvalidItem()
   }
 
+  function focusLastItemInCategory(categoryId: string): void {
+    const categoryRef = categoryRefs.value.get(categoryId)
+    if (categoryRef) {
+      categoryRef.focusLastItem()
+    }
+  }
+
   function resetLastAddedCategory(): void {
     lastAddedCategoryId.value = null
   }
 
   return {
-    categoryRefs,
     lastAddedCategoryId,
     setCategoryRef,
-    getFirstInvalidItem,
+    focusLastItemInCategory,
     scrollToFirstInvalidField,
     resetLastAddedCategory,
   }

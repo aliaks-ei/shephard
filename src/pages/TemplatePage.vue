@@ -292,9 +292,9 @@ const banners = computed(() => {
 const { openDialog, closeDialog, getDialogState } = useEditablePage()
 
 const {
-  categoryRefs,
   lastAddedCategoryId,
   setCategoryRef,
+  focusLastItemInCategory,
   scrollToFirstInvalidField,
   resetLastAddedCategory,
 } = useCategoryRefs(templateItems)
@@ -383,19 +383,11 @@ const actionBarActions = computed<ActionBarAction[]>(() => [
 
 // Component methods
 
-function focusLastItem(categoryId: string): void {
-  const categoryRef = categoryRefs.value.get(categoryId)
-
-  if (categoryRef) {
-    categoryRef.focusLastItem()
-  }
-}
-
 async function handleAddTemplateItem(categoryId: string, categoryColor: string): Promise<void> {
   addTemplateItem(categoryId, categoryColor)
 
   await nextTick()
-  focusLastItem(categoryId)
+  focusLastItemInCategory(categoryId)
 }
 
 async function onCategorySelected(category: Category): Promise<void> {
@@ -404,7 +396,7 @@ async function onCategorySelected(category: Category): Promise<void> {
   closeDialog('category')
 
   await nextTick()
-  focusLastItem(category.id)
+  focusLastItemInCategory(category.id)
 }
 
 function toggleAllCategories(): void {

@@ -1,7 +1,6 @@
 import { ref } from 'vue'
 
 export function useEditablePage() {
-  const isLoading = ref(false)
   const dialogStates = ref<Record<string, boolean>>({})
 
   function openDialog(dialogName: string): void {
@@ -17,7 +16,6 @@ export function useEditablePage() {
   }
 
   return {
-    isLoading,
     openDialog,
     closeDialog,
     getDialogState,
