@@ -170,6 +170,7 @@ function confirmDeleteExpense(expense: ExpenseWithCategory) {
     cancel: {
       label: 'Cancel',
       flat: true,
+      color: 'text-white',
     },
   }).onOk(() => {
     void (async () => {
