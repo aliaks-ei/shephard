@@ -126,17 +126,7 @@
 import { computed } from 'vue'
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
-
-interface CategoryBudget {
-  categoryId: string
-  categoryName: string
-  categoryColor: string
-  categoryIcon: string
-  plannedAmount: number
-  actualAmount: number
-  remainingAmount: number
-  expenseCount: number
-}
+import type { CategoryBudget } from 'src/types'
 
 const props = defineProps<{
   category: CategoryBudget

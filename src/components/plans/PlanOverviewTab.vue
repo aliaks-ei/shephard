@@ -99,6 +99,7 @@ import { usePlanOverview } from 'src/composables/usePlanOverview'
 import { useExpensesStore } from 'src/stores/expenses'
 import type { PlanWithItems } from 'src/api'
 import type { CurrencyCode } from 'src/utils/currency'
+import type { CategoryBudget } from 'src/types'
 
 const props = defineProps<{
   plan: (PlanWithItems & { permission_level?: string }) | null
@@ -113,17 +114,6 @@ const emit = defineEmits<{
 }>()
 
 const expensesStore = useExpensesStore()
-
-interface CategoryBudget {
-  categoryId: string
-  categoryName: string
-  categoryColor: string
-  categoryIcon: string
-  plannedAmount: number
-  actualAmount: number
-  remainingAmount: number
-  expenseCount: number
-}
 
 const showCategoryModal = ref(false)
 const showAllExpensesModal = ref(false)

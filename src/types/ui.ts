@@ -44,3 +44,18 @@ export type TemplateCategoryUI = BaseCategoryUI & {
 export type PlanCategoryUI = BaseCategoryUI & {
   items: PlanItemUI[]
 }
+
+/**
+ * Category budget information with planned vs actual amounts
+ * Used for tracking expense progress against plan items
+ */
+export type CategoryBudget = {
+  categoryId: string
+  categoryName: string
+  categoryColor: string
+  categoryIcon: string
+  plannedAmount: number
+  actualAmount: number
+  remainingAmount: number
+  expenseCount: number
+}

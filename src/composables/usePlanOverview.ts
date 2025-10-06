@@ -3,17 +3,7 @@ import { usePlansStore } from 'src/stores/plans'
 import { useExpensesStore } from 'src/stores/expenses'
 import { useCategoriesStore } from 'src/stores/categories'
 import type { ExpenseWithCategory, PlanWithItems } from 'src/api'
-
-interface CategoryBudget {
-  categoryId: string
-  categoryName: string
-  categoryColor: string
-  categoryIcon: string
-  plannedAmount: number
-  actualAmount: number
-  remainingAmount: number
-  expenseCount: number
-}
+import type { CategoryBudget } from 'src/types'
 
 export function usePlanOverview(
   planId: Ref<string> | string,

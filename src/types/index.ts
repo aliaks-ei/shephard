@@ -6,6 +6,7 @@ export type {
   TemplateCategoryUI,
   PlanItemUI,
   PlanCategoryUI,
+  CategoryBudget,
 } from './ui'
 
 export type ActionResult<T = void> = T extends void
