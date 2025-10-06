@@ -49,6 +49,10 @@ html {
     env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
 }
 
+html:has(.body--dark) {
+  background-color: $dark-page;
+}
+
 body {
   font-family:
     'Space Grotesk',

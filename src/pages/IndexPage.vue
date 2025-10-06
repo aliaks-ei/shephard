@@ -35,7 +35,10 @@
             :class="$q.screen.lt.md ? 'q-col-gutter-sm' : 'q-col-gutter-md'"
           >
             <div class="col-6 col-sm-3">
-              <q-card class="shadow-1">
+              <q-card
+                :bordered="$q.dark.isActive"
+                class="shadow-1"
+              >
                 <q-item
                   clickable
                   :class="$q.screen.lt.sm ? 'q-pa-sm' : 'q-pa-md'"
@@ -55,7 +58,10 @@
               </q-card>
             </div>
             <div class="col-6 col-sm-3">
-              <q-card class="shadow-1">
+              <q-card
+                :bordered="$q.dark.isActive"
+                class="shadow-1"
+              >
                 <q-item
                   clickable
                   :class="$q.screen.lt.sm ? 'q-pa-sm' : 'q-pa-md'"
@@ -75,7 +81,10 @@
               </q-card>
             </div>
             <div class="col-6 col-sm-3">
-              <q-card class="shadow-1">
+              <q-card
+                :bordered="$q.dark.isActive"
+                class="shadow-1"
+              >
                 <q-item
                   clickable
                   :class="$q.screen.lt.sm ? 'q-pa-sm' : 'q-pa-md'"
@@ -95,7 +104,10 @@
               </q-card>
             </div>
             <div class="col-6 col-sm-3">
-              <q-card class="shadow-1">
+              <q-card
+                :bordered="$q.dark.isActive"
+                class="shadow-1"
+              >
                 <q-item
                   clickable
                   :class="$q.screen.lt.sm ? 'q-pa-sm' : 'q-pa-md'"
@@ -157,7 +169,10 @@
               :key="`plan-skeleton-${i}`"
               class="col-12 col-sm-6 col-md-4"
             >
-              <q-card class="shadow-1">
+              <q-card
+                :bordered="$q.dark.isActive"
+                class="shadow-1"
+              >
                 <q-card-section>
                   <q-skeleton
                     type="text"
@@ -295,7 +310,10 @@
               :key="`template-skeleton-${i}`"
               class="col-12 col-sm-6 col-md-4"
             >
-              <q-card class="shadow-1">
+              <q-card
+                :bordered="$q.dark.isActive"
+                class="shadow-1"
+              >
                 <q-card-section>
                   <q-skeleton
                     type="text"

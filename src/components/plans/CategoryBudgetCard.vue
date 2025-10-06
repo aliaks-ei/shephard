@@ -1,5 +1,8 @@
 <template>
-  <q-card class="shadow-1 full-height">
+  <q-card
+    :bordered="$q.dark.isActive"
+    class="shadow-1 full-height"
+  >
     <q-item
       class="column full-height q-pa-md"
       clickable

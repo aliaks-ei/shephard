@@ -1,5 +1,8 @@
 <template>
-  <q-card class="q-mb-sm shadow-1">
+  <q-card
+    :bordered="$q.dark.isActive"
+    class="q-mb-sm shadow-1"
+  >
     <q-expansion-item
       v-model="isExpanded"
       :label="categoryName"

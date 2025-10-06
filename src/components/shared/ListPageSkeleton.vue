@@ -8,7 +8,10 @@
       :key="n"
       class="col-12 col-sm-6 col-md-4"
     >
-      <q-card class="shadow-1">
+      <q-card
+        :bordered="$q.dark.isActive"
+        class="shadow-1"
+      >
         <q-card-section>
           <q-skeleton
             type="text"

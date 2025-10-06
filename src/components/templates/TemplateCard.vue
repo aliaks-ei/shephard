@@ -2,7 +2,7 @@
   <q-card
     class="full-height"
     :flat="readonly"
-    :bordered="readonly"
+    :bordered="readonly || $q.dark.isActive"
     :class="readonly ? '' : 'shadow-1'"
   >
     <q-item

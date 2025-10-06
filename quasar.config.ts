@@ -77,7 +77,7 @@ export default defineConfig((ctx) => {
                 'vendor-vue': ['vue', 'vue-router', 'pinia'],
                 'vendor-quasar': ['quasar'],
                 'vendor-supabase': ['@supabase/supabase-js'],
-                'vendor-utils': ['@vueuse/core', 'axios'],
+                'vendor-utils': ['@vueuse/core'],
               },
               // Optimize chunk file names
               chunkFileNames: ctx.prod ? 'js/[name]-[hash].js' : '[name].js',
@@ -112,7 +112,6 @@ export default defineConfig((ctx) => {
             'quasar',
             '@supabase/supabase-js',
             '@vueuse/core',
-            'axios',
           ],
           exclude: [
             // Exclude test utilities from production builds
