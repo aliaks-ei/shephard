@@ -206,6 +206,7 @@
               <PlanCard
                 :plan="plan"
                 @edit="goToPlan"
+                @share="openSharePlanDialog"
               />
             </div>
           </div>
@@ -236,6 +237,7 @@
               <PlanCard
                 :plan="plan"
                 @edit="goToPlan"
+                @share="openSharePlanDialog"
               />
             </q-carousel-slide>
           </q-carousel>
@@ -347,6 +349,7 @@
               <TemplateCard
                 :template="template"
                 @edit="goToTemplate"
+                @share="openShareTemplateDialog"
               />
             </div>
           </div>
@@ -377,6 +380,7 @@
               <TemplateCard
                 :template="template"
                 @edit="goToTemplate"
+                @share="openShareTemplateDialog"
               />
             </q-carousel-slide>
           </q-carousel>
@@ -419,6 +423,20 @@
       auto-select-recent-plan
       @expense-created="onExpenseCreated"
     />
+
+    <!-- Share Plan Dialog -->
+    <SharePlanDialog
+      v-if="selectedPlanId"
+      v-model="showSharePlanDialog"
+      :plan-id="selectedPlanId"
+    />
+
+    <!-- Share Template Dialog -->
+    <ShareTemplateDialog
+      v-if="selectedTemplateId"
+      v-model="showShareTemplateDialog"
+      :template-id="selectedTemplateId"
+    />
   </section>
 </template>
 
@@ -431,6 +449,8 @@ import { useTemplatesStore } from 'src/stores/templates'
 import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 import PlanCard from 'src/components/plans/PlanCard.vue'
 import TemplateCard from 'src/components/templates/TemplateCard.vue'
+import SharePlanDialog from 'src/components/plans/SharePlanDialog.vue'
+import ShareTemplateDialog from 'src/components/templates/ShareTemplateDialog.vue'
 
 const router = useRouter()
 const plansStore = usePlansStore()
@@ -438,6 +458,10 @@ const templatesStore = useTemplatesStore()
 const $q = useQuasar()
 
 const showExpenseDialog = ref(false)
+const showSharePlanDialog = ref(false)
+const showShareTemplateDialog = ref(false)
+const selectedPlanId = ref<string | null>(null)
+const selectedTemplateId = ref<string | null>(null)
 const isLoading = ref(true)
 const maxDisplayedItems = 3
 
@@ -484,6 +508,16 @@ function goToPlan(planId: string) {
 
 function goToTemplate(templateId: string) {
   router.push({ name: 'template', params: { id: templateId } })
+}
+
+function openSharePlanDialog(planId: string) {
+  selectedPlanId.value = planId
+  showSharePlanDialog.value = true
+}
+
+function openShareTemplateDialog(templateId: string) {
+  selectedTemplateId.value = templateId
+  showShareTemplateDialog.value = true
 }
 
 onMounted(async () => {
