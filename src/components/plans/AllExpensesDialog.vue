@@ -110,7 +110,8 @@
 <script setup lang="ts">
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
-import { useCategoriesStore } from 'src/stores/categories'
+import { formatDate } from 'src/utils/date'
+import { useCategoryHelpers } from 'src/composables/useCategoryHelpers'
 import { useExpenseActions } from 'src/composables/useExpenseActions'
 import type { ExpenseWithCategory } from 'src/api'
 
@@ -127,30 +128,6 @@ const emit = defineEmits<{
   (e: 'refresh'): void
 }>()
 
-const categoriesStore = useCategoriesStore()
+const { getCategoryName, getCategoryColor, getCategoryIcon } = useCategoryHelpers()
 const { confirmDeleteExpense } = useExpenseActions()
-
-// Helper functions
-function getCategoryName(categoryId: string): string {
-  const category = categoriesStore.getCategoryById(categoryId)
-  return category?.name || 'Unknown'
-}
-
-function getCategoryColor(categoryId: string): string {
-  const category = categoriesStore.getCategoryById(categoryId)
-  return category?.color || '#666'
-}
-
-function getCategoryIcon(categoryId: string): string {
-  const category = categoriesStore.getCategoryById(categoryId)
-  return category?.icon || 'eva-folder-outline'
-}
-
-function formatDate(dateString: string): string {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  }).format(new Date(dateString))
-}
 </script>

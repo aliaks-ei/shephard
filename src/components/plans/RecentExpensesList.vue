@@ -56,7 +56,8 @@
               {{ expense.name }}
             </q-item-label>
             <q-item-label caption>
-              {{ getCategoryName(expense.category_id) }} • {{ formatDate(expense.expense_date) }}
+              {{ getCategoryName(expense.category_id) }} •
+              {{ formatDateRelative(expense.expense_date) }}
             </q-item-label>
           </q-item-section>
 
@@ -110,7 +111,8 @@
 import { computed } from 'vue'
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
-import { useCategoriesStore } from 'src/stores/categories'
+import { formatDateRelative } from 'src/utils/date'
+import { useCategoryHelpers } from 'src/composables/useCategoryHelpers'
 import { useExpenseActions } from 'src/composables/useExpenseActions'
 import type { ExpenseWithCategory } from 'src/api'
 
@@ -127,46 +129,10 @@ const emit = defineEmits<{
   (e: 'refresh'): void
 }>()
 
-const categoriesStore = useCategoriesStore()
+const { getCategoryName, getCategoryColor, getCategoryIcon } = useCategoryHelpers()
 const { confirmDeleteExpense } = useExpenseActions()
 
-// Show only the 5 most recent expenses
 const displayedExpenses = computed(() => {
   return props.expenses.slice(0, 5)
 })
-
-// Helper functions
-function getCategoryName(categoryId: string): string {
-  const category = categoriesStore.getCategoryById(categoryId)
-  return category?.name || 'Unknown'
-}
-
-function getCategoryColor(categoryId: string): string {
-  const category = categoriesStore.getCategoryById(categoryId)
-  return category?.color || '#666'
-}
-
-function getCategoryIcon(categoryId: string): string {
-  const category = categoriesStore.getCategoryById(categoryId)
-  return category?.icon || 'eva-folder-outline'
-}
-
-function formatDate(dateString: string): string {
-  const date = new Date(dateString)
-  const today = new Date()
-  const yesterday = new Date(today)
-  yesterday.setDate(yesterday.getDate() - 1)
-
-  if (date.toDateString() === today.toDateString()) {
-    return 'Today'
-  } else if (date.toDateString() === yesterday.toDateString()) {
-    return 'Yesterday'
-  } else {
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined,
-    }).format(date)
-  }
-}
 </script>

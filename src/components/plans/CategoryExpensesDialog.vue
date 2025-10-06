@@ -311,17 +311,16 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useQuasar } from 'quasar'
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
+import { formatDate } from 'src/utils/date'
+import { getBudgetProgressColor, getBudgetRemainingColorClass } from 'src/utils/budget'
 import { useExpensesStore } from 'src/stores/expenses'
 import { useNotificationStore } from 'src/stores/notification'
 import { updatePlanItemCompletion, type PlanItem } from 'src/api/plans'
 import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 import { useExpenseActions } from 'src/composables/useExpenseActions'
 import type { ExpenseWithCategory } from 'src/api'
-
-const $q = useQuasar()
 
 interface CategoryData {
   categoryId: string
@@ -354,7 +353,6 @@ const expensesStore = useExpensesStore()
 const notificationStore = useNotificationStore()
 const { confirmDeleteExpense } = useExpenseActions()
 
-// Plan items for this category (sorted: incomplete first)
 const sortedPlanItems = computed(() => {
   if (!props.planItems || props.planItems.length === 0) return []
 
@@ -366,10 +364,7 @@ const sortedPlanItems = computed(() => {
   })
 })
 
-// Local state
 const showExpenseDialog = ref(false)
-
-// Default to items tab if there are items, otherwise expenses
 const activeTab = ref('items')
 
 const completedItemsCount = computed(
@@ -383,31 +378,12 @@ const progressPercentage = computed(() => {
   return Math.min((props.category.actualAmount / props.category.plannedAmount) * 100, 999)
 })
 
-const progressColor = computed(() => {
-  const percentage = progressPercentage.value
-  if (percentage < 100) return 'primary'
-  if (percentage === 100) return 'positive'
-  if (percentage <= 110) return 'warning'
-  return 'negative'
-})
+const progressColor = computed(() => getBudgetProgressColor(progressPercentage.value))
 
 const remainingColorClass = computed(() => {
   if (!props.category) return ''
-  const percentage = progressPercentage.value
-  if (percentage < 100) return 'text-primary'
-  if (percentage === 100) return 'text-positive'
-  if (percentage <= 110) return 'text-warning'
-  return 'text-negative'
+  return getBudgetRemainingColorClass(progressPercentage.value)
 })
-
-// Methods
-function formatDate(dateString: string): string {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  }).format(new Date(dateString))
-}
 
 function openExpenseDialog() {
   showExpenseDialog.value = true

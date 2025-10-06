@@ -129,6 +129,7 @@
 import { computed } from 'vue'
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
+import { getBudgetProgressColor, getBudgetRemainingColorClass } from 'src/utils/budget'
 import type { CategoryBudget } from 'src/types'
 
 const props = defineProps<{
@@ -145,22 +146,8 @@ const percentageUsed = computed(() => {
   return (props.category.actualAmount / props.category.plannedAmount) * 100
 })
 
-// Color logic: Primary (< 100%), Green (100%), Warning (101-110%), Negative (> 110%)
-const progressColor = computed(() => {
-  const percentage = percentageUsed.value
-  if (percentage < 100) return 'primary'
-  if (percentage === 100) return 'positive'
-  if (percentage <= 110) return 'warning'
-  return 'negative'
-})
-
-const remainingAmountColor = computed(() => {
-  const percentage = percentageUsed.value
-  if (percentage < 100) return 'text-primary'
-  if (percentage === 100) return 'text-positive'
-  if (percentage <= 110) return 'text-warning'
-  return 'text-negative'
-})
+const progressColor = computed(() => getBudgetProgressColor(percentageUsed.value))
+const remainingAmountColor = computed(() => getBudgetRemainingColorClass(percentageUsed.value))
 
 const statusIcon = computed(() => {
   const percentage = percentageUsed.value
