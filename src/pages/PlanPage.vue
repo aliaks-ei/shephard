@@ -236,13 +236,14 @@
           <PlanCategory
             v-for="group in planCategoryGroups"
             :key="group.categoryId"
+            :ref="(el) => setCategoryRef(el, group.categoryId)"
             :category-id="group.categoryId"
             :category-name="getCategoryName(group.categoryId)"
             :category-color="group.categoryColor"
             :category-icon="getCategoryIcon(group.categoryId)"
             :items="group.items"
             :currency="planCurrency"
-            :default-expanded="allCategoriesExpanded"
+            :default-expanded="allCategoriesExpanded || group.categoryId === lastAddedCategoryId"
             @update-item="handleUpdateItem"
             @remove-item="handleRemoveItem"
             @add-item="handleAddItem"
@@ -491,13 +492,16 @@
                   <PlanCategory
                     v-for="group in planCategoryGroups"
                     :key="group.categoryId"
+                    :ref="(el) => setCategoryRef(el, group.categoryId)"
                     :category-id="group.categoryId"
                     :category-name="getCategoryName(group.categoryId)"
                     :category-color="group.categoryColor"
                     :category-icon="getCategoryIcon(group.categoryId)"
                     :items="group.items"
                     :currency="planCurrency"
-                    :default-expanded="allCategoriesExpanded"
+                    :default-expanded="
+                      allCategoriesExpanded || group.categoryId === lastAddedCategoryId
+                    "
                     @update-item="handleUpdateItem"
                     @remove-item="handleRemoveItem"
                     @add-item="handleAddItem"
@@ -600,7 +604,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import type { QForm } from 'quasar'
 
@@ -656,6 +660,7 @@ const activeTab = ref(currentTab.value)
 const {
   planItems,
   totalAmount,
+  hasValidItems,
   hasDuplicateItems,
   isValidForSave,
   planCategoryGroups,
@@ -707,6 +712,8 @@ const banners = computed(() => {
 
 const { openDialog, closeDialog, getDialogState } = useEditablePage()
 
+const categoryRefs = ref<Map<string, InstanceType<typeof PlanCategory>>>(new Map())
+const lastAddedCategoryId = ref<string | null>(null)
 const planForm = ref()
 const planEditForm = ref()
 const selectedTemplate = ref<TemplateWithItems | null>(null)
@@ -991,13 +998,17 @@ function handleAddItem(categoryId: string, categoryColor: string): void {
 }
 
 async function handleSavePlan(): Promise<void> {
+  lastAddedCategoryId.value = null
   clearTemplateError()
+
+  let hasFormErrors = false
+  let hasItemErrors = false
 
   if (isNewPlan.value && !selectedTemplate.value) {
     templateError.value = true
     templateErrorMessage.value = 'Please select a template'
     notificationsStore.showError('Please select a template before creating the plan')
-    return
+    hasFormErrors = true
   }
 
   // Use the appropriate form ref based on context
@@ -1005,17 +1016,30 @@ async function handleSavePlan(): Promise<void> {
   if (formRef) {
     const isFormValid = await formRef.validate()
     if (!isFormValid) {
-      notificationsStore.showError('Please fix the form errors before saving')
-      return
+      hasFormErrors = true
     }
   }
 
-  if (!isValidForSave.value && hasDuplicateItems.value) {
-    notificationsStore.showError(
-      'You have duplicate item names within the same category. Please use unique names.',
-    )
-    return
+  if (!isValidForSave.value) {
+    hasItemErrors = true
+
+    if (!hasValidItems.value) {
+      await scrollToFirstInvalidField()
+    } else if (hasDuplicateItems.value) {
+      notificationsStore.showError(
+        'You have duplicate item names within the same category. Please use unique names.',
+      )
+
+      allCategoriesExpanded.value = true
+      await nextTick()
+    }
   }
+
+  if (hasFormErrors) {
+    notificationsStore.showError('Please fix the form errors before saving')
+  }
+
+  if (hasFormErrors || hasItemErrors) return
 
   await savePlan()
 }
@@ -1091,6 +1115,46 @@ function goBack(): void {
 function clearTemplateError(): void {
   templateError.value = false
   templateErrorMessage.value = ''
+}
+
+function setCategoryRef(el: unknown, categoryId: string): void {
+  if (el && typeof el === 'object' && 'focusLastItem' in el) {
+    const component = el as InstanceType<typeof PlanCategory>
+    if (typeof component.focusLastItem === 'function') {
+      categoryRefs.value.set(categoryId, component)
+    }
+  } else {
+    categoryRefs.value.delete(categoryId)
+  }
+}
+
+function getFirstInvalidItem(): { categoryId: string; item: PlanItemUI } | null {
+  for (const item of planItems.value) {
+    if (!item.name.trim() || item.amount <= 0) {
+      return { categoryId: item.categoryId, item }
+    }
+  }
+  return null
+}
+
+async function scrollToFirstInvalidField(): Promise<void> {
+  const firstInvalidItem = getFirstInvalidItem()
+  if (!firstInvalidItem) return
+
+  const categoryRef = categoryRefs.value.get(firstInvalidItem.categoryId)
+  if (!categoryRef) return
+
+  const categoryElement = categoryRef.$el
+  if (!categoryElement) return
+
+  categoryElement.scrollIntoView({
+    behavior: 'smooth',
+    block: 'center',
+  })
+
+  await nextTick()
+  lastAddedCategoryId.value = firstInvalidItem.categoryId
+  categoryRef.focusFirstInvalidItem()
 }
 
 function openExpenseRegistration(): void {
