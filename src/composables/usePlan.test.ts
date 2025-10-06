@@ -85,20 +85,6 @@ describe('computed state', () => {
     expect(p.isEditMode.value).toBe(true)
   })
 
-  it('computes currentTab based on route name', async () => {
-    mockRouteValue.value = { name: 'plan-overview', params: { id: 'plan-123' } }
-    const p = usePlan()
-    expect(p.currentTab.value).toBe('overview')
-
-    mockRouteValue.value = { name: 'plan-edit', params: { id: 'plan-123' } }
-    await nextTick()
-    expect(p.currentTab.value).toBe('edit')
-
-    mockRouteValue.value = { name: 'new-plan', params: {} }
-    await nextTick()
-    expect(p.currentTab.value).toBe('overview')
-  })
-
   it('read-only when shared with view permission', () => {
     const userStore = useUserStore()
     // @ts-expect-error - test state

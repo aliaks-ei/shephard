@@ -137,6 +137,7 @@
                     v-if="didAutoSelectPlan && selectedPlan"
                     class="bg-blue-1 text-blue-8 q-mt-md"
                     dense
+                    rounded
                   >
                     <template #avatar>
                       <q-icon name="eva-info-outline" />
@@ -349,6 +350,7 @@
                 v-if="didAutoSelectPlan && selectedPlan"
                 class="bg-blue-1 text-blue-8 q-mb-md"
                 dense
+                rounded
               >
                 <template #avatar>
                   <q-icon name="eva-info-outline" />
@@ -485,6 +487,8 @@
               <q-banner
                 v-if="budgetWarning"
                 class="bg-orange-1 text-orange-8 q-mb-md"
+                dense
+                rounded
               >
                 <template #avatar>
                   <q-icon name="eva-alert-triangle-outline" />
@@ -674,7 +678,7 @@ const budgetWarning = computed(() => {
   const currency = selectedPlan.value.currency as CurrencyCode
 
   if (newRemaining < 0) {
-    return `This expense will exceed the category budget by ${formatCurrency(Math.abs(newRemaining), currency)}`
+    return `This expense will exceed the budget by ${formatCurrency(Math.abs(newRemaining), currency)}`
   }
 
   return ''

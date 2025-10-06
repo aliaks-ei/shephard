@@ -17,12 +17,6 @@ export function usePlan() {
 
   const isNewPlan = computed(() => route.name === 'new-plan')
   const routePlanId = computed(() => (typeof route.params.id === 'string' ? route.params.id : null))
-  const currentTab = computed(() => {
-    if (route.name === 'plan-overview') return 'overview'
-    if (route.name === 'plan-items') return 'items'
-    if (route.name === 'plan-edit') return 'edit'
-    return 'overview' // default
-  })
   const isOwner = computed(() => {
     if (!currentPlan.value || !userStore.userProfile) return false
     return currentPlan.value.owner_id === userStore.userProfile.id
@@ -41,10 +35,12 @@ export function usePlan() {
 
   const planCurrency = computed((): CurrencyCode => {
     if (isNewPlan.value) {
-      return userStore.preferences.currency as CurrencyCode
+      return (userStore.preferences.currency as CurrencyCode) || 'EUR'
     }
 
-    return (currentPlan.value?.currency || userStore.preferences.currency) as CurrencyCode
+    return (
+      ((currentPlan.value?.currency || userStore.preferences.currency) as CurrencyCode) || 'EUR'
+    )
   })
 
   async function createNewPlanWithItems(
@@ -182,7 +178,6 @@ export function usePlan() {
     isPlanLoading,
     isNewPlan,
     routePlanId,
-    currentTab,
     isOwner,
     isEditMode,
     canEditPlanData,

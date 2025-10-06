@@ -82,6 +82,7 @@
     <div v-else-if="categoryGroups.length === 0">
       <q-banner
         dense
+        rounded
         :class="$q.dark.isActive ? 'bg-grey-9 text-grey-3' : 'bg-grey-1 text-grey-7'"
       >
         <template #avatar>

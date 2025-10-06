@@ -33,24 +33,6 @@ const routes: RouteRecordRaw[] = [
         path: 'plans/:id',
         component: () => import('pages/PlanPage.vue'),
         name: 'plan',
-        redirect: { name: 'plan-overview' },
-        children: [
-          {
-            path: 'overview',
-            component: () => import('pages/PlanPage.vue'),
-            name: 'plan-overview',
-          },
-          {
-            path: 'items',
-            component: () => import('pages/PlanPage.vue'),
-            name: 'plan-items',
-          },
-          {
-            path: 'edit',
-            component: () => import('pages/PlanPage.vue'),
-            name: 'plan-edit',
-          },
-        ],
       },
     ],
     meta: {

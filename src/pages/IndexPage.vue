@@ -423,18 +423,13 @@ const showExpenseDialog = ref(false)
 const isLoading = ref(true)
 const maxDisplayedItems = 3
 
-// Carousel slide refs
 const plansCarouselSlide = ref(0)
 const templatesCarouselSlide = ref(0)
 
-// Computed properties for stats
 const activePlansCount = computed(() => plansStore.activePlans.length)
 const templatesCount = computed(() => templatesStore.templates.length)
-
-// Show 1 skeleton on mobile (matches carousel), 3 on desktop
 const skeletonCount = computed(() => ($q.screen.lt.sm ? 1 : maxDisplayedItems))
 
-// Computed properties for recent items sorted by updated_at
 const recentActivePlans = computed(() => {
   return [...plansStore.activePlans]
     .filter((p) => p.updated_at)

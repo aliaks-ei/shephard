@@ -1,174 +1,48 @@
 <template>
-  <DetailPageLayout
+  <BaseItemFormPage
     :page-title="pageTitle"
     :page-icon="pageIcon"
-    :banners="banners"
     :is-loading="isTemplateLoading"
     :actions="actionBarActions"
     :actions-visible="isEditMode"
+    :is-edit-mode="isEditMode"
     :show-read-only-badge="!isEditMode"
     @back="goBack"
   >
-    <!-- Main Content -->
-    <q-form
+    <TemplateEditView
       v-if="isEditMode"
-      ref="formRef"
+      ref="editViewRef"
+      v-model:form="form"
+      :category-groups="categoryGroups"
+      :categories="categoriesStore.categories"
+      :total-amount="totalAmount"
+      :currency="templateCurrency"
+      :all-expanded="allCategoriesExpanded"
+      :has-duplicates="hasDuplicateItems"
+      :name-error="nameError"
+      :name-error-message="nameErrorMessage"
+      :last-added-category-id="lastAddedCategoryId"
+      :set-category-ref="setCategoryRef"
       @submit="saveTemplate"
-    >
-      <!-- Basic Information Card -->
-      <TemplateBasicInfoSection
-        v-model="form"
-        :name-error="nameError"
-        :name-error-message="nameErrorMessage"
-        @clear-name-error="clearNameError"
-      />
+      @clear-name-error="clearNameError"
+      @toggle-expand="toggleAllCategories"
+      @open-category-dialog="openDialog('category')"
+      @update-item="updateTemplateItem"
+      @remove-item="removeTemplateItem"
+      @add-item="handleAddTemplateItem"
+    />
 
-      <!-- Categories Card -->
-      <CategoryListSection
-        header-icon="eva-grid-outline"
-        header-title="Categories"
-        :has-categories="templateItems.length > 0"
-        :item-count="templateItems.length"
-        :all-expanded="allCategoriesExpanded"
-        :has-duplicates="hasDuplicateItems"
-        duplicate-banner-position="top"
-        :duplicate-banner-class="
-          $q.dark.isActive ? 'bg-orange-9 text-orange-3' : 'bg-orange-1 text-orange-8'
-        "
-        show-item-count
-        @toggle-expand="toggleAllCategories"
-      >
-        <template #header-actions>
-          <q-btn
-            v-if="!$q.screen.lt.md"
-            icon="eva-plus-outline"
-            label="Add category"
-            color="primary"
-            no-caps
-            @click="openDialog('category')"
-          />
-        </template>
+    <TemplateReadOnlyView
+      v-else
+      :form="form"
+      :category-groups="categoryGroups"
+      :categories="categoriesStore.categories"
+      :total-amount="totalAmount"
+      :currency="templateCurrency"
+      :all-expanded="allCategoriesExpanded"
+      @toggle-expand="toggleAllCategories"
+    />
 
-        <template #duplicate-message>
-          You have duplicate item names within the same category. Please use unique names for each
-          item.
-        </template>
-
-        <template #empty-state>
-          <div class="text-center q-py-xl">
-            <q-icon
-              name="eva-grid-outline"
-              size="4rem"
-              class="text-grey-4 q-mb-md"
-            />
-            <div class="text-h6 q-mb-sm text-grey-6">No categories yet</div>
-            <div class="text-body2 text-grey-5 q-mb-lg">
-              Start building your template by adding named items with categories and amounts
-            </div>
-            <q-btn
-              color="primary"
-              icon="eva-plus-outline"
-              label="Add Your First Category"
-              unelevated
-              no-caps
-              @click="openDialog('category')"
-            />
-          </div>
-        </template>
-
-        <template #categories>
-          <TemplateCategory
-            v-for="group in enrichedCategories"
-            :key="`${group.categoryId}-${allCategoriesExpanded}`"
-            :ref="(el) => setCategoryRef(el, group.categoryId)"
-            :category-id="group.categoryId"
-            :category-name="group.categoryName"
-            :category-color="group.categoryColor"
-            :category-icon="group.categoryIcon"
-            :items="group.items"
-            :currency="templateCurrency"
-            :readonly="false"
-            :default-expanded="allCategoriesExpanded || group.categoryId === lastAddedCategoryId"
-            @update-item="updateTemplateItem"
-            @remove-item="removeTemplateItem"
-            @add-item="handleAddTemplateItem"
-          />
-        </template>
-
-        <template #summary>
-          <ItemsSummarySection
-            :formatted-amount="formattedTotalAmount"
-            :item-count="enrichedCategories.length"
-            item-type="categories"
-            summary-label="Total Amount"
-          />
-        </template>
-      </CategoryListSection>
-    </q-form>
-
-    <!-- Read-only view -->
-    <div v-else>
-      <!-- Basic Information Card -->
-      <TemplateBasicInfoSection
-        v-model="form"
-        readonly
-      />
-
-      <!-- Categories Card -->
-      <CategoryListSection
-        header-icon="eva-grid-outline"
-        header-title="Categories"
-        :has-categories="templateItems.length > 0"
-        :item-count="templateItems.length"
-        :all-expanded="allCategoriesExpanded"
-        :show-duplicate-warning="false"
-        show-item-count
-        @toggle-expand="toggleAllCategories"
-      >
-        <template #empty-state>
-          <div class="text-center q-py-xl">
-            <q-icon
-              name="eva-grid-outline"
-              size="4rem"
-              class="text-grey-4 q-mb-md"
-            />
-            <div class="text-h6 q-mb-sm text-grey-6">No categories</div>
-            <div class="text-body2 text-grey-5 q-mb-lg">
-              This template doesn't have any items yet
-            </div>
-          </div>
-        </template>
-
-        <template #categories>
-          <TemplateCategory
-            v-for="group in enrichedCategories"
-            :key="`${group.categoryId}-${allCategoriesExpanded}`"
-            :category-id="group.categoryId"
-            :category-name="group.categoryName"
-            :category-color="group.categoryColor"
-            :category-icon="group.categoryIcon"
-            :items="group.items"
-            :currency="templateCurrency"
-            :default-expanded="allCategoriesExpanded"
-            readonly
-            @update-item="updateTemplateItem"
-            @remove-item="removeTemplateItem"
-          />
-        </template>
-
-        <template #summary>
-          <ItemsSummarySection
-            :formatted-amount="formattedTotalAmount"
-            :item-count="templateItems.length"
-            item-type="categories"
-            amount-size-mobile="text-h5"
-            amount-size-desktop="text-h4"
-          />
-        </template>
-      </CategoryListSection>
-    </div>
-
-    <!-- Dialogs Slot -->
     <template #dialogs>
       <CategorySelectionDialog
         v-model="showCategoryDialog"
@@ -184,7 +58,6 @@
         @shared="onTemplateShared"
       />
 
-      <!-- Delete Template Dialog -->
       <DeleteDialog
         v-if="!isNewTemplate"
         v-model="showDeleteDialog"
@@ -197,34 +70,30 @@
         @confirm="deleteTemplate"
       />
     </template>
-  </DetailPageLayout>
+  </BaseItemFormPage>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import type { QForm } from 'quasar'
 
-import DetailPageLayout from 'src/layouts/DetailPageLayout.vue'
+import BaseItemFormPage from 'src/layouts/BaseItemFormPage.vue'
 import type { ActionBarAction } from 'src/components/shared/ActionBar.vue'
-import TemplateCategory from 'src/components/templates/TemplateCategory.vue'
+import TemplateEditView from 'src/components/templates/TemplateEditView.vue'
+import TemplateReadOnlyView from 'src/components/templates/TemplateReadOnlyView.vue'
 import CategorySelectionDialog from 'src/components/categories/CategorySelectionDialog.vue'
 import ShareTemplateDialog from 'src/components/templates/ShareTemplateDialog.vue'
 import DeleteDialog from 'src/components/shared/DeleteDialog.vue'
-import CategoryListSection from 'src/components/shared/CategoryListSection.vue'
-import ItemsSummarySection from 'src/components/shared/ItemsSummarySection.vue'
-import TemplateBasicInfoSection from 'src/components/templates/TemplateBasicInfoSection.vue'
 import { useTemplatesStore } from 'src/stores/templates'
 import { useCategoriesStore } from 'src/stores/categories'
 import { useNotificationStore } from 'src/stores/notification'
 import { useTemplateItems } from 'src/composables/useTemplateItems'
-import { formatCurrency } from 'src/utils/currency'
 import { useTemplate } from 'src/composables/useTemplate'
 import { useDetailPageState } from 'src/composables/useDetailPageState'
 import { useEditablePage } from 'src/composables/useEditablePage'
 import { useCategoryRefs } from 'src/composables/useCategoryRefs'
+import { validateItemForm } from 'src/composables/useItemFormValidation'
 import type { Category } from 'src/api'
-import type { TemplateCategoryUI } from 'src/types'
 
 const router = useRouter()
 const templatesStore = useTemplatesStore()
@@ -248,7 +117,6 @@ const {
   totalAmount,
   hasValidItems,
   hasDuplicateItems,
-  isValidForSave,
   categoryGroups,
   addTemplateItem,
   updateTemplateItem,
@@ -274,21 +142,6 @@ const { pageTitle, pageIcon } = useDetailPageState(
   !isEditMode.value,
 )
 
-const banners = computed(() => {
-  const bannersList = []
-
-  if (!isEditMode.value) {
-    bannersList.push({
-      type: 'readonly',
-      class: 'bg-orange-1 text-orange-8',
-      icon: 'eva-eye-outline',
-      message: `Read-only access. Contact the owner to edit.`,
-    })
-  }
-
-  return bannersList
-})
-
 const { openDialog, closeDialog, getDialogState } = useEditablePage()
 
 const {
@@ -298,9 +151,10 @@ const {
   scrollToFirstInvalidField,
   resetLastAddedCategory,
 } = useCategoryRefs(templateItems)
+
+const editViewRef = ref()
 const allCategoriesExpanded = ref(false)
 const showDeleteDialog = ref(false)
-const formRef = ref<QForm>()
 const form = ref({
   name: '',
   duration: 'monthly' as string,
@@ -309,26 +163,6 @@ const form = ref({
 const nameError = ref(false)
 const nameErrorMessage = ref('')
 
-const formattedTotalAmount = computed(() =>
-  formatCurrency(totalAmount.value, templateCurrency.value),
-)
-
-const enrichedCategories = computed(() => {
-  return categoryGroups.value.reduce((acc, group) => {
-    const category = categoriesStore.getCategoryById(group.categoryId)
-    if (category) {
-      acc.push({
-        ...group,
-        categoryName: category.name,
-        categoryColor: category.color,
-        categoryIcon: category.icon,
-      })
-    }
-    return acc
-  }, [] as TemplateCategoryUI[])
-})
-
-// Dialog states
 const showCategoryDialog = computed({
   get: () => getDialogState('category'),
   set: (value: boolean) => (value ? openDialog('category') : closeDialog('category')),
@@ -339,7 +173,6 @@ const isShareDialogOpen = computed({
   set: (value: boolean) => (value ? openDialog('share') : closeDialog('share')),
 })
 
-// Action Bar Actions
 const actionBarActions = computed<ActionBarAction[]>(() => [
   {
     key: 'add-category',
@@ -381,8 +214,6 @@ const actionBarActions = computed<ActionBarAction[]>(() => [
   },
 ])
 
-// Component methods
-
 async function handleAddTemplateItem(categoryId: string, categoryColor: string): Promise<void> {
   addTemplateItem(categoryId, categoryColor)
 
@@ -419,44 +250,28 @@ async function saveTemplate(): Promise<void> {
   resetLastAddedCategory()
   clearNameError()
 
-  let hasFormErrors = false
-  let hasItemErrors = false
-
-  if (!form.value.name || form.value.name.trim().length === 0) {
-    nameError.value = true
-    nameErrorMessage.value = 'Template name is required'
-    hasFormErrors = true
-  }
-
-  if (formRef.value?.validate) {
-    const isFormValid = await formRef.value.validate()
-    if (!isFormValid) {
-      hasFormErrors = true
-    }
-  }
-
-  if (!isValidForSave.value) {
-    hasItemErrors = true
-
-    if (!hasValidItems.value) {
-      await scrollToFirstInvalidField()
-    } else if (hasDuplicateItems.value) {
-      notificationsStore.showError(
-        'You have duplicate item names within the same category. Please use unique names.',
-      )
-
+  const validationResult = await validateItemForm({
+    formRef: editViewRef.value?.formRef ? ref(editViewRef.value.formRef) : ref(undefined),
+    hasValidItems: hasValidItems.value,
+    hasDuplicateItems: hasDuplicateItems.value,
+    customValidation: () => {
+      if (!form.value.name || form.value.name.trim().length === 0) {
+        nameError.value = true
+        nameErrorMessage.value = 'Template name is required'
+        return { isValid: false }
+      }
+      return { isValid: true }
+    },
+    scrollToFirstInvalid: scrollToFirstInvalidField,
+    onExpandCategories: () => {
       allCategoriesExpanded.value = true
-      await nextTick()
-    }
-  }
+      nextTick()
+    },
+  })
 
-  if (hasFormErrors) {
-    notificationsStore.showError('Please fix the form errors before saving')
-  }
+  if (!validationResult.isValid) return
 
-  if (hasFormErrors || hasItemErrors) return
-
-  const templateItems = getTemplateItemsForSave()
+  const templateItemsForSave = getTemplateItemsForSave()
 
   let result
   if (isNewTemplate.value) {
@@ -464,14 +279,14 @@ async function saveTemplate(): Promise<void> {
       form.value.name.trim(),
       form.value.duration,
       totalAmount.value,
-      templateItems,
+      templateItemsForSave,
     )
   } else {
     result = await updateExistingTemplateWithItems(
       form.value.name.trim(),
       form.value.duration,
       totalAmount.value,
-      templateItems,
+      templateItemsForSave,
     )
   }
 
@@ -481,7 +296,6 @@ async function saveTemplate(): Promise<void> {
     )
     goBack()
   }
-  // Error notification already shown by store
 }
 
 async function loadCurrentTemplate(): Promise<void> {

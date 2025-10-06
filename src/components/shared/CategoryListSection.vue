@@ -60,6 +60,7 @@
       <slot name="empty-state">
         <q-banner
           dense
+          rounded
           :class="$q.dark.isActive ? 'bg-grey-9 text-grey-3' : 'bg-grey-1 text-grey-7'"
         >
           <template #avatar>
@@ -86,7 +87,10 @@
       v-if="isDuplicateWarningVisible && duplicateBannerPosition === 'bottom'"
       class="q-mt-md"
     >
-      <q-banner :class="duplicateBannerClass">
+      <q-banner
+        rounded
+        :class="duplicateBannerClass"
+      >
         <template #avatar>
           <q-icon name="eva-alert-triangle-outline" />
         </template>
