@@ -326,13 +326,11 @@ export const usePlansStore = defineStore('plans', () => {
     isLoading.value = true
 
     try {
-      // Add plan_id to each item for batch upsert
       const itemsWithPlanId = items.map((item) => ({
         ...item,
         plan_id: planId,
       }))
 
-      // Use batch update for efficiency - single request instead of N requests
       await batchUpdatePlanItems(itemsWithPlanId)
       return { success: true }
     } catch (error) {

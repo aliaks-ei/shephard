@@ -72,7 +72,6 @@ export function usePlan() {
 
     if (!itemsResult.success) return { success: false }
 
-    // Load the full plan with items and update currentPlan
     currentPlan.value = await plansStore.loadPlanWithItems(planResult.data.id)
 
     if (!currentPlan.value) return { success: false }
@@ -98,20 +97,16 @@ export function usePlan() {
 
     if (!planResult.success || !planResult.data) return { success: false }
 
-    // Separate items into existing (to update) and new (to create)
     const itemsToUpdate = planItems.filter((item) => item.id)
     const itemsToCreate = planItems.filter((item) => !item.id)
 
-    // Find items to delete (items that existed before but are no longer in planItems)
     const newItemIds = new Set(itemsToUpdate.map((item) => item.id))
     const itemsToDelete = currentPlan.value.plan_items
       .filter((existingItem) => !newItemIds.has(existingItem.id))
       .map((item) => item.id)
 
-    // Execute all operations and check their results
     const operations: Array<Promise<ActionResult>> = []
 
-    // Update existing items
     if (itemsToUpdate.length > 0) {
       operations.push(
         plansStore.updatePlanItems(
@@ -121,7 +116,6 @@ export function usePlan() {
       )
     }
 
-    // Create new items
     if (itemsToCreate.length > 0) {
       const newItems = itemsToCreate.map((item) => ({
         name: item.name,
@@ -132,20 +126,16 @@ export function usePlan() {
       operations.push(plansStore.savePlanItems(planResult.data.id, newItems))
     }
 
-    // Delete removed items
     if (itemsToDelete.length > 0) {
       operations.push(plansStore.removePlanItems(itemsToDelete))
     }
 
-    // Wait for all operations to complete
     const results = await Promise.all(operations)
 
-    // Check if any operation failed
     if (results.some((result) => !result.success)) {
       return { success: false }
     }
 
-    // Reload the plan to get fresh data
     await loadPlan()
 
     if (!currentPlan.value) return { success: false }

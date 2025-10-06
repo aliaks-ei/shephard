@@ -6,12 +6,6 @@ interface ItemWithTimestamp {
   [key: string]: unknown
 }
 
-/**
- * Composable that sorts items by updated_at timestamp and returns the most recent ones
- * @param items - Array of items with updated_at timestamp
- * @param maxItems - Maximum number of items to return
- * @returns Computed array of sorted recent items
- */
 export function useSortedRecentItems<T extends ItemWithTimestamp>(
   items: ComputedRef<T[]>,
   maxItems: number,

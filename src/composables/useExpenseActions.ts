@@ -7,11 +7,6 @@ export function useExpenseActions() {
   const expensesStore = useExpensesStore()
   const notificationStore = useNotificationStore()
 
-  /**
-   * Shows a confirmation dialog and deletes the expense if confirmed
-   * @param expense - The expense to delete
-   * @param onSuccess - Optional callback to execute after successful deletion
-   */
   function confirmDeleteExpense(expense: ExpenseWithCategory, onSuccess?: () => void) {
     Dialog.create({
       title: 'Delete Expense?',

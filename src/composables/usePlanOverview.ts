@@ -13,25 +13,20 @@ export function usePlanOverview(
   const expensesStore = useExpensesStore()
   const categoriesStore = useCategoriesStore()
 
-  // Local state
   const isLoading = ref(false)
 
-  // Get the current plan with items
   const currentPlanWithItems = computed<PlanWithItems | null>(() => {
     const plan = unref(planArg)
     const currentPlanId = unref(planId)
     if (plan && plan.id === currentPlanId) return plan
-    // Fallback to store (may not include items)
     const fromStore = plansStore.plans.find((p) => p.id === currentPlanId)
     return (fromStore as unknown as PlanWithItems) || null
   })
 
-  // Total budget from plan items
   const totalBudget = computed(() => {
     const plan = currentPlanWithItems.value
     if (!plan) return 0
 
-    // Prefer summing plan items if available for accuracy
     const hasItems = Array.isArray(
       (plan as unknown as { plan_items?: { amount: number }[] }).plan_items,
     )
@@ -46,23 +41,19 @@ export function usePlanOverview(
     return plan.total || 0
   })
 
-  // Total spent from all expenses
   const totalSpent = computed(() => {
     return expensesStore.totalExpensesAmount
   })
 
-  // Remaining budget
   const remainingBudget = computed(() => {
     return totalBudget.value - totalSpent.value
   })
 
-  // Category budgets with expense data
   const categoryBudgets = computed((): CategoryBudget[] => {
     const summary = expensesStore.expenseSummary
     const categories = categoriesStore.categories
     const plan = currentPlanWithItems.value
 
-    // If we have plan items, use them to get accurate planned amounts
     const plannedAmountsByCategory = new Map<string, number>()
     if (plan?.plan_items) {
       plan.plan_items.forEach((item) => {
@@ -76,7 +67,6 @@ export function usePlanOverview(
         const category = categories.find((c) => c.id === item.category_id)
         if (!category) return null
 
-        // Use plan items for planned amount if available, otherwise use summary
         const plannedAmount = plannedAmountsByCategory.get(item.category_id) || item.planned_amount
         const calculatedRemaining = plannedAmount - item.actual_amount
 
@@ -93,24 +83,20 @@ export function usePlanOverview(
       })
       .filter((item): item is CategoryBudget => item !== null)
       .sort((a, b) => {
-        // Sort by percentage used (descending) to show most critical first
         const aPercentage = a.plannedAmount > 0 ? a.actualAmount / a.plannedAmount : 0
         const bPercentage = b.plannedAmount > 0 ? b.actualAmount / b.plannedAmount : 0
         return bPercentage - aPercentage
       })
   })
 
-  // Recent expenses (last 10)
   const recentExpenses = computed((): ExpenseWithCategory[] => {
     return expensesStore.sortedExpenses.slice(0, 10)
   })
 
-  // Expenses grouped by category
   const expensesByCategory = computed(() => {
     return expensesStore.expensesByCategory
   })
 
-  // Plan health metrics
   const planHealth = computed(() => {
     const budgetUtilization =
       totalBudget.value > 0 ? (totalSpent.value / totalBudget.value) * 100 : 0

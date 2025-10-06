@@ -83,7 +83,6 @@ export const useTemplatesStore = defineStore('templates', () => {
     isLoading.value = true
 
     try {
-      // Get user's preferred currency for new templates
       const userCurrency = userStore.preferences.currency as CurrencyCode
 
       const newTemplate = await createTemplate({
@@ -94,7 +93,6 @@ export const useTemplatesStore = defineStore('templates', () => {
 
       return { success: true, data: newTemplate }
     } catch (error) {
-      // Handle specific duplicate name error
       if (error instanceof Error && error.name === 'DUPLICATE_TEMPLATE_NAME') {
         handleError('TEMPLATES.DUPLICATE_NAME', error)
       } else {
@@ -117,7 +115,6 @@ export const useTemplatesStore = defineStore('templates', () => {
 
       return { success: true, data: updatedTemplate }
     } catch (error) {
-      // Handle specific duplicate name error
       if (error instanceof Error && error.name === 'DUPLICATE_TEMPLATE_NAME') {
         handleError('TEMPLATES.DUPLICATE_NAME', error, { templateId })
       } else {
@@ -210,10 +207,8 @@ export const useTemplatesStore = defineStore('templates', () => {
     try {
       await unshareTemplate(templateId, targetUserId)
 
-      // Remove from local state
       sharedUsers.value = sharedUsers.value.filter((user) => user.user_id !== targetUserId)
 
-      // Refresh templates to update share counts
       await loadTemplates()
       return { success: true }
     } catch (error) {

@@ -36,7 +36,6 @@ export const usePreferencesStore = defineStore('preferences', () => {
     }
 
     isLoading.value = true
-    // Ensure immediate usable defaults before network
     initializeWithDefaults()
 
     try {

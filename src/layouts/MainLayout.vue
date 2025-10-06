@@ -7,7 +7,7 @@
     />
 
     <template v-if="!userStore.isLoading">
-      <q-header elevated>
+      <q-header>
         <q-toolbar>
           <q-btn
             v-if="$q.screen.gt.sm"
