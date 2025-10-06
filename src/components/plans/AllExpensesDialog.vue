@@ -93,7 +93,7 @@
                     size="sm"
                     icon="eva-trash-2-outline"
                     color="negative"
-                    @click="confirmDeleteExpense(expense)"
+                    @click="confirmDeleteExpense(expense, () => emit('refresh'))"
                   >
                     <q-tooltip v-if="!$q.screen.lt.md">Delete expense</q-tooltip>
                   </q-btn>
@@ -108,12 +108,10 @@
 </template>
 
 <script setup lang="ts">
-import { Dialog } from 'quasar'
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
-import { useExpensesStore } from 'src/stores/expenses'
-import { useNotificationStore } from 'src/stores/notification'
 import { useCategoriesStore } from 'src/stores/categories'
+import { useExpenseActions } from 'src/composables/useExpenseActions'
 import type { ExpenseWithCategory } from 'src/api'
 
 defineProps<{
@@ -129,9 +127,8 @@ const emit = defineEmits<{
   (e: 'refresh'): void
 }>()
 
-const expensesStore = useExpensesStore()
-const notificationStore = useNotificationStore()
 const categoriesStore = useCategoriesStore()
+const { confirmDeleteExpense } = useExpenseActions()
 
 // Helper functions
 function getCategoryName(categoryId: string): string {
@@ -155,29 +152,5 @@ function formatDate(dateString: string): string {
     day: 'numeric',
     year: 'numeric',
   }).format(new Date(dateString))
-}
-
-function confirmDeleteExpense(expense: ExpenseWithCategory) {
-  Dialog.create({
-    title: 'Delete Expense?',
-    message: `Are you sure you want to delete "${expense.name}"?`,
-    persistent: true,
-    ok: {
-      label: 'Delete',
-      color: 'negative',
-      unelevated: true,
-    },
-    cancel: {
-      label: 'Cancel',
-      flat: true,
-      color: 'text-white',
-    },
-  }).onOk(() => {
-    void (async () => {
-      await expensesStore.removeExpense(expense.id)
-      notificationStore.showSuccess('Expense deleted successfully')
-      emit('refresh')
-    })()
-  })
 }
 </script>

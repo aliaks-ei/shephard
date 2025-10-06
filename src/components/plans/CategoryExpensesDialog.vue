@@ -248,7 +248,7 @@
                     size="sm"
                     icon="eva-trash-2-outline"
                     color="negative"
-                    @click="confirmDeleteExpense(expense)"
+                    @click="confirmDeleteExpense(expense, () => emit('refresh'))"
                   >
                     <q-tooltip v-if="!$q.screen.lt.md">Delete expense</q-tooltip>
                   </q-btn>
@@ -311,13 +311,14 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Dialog, useQuasar } from 'quasar'
+import { useQuasar } from 'quasar'
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import { useExpensesStore } from 'src/stores/expenses'
 import { useNotificationStore } from 'src/stores/notification'
 import { updatePlanItemCompletion, type PlanItem } from 'src/api/plans'
 import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
+import { useExpenseActions } from 'src/composables/useExpenseActions'
 import type { ExpenseWithCategory } from 'src/api'
 
 const $q = useQuasar()
@@ -351,6 +352,7 @@ const emit = defineEmits<{
 
 const expensesStore = useExpensesStore()
 const notificationStore = useNotificationStore()
+const { confirmDeleteExpense } = useExpenseActions()
 
 // Plan items for this category (sorted: incomplete first)
 const sortedPlanItems = computed(() => {
@@ -414,30 +416,6 @@ function openExpenseDialog() {
 function onExpenseCreated() {
   showExpenseDialog.value = false
   emit('refresh')
-}
-
-function confirmDeleteExpense(expense: ExpenseWithCategory) {
-  Dialog.create({
-    title: 'Delete Expense?',
-    message: `Are you sure you want to delete "${expense.name}"?`,
-    persistent: true,
-    ok: {
-      label: 'Delete',
-      color: 'negative',
-      unelevated: true,
-    },
-    cancel: {
-      label: 'Cancel',
-      flat: true,
-      color: 'text-white',
-    },
-  }).onOk(() => {
-    void (async () => {
-      await expensesStore.removeExpense(expense.id)
-      notificationStore.showSuccess('Expense deleted successfully')
-      emit('refresh')
-    })()
-  })
 }
 
 async function toggleItemCompletion(item: PlanItem, value?: boolean) {
