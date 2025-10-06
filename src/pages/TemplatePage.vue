@@ -222,8 +222,9 @@ import { formatCurrency } from 'src/utils/currency'
 import { useTemplate } from 'src/composables/useTemplate'
 import { useDetailPageState } from 'src/composables/useDetailPageState'
 import { useEditablePage } from 'src/composables/useEditablePage'
+import { useCategoryRefs } from 'src/composables/useCategoryRefs'
 import type { Category } from 'src/api'
-import type { TemplateCategoryUI, TemplateItemUI } from 'src/types'
+import type { TemplateCategoryUI } from 'src/types'
 
 const router = useRouter()
 const templatesStore = useTemplatesStore()
@@ -290,8 +291,13 @@ const banners = computed(() => {
 
 const { openDialog, closeDialog, getDialogState } = useEditablePage()
 
-const categoryRefs = ref<Map<string, InstanceType<typeof TemplateCategory>>>(new Map())
-const lastAddedCategoryId = ref<string | null>(null)
+const {
+  categoryRefs,
+  lastAddedCategoryId,
+  setCategoryRef,
+  scrollToFirstInvalidField,
+  resetLastAddedCategory,
+} = useCategoryRefs(templateItems)
 const allCategoriesExpanded = ref(false)
 const showDeleteDialog = ref(false)
 const formRef = ref<QForm>()
@@ -376,16 +382,6 @@ const actionBarActions = computed<ActionBarAction[]>(() => [
 ])
 
 // Component methods
-function setCategoryRef(el: unknown, categoryId: string): void {
-  if (el && typeof el === 'object' && 'focusLastItem' in el) {
-    const component = el as InstanceType<typeof TemplateCategory>
-    if (typeof component.focusLastItem === 'function') {
-      categoryRefs.value.set(categoryId, component)
-    }
-  } else {
-    categoryRefs.value.delete(categoryId)
-  }
-}
 
 function focusLastItem(categoryId: string): void {
   const categoryRef = categoryRefs.value.get(categoryId)
@@ -427,37 +423,8 @@ function clearNameError(): void {
   nameErrorMessage.value = ''
 }
 
-function getFirstInvalidItem(): { categoryId: string; item: TemplateItemUI } | null {
-  for (const item of templateItems.value) {
-    if (!item.name.trim() || item.amount <= 0) {
-      return { categoryId: item.categoryId, item }
-    }
-  }
-  return null
-}
-
-async function scrollToFirstInvalidField(): Promise<void> {
-  const firstInvalidItem = getFirstInvalidItem()
-  if (!firstInvalidItem) return
-
-  const categoryRef = categoryRefs.value.get(firstInvalidItem.categoryId)
-  if (!categoryRef) return
-
-  const categoryElement = categoryRef.$el
-  if (!categoryElement) return
-
-  categoryElement.scrollIntoView({
-    behavior: 'smooth',
-    block: 'center',
-  })
-
-  await nextTick()
-  lastAddedCategoryId.value = firstInvalidItem.categoryId
-  categoryRef.focusFirstInvalidItem()
-}
-
 async function saveTemplate(): Promise<void> {
-  lastAddedCategoryId.value = null
+  resetLastAddedCategory()
   clearNameError()
 
   let hasFormErrors = false

@@ -295,6 +295,7 @@ import { usePlan } from 'src/composables/usePlan'
 import { usePlanItems } from 'src/composables/usePlanItems'
 import { useDetailPageState } from 'src/composables/useDetailPageState'
 import { useEditablePage } from 'src/composables/useEditablePage'
+import { useCategoryRefs } from 'src/composables/useCategoryRefs'
 import { formatCurrency } from 'src/utils/currency'
 import { getPlanStatus } from 'src/utils/plans'
 import type { TemplateWithItems } from 'src/api'
@@ -381,8 +382,8 @@ const banners = computed(() => {
 
 const { openDialog, closeDialog, getDialogState } = useEditablePage()
 
-const categoryRefs = ref<Map<string, InstanceType<typeof PlanCategory>>>(new Map())
-const lastAddedCategoryId = ref<string | null>(null)
+const { lastAddedCategoryId, setCategoryRef, scrollToFirstInvalidField, resetLastAddedCategory } =
+  useCategoryRefs(planItems)
 const planForm = ref()
 const planEditForm = ref()
 const selectedTemplate = ref<TemplateWithItems | null>(null)
@@ -622,7 +623,7 @@ function handleAddItem(categoryId: string, categoryColor: string): void {
 }
 
 async function handleSavePlan(): Promise<void> {
-  lastAddedCategoryId.value = null
+  resetLastAddedCategory()
   clearTemplateError()
 
   let hasFormErrors = false
@@ -741,46 +742,6 @@ function clearTemplateError(): void {
   templateErrorMessage.value = ''
 }
 
-function setCategoryRef(el: unknown, categoryId: string): void {
-  if (el && typeof el === 'object' && 'focusLastItem' in el) {
-    const component = el as InstanceType<typeof PlanCategory>
-    if (typeof component.focusLastItem === 'function') {
-      categoryRefs.value.set(categoryId, component)
-    }
-  } else {
-    categoryRefs.value.delete(categoryId)
-  }
-}
-
-function getFirstInvalidItem(): { categoryId: string; item: PlanItemUI } | null {
-  for (const item of planItems.value) {
-    if (!item.name.trim() || item.amount <= 0) {
-      return { categoryId: item.categoryId, item }
-    }
-  }
-  return null
-}
-
-async function scrollToFirstInvalidField(): Promise<void> {
-  const firstInvalidItem = getFirstInvalidItem()
-  if (!firstInvalidItem) return
-
-  const categoryRef = categoryRefs.value.get(firstInvalidItem.categoryId)
-  if (!categoryRef) return
-
-  const categoryElement = categoryRef.$el
-  if (!categoryElement) return
-
-  categoryElement.scrollIntoView({
-    behavior: 'smooth',
-    block: 'center',
-  })
-
-  await nextTick()
-  lastAddedCategoryId.value = firstInvalidItem.categoryId
-  categoryRef.focusFirstInvalidItem()
-}
-
 function openExpenseRegistration(): void {
   selectedCategory.value = null
   showExpenseDialog.value = true
@@ -797,14 +758,10 @@ function openExpenseRegistrationFromItem(categoryId?: string, itemId?: string): 
 }
 
 async function loadPlanExpenses(planId: string): Promise<void> {
-  try {
-    await Promise.all([
-      expensesStore.loadExpensesForPlan(planId),
-      expensesStore.loadExpenseSummaryForPlan(planId),
-    ])
-  } catch (error) {
-    console.error('Error loading plan expenses:', error)
-  }
+  await Promise.all([
+    expensesStore.loadExpensesForPlan(planId),
+    expensesStore.loadExpenseSummaryForPlan(planId),
+  ])
 }
 
 async function refreshPlanData(): Promise<void> {
