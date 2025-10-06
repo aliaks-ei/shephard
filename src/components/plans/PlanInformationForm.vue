@@ -1,8 +1,5 @@
 <template>
-  <q-card
-    flat
-    class="q-mb-lg"
-  >
+  <q-card flat>
     <SectionHeader
       icon="eva-info-outline"
       title="Plan Information"
@@ -75,13 +72,6 @@
           hint="Auto-calculated from template"
         />
       </div>
-    </div>
-
-    <div
-      v-if="templateDuration"
-      class="text-caption text-grey-6 q-mt-sm"
-    >
-      Template duration: {{ templateDuration }}
     </div>
   </q-card>
 </template>

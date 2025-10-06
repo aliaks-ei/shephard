@@ -79,12 +79,14 @@ body {
   }
 }
 
-// Global Notification Styles - Full width on mobile
+// Global Notification Styles - Full width on mobile with bottom offset for navigation
 .q-notification {
   width: 100%;
+  margin-bottom: calc(58px + env(safe-area-inset-bottom, 0px));
 
   @media (min-width: $breakpoint-sm-min) {
     width: auto;
+    margin-bottom: 0;
   }
 }
 

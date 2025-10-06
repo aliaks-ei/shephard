@@ -9,14 +9,6 @@
     <template v-if="!userStore.isLoading">
       <q-header>
         <q-toolbar>
-          <q-btn
-            v-if="$q.screen.gt.sm"
-            icon="eva-menu-outline"
-            aria-label="Menu"
-            flat
-            round
-            @click="toggleLeftDrawer"
-          />
           <q-toolbar-title>
             <q-btn
               class="text-h6"
@@ -42,16 +34,6 @@
           </q-btn>
         </q-toolbar>
       </q-header>
-
-      <q-drawer
-        v-if="$q.screen.gt.sm"
-        v-model="leftDrawerOpen"
-        class="q-py-md"
-        bordered
-        behavior="mobile"
-      >
-        <NavigationDrawer :items="navigationItems" />
-      </q-drawer>
 
       <q-page-container
         class="page-container"
@@ -115,7 +97,6 @@ const $q = useQuasar()
 const { isInstallable, promptInstall, dismissInstall } = usePwaInstall()
 const notificationStore = useNotificationStore()
 
-const leftDrawerOpen = ref(false)
 const showExpenseDialog = ref(false)
 const showMobileUserDialog = ref(false)
 
@@ -175,16 +156,12 @@ const navigationItems = ref([
 ])
 
 const isDetailPage = computed(() => {
-  return !!route.params.id
+  return !!route.params.id || route.path.includes('/new')
 })
 
 const showMobileBottomNav = computed(() => {
   return $q.screen.lt.md && !isDetailPage.value
 })
-
-const toggleLeftDrawer = () => {
-  leftDrawerOpen.value = !leftDrawerOpen.value
-}
 </script>
 
 <style lang="scss" scoped>

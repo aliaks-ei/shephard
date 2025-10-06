@@ -322,7 +322,6 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
   }
 
   async function initialize(autoSelectRecentPlan: boolean) {
-    console.log('initialize', defaultPlanId?.value)
     await Promise.all([plansStore.loadPlans(), categoriesStore.loadCategories()])
     resetForm()
 
