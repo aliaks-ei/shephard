@@ -31,7 +31,10 @@
         :key="category.id"
         class="col-12 col-sm-6 col-md-4"
       >
-        <q-card class="full-height shadow-1 overflow-hidden">
+        <q-card
+          :bordered="$q.dark.isActive"
+          class="full-height shadow-1 overflow-hidden"
+        >
           <q-item
             clickable
             class="q-pa-md full-height"

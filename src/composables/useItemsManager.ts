@@ -161,7 +161,6 @@ export function useItemsManager<T extends BaseItemUI>(config: ItemsConfig<T>) {
       .filter((item) => item.name.trim() && item.categoryId && item.amount > 0)
       .map((item) => {
         const baseItem = config.createItemForSave(item)
-        // Include ID only if it's not a temporary ID (doesn't start with 'temp_')
         const isExistingItem = !item.id.startsWith('temp_')
         return isExistingItem ? { id: item.id, ...baseItem } : baseItem
       })

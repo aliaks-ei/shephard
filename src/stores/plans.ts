@@ -19,10 +19,9 @@ import {
   type PlanUpdate,
   type PlanWithPermission,
   type PlanItemInsert,
-  type PlanSharedUser,
-  type UserSearchResult,
 } from 'src/api'
 import { useError } from 'src/composables/useError'
+import { useEntitySharing } from 'src/composables/useEntitySharing'
 import { useUserStore } from 'src/stores/user'
 import type { ActionResult } from 'src/types'
 import { canAddExpensesToPlan } from 'src/utils/plans'
@@ -34,10 +33,6 @@ export const usePlansStore = defineStore('plans', () => {
 
   const plans = ref<PlanWithPermission[]>([])
   const isLoading = ref(false)
-  const isSharing = ref(false)
-  const sharedUsers = ref<PlanSharedUser[]>([])
-  const userSearchResults = ref<UserSearchResult[]>([])
-  const isSearchingUsers = ref(false)
 
   const userId = computed(() => userStore.userProfile?.id)
   const ownedPlans = computed(() => plans.value.filter((p) => p.owner_id === userId.value))
@@ -49,6 +44,24 @@ export const usePlansStore = defineStore('plans', () => {
       return canAddExpensesToPlan(p, isOwner)
     }),
   )
+
+  // Entity sharing functionality
+  const sharing = useEntitySharing({
+    entityNameSingular: 'plan',
+    entityNamePlural: 'plans',
+    entities: plans,
+    userId,
+    loadSharedUsersApi: getPlanSharedUsers,
+    shareApi: sharePlan,
+    unshareApi: unsharePlan,
+    updatePermissionApi: updatePlanSharePermission,
+    searchUsersApi: searchUsersByEmail,
+    updateLocalIsShared: true,
+    onAfterShare: async (planId) => {
+      await sharing.loadSharedUsers(planId)
+    },
+    handleSpecificErrors: true,
+  })
 
   async function loadPlans() {
     if (!userId.value) return
@@ -166,125 +179,6 @@ export const usePlansStore = defineStore('plans', () => {
     }
   }
 
-  async function loadSharedUsers(planId: string): Promise<void> {
-    isLoading.value = true
-
-    try {
-      const users = await getPlanSharedUsers(planId)
-      sharedUsers.value = users
-    } catch (error) {
-      handleError('PLANS.LOAD_SHARED_USERS_FAILED', error, { planId })
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  async function sharePlanWithUser(
-    planId: string,
-    userEmail: string,
-    permission: 'view' | 'edit',
-  ): Promise<ActionResult> {
-    if (!userId.value) return { success: false }
-
-    isSharing.value = true
-
-    try {
-      await sharePlan(planId, userEmail, permission, userId.value)
-
-      const planIndex = plans.value.findIndex((p) => p.id === planId)
-      if (planIndex !== -1 && plans.value[planIndex]) {
-        plans.value[planIndex].is_shared = true
-      }
-
-      await loadSharedUsers(planId)
-      return { success: true }
-    } catch (error) {
-      if (error instanceof Error && error.message.includes('User not found')) {
-        handleError('PLANS.USER_NOT_FOUND', error, { userEmail })
-      } else if (error instanceof Error && error.message.includes('already shared')) {
-        handleError('PLANS.ALREADY_SHARED', error, { userEmail })
-      } else {
-        handleError('PLANS.SHARE_FAILED', error, { planId, userEmail })
-      }
-      return { success: false }
-    } finally {
-      isSharing.value = false
-    }
-  }
-
-  async function unsharePlanWithUser(planId: string, targetUserId: string): Promise<ActionResult> {
-    if (!userId.value) return { success: false }
-
-    isSharing.value = true
-
-    try {
-      await unsharePlan(planId, targetUserId)
-
-      sharedUsers.value = sharedUsers.value.filter((user) => user.user_id !== targetUserId)
-
-      if (sharedUsers.value.length === 0) {
-        const planIndex = plans.value.findIndex((p) => p.id === planId)
-        if (planIndex !== -1 && plans.value[planIndex]) {
-          plans.value[planIndex].is_shared = false
-        }
-      }
-      return { success: true }
-    } catch (error) {
-      handleError('PLANS.UNSHARE_FAILED', error, { planId, targetUserId })
-      return { success: false }
-    } finally {
-      isSharing.value = false
-    }
-  }
-
-  async function updateUserPermission(
-    planId: string,
-    targetUserId: string,
-    permission: 'view' | 'edit',
-  ): Promise<ActionResult> {
-    if (!userId.value) return { success: false }
-
-    isSharing.value = true
-
-    try {
-      await updatePlanSharePermission(planId, targetUserId, permission)
-
-      const userIndex = sharedUsers.value.findIndex((user) => user.user_id === targetUserId)
-      if (userIndex !== -1 && sharedUsers.value[userIndex]) {
-        sharedUsers.value[userIndex].permission_level = permission
-      }
-      return { success: true }
-    } catch (error) {
-      handleError('PLANS.UPDATE_PERMISSION_FAILED', error, { planId, targetUserId, permission })
-      return { success: false }
-    } finally {
-      isSharing.value = false
-    }
-  }
-
-  async function searchUsers(query: string): Promise<void> {
-    if (!query.trim()) {
-      clearUserSearch()
-      return
-    }
-
-    isSearchingUsers.value = true
-
-    try {
-      const results = await searchUsersByEmail(query)
-      userSearchResults.value = results
-    } catch (error) {
-      handleError('PLANS.SEARCH_USERS_FAILED', error, { query })
-    } finally {
-      isSearchingUsers.value = false
-    }
-  }
-
-  function clearUserSearch() {
-    userSearchResults.value = []
-    isSearchingUsers.value = false
-  }
-
   async function savePlanItems(planId: string, items: PlanItemInsert[]): Promise<ActionResult> {
     if (!userId.value) return { success: false }
 
@@ -326,13 +220,11 @@ export const usePlansStore = defineStore('plans', () => {
     isLoading.value = true
 
     try {
-      // Add plan_id to each item for batch upsert
       const itemsWithPlanId = items.map((item) => ({
         ...item,
         plan_id: planId,
       }))
 
-      // Use batch update for efficiency - single request instead of N requests
       await batchUpdatePlanItems(itemsWithPlanId)
       return { success: true }
     } catch (error) {
@@ -345,20 +237,17 @@ export const usePlansStore = defineStore('plans', () => {
 
   function reset() {
     plans.value = []
-    sharedUsers.value = []
-    userSearchResults.value = []
     isLoading.value = false
-    isSharing.value = false
-    isSearchingUsers.value = false
+    sharing.reset()
   }
 
   return {
     plans,
     isLoading,
-    isSharing,
-    sharedUsers,
-    userSearchResults,
-    isSearchingUsers,
+    isSharing: sharing.isSharing,
+    sharedUsers: sharing.sharedUsers,
+    userSearchResults: sharing.userSearchResults,
+    isSearchingUsers: sharing.isSearchingUsers,
     userId,
     ownedPlans,
     sharedPlans,
@@ -370,12 +259,12 @@ export const usePlansStore = defineStore('plans', () => {
     editPlan,
     removePlan,
     cancelPlan,
-    loadSharedUsers,
-    sharePlanWithUser,
-    unsharePlanWithUser,
-    updateUserPermission,
-    searchUsers,
-    clearUserSearch,
+    loadSharedUsers: sharing.loadSharedUsers,
+    sharePlanWithUser: sharing.shareWithUser,
+    unsharePlanWithUser: sharing.unshareWithUser,
+    updateUserPermission: sharing.updateUserPermission,
+    searchUsers: sharing.searchUsers,
+    clearUserSearch: sharing.clearUserSearch,
     savePlanItems,
     updatePlanItems,
     removePlanItems,

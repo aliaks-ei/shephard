@@ -2,6 +2,7 @@
   <q-item class="q-py-sm q-px-none">
     <q-item-section>
       <q-input
+        ref="nameInputRef"
         :model-value="modelValue.name"
         :readonly="readonly"
         :rules="nameRules"
@@ -54,9 +55,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
+import type { QInput } from 'quasar'
 import { getCurrencySymbol, type CurrencyCode } from 'src/utils/currency'
 import type { PlanItemUI } from 'src/types'
+
+const nameInputRef = ref<QInput | null>(null)
 
 const emit = defineEmits<{
   (e: 'update:modelValue', item: PlanItemUI): void
@@ -112,4 +116,12 @@ function updateAmount(amount: string | number | null): void {
   }
   emit('update:modelValue', updatedItem)
 }
+
+function focusNameInput(): void {
+  nameInputRef.value?.focus()
+}
+
+defineExpose({
+  focusNameInput,
+})
 </script>

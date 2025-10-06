@@ -18,10 +18,9 @@ import {
   type TemplateUpdate,
   type TemplateWithPermission,
   type TemplateItemInsert,
-  type TemplateSharedUser,
-  type UserSearchResult,
 } from 'src/api'
 import { useError } from 'src/composables/useError'
+import { useEntitySharing } from 'src/composables/useEntitySharing'
 import { useUserStore } from 'src/stores/user'
 import type { CurrencyCode } from 'src/utils/currency'
 import type { ActionResult } from 'src/types'
@@ -32,15 +31,32 @@ export const useTemplatesStore = defineStore('templates', () => {
 
   const templates = ref<TemplateWithPermission[]>([])
   const isLoading = ref(false)
-  const isSharing = ref(false)
-  const sharedUsers = ref<TemplateSharedUser[]>([])
-  const userSearchResults = ref<UserSearchResult[]>([])
-  const isSearchingUsers = ref(false)
 
   const userId = computed(() => userStore.userProfile?.id)
   const templatesCount = computed(() => templates.value.length)
   const ownedTemplates = computed(() => templates.value.filter((t) => t.owner_id === userId.value))
   const sharedTemplates = computed(() => templates.value.filter((t) => t.owner_id !== userId.value))
+
+  // Entity sharing functionality
+  const sharing = useEntitySharing({
+    entityNameSingular: 'template',
+    entityNamePlural: 'templates',
+    entities: templates,
+    userId,
+    loadSharedUsersApi: getTemplateSharedUsers,
+    shareApi: shareTemplate,
+    unshareApi: unshareTemplate,
+    updatePermissionApi: updateSharePermission,
+    searchUsersApi: searchUsersByEmail,
+    updateLocalIsShared: false,
+    onAfterShare: async (templateId) => {
+      await Promise.all([sharing.loadSharedUsers(templateId), loadTemplates()])
+    },
+    onAfterUnshare: async () => {
+      await loadTemplates()
+    },
+    handleSpecificErrors: false,
+  })
 
   async function loadTemplates() {
     if (!userId.value) return
@@ -83,7 +99,6 @@ export const useTemplatesStore = defineStore('templates', () => {
     isLoading.value = true
 
     try {
-      // Get user's preferred currency for new templates
       const userCurrency = userStore.preferences.currency as CurrencyCode
 
       const newTemplate = await createTemplate({
@@ -94,7 +109,6 @@ export const useTemplatesStore = defineStore('templates', () => {
 
       return { success: true, data: newTemplate }
     } catch (error) {
-      // Handle specific duplicate name error
       if (error instanceof Error && error.name === 'DUPLICATE_TEMPLATE_NAME') {
         handleError('TEMPLATES.DUPLICATE_NAME', error)
       } else {
@@ -117,7 +131,6 @@ export const useTemplatesStore = defineStore('templates', () => {
 
       return { success: true, data: updatedTemplate }
     } catch (error) {
-      // Handle specific duplicate name error
       if (error instanceof Error && error.name === 'DUPLICATE_TEMPLATE_NAME') {
         handleError('TEMPLATES.DUPLICATE_NAME', error, { templateId })
       } else {
@@ -166,125 +179,19 @@ export const useTemplatesStore = defineStore('templates', () => {
     }
   }
 
-  async function loadTemplateShares(templateId: string): Promise<void> {
-    isSharing.value = true
-
-    try {
-      const data = await getTemplateSharedUsers(templateId)
-      sharedUsers.value = data
-    } catch (error) {
-      handleError('TEMPLATES.LOAD_SHARES_FAILED', error, { templateId })
-    } finally {
-      isSharing.value = false
-    }
-  }
-
-  async function shareTemplateWithUser(
-    templateId: string,
-    userEmail: string,
-    permission: 'view' | 'edit',
-  ): Promise<ActionResult> {
-    if (!userId.value) return { success: false }
-
-    isSharing.value = true
-
-    try {
-      await shareTemplate(templateId, userEmail, permission, userId.value)
-
-      await Promise.all([loadTemplateShares(templateId), loadTemplates()])
-      return { success: true }
-    } catch (error) {
-      handleError('TEMPLATES.SHARE_FAILED', error, { templateId, userEmail })
-      return { success: false }
-    } finally {
-      isSharing.value = false
-    }
-  }
-
-  async function unshareTemplateWithUser(
-    templateId: string,
-    targetUserId: string,
-  ): Promise<ActionResult> {
-    isSharing.value = true
-
-    try {
-      await unshareTemplate(templateId, targetUserId)
-
-      // Remove from local state
-      sharedUsers.value = sharedUsers.value.filter((user) => user.user_id !== targetUserId)
-
-      // Refresh templates to update share counts
-      await loadTemplates()
-      return { success: true }
-    } catch (error) {
-      handleError('TEMPLATES.UNSHARE_FAILED', error, { templateId, targetUserId })
-      return { success: false }
-    } finally {
-      isSharing.value = false
-    }
-  }
-
-  async function updateUserPermission(
-    templateId: string,
-    targetUserId: string,
-    permission: 'view' | 'edit',
-  ): Promise<ActionResult> {
-    isSharing.value = true
-
-    try {
-      await updateSharePermission(templateId, targetUserId, permission)
-
-      const userIndex = sharedUsers.value.findIndex((user) => user.user_id === targetUserId)
-      if (userIndex === -1 || !sharedUsers.value[userIndex]) return { success: false }
-
-      sharedUsers.value[userIndex].permission_level = permission
-      return { success: true }
-    } catch (error) {
-      handleError('TEMPLATES.UPDATE_PERMISSION_FAILED', error, { templateId, targetUserId })
-      return { success: false }
-    } finally {
-      isSharing.value = false
-    }
-  }
-
-  async function searchUsers(query: string): Promise<void> {
-    if (!query.trim()) {
-      userSearchResults.value = []
-      return
-    }
-
-    isSearchingUsers.value = true
-
-    try {
-      const results = await searchUsersByEmail(query)
-      userSearchResults.value = results
-    } catch (error) {
-      handleError('USERS.SEARCH_FAILED', error, { query })
-    } finally {
-      isSearchingUsers.value = false
-    }
-  }
-
-  function clearUserSearch() {
-    userSearchResults.value = []
-  }
-
   function reset() {
     templates.value = []
-    sharedUsers.value = []
-    userSearchResults.value = []
     isLoading.value = false
-    isSharing.value = false
-    isSearchingUsers.value = false
+    sharing.reset()
   }
 
   return {
     isLoading,
-    isSharing,
-    isSearchingUsers,
+    isSharing: sharing.isSharing,
+    isSearchingUsers: sharing.isSearchingUsers,
     templates,
-    sharedUsers,
-    userSearchResults,
+    sharedUsers: sharing.sharedUsers,
+    userSearchResults: sharing.userSearchResults,
     templatesCount,
     ownedTemplates,
     sharedTemplates,
@@ -296,12 +203,12 @@ export const useTemplatesStore = defineStore('templates', () => {
     removeTemplate,
     addItemsToTemplate,
     removeItemsFromTemplate,
-    loadTemplateShares,
-    shareTemplateWithUser,
-    unshareTemplateWithUser,
-    updateUserPermission,
-    searchUsers,
-    clearUserSearch,
+    loadTemplateShares: sharing.loadSharedUsers,
+    shareTemplateWithUser: sharing.shareWithUser,
+    unshareTemplateWithUser: sharing.unshareWithUser,
+    updateUserPermission: sharing.updateUserPermission,
+    searchUsers: sharing.searchUsers,
+    clearUserSearch: sharing.clearUserSearch,
     reset,
   }
 })

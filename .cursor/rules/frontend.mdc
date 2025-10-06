@@ -148,3 +148,4 @@ alwaysApply: true
 - Optimize Quasar theme usage to reduce CSS overhead
 - Use Quasar's icon optimization features
 - Implement proper Quasar plugin loading to reduce bundle size
+- `$q` is available in the `<template>` automatically, there is no need to import `useQuasar`

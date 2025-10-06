@@ -1,0 +1,101 @@
+<template>
+  <div>
+    <q-select
+      :model-value="modelValue"
+      :options="planOptions"
+      option-label="label"
+      option-value="value"
+      label="Select Plan *"
+      outlined
+      emit-value
+      map-options
+      hide-bottom-space
+      :readonly="readonly"
+      :loading="loading"
+      :rules="[(val) => !!val || 'Plan is required']"
+      :display-value="displayValue"
+      :class="additionalClass"
+      @update:model-value="handlePlanSelected"
+    >
+      <template #option="scope">
+        <q-item v-bind="scope.itemProps">
+          <q-item-section>
+            <q-item-label>{{ scope.opt.label }}</q-item-label>
+            <q-item-label caption>
+              {{ formatDateRange(scope.opt.startDate, scope.opt.endDate) }}
+            </q-item-label>
+          </q-item-section>
+          <q-item-section side>
+            <q-chip
+              :color="getStatusColor(scope.opt.status)"
+              text-color="white"
+              size="sm"
+            >
+              {{ scope.opt.status }}
+            </q-chip>
+          </q-item-section>
+        </q-item>
+      </template>
+      <template #no-option>
+        <q-item>
+          <q-item-section class="text-grey">
+            No plans available. Create a plan first.
+          </q-item-section>
+        </q-item>
+      </template>
+    </q-select>
+
+    <q-banner
+      v-if="showAutoSelectBanner"
+      class="bg-blue-1 text-blue-8 q-mt-md q-mb-md"
+      dense
+      rounded
+    >
+      <template #avatar>
+        <q-icon name="eva-info-outline" />
+      </template>
+      Most recently used plan selected.
+    </q-banner>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { formatDateRange, getStatusColor } from 'src/utils/plans'
+
+export interface PlanOption {
+  label: string
+  value: string
+  status: string
+  startDate: string
+  endDate: string
+  currency: string
+}
+
+interface Props {
+  modelValue: string | null
+  planOptions: PlanOption[]
+  readonly?: boolean
+  loading?: boolean
+  showAutoSelectBanner?: boolean
+  additionalClass?: string
+  displayValue?: string
+}
+
+withDefaults(defineProps<Props>(), {
+  readonly: false,
+  loading: false,
+  showAutoSelectBanner: false,
+  additionalClass: '',
+  displayValue: '',
+})
+
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: string | null): void
+  (e: 'plan-selected', value: string | null): void
+}>()
+
+const handlePlanSelected = (planId: string | null) => {
+  emit('update:modelValue', planId)
+  emit('plan-selected', planId)
+}
+</script>

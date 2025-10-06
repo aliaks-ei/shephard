@@ -1,79 +1,37 @@
 <template>
-  <q-card class="q-mb-sm shadow-1">
-    <q-expansion-item
-      v-model="isExpanded"
-      :label="categoryName"
-      :caption="groupCaption"
-      :icon="categoryIcon"
-      expand-icon="eva-chevron-down-outline"
-      expanded-icon="eva-chevron-up-outline"
-    >
-      <template #header>
-        <q-item-section
-          style="min-width: auto"
-          avatar
-        >
-          <CategoryIcon
-            :color="categoryColor"
-            :icon="categoryIcon"
-            size="sm"
-          />
-        </q-item-section>
-
-        <q-item-section>
-          <q-item-label class="text-weight-medium">{{ categoryName }}</q-item-label>
-          <q-item-label caption>
-            {{ itemCount }} {{ itemCount === 1 ? 'item' : 'items' }}
-          </q-item-label>
-        </q-item-section>
-
-        <q-item-section side>
-          <div class="text-right">
-            <div class="text-weight-bold text-primary">{{ formattedSubtotal }}</div>
-            <div class="text-caption text-grey-6">subtotal</div>
-          </div>
-        </q-item-section>
-      </template>
-
-      <q-card-section class="q-pt-none">
-        <q-list>
-          <PlanItem
-            v-for="item in items"
-            :key="item.id"
-            :model-value="item"
-            :currency="currency"
-            :readonly="!!readonly"
-            @update:model-value="
-              (updatedItem: PlanItemUI) => handleUpdateItem(item.id, updatedItem)
-            "
-            @remove="$emit('remove-item', item.id)"
-          />
-        </q-list>
-
-        <div
-          v-if="!readonly"
-          class="q-pt-sm"
-        >
-          <q-btn
-            flat
-            color="primary"
-            icon="eva-plus-outline"
-            label="Add Item"
-            no-caps
-            @click="$emit('add-item', categoryId, categoryColor)"
-          />
-        </div>
-      </q-card-section>
-    </q-expansion-item>
-  </q-card>
+  <ItemCategory
+    ref="itemCategoryRef"
+    :category-id="categoryId"
+    :category-name="categoryName"
+    :category-color="categoryColor"
+    :category-icon="categoryIcon"
+    :items="items"
+    :currency="currency"
+    :readonly="!!readonly"
+    :default-expanded="!!defaultExpanded"
+    @add-item="$emit('add-item', $event, categoryColor)"
+  >
+    <template #item="{ item, index, setItemRef }">
+      <PlanItem
+        :ref="(el) => setItemRef(el, index)"
+        :model-value="item"
+        :currency="currency"
+        :readonly="!!readonly"
+        @update:model-value="(updatedItem: PlanItemUI) => handleUpdateItem(item.id, updatedItem)"
+        @remove="$emit('remove-item', item.id)"
+      />
+    </template>
+  </ItemCategory>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref } from 'vue'
+import ItemCategory from 'src/components/shared/ItemCategory.vue'
 import PlanItem from './PlanItem.vue'
-import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
-import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
+import type { CurrencyCode } from 'src/utils/currency'
 import type { PlanItemUI } from 'src/types'
+
+const itemCategoryRef = ref<InstanceType<typeof ItemCategory> | null>(null)
 
 const emit = defineEmits<{
   (e: 'update-item', itemId: string, item: PlanItemUI): void
@@ -92,29 +50,25 @@ interface Props {
   defaultExpanded?: boolean
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   readonly: false,
   defaultExpanded: false,
-})
-
-const isExpanded = ref(props.defaultExpanded)
-
-const itemCount = computed(() => props.items.length)
-const subtotal = computed(() => props.items.reduce((sum, item) => sum + item.amount, 0))
-const formattedSubtotal = computed(() => formatCurrency(subtotal.value, props.currency))
-const groupCaption = computed(() => {
-  const count = itemCount.value
-  return `${count} ${count === 1 ? 'item' : 'items'} • ${formattedSubtotal.value}`
 })
 
 function handleUpdateItem(itemId: string, updatedItem: PlanItemUI): void {
   emit('update-item', itemId, updatedItem)
 }
 
-watch(
-  () => props.defaultExpanded,
-  (newValue) => {
-    isExpanded.value = newValue
-  },
-)
+function focusLastItem(): void {
+  itemCategoryRef.value?.focusLastItem()
+}
+
+function focusFirstInvalidItem(): void {
+  itemCategoryRef.value?.focusFirstInvalidItem()
+}
+
+defineExpose({
+  focusLastItem,
+  focusFirstInvalidItem,
+})
 </script>

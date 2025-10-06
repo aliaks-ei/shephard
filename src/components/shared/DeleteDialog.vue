@@ -17,7 +17,10 @@
       </q-card-section>
 
       <q-card-section class="q-pt-none col">
-        <q-banner class="bg-red-1 text-red-8 q-mb-md">
+        <q-banner
+          rounded
+          class="bg-red-1 text-red-8 q-mb-md"
+        >
           <template #avatar>
             <q-icon name="eva-alert-triangle-outline" />
           </template>

@@ -114,7 +114,6 @@ export class BaseAPIService<
       throw new Error('Sharing is not supported for this entity')
     }
     const shareTable = this.config.shareTableName
-    // Get owned entities with sharing status
     const { data: ownedEntities, error: ownedError } = await supabase
       .from(this.config.tableName)
       .select(`*, ${shareTable}!left(id)`)
@@ -123,7 +122,6 @@ export class BaseAPIService<
 
     if (ownedError) throw ownedError
 
-    // Transform owned entities to include is_shared flag
     const ownedEntitiesWithShares = (ownedEntities || []).map((raw) => {
       const entity = raw as unknown as Record<string, unknown>
       const shares = entity[shareTable]
@@ -133,7 +131,6 @@ export class BaseAPIService<
       return { ...(rest as unknown as TEntity), is_shared: isShared } as TWithPermission
     })
 
-    // Get shared entities
     const entityColumn = entityColumnName || this.config.tableName
     const { data: sharedEntitiesData, error: sharedError } = await supabase
       .from(shareTable)
@@ -172,13 +169,11 @@ export class BaseAPIService<
     if (error) throw error
     if (!entity) return null
 
-    // If user is the owner, no need to check permissions
     const ownedBy = (entity as unknown as { owner_id?: string }).owner_id
     if (ownedBy === userId) {
       return entity as unknown as TWithItems & { permission_level?: string }
     }
 
-    // Check if entity is shared with this user
     if (!this.config.shareTableName) {
       throw new Error('Sharing is not supported for this entity')
     }

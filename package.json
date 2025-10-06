@@ -27,7 +27,6 @@
     "@quasar/extras": "^1.16.4",
     "@supabase/supabase-js": "^2.49.1",
     "@vueuse/core": "^13.2.0",
-    "axios": "^1.2.1",
     "pinia": "^3.0.1",
     "quasar": "^2.16.0",
     "register-service-worker": "^1.7.2",

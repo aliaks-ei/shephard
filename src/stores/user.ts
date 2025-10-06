@@ -23,10 +23,6 @@ export type UserProfileUpdates = {
   preferences: Partial<UserPreferences>
 }
 
-/**
- * User store that provides a unified interface for user data
- * Focuses on combining auth data and preferences into a cohesive user profile
- */
 export const useUserStore = defineStore('user', () => {
   const authStore = useAuthStore()
   const preferencesStore = usePreferencesStore()

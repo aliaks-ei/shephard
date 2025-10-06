@@ -18,7 +18,7 @@ export function usePlans() {
       entityName: 'Plan',
       entityNamePlural: 'Plans',
       newRouteNameSingular: 'new-plan',
-      viewRouteNameSingular: 'plan-overview',
+      viewRouteNameSingular: 'plan',
       sortOptions,
       defaultSort: 'created_at',
       filterAndSortFn: filterAndSortPlans,

@@ -26,7 +26,6 @@ export type TemplateSharedUser = {
   shared_at: string
 }
 
-// Create service instance with template configuration
 const templateService = new BaseAPIService<
   'templates',
   Template,
