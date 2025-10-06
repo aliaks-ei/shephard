@@ -22,14 +22,12 @@
         bordered
         class="q-pa-md q-mb-lg"
       >
-        <div class="row items-center q-mb-xs">
-          <q-icon
-            name="eva-file-text-outline"
-            class="q-mr-sm"
-            size="24px"
-          />
-          <h2 class="text-h6 q-my-none">Select Template</h2>
-        </div>
+        <SectionHeader
+          icon="eva-file-text-outline"
+          title="Select Template"
+          icon-size="24px"
+          spacing="q-mb-xs"
+        />
 
         <div class="text-body2 text-grey-6 q-mb-md">
           Select a template to base your plan on. You can modify the items and amounts after
@@ -106,14 +104,11 @@
         bordered
         class="q-pa-md q-mb-lg"
       >
-        <div class="row items-center q-mb-md">
-          <q-icon
-            name="eva-info-outline"
-            class="q-mr-sm"
-            size="24px"
-          />
-          <h2 class="text-h6 q-my-none">Plan Information</h2>
-        </div>
+        <SectionHeader
+          icon="eva-info-outline"
+          title="Plan Information"
+          icon-size="24px"
+        />
 
         <q-input
           v-model="form.name"
@@ -189,50 +184,20 @@
       </q-card>
 
       <!-- Plan Items -->
-      <q-card
-        flat
-        bordered
-        class="q-pa-md q-mb-lg"
+      <CategoryListSection
+        header-icon="eva-list-outline"
+        header-title="Plan Items"
+        :has-categories="planCategoryGroups.length > 0"
+        :all-expanded="allCategoriesExpanded"
+        :has-duplicates="hasDuplicateItems && planItems.length > 0"
+        duplicate-banner-position="bottom"
+        :duplicate-banner-class="$q.dark.isActive ? 'bg-red-9 text-red-3' : 'bg-red-1 text-red-8'"
+        :empty-message="
+          isNewPlan ? 'Select a template to load plan items' : 'No items in this plan'
+        "
+        @toggle-expand="toggleAllCategories"
       >
-        <div class="row items-center justify-between q-mb-lg">
-          <div class="row items-center">
-            <q-icon
-              name="eva-list-outline"
-              class="q-mr-sm"
-              size="20px"
-            />
-            <h2 class="text-h6 q-my-none">Plan Items</h2>
-          </div>
-          <q-btn
-            v-if="planCategoryGroups.length > 0"
-            flat
-            :icon="allCategoriesExpanded ? 'eva-collapse-outline' : 'eva-expand-outline'"
-            :label="$q.screen.lt.md ? '' : allCategoriesExpanded ? 'Collapse All' : 'Expand All'"
-            color="primary"
-            no-caps
-            @click="toggleAllCategories"
-          />
-        </div>
-
-        <div v-if="planCategoryGroups.length === 0">
-          <q-banner
-            dense
-            :class="$q.dark.isActive ? 'bg-grey-9 text-grey-3' : 'bg-grey-1 text-grey-7'"
-          >
-            <template #avatar>
-              <q-icon
-                name="eva-info-outline"
-                :size="$q.screen.lt.md ? 'sm' : 'md'"
-              />
-            </template>
-            {{ isNewPlan ? 'Select a template to load plan items' : 'No items in this plan' }}
-          </q-banner>
-        </div>
-
-        <div
-          class="q-mb-lg"
-          v-else
-        >
+        <template #categories>
           <PlanCategory
             v-for="group in planCategoryGroups"
             :key="group.categoryId"
@@ -248,45 +213,18 @@
             @remove-item="handleRemoveItem"
             @add-item="handleAddItem"
           />
-        </div>
+        </template>
 
-        <div v-if="planCategoryGroups.length > 0">
-          <q-separator class="q-mb-lg" />
-          <div class="row items-center justify-between">
-            <div class="row items-center">
-              <q-icon
-                name="eva-credit-card-outline"
-                class="q-mr-sm"
-                size="20px"
-              />
-              <h3 class="text-h6 q-my-none">Total Amount</h3>
-            </div>
-            <div
-              :class="['text-primary text-weight-bold', $q.screen.lt.md ? 'text-h5' : 'text-h4']"
-            >
-              {{ formattedTotalAmount }}
-            </div>
-          </div>
-          <div class="text-body2 text-grey-6">
-            Total across {{ planCategoryGroups.length }}
-            {{ planCategoryGroups.length === 1 ? 'category' : 'categories' }}
-          </div>
-        </div>
-
-        <div
-          v-if="hasDuplicateItems && planItems.length > 0"
-          class="q-mt-md"
-        >
-          <q-banner :class="$q.dark.isActive ? 'bg-red-9 text-red-3' : 'bg-red-1 text-red-8'">
-            <template #avatar>
-              <q-icon name="eva-alert-triangle-outline" />
-            </template>
-            <div>
-              You have duplicate item names within the same category. Please use unique names.
-            </div>
-          </q-banner>
-        </div>
-      </q-card>
+        <template #summary>
+          <ItemsSummarySection
+            :formatted-amount="formattedTotalAmount"
+            :item-count="planCategoryGroups.length"
+            item-type="categories"
+            amount-size-mobile="text-h5"
+            amount-size-desktop="text-h4"
+          />
+        </template>
+      </CategoryListSection>
     </q-form>
 
     <!-- For existing plans, show tabs for Overview and Edit modes -->
@@ -374,14 +312,11 @@
             <!-- Plan Information for editing existing plan -->
             <q-card flat>
               <q-card-section>
-                <div class="row items-center q-mb-md">
-                  <q-icon
-                    name="eva-info-outline"
-                    class="q-mr-sm"
-                    size="24px"
-                  />
-                  <h2 class="text-h6 q-my-none">Plan Information</h2>
-                </div>
+                <SectionHeader
+                  icon="eva-info-outline"
+                  title="Plan Information"
+                  icon-size="24px"
+                />
 
                 <q-input
                   v-model="form.name"
@@ -453,103 +388,49 @@
             <!-- Plan Items for editing existing plan -->
             <q-card flat>
               <q-card-section>
-                <div class="row items-center justify-between q-mb-lg">
-                  <div class="row items-center">
-                    <q-icon
-                      name="eva-list-outline"
-                      class="q-mr-sm"
-                      size="20px"
+                <CategoryListSection
+                  header-icon="eva-list-outline"
+                  header-title="Plan Items"
+                  :has-categories="planCategoryGroups.length > 0"
+                  :all-expanded="allCategoriesExpanded"
+                  :has-duplicates="hasDuplicateItems && planItems.length > 0"
+                  duplicate-banner-position="bottom"
+                  :duplicate-banner-class="
+                    $q.dark.isActive ? 'bg-red-9 text-red-3' : 'bg-red-1 text-red-8'
+                  "
+                  empty-message="No items in this plan"
+                  @toggle-expand="toggleAllCategories"
+                >
+                  <template #categories>
+                    <PlanCategory
+                      v-for="group in planCategoryGroups"
+                      :key="group.categoryId"
+                      :ref="(el) => setCategoryRef(el, group.categoryId)"
+                      :category-id="group.categoryId"
+                      :category-name="getCategoryName(group.categoryId)"
+                      :category-color="group.categoryColor"
+                      :category-icon="getCategoryIcon(group.categoryId)"
+                      :items="group.items"
+                      :currency="planCurrency"
+                      :default-expanded="
+                        allCategoriesExpanded || group.categoryId === lastAddedCategoryId
+                      "
+                      @update-item="handleUpdateItem"
+                      @remove-item="handleRemoveItem"
+                      @add-item="handleAddItem"
                     />
-                    <h2 class="text-h6 q-my-none">Plan Items</h2>
-                  </div>
-                  <q-btn
-                    flat
-                    :icon="allCategoriesExpanded ? 'eva-collapse-outline' : 'eva-expand-outline'"
-                    :label="
-                      $q.screen.lt.md ? '' : allCategoriesExpanded ? 'Collapse All' : 'Expand All'
-                    "
-                    color="primary"
-                    no-caps
-                    @click="toggleAllCategories"
-                  />
-                </div>
+                  </template>
 
-                <div v-if="planCategoryGroups.length === 0">
-                  <q-banner
-                    :class="$q.dark.isActive ? 'bg-grey-9 text-grey-3' : 'bg-grey-1 text-grey-7'"
-                  >
-                    <template #avatar>
-                      <q-icon name="eva-info-outline" />
-                    </template>
-                    No items in this plan
-                  </q-banner>
-                </div>
-
-                <div
-                  class="q-mb-lg"
-                  v-else
-                >
-                  <PlanCategory
-                    v-for="group in planCategoryGroups"
-                    :key="group.categoryId"
-                    :ref="(el) => setCategoryRef(el, group.categoryId)"
-                    :category-id="group.categoryId"
-                    :category-name="getCategoryName(group.categoryId)"
-                    :category-color="group.categoryColor"
-                    :category-icon="getCategoryIcon(group.categoryId)"
-                    :items="group.items"
-                    :currency="planCurrency"
-                    :default-expanded="
-                      allCategoriesExpanded || group.categoryId === lastAddedCategoryId
-                    "
-                    @update-item="handleUpdateItem"
-                    @remove-item="handleRemoveItem"
-                    @add-item="handleAddItem"
-                  />
-                </div>
-
-                <div v-if="planCategoryGroups.length > 0">
-                  <q-separator class="q-mb-lg" />
-                  <div class="row items-center justify-between">
-                    <div class="row items-center">
-                      <q-icon
-                        name="eva-credit-card-outline"
-                        class="q-mr-sm"
-                        size="20px"
-                      />
-                      <h2 class="text-h6 q-my-none">Total Amount</h2>
-                    </div>
-                    <div
-                      :class="[
-                        'text-primary text-weight-bold',
-                        $q.screen.lt.md ? 'text-h6' : 'text-h5',
-                      ]"
-                    >
-                      {{ formattedTotalAmount }}
-                    </div>
-                  </div>
-                  <div class="text-body2 text-grey-6">
-                    Total across {{ planCategoryGroups.length }}
-                    {{ planCategoryGroups.length === 1 ? 'category' : 'categories' }}
-                  </div>
-                </div>
-
-                <div
-                  v-if="hasDuplicateItems && planItems.length > 0"
-                  class="q-mt-md"
-                >
-                  <q-banner
-                    :class="$q.dark.isActive ? 'bg-red-9 text-red-3' : 'bg-red-1 text-red-8'"
-                  >
-                    <template #avatar>
-                      <q-icon name="eva-alert-triangle-outline" />
-                    </template>
-                    <div>
-                      You have duplicate item names within the same category. Please use unique
-                      names.
-                    </div>
-                  </q-banner>
-                </div>
+                  <template #summary>
+                    <ItemsSummarySection
+                      :formatted-amount="formattedTotalAmount"
+                      :item-count="planCategoryGroups.length"
+                      item-type="categories"
+                      amount-size-mobile="text-h6"
+                      amount-size-desktop="text-h5"
+                    />
+                  </template>
+                </CategoryListSection>
               </q-card-section>
             </q-card>
           </q-form>
@@ -617,6 +498,9 @@ import DeleteDialog from 'src/components/shared/DeleteDialog.vue'
 import PlanOverviewTab from 'src/components/plans/PlanOverviewTab.vue'
 import PlanItemsTrackingTab from 'src/components/plans/PlanItemsTrackingTab.vue'
 import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
+import SectionHeader from 'src/components/shared/SectionHeader.vue'
+import CategoryListSection from 'src/components/shared/CategoryListSection.vue'
+import ItemsSummarySection from 'src/components/shared/ItemsSummarySection.vue'
 import { usePlansStore } from 'src/stores/plans'
 import { useCategoriesStore } from 'src/stores/categories'
 import { useNotificationStore } from 'src/stores/notification'
