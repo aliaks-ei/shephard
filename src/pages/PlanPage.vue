@@ -7,7 +7,6 @@
     :actions-visible="actionsVisible"
     :is-edit-mode="isEditMode"
     :show-read-only-badge="!isEditMode"
-    :additional-banners="additionalBanners"
     @back="goBack"
   >
     <PlanFormSection
@@ -177,7 +176,6 @@ import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 
 import BaseItemFormPage from 'src/layouts/BaseItemFormPage.vue'
-import type { BannerConfig } from 'src/layouts/DetailPageLayout.vue'
 import PlanFormSection from 'src/components/plans/PlanFormSection.vue'
 import PlanEditTab from 'src/components/plans/PlanEditTab.vue'
 import PlanOverviewTab from 'src/components/plans/PlanOverviewTab.vue'
@@ -197,7 +195,7 @@ import { useEditablePage } from 'src/composables/useEditablePage'
 import { useCategoryRefs } from 'src/composables/useCategoryRefs'
 import { usePlanActions } from 'src/composables/usePlanActions'
 import { validateItemForm } from 'src/composables/useItemFormValidation'
-import { getPlanStatus } from 'src/utils/plans'
+import { calculateEndDate } from 'src/utils/plans'
 import type { TemplateWithItems } from 'src/api'
 import type { PlanItemUI } from 'src/types'
 
@@ -249,21 +247,6 @@ const pageConfig = {
 
 const { pageTitle, pageIcon } = useDetailPageState(pageConfig, isNewPlan.value, !isEditMode.value)
 
-const additionalBanners = computed((): BannerConfig[] => {
-  const bannersList: BannerConfig[] = []
-
-  if (!isNewPlan.value && !canEditPlanData.value && isOwner.value) {
-    bannersList.push({
-      type: 'locked',
-      class: $q.dark.isActive ? 'bg-grey-9 text-grey-3' : 'bg-grey-2 text-grey-8',
-      icon: 'eva-lock-outline',
-      message: `This plan cannot be edited because it's ${currentPlanStatus.value} or completed.`,
-    })
-  }
-
-  return bannersList
-})
-
 const { openDialog, closeDialog, getDialogState } = useEditablePage()
 
 const { lastAddedCategoryId, setCategoryRef, scrollToFirstInvalidField, resetLastAddedCategory } =
@@ -288,11 +271,6 @@ const form = ref({
 
 const templateError = ref(false)
 const templateErrorMessage = ref('')
-
-const currentPlanStatus = computed(() => {
-  if (!currentPlan.value) return ''
-  return getPlanStatus(currentPlan.value)
-})
 
 const templateOptions = computed(() => {
   return templatesStore.templates.map((template) => ({
@@ -361,6 +339,18 @@ async function onTemplateSelected(templateId: string | null): Promise<void> {
 
     if (!form.value.startDate) {
       form.value.startDate = new Date().toISOString().split('T')[0] || ''
+    }
+
+    // Calculate end date based on template duration and start date
+    if (form.value.startDate && template.duration) {
+      const startDate = new Date(form.value.startDate)
+      if (!isNaN(startDate.getTime())) {
+        const endDate = calculateEndDate(
+          startDate,
+          template.duration as 'weekly' | 'monthly' | 'yearly',
+        )
+        form.value.endDate = endDate.toISOString().split('T')[0] || ''
+      }
     }
   }
 }

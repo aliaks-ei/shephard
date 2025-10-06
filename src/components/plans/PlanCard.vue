@@ -59,7 +59,7 @@
         <div class="q-mt-lg">
           <div class="row items-center justify-between">
             <div class="col">
-              <div class="text-h6 text-weight-bold text-primary">
+              <div class="text-subtitle1 text-weight-bold text-primary">
                 {{ formatAmount(plan.total) }}
               </div>
             </div>
