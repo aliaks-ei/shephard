@@ -83,25 +83,19 @@
         />
       </q-page-container>
 
-      <!-- Lazy Loaded Dialogs -->
-      <component
-        :is="ExpenseRegistrationDialog"
-        v-if="showExpenseDialog"
+      <!-- Dialogs -->
+      <ExpenseRegistrationDialog
         v-model="showExpenseDialog"
         auto-select-recent-plan
       />
 
-      <component
-        :is="MobileUserDialog"
-        v-if="showMobileUserDialog"
-        v-model="showMobileUserDialog"
-      />
+      <MobileUserDialog v-model="showMobileUserDialog" />
     </template>
   </q-layout>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, defineAsyncComponent } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 
@@ -109,14 +103,11 @@ import UserDropdownMenu from 'src/components/UserDropdownMenu.vue'
 import UserAvatar from 'src/components/UserAvatar.vue'
 import NavigationDrawer from 'src/components/NavigationDrawer.vue'
 import MobileBottomNavigation from 'src/components/MobileBottomNavigation.vue'
+import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
+import MobileUserDialog from 'src/components/MobileUserDialog.vue'
 import { useUserStore } from 'src/stores/user'
 import { usePwaInstall } from 'src/composables/usePwaInstall'
 import { useNotificationStore } from 'src/stores/notification'
-
-const ExpenseRegistrationDialog = defineAsyncComponent(
-  () => import('src/components/expenses/ExpenseRegistrationDialog.vue'),
-)
-const MobileUserDialog = defineAsyncComponent(() => import('src/components/MobileUserDialog.vue'))
 
 const userStore = useUserStore()
 const route = useRoute()

@@ -37,10 +37,9 @@
       @create="goToNew"
     />
 
-    <!-- Share Template Dialog - Lazy Loaded -->
-    <component
-      :is="ShareTemplateDialog"
-      v-if="isShareDialogOpen && shareTemplateId"
+    <!-- Share Template Dialog -->
+    <ShareTemplateDialog
+      v-if="shareTemplateId"
       v-model="isShareDialogOpen"
       :template-id="shareTemplateId"
       @shared="onTemplateShared"
@@ -49,20 +48,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, defineAsyncComponent } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 
 import ListPageLayout from 'src/layouts/ListPageLayout.vue'
 import SearchAndSort from 'src/components/shared/SearchAndSort.vue'
 import ListPageSkeleton from 'src/components/shared/ListPageSkeleton.vue'
 import EmptyState from 'src/components/shared/EmptyState.vue'
 import TemplatesGroup from 'src/components/templates/TemplatesGroup.vue'
+import ShareTemplateDialog from 'src/components/templates/ShareTemplateDialog.vue'
 import { useTemplatesStore } from 'src/stores/templates'
 import { useNotificationStore } from 'src/stores/notification'
 import { useTemplates } from 'src/composables/useTemplates'
-
-const ShareTemplateDialog = defineAsyncComponent(
-  () => import('src/components/templates/ShareTemplateDialog.vue'),
-)
 
 const templatesStore = useTemplatesStore()
 const notificationsStore = useNotificationStore()

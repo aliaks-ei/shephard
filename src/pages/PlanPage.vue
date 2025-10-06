@@ -130,18 +130,15 @@
     </div>
 
     <template #dialogs>
-      <!-- Lazy Loaded Dialogs -->
-      <component
-        :is="SharePlanDialog"
-        v-if="isShareDialogOpen && currentPlan"
+      <!-- Dialogs -->
+      <SharePlanDialog
+        v-if="currentPlan"
         v-model="isShareDialogOpen"
         :plan-id="currentPlan.id"
         @shared="onPlanShared"
       />
 
-      <component
-        :is="DeleteDialog"
-        v-if="showCancelDialog"
+      <DeleteDialog
         v-model="showCancelDialog"
         title="Cancel Plan"
         warning-message="This will mark the plan as cancelled and stop any active tracking."
@@ -151,8 +148,7 @@
         @confirm="cancelPlan"
       />
 
-      <component
-        :is="DeleteDialog"
+      <DeleteDialog
         v-if="showDeleteDialog"
         v-model="showDeleteDialog"
         title="Delete Plan"
@@ -164,9 +160,8 @@
         @confirm="deletePlan"
       />
 
-      <component
-        :is="ExpenseRegistrationDialog"
-        v-if="showExpenseDialog && currentPlan && !isNewPlan"
+      <ExpenseRegistrationDialog
+        v-if="currentPlan && !isNewPlan"
         v-model="showExpenseDialog"
         :default-plan-id="currentPlan.id"
         :default-category-id="selectedCategory?.categoryId || null"
@@ -177,7 +172,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick, defineAsyncComponent } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 
@@ -187,6 +182,9 @@ import PlanFormSection from 'src/components/plans/PlanFormSection.vue'
 import PlanEditTab from 'src/components/plans/PlanEditTab.vue'
 import PlanOverviewTab from 'src/components/plans/PlanOverviewTab.vue'
 import PlanItemsTrackingTab from 'src/components/plans/PlanItemsTrackingTab.vue'
+import SharePlanDialog from 'src/components/plans/SharePlanDialog.vue'
+import DeleteDialog from 'src/components/shared/DeleteDialog.vue'
+import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 import { usePlansStore } from 'src/stores/plans'
 import { useCategoriesStore } from 'src/stores/categories'
 import { useNotificationStore } from 'src/stores/notification'
@@ -202,14 +200,6 @@ import { validateItemForm } from 'src/composables/useItemFormValidation'
 import { getPlanStatus } from 'src/utils/plans'
 import type { TemplateWithItems } from 'src/api'
 import type { PlanItemUI } from 'src/types'
-
-const SharePlanDialog = defineAsyncComponent(
-  () => import('src/components/plans/SharePlanDialog.vue'),
-)
-const DeleteDialog = defineAsyncComponent(() => import('src/components/shared/DeleteDialog.vue'))
-const ExpenseRegistrationDialog = defineAsyncComponent(
-  () => import('src/components/expenses/ExpenseRegistrationDialog.vue'),
-)
 
 const $q = useQuasar()
 const router = useRouter()
