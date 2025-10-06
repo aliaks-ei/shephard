@@ -93,7 +93,7 @@
                     size="sm"
                     icon="eva-trash-2-outline"
                     color="negative"
-                    @click="confirmDeleteExpense(expense)"
+                    @click="confirmDeleteExpense(expense, () => emit('refresh'))"
                   >
                     <q-tooltip v-if="!$q.screen.lt.md">Delete expense</q-tooltip>
                   </q-btn>
@@ -108,12 +108,11 @@
 </template>
 
 <script setup lang="ts">
-import { Dialog } from 'quasar'
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
-import { useExpensesStore } from 'src/stores/expenses'
-import { useNotificationStore } from 'src/stores/notification'
-import { useCategoriesStore } from 'src/stores/categories'
+import { formatDate } from 'src/utils/date'
+import { useCategoryHelpers } from 'src/composables/useCategoryHelpers'
+import { useExpenseActions } from 'src/composables/useExpenseActions'
 import type { ExpenseWithCategory } from 'src/api'
 
 defineProps<{
@@ -129,54 +128,6 @@ const emit = defineEmits<{
   (e: 'refresh'): void
 }>()
 
-const expensesStore = useExpensesStore()
-const notificationStore = useNotificationStore()
-const categoriesStore = useCategoriesStore()
-
-// Helper functions
-function getCategoryName(categoryId: string): string {
-  const category = categoriesStore.getCategoryById(categoryId)
-  return category?.name || 'Unknown'
-}
-
-function getCategoryColor(categoryId: string): string {
-  const category = categoriesStore.getCategoryById(categoryId)
-  return category?.color || '#666'
-}
-
-function getCategoryIcon(categoryId: string): string {
-  const category = categoriesStore.getCategoryById(categoryId)
-  return category?.icon || 'eva-folder-outline'
-}
-
-function formatDate(dateString: string): string {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  }).format(new Date(dateString))
-}
-
-function confirmDeleteExpense(expense: ExpenseWithCategory) {
-  Dialog.create({
-    title: 'Delete Expense?',
-    message: `Are you sure you want to delete "${expense.name}"?`,
-    persistent: true,
-    ok: {
-      label: 'Delete',
-      color: 'negative',
-      unelevated: true,
-    },
-    cancel: {
-      label: 'Cancel',
-      flat: true,
-    },
-  }).onOk(() => {
-    void (async () => {
-      await expensesStore.removeExpense(expense.id)
-      notificationStore.showSuccess('Expense deleted successfully')
-      emit('refresh')
-    })()
-  })
-}
+const { getCategoryName, getCategoryColor, getCategoryIcon } = useCategoryHelpers()
+const { confirmDeleteExpense } = useExpenseActions()
 </script>

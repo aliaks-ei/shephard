@@ -24,10 +24,10 @@ jobs:
 
       - name: Run linting
         run: npm run lint
+      
+      - name: Run type checking
+        run: npm run type-check
         
       # TODO: Uncomment when tests are fixed
       # - name: Run unit tests
       #   run: npm run test:unit:ci
-      
-      - name: Run type checking
-        run: npm run type-check

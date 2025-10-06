@@ -68,13 +68,11 @@ function formatErrorMessage(
 ): string {
   let message = baseMessage
 
-  // Add original error message if requested
   if (includeErrorMessage) {
     const errorMessage = extractErrorMessage(originalError)
     message = `${message}: ${errorMessage}`
   }
 
-  // Add context information (excluding entityName as it's handled separately)
   const contextEntries = Object.entries(context || {})
     .filter(([key, value]) => key !== 'entityName' && value !== undefined)
     .map(([key, value]) => `${key}: ${value}`)

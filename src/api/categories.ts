@@ -25,7 +25,6 @@ export type CategoryTemplate = {
 }
 
 export async function getCategoriesWithStats(userId: string): Promise<CategoryWithStats[]> {
-  // First, get all categories
   const { data: categories, error: categoriesError } = await supabase
     .from('categories')
     .select('*')
@@ -33,7 +32,6 @@ export async function getCategoriesWithStats(userId: string): Promise<CategoryWi
 
   if (categoriesError) throw categoriesError
 
-  // Get template IDs that the user has access to (owned + shared)
   const { data: ownedTemplates, error: ownedError } = await supabase
     .from('templates')
     .select('id, name, owner_id')
@@ -48,7 +46,6 @@ export async function getCategoriesWithStats(userId: string): Promise<CategoryWi
 
   if (sharedError) throw sharedError
 
-  // Combine owned and shared template IDs for filtering
   const ownedTemplateIds = new Set((ownedTemplates || []).map((t) => t.id))
   const sharedTemplateIds = new Set((sharedTemplatesData || []).map((s) => s.template_id))
   const allAccessibleTemplateIds = new Set([...ownedTemplateIds, ...sharedTemplateIds])
@@ -60,7 +57,6 @@ export async function getCategoriesWithStats(userId: string): Promise<CategoryWi
     }))
   }
 
-  // Get template items from all accessible templates, grouped by category
   const { data: templateItems, error: itemsError } = await supabase
     .from('template_items')
     .select('category_id, template_id')
@@ -68,7 +64,6 @@ export async function getCategoriesWithStats(userId: string): Promise<CategoryWi
 
   if (itemsError) throw itemsError
 
-  // Group template IDs by category
   const categoryTemplateIds = (templateItems || []).reduce(
     (acc, item) => {
       if (!acc[item.category_id]) {
@@ -80,7 +75,6 @@ export async function getCategoriesWithStats(userId: string): Promise<CategoryWi
     {} as Record<string, Set<string>>,
   )
 
-  // Build template details for each category
   return categories.map((category) => {
     const templateIdsForCategory = categoryTemplateIds[category.id]
     if (!templateIdsForCategory || templateIdsForCategory.size === 0) {
@@ -92,7 +86,6 @@ export async function getCategoriesWithStats(userId: string): Promise<CategoryWi
 
     const templates: CategoryTemplate[] = []
 
-    // Add owned templates
     for (const template of ownedTemplates || []) {
       if (templateIdsForCategory.has(template.id)) {
         templates.push({
@@ -103,7 +96,6 @@ export async function getCategoriesWithStats(userId: string): Promise<CategoryWi
       }
     }
 
-    // Add shared templates
     for (const sharedData of sharedTemplatesData || []) {
       if (templateIdsForCategory.has(sharedData.template_id) && sharedData.templates) {
         templates.push({
@@ -115,7 +107,6 @@ export async function getCategoriesWithStats(userId: string): Promise<CategoryWi
       }
     }
 
-    // Sort templates by name
     templates.sort((a, b) => a.name.localeCompare(b.name))
 
     return {

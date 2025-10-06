@@ -2,9 +2,6 @@ import type { Plan } from 'src/api/plans'
 
 export type PlanStatus = 'pending' | 'active' | 'completed' | 'cancelled'
 
-/**
- * Calculate end date based on template duration and start date
- */
 export function calculateEndDate(startDate: Date, duration: 'weekly' | 'monthly' | 'yearly'): Date {
   const endDate = new Date(startDate)
 
@@ -23,9 +20,6 @@ export function calculateEndDate(startDate: Date, duration: 'weekly' | 'monthly'
   return endDate
 }
 
-/**
- * Determine current plan status based on dates
- */
 export function getPlanStatus(plan: Plan): PlanStatus {
   if (plan.status === 'cancelled') {
     return 'cancelled'
@@ -35,7 +29,6 @@ export function getPlanStatus(plan: Plan): PlanStatus {
   const startDate = new Date(plan.start_date)
   const endDate = new Date(plan.end_date)
 
-  // Reset time to compare dates only
   now.setHours(0, 0, 0, 0)
   startDate.setHours(0, 0, 0, 0)
   endDate.setHours(0, 0, 0, 0)
@@ -49,16 +42,11 @@ export function getPlanStatus(plan: Plan): PlanStatus {
   }
 }
 
-/**
- * Check if plan can be edited based on status and permissions
- */
 export function canEditPlan(plan: Plan, isOwner: boolean): boolean {
-  // Only owners can edit plans
   if (!isOwner) {
     return false
   }
 
-  // Cancelled and completed plans cannot be edited
   if (plan.status === 'cancelled' || getPlanStatus(plan) === 'completed') {
     return false
   }
@@ -66,30 +54,21 @@ export function canEditPlan(plan: Plan, isOwner: boolean): boolean {
   return true
 }
 
-/**
- * Check if expenses can be added to a plan based on status and permissions
- */
 export function canAddExpensesToPlan(
   plan: Plan & { permission_level?: string },
   isOwner: boolean,
 ): boolean {
-  // Cancelled and completed plans cannot have expenses added
   if (plan.status === 'cancelled' || getPlanStatus(plan) === 'completed') {
     return false
   }
 
-  // If user is the owner, they can always add expenses to active/pending plans
   if (isOwner) {
     return true
   }
 
-  // For shared plans, user needs edit permission to add expenses
   return plan.permission_level === 'edit'
 }
 
-/**
- * Get days remaining for active plans
- */
 export function getDaysRemaining(plan: Plan): number | null {
   const status = getPlanStatus(plan)
 
@@ -109,9 +88,6 @@ export function getDaysRemaining(plan: Plan): number | null {
   return Math.max(0, diffDays)
 }
 
-/**
- * Get days until plan starts for pending plans
- */
 export function getDaysUntilStart(plan: Plan): number | null {
   const status = getPlanStatus(plan)
 
@@ -131,9 +107,6 @@ export function getDaysUntilStart(plan: Plan): number | null {
   return Math.max(0, diffDays)
 }
 
-/**
- * Get status display text
- */
 export function getStatusText(plan: Plan): string {
   const status = getPlanStatus(plan)
 
@@ -157,9 +130,6 @@ export function getStatusText(plan: Plan): string {
   }
 }
 
-/**
- * Get status color for UI components
- */
 export function getStatusColor(plan: Plan): string {
   const status = getPlanStatus(plan)
 
@@ -177,9 +147,6 @@ export function getStatusColor(plan: Plan): string {
   }
 }
 
-/**
- * Get status icon
- */
 export function getStatusIcon(plan: Plan): string {
   const status = getPlanStatus(plan)
 
@@ -197,9 +164,6 @@ export function getStatusIcon(plan: Plan): string {
   }
 }
 
-/**
- * Format date range for display
- */
 export function formatDateRange(startDate: string, endDate: string): string {
   const start = new Date(startDate)
   const end = new Date(endDate)

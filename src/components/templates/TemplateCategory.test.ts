@@ -54,7 +54,6 @@ describe('TemplateCategory', () => {
       categoryName: 'Food',
       categoryColor: '#FF0000',
       items: mockItems,
-      subtotal: 80,
       currency: 'USD',
       categoryIcon: 'eva-pricetags-outline',
     })
@@ -67,7 +66,6 @@ describe('TemplateCategory', () => {
       categoryName: 'Food',
       categoryColor: '#FF0000',
       items: mockItems,
-      subtotal: 80,
       currency: 'USD',
       categoryIcon: 'eva-pricetags-outline',
       readonly: true,
@@ -78,7 +76,6 @@ describe('TemplateCategory', () => {
     expect(wrapper.props('categoryName')).toBe('Food')
     expect(wrapper.props('categoryColor')).toBe('#FF0000')
     expect(wrapper.props('items')).toEqual(mockItems)
-    expect(wrapper.props('subtotal')).toBe(80)
     expect(wrapper.props('currency')).toBe('USD')
     expect(wrapper.props('readonly')).toBe(true)
     expect(wrapper.props('defaultExpanded')).toBe(false)
@@ -90,7 +87,6 @@ describe('TemplateCategory', () => {
       categoryName: 'Food',
       categoryColor: '#FF0000',
       items: mockItems,
-      subtotal: 80,
       currency: 'USD',
       categoryIcon: 'eva-pricetags-outline',
     })
@@ -105,7 +101,6 @@ describe('TemplateCategory', () => {
       categoryName: 'Food',
       categoryColor: '#FF0000',
       items: mockItems,
-      subtotal: 80,
       currency: 'USD',
       categoryIcon: 'eva-pricetags-outline',
     })
@@ -123,7 +118,6 @@ describe('TemplateCategory', () => {
       categoryName: 'Food',
       categoryColor: '#FF0000',
       items: mockItems,
-      subtotal: 80,
       currency: 'USD',
       categoryIcon: 'eva-pricetags-outline',
     })
@@ -140,7 +134,6 @@ describe('TemplateCategory', () => {
       categoryName: 'Food',
       categoryColor: '#FF0000',
       items: mockItems,
-      subtotal: 80,
       currency: 'USD',
       categoryIcon: 'eva-pricetags-outline',
     })
@@ -165,13 +158,11 @@ describe('TemplateCategory', () => {
       categoryName: 'Food',
       categoryColor: '#FF0000',
       items: [],
-      subtotal: 0,
       currency: 'USD',
       categoryIcon: 'eva-pricetags-outline',
     })
 
     expect(wrapper.props('items')).toEqual([])
-    expect(wrapper.props('subtotal')).toBe(0)
   })
 
   it('should handle different currencies', () => {
@@ -183,7 +174,6 @@ describe('TemplateCategory', () => {
         categoryName: 'Food',
         categoryColor: '#FF0000',
         items: mockItems,
-        subtotal: 80,
         currency: currency as CurrencyCode,
         categoryIcon: 'eva-pricetags-outline',
       })
@@ -198,7 +188,6 @@ describe('TemplateCategory', () => {
       categoryName: 'Food',
       categoryColor: '#FF0000',
       items: mockItems,
-      subtotal: 80,
       currency: 'USD',
       readonly: true,
       categoryIcon: 'eva-pricetags-outline',

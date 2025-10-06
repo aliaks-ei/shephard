@@ -63,8 +63,10 @@
       @refresh="$emit('refresh')"
     />
 
-    <!-- Category Expenses Modal -->
-    <CategoryExpensesDialog
+    <!-- Category Expenses Modal - Lazy Loaded -->
+    <component
+      :is="CategoryExpensesDialog"
+      v-if="showCategoryModal"
       v-model="showCategoryModal"
       :category="selectedCategory"
       :expenses="categoryExpenses"
@@ -76,8 +78,10 @@
       @refresh="$emit('refresh')"
     />
 
-    <!-- All Expenses Modal -->
-    <AllExpensesDialog
+    <!-- All Expenses Modal - Lazy Loaded -->
+    <component
+      :is="AllExpensesDialog"
+      v-if="showAllExpensesModal"
       v-model="showAllExpensesModal"
       :expenses="expensesStore.sortedExpenses"
       :currency="planCurrency"
@@ -89,16 +93,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, defineAsyncComponent } from 'vue'
 import PlanSummaryCard from './PlanSummaryCard.vue'
 import CategoryBudgetCard from './CategoryBudgetCard.vue'
 import RecentExpensesList from './RecentExpensesList.vue'
-import CategoryExpensesDialog from './CategoryExpensesDialog.vue'
-import AllExpensesDialog from './AllExpensesDialog.vue'
 import { usePlanOverview } from 'src/composables/usePlanOverview'
 import { useExpensesStore } from 'src/stores/expenses'
 import type { PlanWithItems } from 'src/api'
+
+const CategoryExpensesDialog = defineAsyncComponent(() => import('./CategoryExpensesDialog.vue'))
+const AllExpensesDialog = defineAsyncComponent(() => import('./AllExpensesDialog.vue'))
 import type { CurrencyCode } from 'src/utils/currency'
+import type { CategoryBudget } from 'src/types'
 
 const props = defineProps<{
   plan: (PlanWithItems & { permission_level?: string }) | null
@@ -113,17 +119,6 @@ const emit = defineEmits<{
 }>()
 
 const expensesStore = useExpensesStore()
-
-interface CategoryBudget {
-  categoryId: string
-  categoryName: string
-  categoryColor: string
-  categoryIcon: string
-  plannedAmount: number
-  actualAmount: number
-  remainingAmount: number
-  expenseCount: number
-}
 
 const showCategoryModal = ref(false)
 const showAllExpensesModal = ref(false)

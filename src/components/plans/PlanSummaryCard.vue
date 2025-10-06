@@ -70,6 +70,7 @@
 import { computed } from 'vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import { getStatusText, getStatusColor, getStatusIcon, formatDateRange } from 'src/utils/plans'
+import { getBudgetProgressColor, getBudgetRemainingColorClass } from 'src/utils/budget'
 import type { PlanWithItems } from 'src/api'
 
 const props = defineProps<{
@@ -79,28 +80,14 @@ const props = defineProps<{
   currency: CurrencyCode
 }>()
 
-// Computed properties
 const remaining = computed(() => props.totalBudget - props.totalSpent)
+const progressPercentage = computed(() => overallProgress.value * 100)
+const progressColor = computed(() => getBudgetProgressColor(progressPercentage.value))
+const remainingColorClass = computed(() => getBudgetRemainingColorClass(progressPercentage.value))
 
 const overallProgress = computed(() => {
   if (props.totalBudget === 0) return 0
   return Math.min(props.totalSpent / props.totalBudget, 1)
-})
-
-const progressColor = computed(() => {
-  const percentage = overallProgress.value * 100
-  if (percentage < 100) return 'primary'
-  if (percentage === 100) return 'positive'
-  if (percentage <= 110) return 'warning'
-  return 'negative'
-})
-
-const remainingColorClass = computed(() => {
-  const percentage = overallProgress.value * 100
-  if (percentage < 100) return 'text-primary'
-  if (percentage === 100) return 'text-positive'
-  if (percentage <= 110) return 'text-warning'
-  return 'text-negative'
 })
 
 const statusText = computed(() => {

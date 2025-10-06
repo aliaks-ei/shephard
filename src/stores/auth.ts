@@ -40,7 +40,6 @@ export const useAuthStore = defineStore('auth', () => {
         preferencesStore.reset()
       }
 
-      // The first auth event resolves the ready promise
       if (!resolved) {
         isLoading.value = false
         resolved = true
@@ -48,7 +47,6 @@ export const useAuthStore = defineStore('auth', () => {
       }
     })
 
-    // Fallback timeout to prevent infinite loading (5 seconds)
     setTimeout(() => {
       if (!resolved) {
         console.warn('[Auth] Initialization timeout - proceeding without session')

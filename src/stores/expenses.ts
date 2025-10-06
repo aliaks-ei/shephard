@@ -33,21 +33,18 @@ export const useExpensesStore = defineStore('expenses', () => {
     expenses.value.reduce((total, expense) => total + expense.amount, 0),
   )
 
-  // Sorted expenses (most recent first, with created_at as tiebreaker)
   const sortedExpenses = computed(() => {
     return [...expenses.value].sort((a, b) => {
       const dateA = new Date(a.expense_date).getTime()
       const dateB = new Date(b.expense_date).getTime()
 
-      // If expense dates are different, sort by expense_date
       if (dateA !== dateB) {
-        return dateB - dateA // Most recent expense_date first
+        return dateB - dateA
       }
 
-      // If expense dates are the same, sort by created_at
       const createdA = new Date(a.created_at).getTime()
       const createdB = new Date(b.created_at).getTime()
-      return createdB - createdA // Most recent created_at first
+      return createdB - createdA
     })
   })
 
@@ -104,7 +101,6 @@ export const useExpensesStore = defineStore('expenses', () => {
         user_id: userId.value,
       })
 
-      // Refresh expenses and summary for the plan
       if (currentPlanId.value) {
         await Promise.all([
           loadExpensesForPlan(currentPlanId.value),
@@ -115,7 +111,6 @@ export const useExpensesStore = defineStore('expenses', () => {
       return { success: true, data: newExpense as ExpenseWithCategory }
     } catch (error) {
       if (error instanceof Error && error.message.includes('violates foreign key constraint')) {
-        // Handle database foreign key constraint violations
         if (error.message.includes('expenses_plan_id_fkey')) {
           handleError('EXPENSES.PLAN_NOT_FOUND', error, { planId: expenseData.plan_id })
         } else if (error.message.includes('expenses_plan_item_id_fkey')) {
@@ -145,10 +140,8 @@ export const useExpensesStore = defineStore('expenses', () => {
     try {
       const updatedExpense = await updateExpense(expenseId, updates)
 
-      // Update the expense in the local state
       const index = expenses.value.findIndex((e) => e.id === expenseId)
       if (index !== -1 && updatedExpense) {
-        // Preserve the category data
         const existingCategory = expenses.value[index]?.categories
         expenses.value[index] = {
           ...updatedExpense,
@@ -156,7 +149,6 @@ export const useExpensesStore = defineStore('expenses', () => {
         } as ExpenseWithCategory
       }
 
-      // Refresh summary if the plan is current
       if (currentPlanId.value) {
         await loadExpenseSummaryForPlan(currentPlanId.value)
       }
@@ -176,7 +168,6 @@ export const useExpensesStore = defineStore('expenses', () => {
     isLoading.value = true
 
     try {
-      // Find the expense to get the plan_item_id before deleting
       const expenseToDelete = expenses.value.find((e) => e.id === expenseId)
       const planItemId = expenseToDelete?.plan_item_id
 
@@ -184,12 +175,9 @@ export const useExpensesStore = defineStore('expenses', () => {
 
       expenses.value = expenses.value.filter((e) => e.id !== expenseId)
 
-      // Handle plan item completion synchronization
       if (planItemId) {
-        // Check if there are any remaining expenses linked to this plan item
         const remainingExpenses = expenses.value.filter((e) => e.plan_item_id === planItemId)
 
-        // If no remaining expenses, mark the plan item as incomplete
         if (remainingExpenses.length === 0) {
           await updatePlanItemCompletion(planItemId, false)
         }

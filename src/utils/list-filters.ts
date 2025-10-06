@@ -40,12 +40,10 @@ export function filterAndSortItems<T extends BaseItem>(
       case 'created_at':
         return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
       case 'duration':
-        // For templates
         return ((a as unknown as TemplateItem).duration || '').localeCompare(
           (b as unknown as TemplateItem).duration || '',
         )
       case 'start_date':
-        // For plans
         return (
           new Date((b as unknown as PlanItem).start_date).getTime() -
           new Date((a as unknown as PlanItem).start_date).getTime()

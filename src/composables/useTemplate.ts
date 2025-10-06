@@ -31,10 +31,10 @@ export function useTemplate() {
 
   const templateCurrency = computed((): CurrencyCode => {
     if (isNewTemplate.value) {
-      return userStore.preferences.currency as CurrencyCode
+      return (userStore.preferences.currency as CurrencyCode) || 'EUR'
     }
 
-    return currentTemplate.value?.currency as CurrencyCode
+    return (currentTemplate.value?.currency as CurrencyCode) || 'EUR'
   })
 
   async function createNewTemplateWithItems(

@@ -24,7 +24,10 @@
         :key="i"
         class="q-mb-sm"
       >
-        <q-card class="shadow-1">
+        <q-card
+          :bordered="$q.dark.isActive"
+          class="shadow-1"
+        >
           <q-card-section class="q-pb-none">
             <div class="row items-center q-gutter-md">
               <q-skeleton
@@ -82,6 +85,7 @@
     <div v-else-if="categoryGroups.length === 0">
       <q-banner
         dense
+        rounded
         :class="$q.dark.isActive ? 'bg-grey-9 text-grey-3' : 'bg-grey-1 text-grey-7'"
       >
         <template #avatar>
@@ -101,6 +105,7 @@
       <q-card
         v-for="group in categoryGroups"
         :key="group.categoryId"
+        :bordered="$q.dark.isActive"
         class="q-mb-sm shadow-1"
       >
         <q-expansion-item

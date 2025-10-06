@@ -2,7 +2,10 @@
   <div class="auth-callback-page q-pa-md">
     <div class="row justify-center items-center full-height">
       <div class="col-12 col-sm-8 col-md-6 col-lg-4 col-xl-3">
-        <q-card class="shadow-1 full-width">
+        <q-card
+          :bordered="$q.dark.isActive"
+          class="shadow-1 full-width"
+        >
           <q-card-section class="bg-primary text-white text-center">
             <h1 class="text-h4">Welcome to Shephard</h1>
           </q-card-section>

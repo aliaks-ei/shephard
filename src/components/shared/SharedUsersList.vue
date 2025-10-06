@@ -53,7 +53,7 @@
 </template>
 
 <script setup lang="ts">
-import { date, useQuasar } from 'quasar'
+import { date, Dialog } from 'quasar'
 
 import { getUserInitial, getUserDisplayName } from 'src/utils/name'
 import type { TemplateSharedUser } from 'src/api'
@@ -68,14 +68,12 @@ defineProps<{
   permissionOptions: { label: string; value: string }[]
 }>()
 
-const $q = useQuasar()
-
 function formatDate(dateString: string): string {
   return date.formatDate(dateString, 'MMM D, YYYY')
 }
 
 function showRemoveUserConfirmDialog(user: TemplateSharedUser) {
-  $q.dialog({
+  Dialog.create({
     title: 'Remove Access',
     message: `Are you sure you want to remove access for ${user.user_name || user.user_email}?`,
     persistent: true,
@@ -87,6 +85,7 @@ function showRemoveUserConfirmDialog(user: TemplateSharedUser) {
     cancel: {
       label: 'Cancel',
       flat: true,
+      color: 'text-white',
     },
   }).onOk(() => {
     emit('remove:user', user.user_id)
