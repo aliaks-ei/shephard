@@ -16,172 +16,23 @@
       @submit="handleSavePlan"
     >
       <!-- Template Selection (only for new plans) -->
-      <q-card
+      <PlanTemplateSelection
         v-if="isNewPlan"
-        flat
-        bordered
-        class="q-pa-md q-mb-lg"
-      >
-        <SectionHeader
-          icon="eva-file-text-outline"
-          title="Select Template"
-          icon-size="24px"
-          spacing="q-mb-xs"
-        />
-
-        <div class="text-body2 text-grey-6 q-mb-md">
-          Select a template to base your plan on. You can modify the items and amounts after
-          selection.
-        </div>
-
-        <q-select
-          v-model="selectedTemplateOption"
-          :options="templateOptions"
-          option-label="name"
-          option-value="id"
-          label="Choose Template"
-          outlined
-          emit-value
-          map-options
-          :loading="templatesStore.isLoading"
-          :error="templateError"
-          :error-message="templateErrorMessage"
-          @update:model-value="onTemplateSelected"
-        >
-          <template #option="scope">
-            <q-item
-              v-bind="scope.itemProps"
-              class="q-pa-md"
-            >
-              <q-item-section>
-                <div class="row items-center justify-between">
-                  <div class="row">
-                    <div class="text-weight-medium">{{ scope.opt.name }}</div>
-                    <q-badge
-                      color="primary"
-                      text-color="white"
-                      class="q-px-sm q-py-xs q-ml-sm"
-                    >
-                      <q-icon
-                        name="eva-clock-outline"
-                        size="12px"
-                        class="q-mr-xs"
-                      />
-                      {{ scope.opt.duration }}
-                    </q-badge>
-                  </div>
-                  <div class="col-auto row items-center q-gutter-sm">
-                    <div class="text-weight-bold text-primary">
-                      {{ formatCurrency(scope.opt.total, scope.opt.currency) }}
-                    </div>
-                  </div>
-                </div>
-              </q-item-section>
-            </q-item>
-          </template>
-          <template #no-option>
-            <q-item>
-              <q-item-section class="text-grey"> No templates available </q-item-section>
-            </q-item>
-          </template>
-        </q-select>
-
-        <div
-          v-if="selectedTemplate"
-          class="q-mt-lg"
-        >
-          <div class="text-subtitle2 q-mb-sm">Selected Template:</div>
-          <TemplateCard
-            :template="selectedTemplate"
-            readonly
-          />
-        </div>
-      </q-card>
+        v-model="selectedTemplateOption"
+        :template-options="templateOptions"
+        :selected-template="selectedTemplate"
+        :loading="templatesStore.isLoading"
+        :error="templateError"
+        :error-message="templateErrorMessage"
+        @template-selected="onTemplateSelected"
+      />
 
       <!-- Plan Information -->
-      <q-card
-        flat
-        bordered
-        class="q-pa-md q-mb-lg"
-      >
-        <SectionHeader
-          icon="eva-info-outline"
-          title="Plan Information"
-          icon-size="24px"
-        />
-
-        <q-input
-          v-model="form.name"
-          label="Plan Name"
-          outlined
-          no-error-icon
-          :rules="[(val: string) => !!val || 'Plan name is required']"
-          :class="$q.screen.lt.md ? 'q-mb-sm' : 'q-mb-md'"
-        />
-
-        <div
-          class="row"
-          :class="$q.screen.lt.md ? 'q-col-gutter-sm' : 'q-col-gutter-md'"
-        >
-          <div class="col-12 col-sm-6">
-            <q-input
-              v-model="form.startDate"
-              label="Start Date"
-              outlined
-              no-error-icon
-              :rules="startDateRules"
-              @update:model-value="updateEndDate"
-            >
-              <template #append>
-                <q-icon
-                  name="eva-calendar-outline"
-                  class="cursor-pointer"
-                >
-                  <q-popup-proxy
-                    cover
-                    transition-show="scale"
-                    transition-hide="scale"
-                  >
-                    <q-date
-                      v-model="form.startDate"
-                      mask="YYYY-MM-DD"
-                      @update:model-value="onStartDateChange"
-                    >
-                      <div class="row items-center justify-end">
-                        <q-btn
-                          v-close-popup
-                          label="Cancel"
-                          color="primary"
-                          flat
-                          no-caps
-                        />
-                      </div>
-                    </q-date>
-                  </q-popup-proxy>
-                </q-icon>
-              </template>
-            </q-input>
-          </div>
-          <div class="col-12 col-sm-6">
-            <q-input
-              v-model="form.endDate"
-              label="End Date"
-              no-error-icon
-              outlined
-              readonly
-              :rules="[(val: string) => !!val || 'End date is required']"
-              hint="Auto-calculated from template"
-            />
-          </div>
-        </div>
-
-        <div
-          v-if="selectedTemplate"
-          class="text-caption text-grey-6 q-mt-sm"
-        >
-          Template duration: {{ selectedTemplate.duration }}
-        </div>
-      </q-card>
+      <PlanInformationForm
+        v-model="form"
+        class="q-pa-md"
+        :template-duration="selectedTemplate?.duration ?? ''"
+      />
 
       <!-- Plan Items -->
       <CategoryListSection
@@ -312,76 +163,10 @@
             <!-- Plan Information for editing existing plan -->
             <q-card flat>
               <q-card-section>
-                <SectionHeader
-                  icon="eva-info-outline"
-                  title="Plan Information"
-                  icon-size="24px"
+                <PlanInformationForm
+                  v-model="form"
+                  :template-duration="currentPlanTemplateDuration"
                 />
-
-                <q-input
-                  v-model="form.name"
-                  label="Plan Name"
-                  outlined
-                  no-error-icon
-                  :rules="[(val: string) => !!val || 'Plan name is required']"
-                  :class="$q.screen.lt.md ? 'q-mb-sm' : 'q-mb-md'"
-                />
-
-                <div
-                  class="row"
-                  :class="$q.screen.lt.md ? 'q-col-gutter-sm' : 'q-col-gutter-md'"
-                >
-                  <div class="col-12 col-sm-6">
-                    <q-input
-                      v-model="form.startDate"
-                      label="Start Date"
-                      outlined
-                      no-error-icon
-                      :rules="startDateRules"
-                      @update:model-value="updateEndDate"
-                    >
-                      <template #append>
-                        <q-icon
-                          name="eva-calendar-outline"
-                          class="cursor-pointer"
-                        >
-                          <q-popup-proxy
-                            cover
-                            transition-show="scale"
-                            transition-hide="scale"
-                          >
-                            <q-date
-                              v-model="form.startDate"
-                              mask="YYYY-MM-DD"
-                              @update:model-value="onStartDateChange"
-                            >
-                              <div class="row items-center justify-end">
-                                <q-btn
-                                  v-close-popup
-                                  label="Cancel"
-                                  color="primary"
-                                  flat
-                                  no-caps
-                                />
-                              </div>
-                            </q-date>
-                          </q-popup-proxy>
-                        </q-icon>
-                      </template>
-                    </q-input>
-                  </div>
-                  <div class="col-12 col-sm-6">
-                    <q-input
-                      v-model="form.endDate"
-                      label="End Date"
-                      outlined
-                      readonly
-                      no-error-icon
-                      :rules="[(val: string) => !!val || 'End date is required']"
-                      hint="Auto-calculated from template"
-                    />
-                  </div>
-                </div>
               </q-card-section>
             </q-card>
 
@@ -493,14 +278,14 @@ import DetailPageLayout from 'src/layouts/DetailPageLayout.vue'
 import type { ActionBarAction } from 'src/components/shared/ActionBar.vue'
 import PlanCategory from 'src/components/plans/PlanCategory.vue'
 import SharePlanDialog from 'src/components/plans/SharePlanDialog.vue'
-import TemplateCard from 'src/components/templates/TemplateCard.vue'
 import DeleteDialog from 'src/components/shared/DeleteDialog.vue'
 import PlanOverviewTab from 'src/components/plans/PlanOverviewTab.vue'
 import PlanItemsTrackingTab from 'src/components/plans/PlanItemsTrackingTab.vue'
 import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
-import SectionHeader from 'src/components/shared/SectionHeader.vue'
 import CategoryListSection from 'src/components/shared/CategoryListSection.vue'
 import ItemsSummarySection from 'src/components/shared/ItemsSummarySection.vue'
+import PlanInformationForm from 'src/components/plans/PlanInformationForm.vue'
+import PlanTemplateSelection from 'src/components/plans/PlanTemplateSelection.vue'
 import { usePlansStore } from 'src/stores/plans'
 import { useCategoriesStore } from 'src/stores/categories'
 import { useNotificationStore } from 'src/stores/notification'
@@ -511,7 +296,7 @@ import { usePlanItems } from 'src/composables/usePlanItems'
 import { useDetailPageState } from 'src/composables/useDetailPageState'
 import { useEditablePage } from 'src/composables/useEditablePage'
 import { formatCurrency } from 'src/utils/currency'
-import { calculateEndDate, getPlanStatus } from 'src/utils/plans'
+import { getPlanStatus } from 'src/utils/plans'
 import type { TemplateWithItems } from 'src/api'
 import type { PlanItemUI } from 'src/types'
 
@@ -629,30 +414,17 @@ const templateOptions = computed(() => {
     id: template.id,
     name: template.name,
     duration: template.duration,
-    total: template.total,
-    currency: template.currency,
-    permission_level: template.permission_level,
+    total: template.total ?? 0,
+    currency: template.currency ?? 'USD',
+    permission_level: template.permission_level ?? 'owner',
   }))
 })
 
-const startDateRules = computed(() => [
-  (val: string) => !!val || 'Start date is required',
-  (val: string) => {
-    if (!val) return true
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/
-    if (!dateRegex.test(val)) {
-      return 'Date must be in YYYY-MM-DD format'
-    }
-    const date = new Date(val)
-    if (isNaN(date.getTime())) {
-      return 'Please enter a valid date'
-    }
-    if (date.toISOString().split('T')[0] !== val) {
-      return 'Please enter a valid date'
-    }
-    return true
-  },
-])
+const currentPlanTemplateDuration = computed(() => {
+  if (!currentPlan.value?.template_id) return ''
+  const template = templatesStore.templates.find((t) => t.id === currentPlan.value?.template_id)
+  return template?.duration || ''
+})
 
 const isShareDialogOpen = computed({
   get: () => getDialogState('share'),
@@ -833,40 +605,8 @@ async function onTemplateSelected(templateId: string | null): Promise<void> {
 
     if (!form.value.startDate) {
       form.value.startDate = new Date().toISOString().split('T')[0] || ''
-      updateEndDate()
     }
   }
-}
-
-function updateEndDate(): void {
-  if (!form.value.startDate) return
-
-  let templateDuration: string | null = null
-
-  if (isNewPlan.value && selectedTemplate.value) {
-    templateDuration = selectedTemplate.value.duration
-  } else if (!isNewPlan.value && currentPlan.value?.template_id) {
-    const template = templatesStore.templates.find((t) => t.id === currentPlan.value?.template_id)
-    templateDuration = template?.duration || null
-  }
-
-  if (templateDuration) {
-    const startDate = new Date(form.value.startDate)
-    if (!isNaN(startDate.getTime())) {
-      const endDate = calculateEndDate(
-        startDate,
-        templateDuration as 'weekly' | 'monthly' | 'yearly',
-      )
-      form.value.endDate = endDate?.toISOString().split('T')[0] || ''
-    } else {
-      form.value.endDate = ''
-    }
-  }
-}
-
-function onStartDateChange(newDate: string): void {
-  form.value.startDate = newDate
-  updateEndDate()
 }
 
 function handleUpdateItem(itemId: string, updatedItem: PlanItemUI): void {

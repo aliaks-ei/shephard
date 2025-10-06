@@ -16,49 +16,12 @@
       @submit="saveTemplate"
     >
       <!-- Basic Information Card -->
-      <q-card
-        flat
-        bordered
-        :class="$q.screen.lt.md ? 'q-pa-md q-mb-md' : 'q-px-md q-pt-md q-mb-lg'"
-      >
-        <div
-          class="row"
-          :class="$q.screen.lt.md ? 'q-col-gutter-sm' : 'q-col-gutter-md'"
-        >
-          <div class="col-12 col-sm-8">
-            <SectionHeader
-              icon="eva-info-outline"
-              title="Basic Information"
-            />
-            <q-input
-              v-model="form.name"
-              label="Template Name"
-              outlined
-              no-error-icon
-              :hide-bottom-space="$q.screen.lt.md"
-              :rules="nameRules"
-              :error="nameError"
-              :error-message="nameErrorMessage"
-              :class="$q.screen.lt.md ? 'q-mb-sm' : 'q-mb-md'"
-              @update:model-value="clearNameError"
-            />
-          </div>
-          <div class="col-12 col-sm">
-            <SectionHeader
-              icon="eva-calendar-outline"
-              title="Duration"
-            />
-            <q-select
-              v-model="form.duration"
-              :options="durationSelectOptions"
-              outlined
-              emit-value
-              map-options
-              style="min-width: 120px"
-            />
-          </div>
-        </div>
-      </q-card>
+      <TemplateBasicInfoSection
+        v-model="form"
+        :name-error="nameError"
+        :name-error-message="nameErrorMessage"
+        @clear-name-error="clearNameError"
+      />
 
       <!-- Categories Card -->
       <CategoryListSection
@@ -146,47 +109,10 @@
     <!-- Read-only view -->
     <div v-else>
       <!-- Basic Information Card -->
-      <q-card
-        flat
-        bordered
-        :class="$q.screen.lt.md ? 'q-pa-md q-mb-md' : 'q-px-md q-pt-md q-mb-lg'"
-      >
-        <div
-          class="row"
-          :class="$q.screen.lt.md ? 'q-col-gutter-sm' : 'q-col-gutter-md'"
-        >
-          <div class="col-12 col-sm-8">
-            <SectionHeader
-              icon="eva-info-outline"
-              title="Basic Information"
-            />
-            <q-input
-              v-model="form.name"
-              label="Template Name"
-              outlined
-              readonly
-              no-error-icon
-              :hide-bottom-space="$q.screen.lt.md"
-              :class="$q.screen.lt.md ? 'q-mb-sm' : 'q-mb-md'"
-            />
-          </div>
-          <div class="col-12 col-sm">
-            <SectionHeader
-              icon="eva-calendar-outline"
-              title="Duration"
-              icon-size="24px"
-            />
-            <q-chip
-              :label="form.duration"
-              color="primary"
-              text-color="primary"
-              class="text-capitalize"
-              :ripple="false"
-              outline
-            />
-          </div>
-        </div>
-      </q-card>
+      <TemplateBasicInfoSection
+        v-model="form"
+        readonly
+      />
 
       <!-- Categories Card -->
       <CategoryListSection
@@ -285,9 +211,9 @@ import TemplateCategory from 'src/components/templates/TemplateCategory.vue'
 import CategorySelectionDialog from 'src/components/categories/CategorySelectionDialog.vue'
 import ShareTemplateDialog from 'src/components/templates/ShareTemplateDialog.vue'
 import DeleteDialog from 'src/components/shared/DeleteDialog.vue'
-import SectionHeader from 'src/components/shared/SectionHeader.vue'
 import CategoryListSection from 'src/components/shared/CategoryListSection.vue'
 import ItemsSummarySection from 'src/components/shared/ItemsSummarySection.vue'
+import TemplateBasicInfoSection from 'src/components/templates/TemplateBasicInfoSection.vue'
 import { useTemplatesStore } from 'src/stores/templates'
 import { useCategoriesStore } from 'src/stores/categories'
 import { useNotificationStore } from 'src/stores/notification'
@@ -380,33 +306,6 @@ const nameErrorMessage = ref('')
 const formattedTotalAmount = computed(() =>
   formatCurrency(totalAmount.value, templateCurrency.value),
 )
-
-const nameRules = computed(() => [
-  (val: string) => {
-    if (!val || val.trim().length === 0) {
-      return 'Template name is required'
-    }
-    if (val.length > 100) {
-      return 'Template name must be 100 characters or less'
-    }
-    return true
-  },
-])
-
-const durationSelectOptions = computed(() => [
-  {
-    label: 'Weekly',
-    value: 'weekly',
-  },
-  {
-    label: 'Monthly',
-    value: 'monthly',
-  },
-  {
-    label: 'Yearly',
-    value: 'yearly',
-  },
-])
 
 const enrichedCategories = computed(() => {
   return categoryGroups.value.reduce((acc, group) => {
