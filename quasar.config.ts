@@ -256,36 +256,69 @@ export default defineConfig((ctx) => {
         cfg.clientsClaim = true
         cfg.cleanupOutdatedCaches = true
 
-        // Cache optimization
+        // More aggressive navigation preload
+        cfg.navigationPreload = true
+
+        // Optimize runtime caching
         cfg.runtimeCaching = [
+          // API responses with Network First strategy
           {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com/,
-            handler: 'StaleWhileRevalidate',
+            urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/v1\/.*/,
+            handler: 'NetworkFirst',
             options: {
-              cacheName: 'google-fonts-stylesheets',
+              cacheName: 'supabase-api',
+              networkTimeoutSeconds: 3,
               expiration: {
-                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 5, // 5 minutes
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
               },
             },
           },
+
+          // Auth requests - Network Only
           {
-            urlPattern: /^https:\/\/fonts\.gstatic\.com/,
+            urlPattern: /^https:\/\/.*\.supabase\.co\/auth\/.*/,
+            handler: 'NetworkOnly',
+          },
+
+          // Static assets - Cache First with longer expiration
+          {
+            urlPattern: /\.(?:js|css)$/,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'google-fonts-webfonts',
+              cacheName: 'static-assets',
               expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+              },
+            },
+          },
+
+          // Fonts - Cache First with long expiration
+          {
+            urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts',
+              expiration: {
+                maxEntries: 20,
                 maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
               },
             },
           },
+
+          // Images - Cache First with size limit
           {
-            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|avif)$/,
             handler: 'CacheFirst',
             options: {
               cacheName: 'images',
               expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 90, // 90 days
               },
             },
           },

@@ -5,9 +5,26 @@ const routes: RouteRecordRaw[] = [
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/IndexPage.vue') },
-      { path: 'settings', component: () => import('pages/UserSettingsPage.vue'), name: 'settings' },
-      { path: 'templates', component: () => import('pages/TemplatesPage.vue'), name: 'templates' },
+      {
+        path: '',
+        component: () => import('pages/IndexPage.vue'),
+        meta: {
+          prefetch: ['/plans', '/templates'],
+        },
+      },
+      {
+        path: 'settings',
+        component: () => import('pages/UserSettingsPage.vue'),
+        name: 'settings',
+      },
+      {
+        path: 'templates',
+        component: () => import('pages/TemplatesPage.vue'),
+        name: 'templates',
+        meta: {
+          prefetch: ['/templates/new'],
+        },
+      },
       {
         path: 'templates/new',
         component: () => import('pages/TemplatePage.vue'),
@@ -17,13 +34,23 @@ const routes: RouteRecordRaw[] = [
         path: 'templates/:id',
         component: () => import('pages/TemplatePage.vue'),
         name: 'template',
+        meta: {
+          prefetch: ['/templates'],
+        },
       },
       {
         path: 'categories',
         component: () => import('pages/CategoriesPage.vue'),
         name: 'categories',
       },
-      { path: 'plans', component: () => import('pages/PlansPage.vue'), name: 'plans' },
+      {
+        path: 'plans',
+        component: () => import('pages/PlansPage.vue'),
+        name: 'plans',
+        meta: {
+          prefetch: ['/plans/new'],
+        },
+      },
       {
         path: 'plans/new',
         component: () => import('pages/PlanPage.vue'),
@@ -33,6 +60,9 @@ const routes: RouteRecordRaw[] = [
         path: 'plans/:id',
         component: () => import('pages/PlanPage.vue'),
         name: 'plan',
+        meta: {
+          prefetch: ['/plans'],
+        },
       },
     ],
     meta: {

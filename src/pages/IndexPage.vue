@@ -56,23 +56,27 @@
       </div>
     </div>
 
-    <!-- Expense Registration Dialog -->
-    <ExpenseRegistrationDialog
+    <!-- Expense Registration Dialog - Lazy Loaded -->
+    <component
+      :is="ExpenseRegistrationDialog"
+      v-if="showExpenseDialog"
       v-model="showExpenseDialog"
       auto-select-recent-plan
       @expense-created="onExpenseCreated"
     />
 
-    <!-- Share Plan Dialog -->
-    <SharePlanDialog
-      v-if="selectedPlanId"
+    <!-- Share Plan Dialog - Lazy Loaded -->
+    <component
+      :is="SharePlanDialog"
+      v-if="showSharePlanDialog && selectedPlanId"
       v-model="showSharePlanDialog"
       :plan-id="selectedPlanId"
     />
 
-    <!-- Share Template Dialog -->
-    <ShareTemplateDialog
-      v-if="selectedTemplateId"
+    <!-- Share Template Dialog - Lazy Loaded -->
+    <component
+      :is="ShareTemplateDialog"
+      v-if="showShareTemplateDialog && selectedTemplateId"
       v-model="showShareTemplateDialog"
       :template-id="selectedTemplateId"
     />
@@ -80,7 +84,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, defineAsyncComponent } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { usePlansStore } from 'src/stores/plans'
@@ -91,11 +95,18 @@ import QuickActionsGrid from 'src/components/dashboard/QuickActionsGrid.vue'
 import DashboardSection from 'src/components/dashboard/DashboardSection.vue'
 import EmptyPlansState from 'src/components/dashboard/EmptyPlansState.vue'
 import EmptyTemplatesState from 'src/components/dashboard/EmptyTemplatesState.vue'
-import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 import PlanCard from 'src/components/plans/PlanCard.vue'
 import TemplateCard from 'src/components/templates/TemplateCard.vue'
-import SharePlanDialog from 'src/components/plans/SharePlanDialog.vue'
-import ShareTemplateDialog from 'src/components/templates/ShareTemplateDialog.vue'
+
+const ExpenseRegistrationDialog = defineAsyncComponent(
+  () => import('src/components/expenses/ExpenseRegistrationDialog.vue'),
+)
+const SharePlanDialog = defineAsyncComponent(
+  () => import('src/components/plans/SharePlanDialog.vue'),
+)
+const ShareTemplateDialog = defineAsyncComponent(
+  () => import('src/components/templates/ShareTemplateDialog.vue'),
+)
 
 const router = useRouter()
 const plansStore = usePlansStore()
