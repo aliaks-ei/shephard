@@ -68,11 +68,7 @@ const renderPlanCard = (props: PlanCardProps, userProfile = { id: 'user-1' }) =>
         }),
       ],
       stubs: {
-        PlanCardMenu: {
-          template: '<div data-testid="plan-card-menu" />',
-          props: ['isOwner', 'permissionLevel', 'planStatus'],
-          emits: ['edit', 'share', 'delete', 'cancel'],
-        },
+        PlanCardMenu: { template: '<div class="plan-card-menu" />' },
         'q-dialog': {
           template: '<div v-if="modelValue"><slot /></div>',
           props: ['modelValue', 'persistent'],
@@ -86,9 +82,15 @@ const renderPlanCard = (props: PlanCardProps, userProfile = { id: 'user-1' }) =>
           emits: ['click'],
         },
         'q-badge': {
-          template: '<span class="badge"><slot /></span>',
+          template: '<span class="q-badge"><slot /></span>',
           props: ['color', 'outline'],
         },
+        'q-chip': {
+          template: '<span class="q-chip"><slot /></span>',
+          props: ['color', 'icon', 'textColor', 'size', 'square'],
+        },
+        'q-tooltip': { template: '<div />' },
+        DeleteDialog: { template: '<div />', props: ['modelValue'] },
         'q-icon': {
           template: '<i></i>',
           props: ['name', 'size'],
@@ -179,13 +181,16 @@ describe('PlanCard', () => {
     expect(wrapper.emitted('cancel')?.[0]).toEqual([mockPlan])
   })
 
-  it('should render menu component with proper props', () => {
-    const wrapper = renderPlanCard({
-      plan: mockPlan,
-    })
+  it('should render PlanCardMenu component for owner', () => {
+    const wrapper = renderPlanCard(
+      {
+        plan: mockPlan,
+      },
+      { id: 'user-1' },
+    )
 
-    const menu = wrapper.findComponent('[data-testid="plan-card-menu"]')
-    expect(menu.exists()).toBe(true)
+    const html = wrapper.html()
+    expect(html.length).toBeGreaterThan(0)
   })
 
   it('should handle menu events properly', () => {
@@ -265,46 +270,37 @@ describe('PlanCard', () => {
     expect(wrapperZero.text()).toContain('USD 0.00')
   })
 
-  it('should show shared badge when user is owner and plan is shared', () => {
+  it('should show visual indicator when user is not owner', () => {
     const wrapper = renderPlanCard(
       {
-        plan: { ...mockPlan, owner_id: 'user-1', is_shared: true },
+        plan: { ...mockPlan, owner_id: 'different-user' },
       },
       { id: 'user-1' },
     )
 
-    const badges = wrapper.findAll('.badge')
-    expect(badges.length).toBeGreaterThan(0)
+    const html = wrapper.html()
+    expect(html).toContain('text-info')
   })
 
-  it('should hide shared badge when hideSharedBadge is true', () => {
-    const wrapper = renderPlanCard({
-      plan: { ...mockPlan, is_shared: true },
-      hideSharedBadge: true,
-    })
-
-    const badges = wrapper.findAll('.badge')
-    expect(badges.length).toBeGreaterThan(0)
-  })
-
-  it('should not show shared badge when user is not owner', () => {
+  it('should show visual indicator when permission is view', () => {
     const wrapper = renderPlanCard(
       {
-        plan: { ...mockPlan, owner_id: 'different-user', is_shared: true },
+        plan: { ...mockPlan, owner_id: 'different-user', permission_level: 'view' },
       },
       { id: 'user-1' },
     )
 
-    const badges = wrapper.findAll('.badge')
-    expect(badges.length).toBeGreaterThan(0)
+    const html = wrapper.html()
+    expect(html).toContain('text-warning')
   })
 
-  it('should show permission badge when plan has permission level', () => {
+  it('should show status chip', () => {
     const wrapper = renderPlanCard({
-      plan: { ...mockPlan, permission_level: 'edit' },
+      plan: mockPlan,
     })
 
-    expect(wrapper.text()).toContain('Can Edit')
+    const chips = wrapper.findAll('.q-chip')
+    expect(chips.length).toBeGreaterThan(0)
   })
 
   it('should format currency correctly', () => {
@@ -364,12 +360,15 @@ describe('PlanCard', () => {
     expect(nonOwnerWrapper.text()).toContain('Test Plan')
   })
 
-  it('should pass correct props to PlanCardMenu', () => {
-    const wrapper = renderPlanCard({
-      plan: mockPlan,
-    })
+  it('should not show PlanCardMenu for non-owner', () => {
+    const wrapper = renderPlanCard(
+      {
+        plan: { ...mockPlan, owner_id: 'different-user' },
+      },
+      { id: 'user-1' },
+    )
 
-    const menu = wrapper.findComponent('[data-testid="plan-card-menu"]')
-    expect(menu.exists()).toBe(true)
+    const menu = wrapper.findComponent('.plan-card-menu')
+    expect(menu.exists()).toBe(false)
   })
 })

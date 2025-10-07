@@ -5,6 +5,7 @@ import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { ComponentProps } from 'vue-component-type-helpers'
 
 import SharePlanDialog from './SharePlanDialog.vue'
+import { usePlansStore } from 'src/stores/plans'
 
 installQuasarPlugin()
 
@@ -37,7 +38,7 @@ const renderSharePlanDialog = (props: SharePlanDialogProps) => {
       stubs: {
         ShareDialog: {
           template:
-            '<div class="share-dialog"><button class="close" @click="$emit(\'update:model-value\', false)"></button><button class="shared" @click="$emit(\'shared\')"></button></div>',
+            '<div class="share-dialog"><button class="close" @click="$emit(\'update:model-value\', false)"></button><button class="shared" @click="handleShare"></button></div>',
           props: [
             'modelValue',
             'entityId',
@@ -47,6 +48,12 @@ const renderSharePlanDialog = (props: SharePlanDialogProps) => {
             'isSharing',
             'isSearchingUsers',
           ],
+          emits: ['update:model-value', 'share-with-user'],
+          methods: {
+            handleShare() {
+              this.$emit('share-with-user', 'plan-id', 'test@example.com', 'edit')
+            },
+          },
         },
       },
     },
@@ -77,10 +84,37 @@ describe('SharePlanDialog', () => {
     expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([false])
   })
 
-  it('should emit shared when ShareDialog emits shared', async () => {
-    const wrapper = renderSharePlanDialog({ planId: 'p1', modelValue: true })
-    const button = wrapper.find('.share-dialog .shared')
+  it('should emit shared when share is successful', async () => {
+    const pinia = createTestingPinia({
+      createSpy: vi.fn,
+      stubActions: false,
+    })
+    const plansStore = usePlansStore(pinia)
+    plansStore.sharePlanWithUser = vi.fn().mockResolvedValue({ success: true })
+
+    const wrapper = mount(SharePlanDialog, {
+      props: { planId: 'p1', modelValue: true },
+      global: {
+        plugins: [pinia],
+        stubs: {
+          ShareDialog: {
+            template: '<div><button class="share-btn" @click="handleShare"></button></div>',
+            props: ['modelValue'],
+            emits: ['share-with-user'],
+            methods: {
+              handleShare() {
+                this.$emit('share-with-user', 'p1', 'test@example.com', 'edit')
+              },
+            },
+          },
+        },
+      },
+    })
+
+    const button = wrapper.find('.share-btn')
     await button.trigger('click')
+    await wrapper.vm.$nextTick()
+
     expect(wrapper.emitted('shared')).toBeTruthy()
   })
 })
