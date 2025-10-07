@@ -13,7 +13,7 @@
       <q-item-section class="justify-between">
         <div class="row items-start justify-between">
           <div class="col">
-            <h3 class="text-h6 text-weight-bold q-mt-none q-mb-xs">
+            <h3 class="text-h6 q-mt-none q-mb-xs">
               {{ template.name }}
             </h3>
           </div>

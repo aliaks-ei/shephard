@@ -22,7 +22,7 @@
           :name-initial="userStore.userProfile?.nameInitial"
           size="72px"
         />
-        <h3 class="text-center q-mt-sm text-weight-bold text-h6 q-mb-none">
+        <h3 class="text-center q-mt-sm text-h6 q-mb-none">
           {{ userStore.userProfile?.displayName }}
         </h3>
         <p class="text-center text-caption q-mb-none">

@@ -139,7 +139,7 @@
               <div class="row items-center q-gutter-xs">
                 <div
                   v-if="group.selectedCount > 0"
-                  class="text-caption text-weight-bold text-primary"
+                  class="text-caption text-weight-medium text-primary"
                 >
                   {{ group.selectedCount }} selected
                 </div>
@@ -160,6 +160,7 @@
                   <q-checkbox
                     :model-value="isItemSelected(item.id)"
                     color="primary"
+                    dense
                     @update:model-value="(val) => toggleItemSelection(item, val)"
                   />
                 </q-item-section>
@@ -168,29 +169,7 @@
                   <q-item-label>{{ item.name }}</q-item-label>
                   <q-item-label caption>
                     {{ formatCurrency(item.amount, currency) }}
-                    <span
-                      v-if="item.is_completed ?? false"
-                      class="text-positive"
-                    >
-                      • Completed
-                    </span>
                   </q-item-label>
-                </q-item-section>
-
-                <q-item-section side>
-                  <q-chip
-                    v-if="item.is_completed ?? false"
-                    color="positive"
-                    text-color="white"
-                    size="sm"
-                    dense
-                  >
-                    <q-icon
-                      name="eva-checkmark-circle-2-outline"
-                      class="q-mr-xs"
-                    />
-                    Completed
-                  </q-chip>
                 </q-item-section>
               </q-item>
             </q-list>

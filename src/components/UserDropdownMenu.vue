@@ -16,7 +16,7 @@
             :name-initial="userStore.userProfile?.nameInitial"
             size="72px"
           />
-          <p class="text-center q-mt-sm text-weight-bold text-h6 q-mb-none">
+          <p class="text-center q-mt-md text-h6 q-mb-none">
             {{ userStore.userProfile?.displayName }}
           </p>
           <p class="text-center text-caption q-mb-none">

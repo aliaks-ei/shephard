@@ -185,12 +185,12 @@
                   :class="item.is_completed ? 'text-strike' : ''"
                 >
                   <q-item-section
-                    class="q-pr-sm"
                     style="min-width: auto"
                     avatar
                   >
                     <q-checkbox
                       :model-value="item.is_completed"
+                      dense
                       @update:model-value="(value) => toggleItemCompletion(item, value)"
                       :disable="!canEdit"
                       color="primary"
