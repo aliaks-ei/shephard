@@ -1,4 +1,5 @@
 export * from './categories'
+export * from './expenses'
 export * from './plans'
 export * from './templates'
 export * from './users'

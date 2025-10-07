@@ -82,6 +82,16 @@ describe('Notification Store', () => {
         message: 'Custom message',
         position: 'top',
         group: 'test-group',
+        actions: [
+          {
+            icon: 'eva-close-outline',
+            color: 'white',
+            round: true,
+            dense: true,
+            size: 'sm',
+            handler: expect.any(Function),
+          },
+        ],
       })
     })
 
@@ -157,6 +167,16 @@ describe('Notification Store', () => {
         icon: 'eva-alert-triangle-outline',
         timeout: 5000,
         message: 'Error message',
+        actions: [
+          {
+            icon: 'eva-close-outline',
+            color: 'white',
+            round: true,
+            dense: true,
+            size: 'sm',
+            handler: expect.any(Function),
+          },
+        ],
       })
     })
   })
@@ -175,6 +195,16 @@ describe('Notification Store', () => {
         icon: 'eva-alert-triangle-outline',
         timeout: 4000,
         message: 'Warning message',
+        actions: [
+          {
+            icon: 'eva-close-outline',
+            color: 'white',
+            round: true,
+            dense: true,
+            size: 'sm',
+            handler: expect.any(Function),
+          },
+        ],
       })
     })
   })

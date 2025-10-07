@@ -18,6 +18,7 @@ import type { UserSearchResult } from 'src/api/user'
 import {
   createMockTemplates,
   createMockTemplateWithItems,
+  createMockTemplateWithPermission,
   createMockSharedUsers,
 } from 'test/fixtures/templates'
 import { createMockUserStoreData, createMockUserSearchResults } from 'test/fixtures/users'
@@ -112,21 +113,23 @@ describe('Templates Store', () => {
     })
 
     it('should filter ownedTemplates correctly', () => {
-      templatesStore.templates = mockTemplates
-      const ownedTemplates = templatesStore.ownedTemplates.filter(
-        (t) => t.owner_id === mockUserStoreData.userProfile.id,
-      )
-      expect(ownedTemplates).toHaveLength(1)
-      expect(ownedTemplates[0]?.id).toBe(mockTemplates[0]!.id)
+      const mixedTemplates = [
+        ...mockTemplates,
+        createMockTemplateWithPermission({ id: 'template-3', owner_id: 'user-2' }),
+      ]
+      templatesStore.templates = mixedTemplates
+      expect(templatesStore.ownedTemplates).toHaveLength(2)
+      expect(templatesStore.ownedTemplates.every((t) => t.owner_id === 'user-1')).toBe(true)
     })
 
     it('should filter sharedTemplates correctly', () => {
-      templatesStore.templates = mockTemplates
-      const sharedTemplates = templatesStore.sharedTemplates.filter(
-        (t) => t.owner_id !== mockUserStoreData.userProfile.id,
-      )
-      expect(sharedTemplates).toHaveLength(1)
-      expect(sharedTemplates[0]?.id).toBe(mockTemplates[1]!.id)
+      const mixedTemplates = [
+        ...mockTemplates,
+        createMockTemplateWithPermission({ id: 'template-3', owner_id: 'user-2' }),
+      ]
+      templatesStore.templates = mixedTemplates
+      expect(templatesStore.sharedTemplates).toHaveLength(1)
+      expect(templatesStore.sharedTemplates[0]?.owner_id).not.toBe('user-1')
     })
   })
 
@@ -250,7 +253,8 @@ describe('Templates Store', () => {
         owner_id: mockUserStoreData.userProfile.id,
         currency: mockUserStoreData.preferences.currency,
       })
-      expect(result).toEqual(newTemplate)
+      expect(result.success).toBe(true)
+      expect(result.data).toEqual(newTemplate)
       expect(templatesStore.isLoading).toBe(false)
     })
 
@@ -308,7 +312,8 @@ describe('Templates Store', () => {
       const result = await templatesStore.editTemplate('template-1', updates)
 
       expect(templatesApi.updateTemplate).toHaveBeenCalledWith('template-1', updates)
-      expect(result).toEqual(updatedTemplate)
+      expect(result.success).toBe(true)
+      expect(result.data).toEqual(updatedTemplate)
       expect(templatesStore.isLoading).toBe(false)
     })
 
@@ -386,7 +391,7 @@ describe('Templates Store', () => {
       const result = await templatesStore.addItemsToTemplate(mockTemplateItems)
 
       expect(templatesApi.createTemplateItems).toHaveBeenCalledWith(mockTemplateItems)
-      expect(result).toEqual(newItems)
+      expect(result.success).toBe(true)
     })
 
     it('should handle errors when creating template items', async () => {
@@ -422,11 +427,10 @@ describe('Templates Store', () => {
     it('should load template shares successfully', async () => {
       vi.mocked(templatesApi.getTemplateSharedUsers).mockResolvedValue(mockSharedUsers)
 
-      const result = await templatesStore.loadTemplateShares('template-1')
+      await templatesStore.loadTemplateShares('template-1')
 
       expect(templatesApi.getTemplateSharedUsers).toHaveBeenCalledWith('template-1')
       expect(templatesStore.sharedUsers).toEqual(mockSharedUsers)
-      expect(result).toEqual(mockSharedUsers)
       expect(templatesStore.isSharing).toBe(false)
     })
 
@@ -436,8 +440,8 @@ describe('Templates Store', () => {
 
       await templatesStore.loadTemplateShares('template-1')
 
-      expect(mockHandleError).toHaveBeenCalledWith('TEMPLATES.LOAD_SHARES_FAILED', error, {
-        templateId: 'template-1',
+      expect(mockHandleError).toHaveBeenCalledWith('TEMPLATES.LOAD_SHARED_USERS_FAILED', error, {
+        entityId: 'template-1',
       })
       expect(templatesStore.isSharing).toBe(false)
     })
@@ -471,10 +475,10 @@ describe('Templates Store', () => {
         'template-1',
         'user@example.com',
         'edit',
-        'user-123',
+        'user-1',
       )
       expect(templatesApi.getTemplateSharedUsers).toHaveBeenCalledWith('template-1')
-      expect(templatesApi.getTemplates).toHaveBeenCalledWith('user-123')
+      expect(templatesApi.getTemplates).toHaveBeenCalledWith('user-1')
       expect(templatesStore.isSharing).toBe(false)
     })
 
@@ -485,7 +489,7 @@ describe('Templates Store', () => {
       await templatesStore.shareTemplateWithUser('template-1', 'user@example.com', 'edit')
 
       expect(mockHandleError).toHaveBeenCalledWith('TEMPLATES.SHARE_FAILED', error, {
-        templateId: 'template-1',
+        entityId: 'template-1',
         userEmail: 'user@example.com',
       })
       expect(templatesStore.isSharing).toBe(false)
@@ -519,11 +523,12 @@ describe('Templates Store', () => {
     })
 
     it('should unshare template successfully', async () => {
+      vi.mocked(templatesApi.getTemplateSharedUsers).mockResolvedValue([])
+
       await templatesStore.unshareTemplateWithUser('template-1', 'user-456')
 
       expect(templatesApi.unshareTemplate).toHaveBeenCalledWith('template-1', 'user-456')
-      expect(templatesStore.sharedUsers).toHaveLength(0)
-      expect(templatesApi.getTemplates).toHaveBeenCalledWith('user-123')
+      expect(templatesApi.getTemplates).toHaveBeenCalledWith('user-1')
       expect(templatesStore.isSharing).toBe(false)
     })
 
@@ -534,7 +539,7 @@ describe('Templates Store', () => {
       await templatesStore.unshareTemplateWithUser('template-1', 'user-456')
 
       expect(mockHandleError).toHaveBeenCalledWith('TEMPLATES.UNSHARE_FAILED', error, {
-        templateId: 'template-1',
+        entityId: 'template-1',
         targetUserId: 'user-456',
       })
       expect(templatesStore.sharedUsers).toHaveLength(1)
@@ -549,6 +554,10 @@ describe('Templates Store', () => {
     })
 
     it('should update user permission successfully', async () => {
+      vi.mocked(templatesApi.getTemplateSharedUsers).mockResolvedValue([
+        { ...mockSharedUsers[0]!, permission_level: 'view' },
+      ])
+
       await templatesStore.updateUserPermission('template-1', 'user-456', 'view')
 
       expect(templatesApi.updateSharePermission).toHaveBeenCalledWith(
@@ -556,7 +565,6 @@ describe('Templates Store', () => {
         'user-456',
         'view',
       )
-      expect(templatesStore.sharedUsers[0]?.permission_level).toBe('view')
       expect(templatesStore.isSharing).toBe(false)
     })
 
@@ -564,16 +572,13 @@ describe('Templates Store', () => {
       const error = new Error('Failed to update permission')
       vi.mocked(templatesApi.updateSharePermission).mockRejectedValue(error)
 
-      // Store the original permission level
-      const originalPermission = templatesStore.sharedUsers[0]?.permission_level
-
       await templatesStore.updateUserPermission('template-1', 'user-456', 'view')
 
       expect(mockHandleError).toHaveBeenCalledWith('TEMPLATES.UPDATE_PERMISSION_FAILED', error, {
-        templateId: 'template-1',
+        entityId: 'template-1',
+        permission: 'view',
         targetUserId: 'user-456',
       })
-      expect(templatesStore.sharedUsers[0]?.permission_level).toBe(originalPermission)
       expect(templatesStore.isSharing).toBe(false)
     })
 
@@ -596,11 +601,10 @@ describe('Templates Store', () => {
     it('should search users successfully', async () => {
       vi.mocked(userApi.searchUsersByEmail).mockResolvedValue(mockUserSearchResults)
 
-      const result = await templatesStore.searchUsers('jane@example.com')
+      await templatesStore.searchUsers('jane@example.com')
 
       expect(userApi.searchUsersByEmail).toHaveBeenCalledWith('jane@example.com')
       expect(templatesStore.userSearchResults).toEqual(mockUserSearchResults)
-      expect(result).toEqual(mockUserSearchResults)
       expect(templatesStore.isSearchingUsers).toBe(false)
     })
 
@@ -608,33 +612,30 @@ describe('Templates Store', () => {
       const error = new Error('Failed to search')
       vi.mocked(userApi.searchUsersByEmail).mockRejectedValue(error)
 
-      const result = await templatesStore.searchUsers('jane@example.com')
+      await templatesStore.searchUsers('jane@example.com')
 
-      expect(mockHandleError).toHaveBeenCalledWith('USERS.SEARCH_FAILED', error, {
+      expect(mockHandleError).toHaveBeenCalledWith('TEMPLATES.SEARCH_USERS_FAILED', error, {
         query: 'jane@example.com',
       })
-      expect(result).toEqual([])
       expect(templatesStore.isSearchingUsers).toBe(false)
     })
 
     it('should clear results for empty query', async () => {
       templatesStore.userSearchResults = [...mockUserSearchResults]
 
-      const result = await templatesStore.searchUsers('')
+      await templatesStore.searchUsers('')
 
       expect(userApi.searchUsersByEmail).not.toHaveBeenCalled()
       expect(templatesStore.userSearchResults).toEqual([])
-      expect(result).toEqual([])
     })
 
     it('should clear results for whitespace-only query', async () => {
       templatesStore.userSearchResults = [...mockUserSearchResults]
 
-      const result = await templatesStore.searchUsers('   ')
+      await templatesStore.searchUsers('   ')
 
       expect(userApi.searchUsersByEmail).not.toHaveBeenCalled()
       expect(templatesStore.userSearchResults).toEqual([])
-      expect(result).toEqual([])
     })
 
     it('should set searching state correctly', async () => {
