@@ -85,17 +85,3 @@ export const setupThemeMock = () => {
     mockToggleTheme,
   }
 }
-
-/**
- * Generic helper to mock any composable
- */
-export const mockComposable = <T extends Record<string, unknown>>(
-  composablePath: string,
-  mockImplementation: T,
-): T => {
-  vi.mock(composablePath, () => ({
-    [composablePath.split('/').pop()!]: vi.fn(() => mockImplementation),
-  }))
-
-  return mockImplementation
-}

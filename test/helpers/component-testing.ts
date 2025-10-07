@@ -5,36 +5,37 @@ import { setupTestingPinia, setupMockCategoriesStore } from './pinia-mocks'
 import { createMockCategories } from '../fixtures'
 import type { Component } from 'vue'
 
+const { mockNotify, mockDialog } = vi.hoisted(() => ({
+  mockNotify: vi.fn(),
+  mockDialog: vi.fn(),
+}))
+
+vi.mock('quasar', () => ({
+  Quasar: {},
+  Notify: {
+    create: mockNotify,
+    registerType: vi.fn(),
+    setDefaults: vi.fn(),
+  },
+  Dialog: {
+    create: mockDialog,
+  },
+  Dark: {
+    set: vi.fn(),
+    isActive: false,
+    mode: 'auto',
+  },
+  Loading: {
+    show: vi.fn(),
+    hide: vi.fn(),
+  },
+}))
+
 /**
  * Sets up Quasar testing environment with common mocks
  */
 export const setupQuasarTesting = () => {
   installQuasarPlugin()
-
-  const mockNotify = vi.fn()
-  const mockDialog = vi.fn()
-
-  // Mock Quasar plugins
-  vi.mock('quasar', () => ({
-    Quasar: {},
-    Notify: {
-      create: mockNotify,
-      registerType: vi.fn(),
-      setDefaults: vi.fn(),
-    },
-    Dialog: {
-      create: mockDialog,
-    },
-    Dark: {
-      set: vi.fn(),
-      isActive: false,
-      mode: 'auto',
-    },
-    Loading: {
-      show: vi.fn(),
-      hide: vi.fn(),
-    },
-  }))
 
   return { mockNotify, mockDialog }
 }
