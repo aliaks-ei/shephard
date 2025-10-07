@@ -1,9 +1,9 @@
 import { mount, flushPromises } from '@vue/test-utils'
 import { createTestingPinia } from '@pinia/testing'
-import { it, expect, vi, beforeEach } from 'vitest'
+import { it, expect, beforeEach, vi } from 'vitest'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 import { useUserStore } from 'src/stores/user'
-import UserDropdownMenu from './UserDropdownMenu.vue'
+import MobileUserDialog from './MobileUserDialog.vue'
 
 installQuasarPlugin()
 
@@ -20,8 +20,11 @@ const UserAvatarMock = {
   props: ['avatarUrl', 'nameInitial', 'size'],
 }
 
-function createWrapper() {
-  const wrapper = mount(UserDropdownMenu, {
+function createWrapper(modelValue = true) {
+  const wrapper = mount(MobileUserDialog, {
+    props: {
+      modelValue,
+    },
     global: {
       plugins: [
         createTestingPinia({
@@ -40,13 +43,22 @@ function createWrapper() {
       ],
       stubs: {
         UserAvatar: UserAvatarMock,
-        QBtn: { template: '<button class="q-btn"><slot /></button>' },
-        QMenu: { template: '<div class="q-menu"><slot /></div>' },
+        QDialog: {
+          template: '<div class="q-dialog" v-if="modelValue"><slot /></div>',
+          props: ['modelValue', 'transitionShow', 'transitionHide'],
+          emits: ['update:modelValue'],
+        },
+        QCard: { template: '<div class="q-card"><slot /></div>' },
+        QCardSection: { template: '<div class="q-card-section"><slot /></div>' },
+        QBtn: {
+          template: '<button class="q-btn" @click="$emit(\'click\')"><slot /></button>',
+          props: ['icon', 'flat', 'round', 'dense'],
+          emits: ['click'],
+        },
         QList: { template: '<div class="q-list"><slot /></div>' },
         QItem: {
-          template:
-            '<div :class="[\'q-item\', $attrs.class]" :to="to" @click="$emit(\'click\')"><slot /></div>',
-          props: ['to', 'clickable', 'exact'],
+          template: '<div class="q-item" :to="to" @click="$emit(\'click\')"><slot /></div>',
+          props: ['clickable', 'to', 'exact'],
           emits: ['click'],
         },
         QItemSection: { template: '<div class="q-item-section"><slot /></div>', props: ['avatar'] },
@@ -65,35 +77,56 @@ beforeEach(() => {
   vi.clearAllMocks()
 })
 
-it('renders the UserAvatar component', () => {
+it('renders when modelValue is true', () => {
+  const { wrapper } = createWrapper(true)
+  expect(wrapper.find('.q-dialog').exists()).toBe(true)
+})
+
+it('does not render when modelValue is false', () => {
+  const { wrapper } = createWrapper(false)
+  expect(wrapper.find('.q-dialog').exists()).toBe(false)
+})
+
+it('renders UserAvatar component', () => {
   const { wrapper } = createWrapper()
 
   const avatar = wrapper.findComponent(UserAvatarMock)
   expect(avatar.exists()).toBe(true)
+  expect(avatar.props('size')).toBe('72px')
 })
 
-it('displays user information in menu', () => {
+it('has a close button that emits update:modelValue', async () => {
   const { wrapper } = createWrapper()
 
-  const menuContent = wrapper.find('.q-menu')
-  expect(menuContent.exists()).toBe(true)
-  expect(wrapper.findAllComponents(UserAvatarMock).length).toBeGreaterThan(0)
+  const closeButton = wrapper.findAll('.q-btn').find((btn) => btn.classes('absolute'))
+  await closeButton?.trigger('click')
+
+  expect(wrapper.emitted('update:modelValue')).toBeTruthy()
+  expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([false])
 })
 
 it('has a settings menu item with correct link', () => {
   const { wrapper } = createWrapper()
 
   const settingsItem = wrapper.findAll('.q-item').find((item) => item.text().includes('Settings'))
-
   expect(settingsItem).toBeDefined()
   expect(settingsItem?.attributes('to')).toBe('/settings')
+})
+
+it('closes dialog when settings item is clicked', async () => {
+  const { wrapper } = createWrapper()
+
+  const settingsItem = wrapper.findAll('.q-item').find((item) => item.text().includes('Settings'))
+  await settingsItem?.trigger('click')
+
+  expect(wrapper.emitted('update:modelValue')).toBeTruthy()
+  expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([false])
 })
 
 it('has a sign out menu item', () => {
   const { wrapper } = createWrapper()
 
   const signOutItem = wrapper.findAll('.q-item').find((item) => item.text().includes('Sign Out'))
-
   expect(signOutItem).toBeDefined()
   expect(signOutItem?.classes()).toContain('text-negative')
 })
@@ -102,8 +135,10 @@ it('calls signOut and redirects when sign out is clicked', async () => {
   const { wrapper, userStore } = createWrapper()
 
   const signOutItem = wrapper.findAll('.q-item').find((item) => item.text().includes('Sign Out'))
-
   await signOutItem?.trigger('click')
+
+  expect(wrapper.emitted('update:modelValue')).toBeTruthy()
+  expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([false])
 
   expect(userStore.signOut).toHaveBeenCalled()
 

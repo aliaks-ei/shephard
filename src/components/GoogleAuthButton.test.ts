@@ -2,6 +2,7 @@ import { mount, flushPromises } from '@vue/test-utils'
 import { createTestingPinia } from '@pinia/testing'
 import { it, expect, beforeEach, vi } from 'vitest'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
+import { nextTick } from 'vue'
 import GoogleAuthButton from './GoogleAuthButton.vue'
 
 vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'test-client-id')
@@ -58,7 +59,7 @@ beforeEach(() => {
   vi.clearAllMocks()
 })
 
-it('should render Google Sign In button when nonce is ready', () => {
+it('renders Google Sign In button when nonce is ready', () => {
   const { wrapper } = mountComponent(true)
 
   expect(wrapper.find('#g_id_onload').exists()).toBe(true)
@@ -66,7 +67,7 @@ it('should render Google Sign In button when nonce is ready', () => {
   expect(wrapper.find('.q-spinner').exists()).toBe(false)
 })
 
-it('should render loading spinner when nonce is not ready', () => {
+it('renders loading spinner when nonce is not ready', () => {
   const { wrapper } = mountComponent(false)
 
   expect(wrapper.find('#g_id_onload').exists()).toBe(false)
@@ -76,21 +77,21 @@ it('should render loading spinner when nonce is not ready', () => {
   expect(wrapper.find('button').exists()).toBe(true)
 })
 
-it('should set correct Google client ID from environment variable', () => {
+it('sets correct Google client ID from environment variable', () => {
   const { wrapper } = mountComponent()
 
   const gIdOnload = wrapper.find('#g_id_onload')
   expect(gIdOnload.attributes('data-client_id')).toBe('test-client-id')
 })
 
-it('should set correct nonce in data-nonce attribute', () => {
+it('sets correct nonce in data-nonce attribute', () => {
   const { wrapper } = mountComponent()
 
   const gIdOnload = wrapper.find('#g_id_onload')
   expect(gIdOnload.attributes('data-nonce')).toBe('mock-hashed-nonce')
 })
 
-it('should call refreshGoogleAuth on mount', async () => {
+it('calls refreshGoogleAuth on mount', async () => {
   mountComponent()
 
   await flushPromises()
@@ -99,7 +100,7 @@ it('should call refreshGoogleAuth on mount', async () => {
   expect(mockInitGoogleAuth).toHaveBeenCalledTimes(1)
 })
 
-it('should call cleanup on unmount', () => {
+it('calls cleanup on unmount', () => {
   const { wrapper } = mountComponent()
 
   mockCleanup.mockClear()
@@ -108,9 +109,9 @@ it('should call cleanup on unmount', () => {
   expect(mockCleanup).toHaveBeenCalledTimes(1)
 })
 
-it('tests refresh functionality', async () => {
+it('calls refreshGoogleAuth when refresh button is clicked', async () => {
   const { wrapper } = mountComponent(false)
-  await wrapper.vm.$nextTick()
+  await nextTick()
 
   mockGenerateNonce.mockClear()
   mockInitGoogleAuth.mockClear()
