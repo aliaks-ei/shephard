@@ -28,7 +28,7 @@ describe('ListPageSkeleton', () => {
 
   it('renders the specified count of skeleton groups', () => {
     const wrapper = renderComponent({ count: 3 })
-    const columns = wrapper.findAll('.col-12.col-sm-6.col-lg-4.col-xl-3')
+    const columns = wrapper.findAll('.col-12')
     expect(columns.length).toBe(3)
   })
 })
