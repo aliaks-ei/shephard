@@ -1,5 +1,6 @@
 import { mount } from '@vue/test-utils'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
+import { createTestingPinia } from '@pinia/testing'
 import { vi, it, expect, beforeEach } from 'vitest'
 import type { ComponentProps } from 'vue-component-type-helpers'
 
@@ -12,23 +13,62 @@ const mockRouter = { push: mockRouterPush }
 
 vi.mock('vue-router', () => ({
   useRouter: () => mockRouter,
-  useRoute: () => ({ fullPath: '/templates' }),
+  useRoute: () => ({ fullPath: '/templates', params: {} }),
+}))
+
+vi.mock('src/composables/usePwaInstall', () => ({
+  usePwaInstall: () => ({
+    isInstallable: { value: false },
+    promptInstall: vi.fn(),
+    dismissInstall: vi.fn(),
+  }),
 }))
 
 type MainLayoutProps = ComponentProps<typeof MainLayout>
 
 const renderMainLayout = (props: MainLayoutProps = {}) => {
+  const pinia = createTestingPinia({
+    createSpy: vi.fn,
+    initialState: {
+      auth: {
+        isLoading: false,
+        isAuthenticated: true,
+        user: {
+          id: 'user-1',
+          email: 'test@example.com',
+          user_metadata: {
+            full_name: 'Test User',
+          },
+          created_at: new Date().toISOString(),
+        },
+      },
+      preferences: {
+        isLoading: false,
+        preferences: {
+          theme: 'auto',
+          pushNotificationsEnabled: false,
+          currency: 'USD',
+        },
+      },
+    },
+  })
+
   return mount(MainLayout, {
     props,
     global: {
+      plugins: [pinia],
       stubs: {
         'router-view': true,
         UserDropdownMenu: true,
+        UserAvatar: true,
         NavigationDrawer: {
           template:
             '<div data-testid="navigation-drawer" :items="items" :is-mini-mode="isMiniMode" />',
           props: ['items', 'isMiniMode'],
         },
+        MobileBottomNavigation: true,
+        ExpenseRegistrationDialog: true,
+        MobileUserDialog: true,
       },
     },
   })
@@ -69,35 +109,6 @@ it('should render UserDropdownMenu component', () => {
   expect(userDropdown.exists()).toBe(true)
 })
 
-it('should have menu button configuration for mobile screens', () => {
-  const wrapper = renderMainLayout()
-
-  const toolbar = wrapper.find('.q-toolbar')
-  expect(toolbar.exists()).toBe(true)
-})
-
-it('should render mobile navigation drawer', () => {
-  const wrapper = renderMainLayout()
-
-  const drawer = wrapper.find('.q-drawer')
-  expect(drawer.exists()).toBe(true)
-  expect(drawer.classes()).toContain('q-drawer--mobile')
-
-  const drawerContent = wrapper.find('.q-drawer__content')
-  expect(drawerContent.classes()).toContain('q-py-md')
-
-  const navigationDrawer = wrapper.find('[data-testid="navigation-drawer"]')
-  expect(navigationDrawer.exists()).toBe(true)
-})
-
-it('should render sticky navigation', () => {
-  const wrapper = renderMainLayout()
-
-  const stickyNav = wrapper.find('.q-page-sticky')
-  expect(stickyNav.exists()).toBe(true)
-  expect(stickyNav.classes()).toContain('navigation-sticky-bg')
-})
-
 it('should render router-view in page container', () => {
   const wrapper = renderMainLayout()
 
@@ -110,38 +121,22 @@ it('should render router-view in page container', () => {
   expect(routerView.exists()).toBe(true)
 })
 
-it('should apply correct CSS classes to page', () => {
+it('should render sticky navigation with NavigationDrawer', () => {
   const wrapper = renderMainLayout()
 
-  const page = wrapper.find('.q-page')
-  expect(page.classes()).toContain('shadow-1')
-})
+  const stickyNav = wrapper.find('.q-page-sticky')
+  expect(stickyNav.exists()).toBe(true)
+  expect(stickyNav.classes()).toContain('navigation-sticky-bg')
 
-it('should pass navigation items to NavigationDrawer components', () => {
-  const wrapper = renderMainLayout()
-
-  const navigationDrawers = wrapper.findAll('[data-testid="navigation-drawer"]')
-  expect(navigationDrawers).toHaveLength(2)
-
-  navigationDrawers.forEach((drawer) => {
-    expect(drawer.attributes('items')).toBeDefined()
-  })
-})
-
-it('should pass isMiniMode prop to sticky NavigationDrawer', () => {
-  const wrapper = renderMainLayout()
-
-  const stickySection = wrapper.find('.q-page-sticky')
-  const stickyNavigationDrawer = stickySection.find('[data-testid="navigation-drawer"]')
-
+  const stickyNavigationDrawer = stickyNav.find('[data-testid="navigation-drawer"]')
   expect(stickyNavigationDrawer.exists()).toBe(true)
   expect(stickyNavigationDrawer.attributes('is-mini-mode')).toBeDefined()
 })
 
-it('should have drawer toggle functionality', () => {
+it('should render dialogs', () => {
   const wrapper = renderMainLayout()
-
-  const drawer = wrapper.find('.q-drawer')
-  expect(drawer.exists()).toBe(true)
-  expect(drawer.classes()).toContain('q-drawer--mobile')
+  const expenseDialog = wrapper.findComponent({ name: 'ExpenseRegistrationDialog' })
+  const mobileUserDialog = wrapper.findComponent({ name: 'MobileUserDialog' })
+  expect(expenseDialog.exists()).toBe(true)
+  expect(mobileUserDialog.exists()).toBe(true)
 })
