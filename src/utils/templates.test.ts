@@ -159,7 +159,7 @@ describe('templates utils', () => {
 
       it('should sort by total (descending)', () => {
         const result = filterAndSortTemplates(mockTemplates, '', 'total')
-        expect(result.map((t) => t.total)).toEqual([1200, 100, 5, null])
+        expect(result.map((t) => t.total)).toEqual([1200, 100, 5, 0])
       })
 
       it('should sort by duration (ascending)', () => {
@@ -173,7 +173,7 @@ describe('templates utils', () => {
           '2024-02-01T00:00:00Z',
           '2024-01-15T00:00:00Z',
           '2024-01-01T00:00:00Z',
-          null,
+          '',
         ])
       })
 
@@ -209,7 +209,7 @@ describe('templates utils', () => {
 
         const resultByTotal = filterAndSortTemplates(templatesWithNulls, '', 'total')
         expect(resultByTotal[0]?.total).toBe(100)
-        expect(resultByTotal[1]?.total).toBe(null)
+        expect(resultByTotal[1]?.total).toBe(0)
       })
 
       it('should fall back to name sorting for unknown sort field', () => {
