@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils'
-import { createTestingPinia } from '@pinia/testing'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
+import { nextTick } from 'vue'
 import type { ComponentProps } from 'vue-component-type-helpers'
 
 import CategorySelectionDialog from './CategorySelectionDialog.vue'
@@ -48,12 +48,11 @@ const renderCategorySelectionDialog = (props: Partial<CategorySelectionDialogPro
   return mount(CategorySelectionDialog, {
     props: { ...defaultProps, ...props },
     global: {
-      plugins: [
-        createTestingPinia({
-          createSpy: vi.fn,
-          stubActions: true,
-        }),
-      ],
+      stubs: {
+        QDialog: {
+          template: '<div><slot /></div>',
+        },
+      },
     },
   })
 }
@@ -63,123 +62,152 @@ describe('CategorySelectionDialog', () => {
     vi.clearAllMocks()
   })
 
-  it('should mount component properly', () => {
+  it('renders when modelValue is true', () => {
     const wrapper = renderCategorySelectionDialog()
     expect(wrapper.exists()).toBe(true)
   })
 
-  it('should have correct props', () => {
-    const wrapper = renderCategorySelectionDialog({
-      modelValue: false,
-      usedCategoryIds: ['category-1'],
-      categories: mockCategories,
+  describe('Category filtering', () => {
+    it('filters out used categories', () => {
+      const wrapper = renderCategorySelectionDialog({
+        usedCategoryIds: ['category-1', 'category-2'],
+      })
+
+      const text = wrapper.text()
+      expect(text).not.toContain('Rent/Mortgage')
+      expect(text).not.toContain('Transportation')
+      expect(text).toContain('Entertainment')
     })
 
-    expect(wrapper.props()).toEqual({
-      modelValue: false,
-      usedCategoryIds: ['category-1'],
-      categories: mockCategories,
-    })
-  })
-
-  describe('Component Behavior', () => {
-    it('should render with different prop combinations', () => {
-      const wrapper1 = renderCategorySelectionDialog({
-        usedCategoryIds: ['category-2'],
-      })
-      const wrapper2 = renderCategorySelectionDialog({
-        usedCategoryIds: ['category-1', 'category-2', 'category-3'],
-      })
-      const wrapper3 = renderCategorySelectionDialog({
+    it('shows all categories when none are used', () => {
+      const wrapper = renderCategorySelectionDialog({
         usedCategoryIds: [],
       })
 
-      expect(wrapper1.exists()).toBe(true)
-      expect(wrapper2.exists()).toBe(true)
-      expect(wrapper3.exists()).toBe(true)
+      const text = wrapper.text()
+      expect(text).toContain('Rent/Mortgage')
+      expect(text).toContain('Transportation')
+      expect(text).toContain('Entertainment')
     })
 
-    it('should handle edge case props without errors', () => {
-      const wrapper1 = renderCategorySelectionDialog({
+    it('shows empty state when all categories are used', () => {
+      const wrapper = renderCategorySelectionDialog({
+        usedCategoryIds: ['category-1', 'category-2', 'category-3'],
+      })
+
+      expect(wrapper.text()).toContain('All categories are already in use')
+    })
+  })
+
+  describe('Search functionality', () => {
+    it('filters categories by search query', async () => {
+      const wrapper = renderCategorySelectionDialog()
+
+      const searchInput = wrapper.find('input')
+      await searchInput.setValue('rent')
+      await nextTick()
+
+      const text = wrapper.text()
+      expect(text).toContain('Rent/Mortgage')
+      expect(text).not.toContain('Transportation')
+      expect(text).not.toContain('Entertainment')
+    })
+
+    it('search is case insensitive', async () => {
+      const wrapper = renderCategorySelectionDialog()
+
+      const searchInput = wrapper.find('input')
+      await searchInput.setValue('TRANSPORT')
+      await nextTick()
+
+      const text = wrapper.text()
+      expect(text).toContain('Transportation')
+      expect(text).not.toContain('Rent/Mortgage')
+    })
+
+    it('shows empty state when search has no matches', async () => {
+      const wrapper = renderCategorySelectionDialog()
+
+      const searchInput = wrapper.find('input')
+      await searchInput.setValue('nonexistent')
+      await nextTick()
+
+      expect(wrapper.text()).toContain('No categories match your search')
+    })
+
+    it('clears search when dialog is closed', async () => {
+      const wrapper = renderCategorySelectionDialog()
+
+      const searchInput = wrapper.find('input')
+      await searchInput.setValue('transport')
+      await nextTick()
+
+      await wrapper.setProps({ modelValue: false })
+      await nextTick()
+
+      await wrapper.setProps({ modelValue: true })
+      await nextTick()
+
+      const input = wrapper.find('input')
+      expect((input.element as HTMLInputElement).value).toBe('')
+    })
+  })
+
+  describe('Event emissions', () => {
+    it('emits update:modelValue when close button is clicked', async () => {
+      const wrapper = renderCategorySelectionDialog()
+
+      const closeButtons = wrapper.findAll('button')
+      const closeButton = closeButtons.find((btn) =>
+        btn.attributes('class')?.includes('q-btn--round'),
+      )
+
+      if (closeButton) {
+        await closeButton.trigger('click')
+        await nextTick()
+
+        expect(wrapper.emitted('update:modelValue')).toBeTruthy()
+        expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([false])
+      }
+    })
+
+    it('emits update:modelValue when cancel button is clicked', async () => {
+      const wrapper = renderCategorySelectionDialog()
+
+      const buttons = wrapper.findAll('button')
+      const cancelButton = buttons.find((btn) => btn.text() === 'Cancel')
+
+      if (cancelButton) {
+        await cancelButton.trigger('click')
+        await nextTick()
+
+        expect(wrapper.emitted('update:modelValue')).toBeTruthy()
+      }
+    })
+  })
+
+  describe('Edge cases', () => {
+    it('handles empty categories array', () => {
+      const wrapper = renderCategorySelectionDialog({
         categories: [],
         usedCategoryIds: [],
       })
 
-      const categoriesWithNulls: Category[] = [
-        {
-          id: 'category-null',
-          name: 'Test Category',
-          color: '#000000',
-          icon: 'eva-pricetags-outline',
-          created_at: '',
-          updated_at: '',
-        },
-      ]
-
-      const wrapper2 = renderCategorySelectionDialog({
-        categories: categoriesWithNulls,
-        usedCategoryIds: [],
-      })
-
-      const wrapper3 = renderCategorySelectionDialog({
-        usedCategoryIds: ['non-existent-id', 'category-1'],
-      })
-
-      expect(wrapper1.exists()).toBe(true)
-      expect(wrapper2.exists()).toBe(true)
-      expect(wrapper3.exists()).toBe(true)
-    })
-  })
-
-  describe('Props Validation', () => {
-    it('should accept modelValue as boolean', () => {
-      const wrapper1 = renderCategorySelectionDialog({ modelValue: true })
-      const wrapper2 = renderCategorySelectionDialog({ modelValue: false })
-
-      expect(wrapper1.props('modelValue')).toBe(true)
-      expect(wrapper2.props('modelValue')).toBe(false)
+      expect(wrapper.text()).toContain('All categories are already in use')
     })
 
-    it('should accept usedCategoryIds as string array', () => {
-      const usedIds = ['id1', 'id2', 'id3']
-      const wrapper = renderCategorySelectionDialog({ usedCategoryIds: usedIds })
-
-      expect(wrapper.props('usedCategoryIds')).toEqual(usedIds)
-    })
-
-    it('should accept categories as Category array', () => {
-      const wrapper = renderCategorySelectionDialog({ categories: mockCategories })
-
-      expect(wrapper.props('categories')).toEqual(mockCategories)
-    })
-  })
-
-  describe('Reactivity', () => {
-    it('should handle prop changes without errors', async () => {
+    it('handles non-existent used category ids', () => {
       const wrapper = renderCategorySelectionDialog({
-        usedCategoryIds: [],
+        usedCategoryIds: ['non-existent-1', 'non-existent-2'],
       })
 
       expect(wrapper.exists()).toBe(true)
-
-      await wrapper.setProps({ usedCategoryIds: ['category-1'] })
-
-      expect(wrapper.exists()).toBe(true)
-      expect(wrapper.props('usedCategoryIds')).toEqual(['category-1'])
-    })
-
-    it('should handle categories array changes without errors', async () => {
-      const wrapper = renderCategorySelectionDialog({
-        categories: [mockCategories[0]!],
-      })
-
-      expect(wrapper.exists()).toBe(true)
-      expect(wrapper.props('categories')).toEqual([mockCategories[0]])
-
-      await wrapper.setProps({ categories: mockCategories })
-
-      expect(wrapper.exists()).toBe(true)
-      expect(wrapper.props('categories')).toEqual(mockCategories)
+      const text = wrapper.text()
+      const hasCategories =
+        text.includes('Rent/Mortgage') ||
+        text.includes('Transportation') ||
+        text.includes('Entertainment')
+      expect(hasCategories).toBe(true)
     })
   })
 })
