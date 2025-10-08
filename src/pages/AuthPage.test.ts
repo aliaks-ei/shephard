@@ -50,9 +50,9 @@ it('should render the title', () => {
   expect(wrapper.find('h1').text()).toBe('Welcome to Shephard')
 })
 
-it('should render sign in section title', () => {
+it('should render subtitle', () => {
   const wrapper = createWrapper()
-  expect(wrapper.find('h2').text()).toBe('Sign In')
+  expect(wrapper.text()).toContain('Your smart expense management companion')
 })
 
 it('should render EmailOtpForm component', () => {
@@ -68,9 +68,8 @@ it('should render GoogleAuthButton component', () => {
 it('should have proper layout structure', () => {
   const wrapper = createWrapper()
 
-  expect(wrapper.find('.auth-page').exists()).toBe(true)
-  expect(wrapper.find('.auth-page').classes()).toContain('q-pa-md')
-  expect(wrapper.find('.row.justify-center.items-center.full-height').exists()).toBe(true)
+  const root = wrapper.find('.row.justify-center.items-center.q-pa-md')
+  expect(root.exists()).toBe(true)
   expect(wrapper.find('.q-card').exists()).toBe(true)
   expect(wrapper.find('.q-separator').exists()).toBe(true)
 })

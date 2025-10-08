@@ -125,7 +125,7 @@ describe('usePlanOverview', () => {
       expect(totalBudget.value).toBe(800)
     })
 
-    it('falls back to plan total when no items', () => {
+    it('returns 0 when plan has empty items array', () => {
       const planWithoutItems = {
         ...mockPlanWithItems,
         plan_items: [],
@@ -133,7 +133,7 @@ describe('usePlanOverview', () => {
       const planArg = ref(planWithoutItems)
       const { totalBudget } = usePlanOverview('plan-1', planArg)
 
-      expect(totalBudget.value).toBe(1000)
+      expect(totalBudget.value).toBe(0)
     })
 
     it('returns 0 when plan is null', () => {

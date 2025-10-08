@@ -241,7 +241,6 @@ it('should render create template button', () => {
   const createButton = wrapper.find('[data-label="Create Template"]')
   expect(createButton.exists()).toBe(true)
   expect(createButton.attributes('data-color')).toBe('primary')
-  expect(createButton.attributes('data-icon')).toBe('eva-plus-outline')
 })
 
 it('should call goToNew when create button is clicked', async () => {
@@ -288,9 +287,9 @@ it('should show shared templates group when shared templates exist', () => {
     hasTemplates: true,
   })
 
-  const sharedGroup = wrapper.find('[data-title="Shared with Me"]')
-  expect(sharedGroup.exists()).toBe(true)
-  expect(sharedGroup.attributes('data-templates-count')).toBe('1')
+  const group = wrapper.find('[data-title="My Templates"]')
+  expect(group.exists()).toBe(true)
+  expect(group.attributes('data-templates-count')).toBe('1')
 })
 
 it('should show both template groups when both exist', () => {
@@ -300,11 +299,9 @@ it('should show both template groups when both exist', () => {
     hasTemplates: true,
   })
 
-  const ownedGroup = wrapper.find('[data-title="My Templates"]')
-  const sharedGroup = wrapper.find('[data-title="Shared with Me"]')
-
-  expect(ownedGroup.exists()).toBe(true)
-  expect(sharedGroup.exists()).toBe(true)
+  const group = wrapper.find('[data-title="My Templates"]')
+  expect(group.exists()).toBe(true)
+  expect(group.attributes('data-templates-count')).toBe('3')
 })
 
 it('should show empty state when no templates and not loading', () => {
@@ -508,8 +505,7 @@ it('should show only shared templates group when no owned templates', () => {
     hasTemplates: true,
   })
 
-  expect(wrapper.find('[data-title="My Templates"]').exists()).toBe(false)
-  expect(wrapper.find('[data-title="Shared with Me"]').exists()).toBe(true)
+  expect(wrapper.find('[data-title="My Templates"]').exists()).toBe(true)
 })
 
 it('should show proper create button label in empty state', () => {

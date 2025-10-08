@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createTestingPinia, type TestingPinia } from '@pinia/testing'
 import { setActivePinia } from 'pinia'
-import { Dialog } from 'quasar'
 import { useExpenseActions } from './useExpenseActions'
 import { useExpensesStore } from 'src/stores/expenses'
 import { useNotificationStore } from 'src/stores/notification'
@@ -11,7 +10,9 @@ vi.mock('quasar', () => ({
   Dialog: {
     create: vi.fn(),
   },
-  Quasar: {},
+  Dark: {
+    set: vi.fn(),
+  },
 }))
 
 let pinia: TestingPinia
@@ -45,7 +46,8 @@ describe('useExpenseActions', () => {
   }
 
   describe('confirmDeleteExpense', () => {
-    it('shows confirmation dialog with correct content', () => {
+    it('shows confirmation dialog with correct content', async () => {
+      const { Dialog } = await import('quasar')
       const mockCreate = vi.mocked(Dialog.create)
       mockCreate.mockReturnValue({
         onOk: vi.fn().mockReturnThis(),
@@ -75,6 +77,7 @@ describe('useExpenseActions', () => {
     })
 
     it('deletes expense and shows success notification when confirmed', async () => {
+      const { Dialog } = await import('quasar')
       const expensesStore = useExpensesStore()
       const notificationStore = useNotificationStore()
 
@@ -109,6 +112,7 @@ describe('useExpenseActions', () => {
     })
 
     it('calls onSuccess callback after deletion', async () => {
+      const { Dialog } = await import('quasar')
       const expensesStore = useExpensesStore()
       const onSuccess = vi.fn()
 
@@ -142,6 +146,7 @@ describe('useExpenseActions', () => {
     })
 
     it('does not call onSuccess if not provided', async () => {
+      const { Dialog } = await import('quasar')
       const expensesStore = useExpensesStore()
 
       expensesStore.removeExpense = vi.fn().mockResolvedValue(undefined)

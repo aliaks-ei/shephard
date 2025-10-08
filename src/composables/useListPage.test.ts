@@ -53,7 +53,7 @@ const setup = () =>
       ],
       defaultSort: 'created_at',
       filterAndSortFn: filterAndSort,
-      deleteFn: vi.fn().mockResolvedValue(undefined),
+      deleteFn: vi.fn().mockResolvedValue({ success: true }),
     },
     () => items,
     () => [items[0]!],
@@ -107,7 +107,7 @@ describe('navigation', () => {
 
 describe('deletion flow', () => {
   it('calls delete function and shows success notification', () => {
-    const deleteFn = vi.fn().mockResolvedValue(undefined)
+    const deleteFn = vi.fn().mockResolvedValue({ success: true })
 
     const use = () =>
       useListPage<Item>(

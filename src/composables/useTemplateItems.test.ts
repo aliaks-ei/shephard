@@ -564,7 +564,7 @@ describe('useTemplateItems', () => {
             id: 'item1',
             template_id: 'template1',
             name: '',
-            category_id: 'cat1',
+            category_id: 'cat-1',
             amount: 12.5,
             created_at: '2024-01-01',
             updated_at: '2024-01-01',
@@ -594,7 +594,7 @@ describe('useTemplateItems', () => {
             id: 'item1',
             template_id: 'template1',
             name: 'Valid item',
-            category_id: 'cat1',
+            category_id: 'cat-1',
             amount: 12.5,
             created_at: '2024-01-01',
             updated_at: '2024-01-01',
@@ -621,7 +621,7 @@ describe('useTemplateItems', () => {
       const composable = useTemplateItems()
 
       // Add some initial items
-      composable.addTemplateItem('cat1', '#FF5722')
+      composable.addTemplateItem('cat-1', '#FF5722')
       expect(composable.templateItems.value).toHaveLength(1)
 
       const mockTemplate: TemplateWithItems = {
@@ -638,7 +638,7 @@ describe('useTemplateItems', () => {
             id: 'item1',
             template_id: 'template1',
             name: 'Loaded item',
-            category_id: 'cat2',
+            category_id: 'cat-2',
             amount: 10.0,
             created_at: '2024-01-01',
             updated_at: '2024-01-01',
@@ -650,7 +650,7 @@ describe('useTemplateItems', () => {
 
       expect(composable.templateItems.value).toHaveLength(1)
       expect(composable.templateItems.value[0]?.name).toBe('Loaded item')
-      expect(composable.templateItems.value[0]?.categoryId).toBe('cat2')
+      expect(composable.templateItems.value[0]?.categoryId).toBe('cat-2')
     })
   })
 

@@ -24,7 +24,13 @@ describe('Supabase Client', () => {
 
     expect(supabase).toBeDefined()
     expect(supabase).toBe(mockClient)
-    expect(mockCreateClient).toHaveBeenCalledWith(mockUrl, mockKey)
+    expect(mockCreateClient).toHaveBeenCalledWith(mockUrl, mockKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+      },
+    })
   })
 
   it('should throw error when VITE_SUPABASE_URL is missing', async () => {
@@ -81,6 +87,12 @@ describe('Supabase Client', () => {
     await import('./client')
 
     expect(mockCreateClient).toHaveBeenCalledTimes(1)
-    expect(mockCreateClient).toHaveBeenCalledWith(mockUrl, mockKey)
+    expect(mockCreateClient).toHaveBeenCalledWith(mockUrl, mockKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+      },
+    })
   })
 })

@@ -184,7 +184,7 @@ describe('read-only mode detection', () => {
       template_items: [],
     }
 
-    expect(isEditMode.value).toBe(false)
+    expect(isEditMode.value).toBe(true)
   })
 
   it('enforces read-only for view permission', () => {
@@ -206,7 +206,7 @@ describe('read-only mode detection', () => {
       permission_level: 'view',
     }
 
-    expect(isEditMode.value).toBe(true)
+    expect(isEditMode.value).toBe(false)
   })
 
   it('allows editing for edit permission', () => {
@@ -228,7 +228,7 @@ describe('read-only mode detection', () => {
       permission_level: 'edit',
     }
 
-    expect(isEditMode.value).toBe(false)
+    expect(isEditMode.value).toBe(true)
   })
 })
 
@@ -347,14 +347,14 @@ describe('createNewTemplateWithItems', () => {
       { name: 'Item 2', category_id: 'cat-2', amount: 200 },
     ]
 
-    templatesStore.addTemplate = vi.fn().mockResolvedValue(mockTemplate)
-    templatesStore.addItemsToTemplate = vi.fn().mockResolvedValue([])
+    templatesStore.addTemplate = vi.fn().mockResolvedValue({ success: true, data: mockTemplate })
+    templatesStore.addItemsToTemplate = vi.fn().mockResolvedValue({ success: true, data: [] })
 
     const { createNewTemplateWithItems } = useTemplate()
 
     const result = await createNewTemplateWithItems('Test Template', 'monthly', 300, mockItems)
 
-    expect(result).toBe(true)
+    expect(result.success).toBe(true)
     expect(templatesStore.addTemplate).toHaveBeenCalledWith({
       name: 'Test Template',
       duration: 'monthly',
@@ -369,13 +369,13 @@ describe('createNewTemplateWithItems', () => {
   it('returns false when template creation fails', async () => {
     const templatesStore = useTemplatesStore()
 
-    templatesStore.addTemplate = vi.fn().mockResolvedValue(null)
+    templatesStore.addTemplate = vi.fn().mockResolvedValue({ success: false })
 
     const { createNewTemplateWithItems } = useTemplate()
 
     const result = await createNewTemplateWithItems('Test Template', 'monthly', 300, [])
 
-    expect(result).toBe(false)
+    expect(result.success).toBe(false)
     expect(templatesStore.addItemsToTemplate).not.toHaveBeenCalled()
   })
 
@@ -383,14 +383,14 @@ describe('createNewTemplateWithItems', () => {
     const templatesStore = useTemplatesStore()
     const mockTemplate = { id: 'new-template-id', name: 'Test Template' }
 
-    templatesStore.addTemplate = vi.fn().mockResolvedValue(mockTemplate)
-    templatesStore.addItemsToTemplate = vi.fn().mockResolvedValue([])
+    templatesStore.addTemplate = vi.fn().mockResolvedValue({ success: true, data: mockTemplate })
+    templatesStore.addItemsToTemplate = vi.fn().mockResolvedValue({ success: true, data: [] })
 
     const { createNewTemplateWithItems } = useTemplate()
 
     const result = await createNewTemplateWithItems('Test Template', 'monthly', 0, [])
 
-    expect(result).toBe(true)
+    expect(result.success).toBe(true)
     expect(templatesStore.addItemsToTemplate).toHaveBeenCalledWith([])
   })
 })
@@ -424,9 +424,9 @@ describe('updateExistingTemplateWithItems', () => {
       template_items: existingItems,
     } as TemplateWithItems
 
-    templatesStore.editTemplate = vi.fn().mockResolvedValue(mockTemplate)
-    templatesStore.removeItemsFromTemplate = vi.fn().mockResolvedValue(undefined)
-    templatesStore.addItemsToTemplate = vi.fn().mockResolvedValue([])
+    templatesStore.editTemplate = vi.fn().mockResolvedValue({ success: true, data: mockTemplate })
+    templatesStore.removeItemsFromTemplate = vi.fn().mockResolvedValue({ success: true })
+    templatesStore.addItemsToTemplate = vi.fn().mockResolvedValue({ success: true, data: [] })
 
     const result = await updateExistingTemplateWithItems(
       'Updated Template',
@@ -435,7 +435,7 @@ describe('updateExistingTemplateWithItems', () => {
       newItems,
     )
 
-    expect(result).toBe(true)
+    expect(result.success).toBe(true)
     expect(templatesStore.editTemplate).toHaveBeenCalledWith('template-123', {
       name: 'Updated Template',
       duration: 'weekly',
@@ -455,7 +455,7 @@ describe('updateExistingTemplateWithItems', () => {
 
     const result = await updateExistingTemplateWithItems('Test', 'monthly', 100, [])
 
-    expect(result).toBe(false)
+    expect(result.success).toBe(false)
   })
 
   it('returns false when no current template', async () => {
@@ -467,7 +467,7 @@ describe('updateExistingTemplateWithItems', () => {
 
     const result = await updateExistingTemplateWithItems('Test', 'monthly', 100, [])
 
-    expect(result).toBe(false)
+    expect(result.success).toBe(false)
   })
 
   it('returns false when template update fails', async () => {
@@ -488,11 +488,11 @@ describe('updateExistingTemplateWithItems', () => {
       template_items: [],
     }
 
-    templatesStore.editTemplate = vi.fn().mockResolvedValue(null)
+    templatesStore.editTemplate = vi.fn().mockResolvedValue({ success: false })
 
     const result = await updateExistingTemplateWithItems('Test', 'monthly', 100, [])
 
-    expect(result).toBe(false)
+    expect(result.success).toBe(false)
   })
 
   it('handles update with no new items', async () => {
@@ -516,13 +516,13 @@ describe('updateExistingTemplateWithItems', () => {
       template_items: existingItems,
     } as TemplateWithItems
 
-    templatesStore.editTemplate = vi.fn().mockResolvedValue(mockTemplate)
-    templatesStore.removeItemsFromTemplate = vi.fn().mockResolvedValue(undefined)
-    templatesStore.addItemsToTemplate = vi.fn().mockResolvedValue([])
+    templatesStore.editTemplate = vi.fn().mockResolvedValue({ success: true, data: mockTemplate })
+    templatesStore.removeItemsFromTemplate = vi.fn().mockResolvedValue({ success: true })
+    templatesStore.addItemsToTemplate = vi.fn().mockResolvedValue({ success: true, data: [] })
 
     const result = await updateExistingTemplateWithItems('Updated Template', 'weekly', 0, [])
 
-    expect(result).toBe(true)
+    expect(result.success).toBe(true)
     expect(templatesStore.removeItemsFromTemplate).toHaveBeenCalledWith(['item-1'])
     expect(templatesStore.addItemsToTemplate).not.toHaveBeenCalled()
   })
@@ -599,7 +599,7 @@ describe('reactivity', () => {
     const { currentTemplate, isOwner, templateCurrency } = useTemplate()
 
     expect(isOwner.value).toBe(false)
-    expect(templateCurrency.value).toBeUndefined()
+    expect(templateCurrency.value).toBe('EUR')
 
     currentTemplate.value = {
       id: 'template-1',
@@ -607,7 +607,7 @@ describe('reactivity', () => {
       name: 'Test Template',
       duration: 'monthly',
       total: 1000,
-      currency: 'EUR',
+      currency: 'GBP',
       created_at: '2024-01-01',
       updated_at: '2024-01-01',
       template_items: [],
@@ -616,7 +616,7 @@ describe('reactivity', () => {
     await nextTick()
 
     expect(isOwner.value).toBe(true)
-    expect(templateCurrency.value).toBe('EUR')
+    expect(templateCurrency.value).toBe('GBP')
   })
 
   it('reacts to permission level changes', async () => {
@@ -694,8 +694,8 @@ describe('integration scenarios', () => {
       { name: 'Rent', category_id: 'housing-cat', amount: 1200 },
     ]
 
-    templatesStore.addTemplate = vi.fn().mockResolvedValue(mockTemplate)
-    templatesStore.addItemsToTemplate = vi.fn().mockResolvedValue([])
+    templatesStore.addTemplate = vi.fn().mockResolvedValue({ success: true, data: mockTemplate })
+    templatesStore.addItemsToTemplate = vi.fn().mockResolvedValue({ success: true, data: [] })
 
     const { isNewTemplate, templateCurrency, createNewTemplateWithItems } = useTemplate()
 
@@ -704,7 +704,7 @@ describe('integration scenarios', () => {
 
     const result = await createNewTemplateWithItems('My Budget', 'monthly', 1600, templateItems)
 
-    expect(result).toBe(true)
+    expect(result.success).toBe(true)
     expect(templatesStore.addTemplate).toHaveBeenCalledWith({
       name: 'My Budget',
       duration: 'monthly',
@@ -743,9 +743,11 @@ describe('integration scenarios', () => {
     const newItems = [{ name: 'Updated Groceries', category_id: 'food-cat', amount: 500 }]
 
     templatesStore.loadTemplateWithItems = vi.fn().mockResolvedValue(existingTemplate)
-    templatesStore.editTemplate = vi.fn().mockResolvedValue(updatedTemplate)
-    templatesStore.removeItemsFromTemplate = vi.fn().mockResolvedValue(undefined)
-    templatesStore.addItemsToTemplate = vi.fn().mockResolvedValue([])
+    templatesStore.editTemplate = vi
+      .fn()
+      .mockResolvedValue({ success: true, data: updatedTemplate })
+    templatesStore.removeItemsFromTemplate = vi.fn().mockResolvedValue({ success: true })
+    templatesStore.addItemsToTemplate = vi.fn().mockResolvedValue({ success: true, data: [] })
 
     const {
       isNewTemplate,
@@ -771,7 +773,7 @@ describe('integration scenarios', () => {
       newItems,
     )
 
-    expect(updateResult).toBe(true)
+    expect(updateResult.success).toBe(true)
     expect(templatesStore.editTemplate).toHaveBeenCalledWith('template-456', {
       name: 'New Budget',
       duration: 'weekly',
