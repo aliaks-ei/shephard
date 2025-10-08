@@ -1,7 +1,10 @@
 import { mount } from '@vue/test-utils'
+import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 import { describe, it, expect } from 'vitest'
 
 import DeleteDialog from './DeleteDialog.vue'
+
+installQuasarPlugin()
 
 const renderComponent = (props: {
   modelValue: boolean

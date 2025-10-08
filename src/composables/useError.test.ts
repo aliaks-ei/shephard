@@ -341,10 +341,9 @@ describe('integration scenarios', () => {
     const notificationStore = useNotificationStore()
     const error = new Error('Database connection failed')
     const context = { userId: '123', action: 'loadPreferences' }
+    const errorId = handleError('USER.PREFERENCES_LOAD_FAILED', error, context)
 
-    expect(() => {
-      handleError('USER.PREFERENCES_LOAD_FAILED', error, context)
-    }).toThrow()
+    expect(errorId).toBeTruthy()
 
     // Verify notification shows user-friendly message
     expect(notificationStore.showError).toHaveBeenCalledWith(

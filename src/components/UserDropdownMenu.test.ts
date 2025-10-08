@@ -1,6 +1,6 @@
 import { mount, flushPromises } from '@vue/test-utils'
 import { createTestingPinia } from '@pinia/testing'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { it, expect, vi, beforeEach } from 'vitest'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 import { useUserStore } from 'src/stores/user'
 import UserDropdownMenu from './UserDropdownMenu.vue'
@@ -61,46 +61,52 @@ function createWrapper() {
   return { wrapper, userStore }
 }
 
-describe('UserDropdownMenu', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
+beforeEach(() => {
+  vi.clearAllMocks()
+})
 
-  it('renders the UserAvatar component', () => {
-    const { wrapper } = createWrapper()
+it('renders the UserAvatar component', () => {
+  const { wrapper } = createWrapper()
 
-    const avatar = wrapper.findComponent(UserAvatarMock)
-    expect(avatar.exists()).toBe(true)
-  })
+  const avatar = wrapper.findComponent(UserAvatarMock)
+  expect(avatar.exists()).toBe(true)
+})
 
-  it('has a settings menu item with correct link', () => {
-    const { wrapper } = createWrapper()
+it('displays user information in menu', () => {
+  const { wrapper } = createWrapper()
 
-    const settingsItem = wrapper.findAll('.q-item').find((item) => item.text().includes('Settings'))
+  const menuContent = wrapper.find('.q-menu')
+  expect(menuContent.exists()).toBe(true)
+  expect(wrapper.findAllComponents(UserAvatarMock).length).toBeGreaterThan(0)
+})
 
-    expect(settingsItem).toBeDefined()
-    expect(settingsItem?.attributes('to')).toBe('/settings')
-  })
+it('has a settings menu item with correct link', () => {
+  const { wrapper } = createWrapper()
 
-  it('has a sign out menu item', () => {
-    const { wrapper } = createWrapper()
+  const settingsItem = wrapper.findAll('.q-item').find((item) => item.text().includes('Settings'))
 
-    const signOutItem = wrapper.findAll('.q-item').find((item) => item.text().includes('Sign Out'))
+  expect(settingsItem).toBeDefined()
+  expect(settingsItem?.attributes('to')).toBe('/settings')
+})
 
-    expect(signOutItem).toBeDefined()
-    expect(signOutItem?.classes()).toContain('text-negative')
-  })
+it('has a sign out menu item', () => {
+  const { wrapper } = createWrapper()
 
-  it('calls signOut and redirects when sign out is clicked', async () => {
-    const { wrapper, userStore } = createWrapper()
+  const signOutItem = wrapper.findAll('.q-item').find((item) => item.text().includes('Sign Out'))
 
-    const signOutItem = wrapper.findAll('.q-item').find((item) => item.text().includes('Sign Out'))
+  expect(signOutItem).toBeDefined()
+  expect(signOutItem?.classes()).toContain('text-negative')
+})
 
-    await signOutItem?.trigger('click')
+it('calls signOut and redirects when sign out is clicked', async () => {
+  const { wrapper, userStore } = createWrapper()
 
-    expect(userStore.signOut).toHaveBeenCalled()
+  const signOutItem = wrapper.findAll('.q-item').find((item) => item.text().includes('Sign Out'))
 
-    await flushPromises()
-    expect(mockRouterPush).toHaveBeenCalledWith('/auth')
-  })
+  await signOutItem?.trigger('click')
+
+  expect(userStore.signOut).toHaveBeenCalled()
+
+  await flushPromises()
+  expect(mockRouterPush).toHaveBeenCalledWith('/auth')
 })

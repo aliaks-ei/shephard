@@ -20,6 +20,7 @@ const renderDetailPageLayout = (props: Partial<DetailPageLayoutProps> = {}) => {
     global: {
       stubs: {
         PageBanners: true,
+        ActionBar: true,
       },
     },
   })
@@ -140,7 +141,6 @@ it('should render content slot when isLoading is false', () => {
     props: {
       pageTitle: 'Test Page',
       pageIcon: 'eva-settings-outline',
-      breadcrumbs: [],
       isLoading: false,
     },
     slots: {
@@ -149,16 +149,17 @@ it('should render content slot when isLoading is false', () => {
     global: {
       stubs: {
         PageBanners: true,
+        ActionBar: true,
       },
     },
   })
 
   const mainContent = wrapper.find('[data-testid="main-content"]')
-  const skeletonContainer = wrapper.find('.q-pa-lg')
+  const skeletons = wrapper.findAll('.q-skeleton')
 
   expect(mainContent.exists()).toBe(true)
   expect(mainContent.text()).toBe('Main content here')
-  expect(skeletonContainer.exists()).toBe(false)
+  expect(skeletons.length).toBe(0)
 })
 
 it('should render content slot by default when isLoading is not provided', () => {
@@ -166,7 +167,6 @@ it('should render content slot by default when isLoading is not provided', () =>
     props: {
       pageTitle: 'Test Page',
       pageIcon: 'eva-settings-outline',
-      breadcrumbs: [],
     },
     slots: {
       default: '<div data-testid="default-content">Default content</div>',
@@ -174,15 +174,16 @@ it('should render content slot by default when isLoading is not provided', () =>
     global: {
       stubs: {
         PageBanners: true,
+        ActionBar: true,
       },
     },
   })
 
   const defaultContent = wrapper.find('[data-testid="default-content"]')
-  const skeletonContainer = wrapper.find('.q-pa-lg')
+  const skeletons = wrapper.findAll('.q-skeleton')
 
   expect(defaultContent.exists()).toBe(true)
-  expect(skeletonContainer.exists()).toBe(false)
+  expect(skeletons.length).toBe(0)
 })
 
 it('should render dialogs slot', () => {
@@ -190,7 +191,6 @@ it('should render dialogs slot', () => {
     props: {
       pageTitle: 'Test Page',
       pageIcon: 'eva-settings-outline',
-      breadcrumbs: [],
     },
     slots: {
       dialogs: '<div data-testid="dialogs-slot">Dialog content</div>',
@@ -198,6 +198,7 @@ it('should render dialogs slot', () => {
     global: {
       stubs: {
         PageBanners: true,
+        ActionBar: true,
       },
     },
   })
@@ -207,49 +208,112 @@ it('should render dialogs slot', () => {
   expect(dialogsSlot.text()).toBe('Dialog content')
 })
 
-it('should render fab slot', () => {
-  const wrapper = mount(DetailPageLayout, {
-    props: {
-      pageTitle: 'Test Page',
-      pageIcon: 'eva-settings-outline',
-      breadcrumbs: [],
-    },
-    slots: {
-      fab: '<div data-testid="fab-slot">FAB content</div>',
-    },
-    global: {
-      stubs: {
-        PageBanners: true,
-      },
-    },
-  })
-
-  const fabSlot = wrapper.find('[data-testid="fab-slot"]')
-  expect(fabSlot.exists()).toBe(true)
-  expect(fabSlot.text()).toBe('FAB content')
-})
-
 it('should render all slots simultaneously', () => {
   const wrapper = mount(DetailPageLayout, {
     props: {
       pageTitle: 'Test Page',
       pageIcon: 'eva-settings-outline',
-      breadcrumbs: [],
       isLoading: false,
     },
     slots: {
       default: '<div data-testid="main-slot">Main content</div>',
       dialogs: '<div data-testid="dialogs-slot">Dialogs content</div>',
-      fab: '<div data-testid="fab-slot">FAB content</div>',
     },
     global: {
       stubs: {
         PageBanners: true,
+        ActionBar: true,
       },
     },
   })
 
   expect(wrapper.find('[data-testid="main-slot"]').exists()).toBe(true)
   expect(wrapper.find('[data-testid="dialogs-slot"]').exists()).toBe(true)
-  expect(wrapper.find('[data-testid="fab-slot"]').exists()).toBe(true)
+})
+
+it('should render ActionBar component', () => {
+  const wrapper = renderDetailPageLayout()
+  const actionBar = wrapper.findComponent({ name: 'ActionBar' })
+  expect(actionBar.exists()).toBe(true)
+})
+
+it('should pass actions to ActionBar', () => {
+  const actions = [
+    { key: 'save', label: 'Save', icon: 'eva-save-outline', color: 'primary', handler: vi.fn() },
+  ]
+
+  const wrapper = mount(DetailPageLayout, {
+    props: {
+      pageTitle: 'Test Page',
+      pageIcon: 'eva-settings-outline',
+      actions,
+    },
+    global: {
+      stubs: {
+        PageBanners: true,
+        ActionBar: {
+          template: '<div data-testid="action-bar" :actions="actions" />',
+          props: ['actions', 'visible'],
+        },
+      },
+    },
+  })
+
+  const actionBar = wrapper.find('[data-testid="action-bar"]')
+  expect(actionBar.exists()).toBe(true)
+  expect(actionBar.attributes('actions')).toBeDefined()
+})
+
+it('should emit action-clicked event when ActionBar emits it', async () => {
+  const wrapper = mount(DetailPageLayout, {
+    props: {
+      pageTitle: 'Test Page',
+      pageIcon: 'eva-settings-outline',
+      actions: [
+        {
+          key: 'save',
+          label: 'Save',
+          icon: 'eva-save-outline',
+          color: 'primary',
+          handler: vi.fn(),
+        },
+      ],
+    },
+    global: {
+      stubs: {
+        PageBanners: true,
+        ActionBar: {
+          template: "<button @click=\"$emit('action-clicked', 'save')\">Save</button>",
+        },
+      },
+    },
+  })
+
+  const buttons = wrapper.findAll('button')
+  const saveButton = buttons.find((btn) => btn.text() === 'Save')
+
+  if (saveButton) {
+    await saveButton.trigger('click')
+    expect(wrapper.emitted('action-clicked')).toHaveLength(1)
+    expect(wrapper.emitted('action-clicked')?.[0]).toEqual(['save'])
+  }
+})
+
+it('should render read-only badge when showReadOnlyBadge is true on desktop', () => {
+  const wrapper = renderDetailPageLayout({
+    showReadOnlyBadge: true,
+  })
+
+  const badge = wrapper.find('.q-badge')
+  expect(badge.exists()).toBe(true)
+  expect(badge.text()).toContain('view only')
+})
+
+it('should not render read-only badge when showReadOnlyBadge is false', () => {
+  const wrapper = renderDetailPageLayout({
+    showReadOnlyBadge: false,
+  })
+
+  const badge = wrapper.find('.q-badge')
+  expect(badge.exists()).toBe(false)
 })

@@ -52,55 +52,50 @@ describe('PlanCardMenu', () => {
     expect(wrapper.props('planStatus')).toBe('pending')
   })
 
-  it('should emit edit on first item click', async () => {
+  it('should emit share when share item clicked', async () => {
     const wrapper = renderPlanCardMenu({ isOwner: true, planStatus: 'active' })
     const items = wrapper.findAll('.q-item')
     expect(items.length).toBeGreaterThan(0)
     await items[0]?.trigger('click')
-    expect(wrapper.emitted('edit')).toBeTruthy()
+    expect(wrapper.emitted('share')).toBeTruthy()
   })
 
   it('should show share and cancel for owner with active plan', async () => {
     const wrapper = renderPlanCardMenu({ isOwner: true, planStatus: 'active' })
     const items = wrapper.findAll('.q-item')
-    expect(items.length).toBe(3)
-    await items[1]?.trigger('click')
+    expect(items.length).toBe(2)
+    await items[0]?.trigger('click')
     expect(wrapper.emitted('share')).toBeTruthy()
-    await items[2]?.trigger('click')
+    await items[1]?.trigger('click')
     expect(wrapper.emitted('cancel')).toBeTruthy()
   })
 
   it('should show share and delete for owner with pending plan', async () => {
     const wrapper = renderPlanCardMenu({ isOwner: true, planStatus: 'pending' })
     const items = wrapper.findAll('.q-item')
-    expect(items.length).toBe(3)
-    await items[1]?.trigger('click')
+    expect(items.length).toBe(2)
+    await items[0]?.trigger('click')
     expect(wrapper.emitted('share')).toBeTruthy()
-    await items[2]?.trigger('click')
+    await items[1]?.trigger('click')
     expect(wrapper.emitted('delete')).toBeTruthy()
   })
 
-  it('should show only edit/view for non-owner depending on permission', () => {
-    const editWrapper = renderPlanCardMenu({
+  it('should show no items for non-owner', () => {
+    const wrapper = renderPlanCardMenu({
       isOwner: false,
       permissionLevel: 'edit',
       planStatus: 'completed',
     })
-    expect(editWrapper.findAll('.q-item').length).toBe(1)
-
-    const viewWrapper = renderPlanCardMenu({
-      isOwner: false,
-      permissionLevel: undefined,
-      planStatus: 'completed',
-    })
-    expect(viewWrapper.findAll('.q-item').length).toBe(1)
+    expect(wrapper.findAll('.q-item').length).toBe(0)
   })
 
   it('should allow delete when plan is cancelled', async () => {
     const wrapper = renderPlanCardMenu({ isOwner: true, planStatus: 'cancelled' })
     const items = wrapper.findAll('.q-item')
-    expect(items.length).toBe(3)
-    await items[2]?.trigger('click')
+    expect(items.length).toBe(2)
+    await items[0]?.trigger('click')
+    expect(wrapper.emitted('share')).toBeTruthy()
+    await items[1]?.trigger('click')
     expect(wrapper.emitted('delete')).toBeTruthy()
   })
 })

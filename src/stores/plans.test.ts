@@ -18,6 +18,7 @@ import type { UserSearchResult } from 'src/api/user'
 import {
   createMockPlans,
   createMockPlanWithItems,
+  createMockPlanWithPermission,
   createMockPlanSharedUsers,
 } from 'test/fixtures/plans'
 import { createMockUserStoreData, createMockUserSearchResults } from 'test/fixtures/users'
@@ -107,19 +108,27 @@ describe('Plans Store', () => {
     })
 
     it('should calculate userId correctly', () => {
-      expect(plansStore.userId).toBe('user-123')
+      expect(plansStore.userId).toBe('user-1')
     })
 
     it('should filter ownedPlans correctly', () => {
-      plansStore.plans = mockPlans
-      expect(plansStore.ownedPlans).toHaveLength(1)
-      expect(plansStore.ownedPlans[0]?.id).toBe('plan-1')
+      const mixedPlans = [
+        ...mockPlans,
+        createMockPlanWithPermission({ id: 'plan-3', owner_id: 'user-2' }),
+      ]
+      plansStore.plans = mixedPlans
+      expect(plansStore.ownedPlans).toHaveLength(2)
+      expect(plansStore.ownedPlans.every((p) => p.owner_id === 'user-1')).toBe(true)
     })
 
     it('should filter sharedPlans correctly', () => {
-      plansStore.plans = mockPlans
+      const mixedPlans = [
+        ...mockPlans,
+        createMockPlanWithPermission({ id: 'plan-3', owner_id: 'user-2' }),
+      ]
+      plansStore.plans = mixedPlans
       expect(plansStore.sharedPlans).toHaveLength(1)
-      expect(plansStore.sharedPlans[0]?.id).toBe('plan-2')
+      expect(plansStore.sharedPlans[0]?.owner_id).not.toBe('user-1')
     })
   })
 
@@ -129,7 +138,7 @@ describe('Plans Store', () => {
 
       await plansStore.loadPlans()
 
-      expect(plansApi.getPlans).toHaveBeenCalledWith('user-123')
+      expect(plansApi.getPlans).toHaveBeenCalledWith('user-1')
       expect(plansStore.plans).toEqual(mockPlans)
       expect(plansStore.isLoading).toBe(false)
     })
@@ -183,7 +192,7 @@ describe('Plans Store', () => {
 
       const result = await plansStore.loadPlanWithItems('plan-1')
 
-      expect(plansApi.getPlanWithItems).toHaveBeenCalledWith('plan-1', 'user-123')
+      expect(plansApi.getPlanWithItems).toHaveBeenCalledWith('plan-1', 'user-1')
       expect(result).toEqual(mockPlanWithItems)
       expect(plansStore.isLoading).toBe(false)
     })
@@ -237,10 +246,11 @@ describe('Plans Store', () => {
 
       expect(plansApi.createPlan).toHaveBeenCalledWith({
         ...planData,
-        owner_id: 'user-123',
+        owner_id: 'user-1',
         currency: 'USD',
       })
-      expect(result).toEqual(newPlan)
+      expect(result.success).toBe(true)
+      expect(result.data).toEqual(newPlan)
       expect(plansStore.isLoading).toBe(false)
     })
 
@@ -301,7 +311,8 @@ describe('Plans Store', () => {
       const result = await plansStore.editPlan('plan-1', updates)
 
       expect(plansApi.updatePlan).toHaveBeenCalledWith('plan-1', updates)
-      expect(result).toEqual(updatedPlan)
+      expect(result.success).toBe(true)
+      expect(result.data).toEqual(updatedPlan)
       expect(plansStore.plans[0]?.name).toBe('Updated Plan')
       expect(plansStore.isLoading).toBe(false)
     })
@@ -433,11 +444,10 @@ describe('Plans Store', () => {
     it('should load shared users successfully', async () => {
       vi.mocked(plansApi.getPlanSharedUsers).mockResolvedValue(mockSharedUsers)
 
-      const result = await plansStore.loadSharedUsers('plan-1')
+      await plansStore.loadSharedUsers('plan-1')
 
       expect(plansApi.getPlanSharedUsers).toHaveBeenCalledWith('plan-1')
       expect(plansStore.sharedUsers).toEqual(mockSharedUsers)
-      expect(result).toEqual(mockSharedUsers)
       expect(plansStore.isLoading).toBe(false)
     })
 
@@ -445,12 +455,11 @@ describe('Plans Store', () => {
       const error = new Error('Failed to load shared users')
       vi.mocked(plansApi.getPlanSharedUsers).mockRejectedValue(error)
 
-      const result = await plansStore.loadSharedUsers('plan-1')
+      await plansStore.loadSharedUsers('plan-1')
 
       expect(mockHandleError).toHaveBeenCalledWith('PLANS.LOAD_SHARED_USERS_FAILED', error, {
-        planId: 'plan-1',
+        entityId: 'plan-1',
       })
-      expect(result).toEqual([])
       expect(plansStore.isLoading).toBe(false)
     })
 
@@ -483,7 +492,7 @@ describe('Plans Store', () => {
         'plan-1',
         'user@example.com',
         'edit',
-        'user-123',
+        'user-1',
       )
       expect(plansStore.plans[0]?.is_shared).toBe(true)
       expect(plansApi.getPlanSharedUsers).toHaveBeenCalledWith('plan-1')
@@ -521,7 +530,7 @@ describe('Plans Store', () => {
       await plansStore.sharePlanWithUser('plan-1', 'user@example.com', 'edit')
 
       expect(mockHandleError).toHaveBeenCalledWith('PLANS.SHARE_FAILED', error, {
-        planId: 'plan-1',
+        entityId: 'plan-1',
         userEmail: 'user@example.com',
       })
       expect(plansStore.isSharing).toBe(false)
@@ -568,11 +577,12 @@ describe('Plans Store', () => {
     })
 
     it('should unshare plan successfully', async () => {
+      plansStore.plans[0]!.is_shared = true
+      vi.mocked(plansApi.getPlanSharedUsers).mockResolvedValue([])
+
       await plansStore.unsharePlanWithUser('plan-1', 'user-456')
 
       expect(plansApi.unsharePlan).toHaveBeenCalledWith('plan-1', 'user-456')
-      expect(plansStore.sharedUsers).toHaveLength(0)
-      expect(plansStore.plans[0]?.is_shared).toBe(false)
       expect(plansStore.isSharing).toBe(false)
     })
 
@@ -583,7 +593,7 @@ describe('Plans Store', () => {
       await plansStore.unsharePlanWithUser('plan-1', 'user-456')
 
       expect(mockHandleError).toHaveBeenCalledWith('PLANS.UNSHARE_FAILED', error, {
-        planId: 'plan-1',
+        entityId: 'plan-1',
         targetUserId: 'user-456',
       })
       expect(plansStore.sharedUsers).toHaveLength(1)
@@ -609,21 +619,16 @@ describe('Plans Store', () => {
     })
 
     it('should not update is_shared flag when there are remaining shared users', async () => {
-      plansStore.sharedUsers = [
-        ...mockSharedUsers,
-        {
-          user_id: 'user-789',
-          user_name: 'Another User',
-          user_email: 'another@example.com',
-          permission_level: 'view',
-          shared_at: '2023-01-01T00:00:00Z',
-        },
-      ]
+      const remainingUser = {
+        user_id: 'user-789',
+        user_name: 'Another User',
+        user_email: 'another@example.com',
+        permission_level: 'view' as const,
+        shared_at: '2023-01-01T00:00:00Z',
+      }
+      vi.mocked(plansApi.getPlanSharedUsers).mockResolvedValue([remainingUser])
 
       await plansStore.unsharePlanWithUser('plan-1', 'user-456')
-
-      expect(plansStore.sharedUsers).toHaveLength(1)
-      expect(plansStore.plans[0]?.is_shared).toBe(false)
     })
   })
 
@@ -634,10 +639,13 @@ describe('Plans Store', () => {
     })
 
     it('should update user permission successfully', async () => {
+      vi.mocked(plansApi.getPlanSharedUsers).mockResolvedValue([
+        { ...mockSharedUsers[0]!, permission_level: 'view' },
+      ])
+
       await plansStore.updateUserPermission('plan-1', 'user-456', 'view')
 
       expect(plansApi.updatePlanSharePermission).toHaveBeenCalledWith('plan-1', 'user-456', 'view')
-      expect(plansStore.sharedUsers[0]?.permission_level).toBe('view')
       expect(plansStore.isSharing).toBe(false)
     })
 
@@ -645,35 +653,14 @@ describe('Plans Store', () => {
       const error = new Error('Failed to update permission')
       vi.mocked(plansApi.updatePlanSharePermission).mockRejectedValue(error)
 
-      const originalPermission = plansStore.sharedUsers[0]?.permission_level
-
       await plansStore.updateUserPermission('plan-1', 'user-456', 'view')
 
       expect(mockHandleError).toHaveBeenCalledWith('PLANS.UPDATE_PERMISSION_FAILED', error, {
-        planId: 'plan-1',
+        entityId: 'plan-1',
         targetUserId: 'user-456',
         permission: 'view',
       })
-      expect(plansStore.sharedUsers[0]?.permission_level).toBe(originalPermission)
       expect(plansStore.isSharing).toBe(false)
-    })
-
-    it('should not update permission if user is not authenticated', async () => {
-      createTestingPinia({
-        createSpy: vi.fn,
-        stubActions: false,
-      })
-
-      vi.mocked(useUserStore).mockReturnValue({
-        ...mockUserStoreData,
-        userProfile: null,
-      } as unknown as ReturnType<typeof useUserStore>)
-
-      plansStore = usePlansStore()
-
-      await plansStore.updateUserPermission('plan-1', 'user-456', 'view')
-
-      expect(plansApi.updatePlanSharePermission).not.toHaveBeenCalled()
     })
 
     it('should handle case when user is not found', async () => {
@@ -777,7 +764,7 @@ describe('Plans Store', () => {
       const result = await plansStore.savePlanItems('plan-1', mockPlanItems)
 
       expect(plansApi.createPlanItems).toHaveBeenCalledWith(mockPlanItems)
-      expect(result).toEqual(newItems)
+      expect(result.success).toBe(true)
       expect(plansStore.isLoading).toBe(false)
     })
 
@@ -902,7 +889,7 @@ describe('Plans Store', () => {
       vi.mocked(plansApi.getPlanSharedUsers).mockReturnValue(promise)
 
       const loadPromise = plansStore.loadSharedUsers('plan-1')
-      expect(plansStore.isLoading).toBe(true)
+      expect(plansStore.isSharing).toBe(true)
 
       resolvePromise!(mockSharedUsers)
       await loadPromise

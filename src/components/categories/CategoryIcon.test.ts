@@ -1,7 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 import CategoryIcon from './CategoryIcon.vue'
 import { QAvatar, QIcon } from 'quasar'
+
+installQuasarPlugin()
 
 describe('CategoryIcon', () => {
   it('renders with default small size', () => {
@@ -10,19 +13,13 @@ describe('CategoryIcon', () => {
         color: '#FF5722',
         icon: 'eva-home-outline',
       },
-      global: {
-        components: {
-          QAvatar,
-          QIcon,
-        },
-      },
     })
 
     const avatar = wrapper.findComponent(QAvatar)
     expect(avatar.exists()).toBe(true)
     expect(avatar.props('size')).toBe('32px')
     expect(avatar.props('textColor')).toBe('white')
-    expect(avatar.attributes('style')).toContain('background-color: rgb(255, 87, 34)')
+    expect(avatar.attributes('style')).toContain('background-color: #FF5722')
 
     const icon = wrapper.findComponent(QIcon)
     expect(icon.exists()).toBe(true)
@@ -36,12 +33,6 @@ describe('CategoryIcon', () => {
         color: '#4CAF50',
         icon: 'eva-shopping-cart-outline',
         size: 'md',
-      },
-      global: {
-        components: {
-          QAvatar,
-          QIcon,
-        },
       },
     })
 
@@ -59,12 +50,6 @@ describe('CategoryIcon', () => {
         icon: 'eva-heart-outline',
         size: 'lg',
       },
-      global: {
-        components: {
-          QAvatar,
-          QIcon,
-        },
-      },
     })
 
     const avatar = wrapper.findComponent(QAvatar)
@@ -75,28 +60,18 @@ describe('CategoryIcon', () => {
   })
 
   it('applies correct background color', () => {
-    const testCases = [
-      { color: '#FF0000', expectedRgb: 'rgb(255, 0, 0)' },
-      { color: '#00FF00', expectedRgb: 'rgb(0, 255, 0)' },
-      { color: '#0000FF', expectedRgb: 'rgb(0, 0, 255)' },
-    ]
+    const testCases = [{ color: '#FF0000' }, { color: '#00FF00' }, { color: '#0000FF' }]
 
-    testCases.forEach(({ color, expectedRgb }) => {
+    testCases.forEach(({ color }) => {
       const wrapper = mount(CategoryIcon, {
         props: {
           color,
           icon: 'eva-star-outline',
         },
-        global: {
-          components: {
-            QAvatar,
-            QIcon,
-          },
-        },
       })
 
       const avatar = wrapper.findComponent(QAvatar)
-      expect(avatar.attributes('style')).toContain(`background-color: ${expectedRgb}`)
+      expect(avatar.attributes('style')).toContain(`background-color: ${color}`)
     })
   })
 
@@ -108,12 +83,6 @@ describe('CategoryIcon', () => {
         props: {
           color: '#FF5722',
           icon: iconName,
-        },
-        global: {
-          components: {
-            QAvatar,
-            QIcon,
-          },
         },
       })
 

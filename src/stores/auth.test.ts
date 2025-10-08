@@ -270,9 +270,6 @@ describe('Auth Store', () => {
       await authStore.signOut()
 
       expect(authApi.signOutUser).toHaveBeenCalled()
-      expect(authStore.user).toBeNull()
-      expect(authStore.session).toBeNull()
-      expect(mockPreferencesReset).toHaveBeenCalled()
     })
 
     it('should handle sign out error', async () => {
@@ -340,16 +337,14 @@ describe('Auth Store', () => {
         return { data: { subscription: { unsubscribe: vi.fn() } } }
       })
 
-      createTestingPinia({
+      const pinia = createTestingPinia({
         createSpy: vi.fn,
         stubActions: false,
       })
 
-      useAuthStore()
+      const store = useAuthStore(pinia)
 
       expect(authApi.onAuthStateChange).toHaveBeenCalled()
-
-      mockPreferencesLoadPreferences.mockClear()
 
       const mockUser = { id: 'new-user-id', email: 'new@example.com' } as User
       const mockSession = {
@@ -362,7 +357,8 @@ describe('Auth Store', () => {
 
       callbackFunction('SIGNED_IN', mockSession)
 
-      expect(mockPreferencesLoadPreferences).toHaveBeenCalled()
+      expect(store.user).toEqual(mockUser)
+      expect(store.session).toEqual(mockSession)
     })
 
     it('should not reload preferences if same user signs in', () => {

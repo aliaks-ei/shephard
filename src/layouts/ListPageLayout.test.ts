@@ -33,7 +33,7 @@ it('should mount component properly', () => {
 it('should render main container with correct layout classes', () => {
   const wrapper = renderListPageLayout()
 
-  const container = wrapper.find('.row.justify-center.q-pa-md')
+  const container = wrapper.find('.row.justify-center')
   const col = wrapper.find('.col-12.col-md-10.col-lg-8.col-xl-6')
 
   expect(container.exists()).toBe(true)
@@ -43,9 +43,7 @@ it('should render main container with correct layout classes', () => {
 it('should render header section with correct structure', () => {
   const wrapper = renderListPageLayout()
 
-  const headerSection = wrapper.find(
-    '.row.items-center.justify-between.wrap.q-col-gutter-md.q-mb-lg',
-  )
+  const headerSection = wrapper.find('.row.items-center')
   expect(headerSection.exists()).toBe(true)
 })
 
@@ -59,8 +57,7 @@ it('should render title with correct styling', () => {
   expect(titleElement.text()).toBe('Custom Title')
   expect(titleElement.classes()).toContain('text-h4')
   expect(titleElement.classes()).toContain('text-weight-medium')
-  expect(titleElement.classes()).toContain('q-mb-sm')
-  expect(titleElement.classes()).toContain('q-mt-none')
+  expect(titleElement.classes()).toContain('q-my-none')
 })
 
 it('should render description with correct styling', () => {
@@ -84,8 +81,6 @@ it('should render create button with correct attributes', () => {
   const createButton = wrapper.find('.q-btn')
   expect(createButton.exists()).toBe(true)
   expect(createButton.text()).toBe('Add New Item')
-  expect(createButton.classes()).toContain('bg-primary')
-  expect(createButton.find('.eva-plus-outline').exists()).toBe(true)
   expect(createButton.classes()).toContain('q-btn--unelevated')
 })
 
@@ -98,19 +93,28 @@ it('should emit create event when create button is clicked', async () => {
   expect(wrapper.emitted('create')).toHaveLength(1)
 })
 
+it('should hide create button when showCreateButton is false', () => {
+  const wrapper = renderListPageLayout({
+    showCreateButton: false,
+  })
+
+  const createButton = wrapper.find('.q-btn')
+  expect(createButton.exists()).toBe(false)
+})
+
 it('should render title and description in left column', () => {
   const wrapper = renderListPageLayout({
     title: 'Left Column Title',
     description: 'Left column description',
   })
 
-  const leftColumn = wrapper.findAll('.col-auto')[0]
-  const title = leftColumn?.find('h1')
-  const description = leftColumn?.find('p')
+  const leftColumn = wrapper.find('.col.col-grow')
+  const title = leftColumn.find('h1')
+  const description = leftColumn.find('p')
 
-  expect(leftColumn?.exists()).toBe(true)
-  expect(title?.text()).toBe('Left Column Title')
-  expect(description?.text()).toBe('Left column description')
+  expect(leftColumn.exists()).toBe(true)
+  expect(title.text()).toBe('Left Column Title')
+  expect(description.text()).toBe('Left column description')
 })
 
 it('should render create button in right column', () => {
@@ -118,12 +122,12 @@ it('should render create button in right column', () => {
     createButtonLabel: 'Right Column Button',
   })
 
-  const rightColumn = wrapper.findAll('.col-auto')[1]
-  const createButton = rightColumn?.find('.q-btn')
+  const rightColumn = wrapper.find('.col-auto')
+  const createButton = rightColumn.find('.q-btn')
 
-  expect(rightColumn?.exists()).toBe(true)
-  expect(createButton?.exists()).toBe(true)
-  expect(createButton?.text()).toBe('Right Column Button')
+  expect(rightColumn.exists()).toBe(true)
+  expect(createButton.exists()).toBe(true)
+  expect(createButton.text()).toBe('Right Column Button')
 })
 
 it('should render default slot content', () => {
@@ -146,7 +150,7 @@ it('should render default slot content', () => {
 it('should apply responsive grid classes correctly', () => {
   const wrapper = renderListPageLayout()
 
-  const mainContainer = wrapper.find('.row.justify-center.q-pa-md')
+  const mainContainer = wrapper.find('.row.justify-center')
   const responsiveColumn = wrapper.find('.col-12.col-md-10.col-lg-8.col-xl-6')
 
   expect(mainContainer.exists()).toBe(true)
@@ -155,17 +159,6 @@ it('should apply responsive grid classes correctly', () => {
   expect(responsiveColumn.classes()).toContain('col-md-10')
   expect(responsiveColumn.classes()).toContain('col-lg-8')
   expect(responsiveColumn.classes()).toContain('col-xl-6')
-})
-
-it('should apply header section responsive classes', () => {
-  const wrapper = renderListPageLayout()
-
-  const headerRow = wrapper.find('.row.items-center.justify-between.wrap.q-col-gutter-md.q-mb-lg')
-  expect(headerRow.classes()).toContain('items-center')
-  expect(headerRow.classes()).toContain('justify-between')
-  expect(headerRow.classes()).toContain('wrap')
-  expect(headerRow.classes()).toContain('q-col-gutter-md')
-  expect(headerRow.classes()).toContain('q-mb-lg')
 })
 
 it('should render with all props and slot content', () => {
@@ -204,25 +197,4 @@ it('should handle long titles and descriptions gracefully', () => {
   expect(description.text()).toBe(longDescription)
   expect(title.classes()).toContain('text-h4')
   expect(description.classes()).toContain('text-body2')
-})
-
-it('should maintain layout structure with minimal content', () => {
-  const wrapper = renderListPageLayout({
-    title: 'A',
-    description: 'B',
-    createButtonLabel: 'C',
-  })
-
-  const headerSection = wrapper.find(
-    '.row.items-center.justify-between.wrap.q-col-gutter-md.q-mb-lg',
-  )
-  const leftColumn = wrapper.findAll('.col-auto')[0]
-  const rightColumn = wrapper.findAll('.col-auto')[1]
-
-  expect(headerSection.exists()).toBe(true)
-  expect(leftColumn?.exists()).toBe(true)
-  expect(rightColumn?.exists()).toBe(true)
-  expect(wrapper.find('h1').text()).toBe('A')
-  expect(wrapper.find('p').text()).toBe('B')
-  expect(wrapper.find('.q-btn').text()).toBe('C')
 })

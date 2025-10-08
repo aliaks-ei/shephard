@@ -18,31 +18,30 @@ vi.mock('quasar', () => {
 // Install Quasar plugin for testing
 installQuasarPlugin()
 
-// Mock matchMedia
-const mockMatchMedia = () => {
-  const mockMediaQueryList = {
-    matches: false,
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-  }
-
-  Object.defineProperty(window, 'matchMedia', {
-    writable: true,
-    value: vi.fn().mockImplementation(() => mockMediaQueryList),
-  })
-
-  return mockMediaQueryList
-}
-
 describe('useTheme', () => {
   let mockAdapter: ThemeAdapter
-  let mockMediaQueryList: ReturnType<typeof mockMatchMedia>
+  let mockMediaQueryList: {
+    matches: boolean
+    addEventListener: ReturnType<typeof vi.fn>
+    removeEventListener: ReturnType<typeof vi.fn>
+  }
 
   beforeEach(() => {
     mockAdapter = {
       setDarkMode: vi.fn(),
     }
-    mockMediaQueryList = mockMatchMedia()
+
+    mockMediaQueryList = {
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }
+
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      configurable: true,
+      value: vi.fn().mockImplementation(() => mockMediaQueryList),
+    })
   })
 
   afterEach(() => {
@@ -73,11 +72,12 @@ describe('useTheme', () => {
     expect(mockAdapter.setDarkMode).toHaveBeenCalledWith(false)
   })
 
-  it('should use system preference when theme is "system"', () => {
+  it('should use system preference when theme is "system"', async () => {
     mockMediaQueryList.matches = true
     const theme = ref<ThemePreference>('system')
     useTheme(theme, { adapter: mockAdapter })
 
+    await nextTick()
     expect(mockAdapter.setDarkMode).toHaveBeenCalledWith(true)
   })
 
@@ -127,15 +127,17 @@ describe('useTheme', () => {
   })
 
   it('should update dark mode when system preference changes and theme is "system"', async () => {
+    mockMediaQueryList.matches = false
     const theme = ref<ThemePreference>('system')
     useTheme(theme, { adapter: mockAdapter })
 
+    await nextTick()
     expect(mockAdapter.setDarkMode).toHaveBeenCalledWith(false)
-
-    vi.clearAllMocks()
 
     const changeListener = mockMediaQueryList.addEventListener.mock.calls[0]?.[1]
     expect(changeListener).toBeDefined()
+
+    vi.clearAllMocks()
 
     if (changeListener) {
       changeListener({ matches: true } as MediaQueryListEvent)

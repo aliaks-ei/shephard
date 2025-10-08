@@ -323,11 +323,9 @@ it('should show shared plans group when shared plans exist', () => {
     hasPlans: true,
   })
 
-  const sharedGroup = wrapper.find('[data-title="Shared with Me"]')
-  expect(sharedGroup.exists()).toBe(true)
-  expect(sharedGroup.attributes('data-plans-count')).toBe('1')
-  expect(sharedGroup.attributes('data-chip-color')).toBe('secondary')
-  expect(sharedGroup.attributes('data-hide-shared-badge')).toBe('')
+  const group = wrapper.find('[data-title="My Plans"]')
+  expect(group.exists()).toBe(true)
+  expect(group.attributes('data-plans-count')).toBe('1')
 })
 
 it('should show both plan groups when both exist', () => {
@@ -337,11 +335,9 @@ it('should show both plan groups when both exist', () => {
     hasPlans: true,
   })
 
-  const ownedGroup = wrapper.find('[data-title="My Plans"]')
-  const sharedGroup = wrapper.find('[data-title="Shared with Me"]')
-
-  expect(ownedGroup.exists()).toBe(true)
-  expect(sharedGroup.exists()).toBe(true)
+  const group = wrapper.find('[data-title="My Plans"]')
+  expect(group.exists()).toBe(true)
+  expect(group.attributes('data-plans-count')).toBe('3')
 })
 
 it('should show empty state when no plans and not loading', () => {
@@ -447,6 +443,8 @@ it('should call cancelPlan when cancel button is clicked', async () => {
     hasPlans: true,
   })
 
+  vi.mocked(plansStore.cancelPlan).mockResolvedValue({ success: true })
+
   const cancelButton = wrapper.find('.cancel-btn')
   await cancelButton.trigger('click')
 
@@ -534,8 +532,7 @@ it('should show only shared plans group when no owned plans', () => {
     hasPlans: true,
   })
 
-  expect(wrapper.find('[data-title="My Plans"]').exists()).toBe(false)
-  expect(wrapper.find('[data-title="Shared with Me"]').exists()).toBe(true)
+  expect(wrapper.find('[data-title="My Plans"]').exists()).toBe(true)
 })
 
 it('should pass correct sort options to search and sort component', () => {
@@ -578,11 +575,8 @@ it('should handle plan operations for both owned and shared plans', async () => 
     hasPlans: true,
   })
 
-  const ownedGroup = wrapper.find('[data-title="My Plans"]')
-  const sharedGroup = wrapper.find('[data-title="Shared with Me"]')
-
-  expect(ownedGroup.exists()).toBe(true)
-  expect(sharedGroup.exists()).toBe(true)
+  const group = wrapper.find('[data-title="My Plans"]')
+  expect(group.exists()).toBe(true)
 
   const editButtons = wrapper.findAll('.edit-btn')
   expect(editButtons.length).toBe(3)

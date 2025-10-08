@@ -141,15 +141,16 @@ describe('computed state', () => {
 describe('CRUD flows', () => {
   it('createNewPlanWithItems creates plan and saves items', async () => {
     const plansStore = usePlansStore()
-    plansStore.addPlan = vi.fn().mockResolvedValue({ id: 'np' })
-    plansStore.savePlanItems = vi.fn().mockResolvedValue([])
+    plansStore.addPlan = vi.fn().mockResolvedValue({ success: true, data: { id: 'np' } })
+    plansStore.savePlanItems = vi.fn().mockResolvedValue({ success: true })
+    plansStore.loadPlanWithItems = vi.fn().mockResolvedValue({ id: 'np' })
 
     const { createNewPlanWithItems } = usePlan()
-    const ok = await createNewPlanWithItems('tpl', 'Name', '2024-01-01', '2024-01-31', 100, [
+    const result = await createNewPlanWithItems('tpl', 'Name', '2024-01-01', '2024-01-31', 100, [
       { name: 'A', category_id: 'c', amount: 1 },
     ])
 
-    expect(ok).toBe(true)
+    expect(result.success).toBe(true)
     expect(plansStore.addPlan).toHaveBeenCalledWith({
       template_id: 'tpl',
       name: 'Name',
@@ -164,10 +165,10 @@ describe('CRUD flows', () => {
 
   it('createNewPlanWithItems returns false if creation fails', async () => {
     const plansStore = usePlansStore()
-    plansStore.addPlan = vi.fn().mockResolvedValue(null)
+    plansStore.addPlan = vi.fn().mockResolvedValue({ success: false })
     const { createNewPlanWithItems } = usePlan()
-    const ok = await createNewPlanWithItems('tpl', 'Name', 's', 'e', 0, [])
-    expect(ok).toBe(false)
+    const result = await createNewPlanWithItems('tpl', 'Name', 's', 'e', 0, [])
+    expect(result.success).toBe(false)
   })
 
   it('updateExistingPlanWithItems updates, removes old items and saves new ones', async () => {
@@ -199,14 +200,15 @@ describe('CRUD flows', () => {
         },
       ],
     }
-    plansStore.editPlan = vi.fn().mockResolvedValue({ id: 'plan-123' })
-    plansStore.removePlanItems = vi.fn().mockResolvedValue(undefined)
-    plansStore.savePlanItems = vi.fn().mockResolvedValue([])
+    plansStore.editPlan = vi.fn().mockResolvedValue({ success: true, data: { id: 'plan-123' } })
+    plansStore.removePlanItems = vi.fn().mockResolvedValue({ success: true })
+    plansStore.savePlanItems = vi.fn().mockResolvedValue({ success: true })
+    plansStore.loadPlanWithItems = vi.fn().mockResolvedValue({ id: 'plan-123' })
 
-    const ok = await p.updateExistingPlanWithItems('N', 's2', 'e2', 2, [
+    const result = await p.updateExistingPlanWithItems('N', 's2', 'e2', 2, [
       { name: 'A', category_id: 'c', amount: 2 },
     ])
-    expect(ok).toBe(true)
+    expect(result.success).toBe(true)
     expect(plansStore.editPlan).toHaveBeenCalledWith('plan-123', {
       name: 'N',
       start_date: 's2',
@@ -222,14 +224,14 @@ describe('CRUD flows', () => {
   it('updateExistingPlanWithItems returns false when route id missing or no current plan', async () => {
     mockRouteValue.value = { name: 'plan-overview', params: {} }
     let p = usePlan()
-    let ok = await p.updateExistingPlanWithItems('n', 's', 'e', 0, [])
-    expect(ok).toBe(false)
+    let result = await p.updateExistingPlanWithItems('n', 's', 'e', 0, [])
+    expect(result.success).toBe(false)
 
     mockRouteValue.value = { name: 'plan-overview', params: { id: 'plan-1' } }
     p = usePlan()
     p.currentPlan.value = null
-    ok = await p.updateExistingPlanWithItems('n', 's', 'e', 0, [])
-    expect(ok).toBe(false)
+    result = await p.updateExistingPlanWithItems('n', 's', 'e', 0, [])
+    expect(result.success).toBe(false)
   })
 
   it('loadPlan loads plan or returns null for new/missing id', async () => {
@@ -249,7 +251,7 @@ describe('CRUD flows', () => {
 
   it('cancelCurrentPlan updates store and local status', async () => {
     const plansStore = usePlansStore()
-    plansStore.cancelPlan = vi.fn().mockResolvedValue(undefined)
+    plansStore.cancelPlan = vi.fn().mockResolvedValue({ success: true })
     const p = usePlan()
     p.currentPlan.value = {
       id: 'plan-123',
@@ -265,7 +267,8 @@ describe('CRUD flows', () => {
       status: 'pending',
       plan_items: [],
     }
-    await p.cancelCurrentPlan()
+    const result = await p.cancelCurrentPlan()
+    expect(result.success).toBe(true)
     expect(plansStore.cancelPlan).toHaveBeenCalledWith('plan-123')
     expect(p.currentPlan.value?.status).toBe('cancelled')
   })
