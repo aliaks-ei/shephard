@@ -6,6 +6,7 @@ import { useNotificationStore } from 'src/stores/notification'
 import { getPlanItems, updatePlanItemCompletion } from 'src/api/plans'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import { getPlanStatus } from 'src/utils/plans'
+import { calculateStillToPay } from 'src/utils/budget-calculations'
 import type { PlanItem } from 'src/api/plans'
 import type { PlanOption } from 'src/components/expenses/PlanSelectorField.vue'
 
@@ -34,6 +35,7 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
   const quickSelectPhase = ref<QuickSelectPhase>('selection')
 
   const planItems = ref<PlanItem[]>([])
+  const allPlanItems = ref<PlanItem[]>([]) // Unfiltered items for calculations
   const selectedPlanItems = ref<PlanItem[]>([])
 
   const form = ref<ExpenseRegistrationForm>({
@@ -92,6 +94,9 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
         const plannedAmount = categoryData?.planned_amount || 0
         const actualAmount = categoryData?.actual_amount || 0
 
+        // Calculate "still to pay" using the shared utility function
+        const remainingAmount = calculateStillToPay(category.id, allPlanItems.value, actualAmount)
+
         return {
           label: category.name,
           value: category.id,
@@ -99,7 +104,7 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
           icon: category.icon,
           plannedAmount,
           actualAmount,
-          remainingAmount: plannedAmount - actualAmount,
+          remainingAmount,
         }
       })
   })
@@ -166,10 +171,16 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
     isLoadingPlanItems.value = true
     try {
       const items = await getPlanItems(planId)
-      planItems.value = items.filter((item) => !(item.is_completed ?? false))
+      // Store all items for budget calculations
+      allPlanItems.value = items
+      // Only show fixed payment items that are not completed for quick-select
+      planItems.value = items.filter(
+        (item) => (item.is_fixed_payment ?? true) && !(item.is_completed ?? false),
+      )
     } catch {
       notificationStore.showError('Failed to load plan items')
       planItems.value = []
+      allPlanItems.value = []
     } finally {
       isLoadingPlanItems.value = false
     }
@@ -360,6 +371,7 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
     currentMode,
     quickSelectPhase,
     planItems,
+    allPlanItems,
     selectedPlanItems,
     mostRecentlyUsedPlan,
     planOptions,

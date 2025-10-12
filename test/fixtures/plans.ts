@@ -48,6 +48,7 @@ export const createMockPlanItem = (overrides: Partial<PlanItem> = {}): PlanItem 
   created_at: '2024-01-01T00:00:00Z',
   updated_at: '2024-01-01T00:00:00Z',
   is_completed: false,
+  is_fixed_payment: true,
   ...overrides,
 })
 

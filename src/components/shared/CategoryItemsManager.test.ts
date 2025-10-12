@@ -60,6 +60,7 @@ const createMockCategoryGroups = (): CategoryGroup<BaseItemUI>[] => [
         amount: 100,
         categoryId: 'cat-1',
         color: '#FF5722',
+        isFixedPayment: true,
       },
     ],
   },

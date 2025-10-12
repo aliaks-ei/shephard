@@ -262,6 +262,9 @@ const categoryGroups = computed((): CategoryGroup[] => {
   const groups = new Map<string, CategoryGroup>()
 
   for (const item of planItems.value) {
+    // Skip non-fixed payment items
+    if (!item.is_fixed_payment) continue
+
     if (!groups.has(item.category_id)) {
       const category = categoriesStore.getCategoryById(item.category_id)
       if (!category) continue
@@ -297,11 +300,16 @@ const categoryGroups = computed((): CategoryGroup[] => {
     })
   }
 
-  return Array.from(groups.values()).sort((a, b) => a.categoryName.localeCompare(b.categoryName))
+  // Filter out categories with no items (all were non-fixed)
+  return Array.from(groups.values())
+    .filter((group) => group.items.length > 0)
+    .sort((a, b) => a.categoryName.localeCompare(b.categoryName))
 })
 
-const totalItems = computed(() => planItems.value.length)
-const completedItems = computed(() => planItems.value.filter((item) => item.is_completed).length)
+const totalItems = computed(() => planItems.value.filter((item) => item.is_fixed_payment).length)
+const completedItems = computed(
+  () => planItems.value.filter((item) => item.is_fixed_payment && item.is_completed).length,
+)
 
 const overallProgress = computed(() => {
   if (totalItems.value === 0) return 0

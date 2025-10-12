@@ -104,12 +104,13 @@
               <span>{{ formatCurrency(category.plannedAmount, currency) }}</span>
             </div>
 
-            <div
-              v-if="category.remainingAmount !== 0"
-              class="row justify-between text-caption"
-            >
+            <div class="row justify-between text-caption">
               <span class="text-grey-6">{{
-                category.remainingAmount > 0 ? 'Remaining' : 'Over'
+                category.remainingAmount > 0
+                  ? 'Still to pay'
+                  : category.remainingAmount < 0
+                    ? 'Over'
+                    : 'Still to pay'
               }}</span>
               <span
                 class="text-weight-bold"

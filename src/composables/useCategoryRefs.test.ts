@@ -8,9 +8,30 @@ describe('useCategoryRefs', () => {
 
   beforeEach(() => {
     items = ref([
-      { id: 'item-1', categoryId: 'cat-1', name: 'Item 1', amount: 100, color: '#FF0000' },
-      { id: 'item-2', categoryId: 'cat-1', name: 'Item 2', amount: 200, color: '#00FF00' },
-      { id: 'item-3', categoryId: 'cat-2', name: 'Item 3', amount: 50, color: '#0000FF' },
+      {
+        id: 'item-1',
+        categoryId: 'cat-1',
+        name: 'Item 1',
+        amount: 100,
+        color: '#FF0000',
+        isFixedPayment: true,
+      },
+      {
+        id: 'item-2',
+        categoryId: 'cat-1',
+        name: 'Item 2',
+        amount: 200,
+        color: '#00FF00',
+        isFixedPayment: true,
+      },
+      {
+        id: 'item-3',
+        categoryId: 'cat-2',
+        name: 'Item 3',
+        amount: 50,
+        color: '#0000FF',
+        isFixedPayment: true,
+      },
     ])
   })
 
@@ -95,8 +116,22 @@ describe('useCategoryRefs', () => {
       )
 
       items.value = [
-        { id: 'item-1', categoryId: 'cat-1', name: '', amount: 100, color: '#FF0000' },
-        { id: 'item-2', categoryId: 'cat-2', name: 'Valid', amount: 200, color: '#00FF00' },
+        {
+          id: 'item-1',
+          categoryId: 'cat-1',
+          name: '',
+          amount: 100,
+          color: '#FF0000',
+          isFixedPayment: true,
+        },
+        {
+          id: 'item-2',
+          categoryId: 'cat-2',
+          name: 'Valid',
+          amount: 200,
+          color: '#00FF00',
+          isFixedPayment: true,
+        },
       ]
 
       const mockScrollIntoView = vi.fn()
@@ -127,7 +162,14 @@ describe('useCategoryRefs', () => {
       )
 
       items.value = [
-        { id: 'item-1', categoryId: 'cat-1', name: 'Valid', amount: 0, color: '#FF0000' },
+        {
+          id: 'item-1',
+          categoryId: 'cat-1',
+          name: 'Valid',
+          amount: 0,
+          color: '#FF0000',
+          isFixedPayment: true,
+        },
       ]
 
       const mockScrollIntoView = vi.fn()
@@ -149,7 +191,14 @@ describe('useCategoryRefs', () => {
       const { scrollToFirstInvalidField } = useCategoryRefs(items as Ref<BaseItemUI[]>)
 
       items.value = [
-        { id: 'item-1', categoryId: 'cat-1', name: 'Valid', amount: 100, color: '#FF0000' },
+        {
+          id: 'item-1',
+          categoryId: 'cat-1',
+          name: 'Valid',
+          amount: 100,
+          color: '#FF0000',
+          isFixedPayment: true,
+        },
       ]
 
       await scrollToFirstInvalidField()
@@ -158,7 +207,16 @@ describe('useCategoryRefs', () => {
     it('does nothing when category ref does not exist', async () => {
       const { scrollToFirstInvalidField } = useCategoryRefs(items as Ref<BaseItemUI[]>)
 
-      items.value = [{ id: 'item-1', categoryId: 'cat-1', name: '', amount: 100, color: '#FF0000' }]
+      items.value = [
+        {
+          id: 'item-1',
+          categoryId: 'cat-1',
+          name: '',
+          amount: 100,
+          color: '#FF0000',
+          isFixedPayment: true,
+        },
+      ]
 
       await scrollToFirstInvalidField()
     })
@@ -173,7 +231,16 @@ describe('useCategoryRefs', () => {
         lastAddedCategoryId,
       } = useCategoryRefs(items as Ref<BaseItemUI[]>)
 
-      items.value = [{ id: 'item-1', categoryId: 'cat-1', name: '', amount: 100, color: '#FF0000' }]
+      items.value = [
+        {
+          id: 'item-1',
+          categoryId: 'cat-1',
+          name: '',
+          amount: 100,
+          color: '#FF0000',
+          isFixedPayment: true,
+        },
+      ]
 
       const mockElement = {
         $el: {

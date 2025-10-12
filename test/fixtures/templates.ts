@@ -44,6 +44,7 @@ export const createMockTemplateItem = (overrides: Partial<TemplateItem> = {}): T
   amount: 5.99,
   created_at: '2024-01-01T00:00:00Z',
   updated_at: '2024-01-01T00:00:00Z',
+  is_fixed_payment: true,
   ...overrides,
 })
 

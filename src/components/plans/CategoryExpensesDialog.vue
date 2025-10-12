@@ -1,12 +1,12 @@
 <template>
   <q-dialog
     :model-value="modelValue"
-    @update:model-value="$emit('update:modelValue', $event)"
     :transition-show="$q.screen.lt.md ? 'slide-up' : 'scale'"
     :transition-hide="$q.screen.lt.md ? 'slide-down' : 'scale'"
     :maximized="$q.screen.xs"
     :full-width="$q.screen.xs"
     :full-height="$q.screen.xs"
+    @update:model-value="emit('update:modelValue', $event)"
   >
     <q-card class="column no-wrap full-height">
       <!-- Header -->
@@ -32,7 +32,7 @@
           round
           dense
           :size="$q.screen.lt.md ? 'sm' : 'md'"
-          @click="$emit('update:modelValue', false)"
+          @click="emit('update:modelValue', false)"
         />
       </q-card-section>
 
@@ -77,7 +77,7 @@
                 class="text-caption"
                 :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-6'"
               >
-                {{ (category?.remainingAmount || 0) >= 0 ? 'Remaining' : 'Over' }}
+                {{ (category?.remainingAmount || 0) >= 0 ? 'Still to pay' : 'Over' }}
               </div>
               <div
                 class="text-body1 text-weight-bold"
@@ -310,7 +310,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import { formatDate } from 'src/utils/date'
@@ -356,16 +356,19 @@ const { confirmDeleteExpense } = useExpenseActions()
 const sortedPlanItems = computed(() => {
   if (!props.planItems || props.planItems.length === 0) return []
 
-  return [...props.planItems].sort((a, b) => {
-    const aCompleted = a.is_completed
-    const bCompleted = b.is_completed
-    if (aCompleted === bCompleted) return 0
-    return aCompleted ? 1 : -1
-  })
+  // Only show fixed payment items in the tracking tab
+  return [...props.planItems]
+    .filter((item) => item.is_fixed_payment)
+    .sort((a, b) => {
+      const aCompleted = a.is_completed
+      const bCompleted = b.is_completed
+      if (aCompleted === bCompleted) return 0
+      return aCompleted ? 1 : -1
+    })
 })
 
 const showExpenseDialog = ref(false)
-const activeTab = ref('items')
+const activeTab = ref('expenses')
 
 const completedItemsCount = computed(
   () => sortedPlanItems.value.filter((item) => item.is_completed).length,
@@ -452,4 +455,16 @@ async function toggleItemCompletion(item: PlanItem, value?: boolean) {
     notificationStore.showError(`Failed to mark item as ${action}. Please try again.`)
   }
 }
+
+watch(
+  sortedPlanItems,
+  () => {
+    if (sortedPlanItems.value.length > 0) {
+      activeTab.value = 'items'
+    } else {
+      activeTab.value = 'expenses'
+    }
+  },
+  { immediate: true },
+)
 </script>

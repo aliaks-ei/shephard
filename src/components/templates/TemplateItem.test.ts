@@ -24,6 +24,7 @@ const mockItem: TemplateItemUI = {
   categoryId: 'category-1',
   amount: 50,
   color: '#FF0000',
+  isFixedPayment: true,
 }
 
 const renderTemplateItem = (props: TemplateItemProps) => {
@@ -142,6 +143,7 @@ describe('TemplateItem', () => {
       categoryId: 'category-2',
       amount: 100,
       color: '#00FF00',
+      isFixedPayment: true,
     }
 
     const wrapper = renderTemplateItem({

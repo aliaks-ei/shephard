@@ -98,7 +98,7 @@ describe('CategoryBudgetCard', () => {
       currency: 'USD',
     })
 
-    expect(wrapper.text()).toContain('Remaining')
+    expect(wrapper.text()).toContain('Still to pay')
     expect(wrapper.text()).toContain('USD 200.00')
   })
 

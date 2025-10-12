@@ -384,6 +384,7 @@ describe('Templates Store', () => {
           amount: 3.5,
           created_at: '2023-01-01T00:00:00Z',
           updated_at: '2023-01-01T00:00:00Z',
+          is_fixed_payment: true,
         },
       ]
       vi.mocked(templatesApi.createTemplateItems).mockResolvedValue(newItems)

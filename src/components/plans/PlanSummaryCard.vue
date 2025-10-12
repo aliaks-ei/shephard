@@ -24,7 +24,7 @@
         :class="$q.screen.lt.md ? 'q-col-gutter-xs' : 'q-col-gutter-md'"
       >
         <div class="col">
-          <div class="text-caption text-grey-6">Total Budget</div>
+          <div class="text-caption text-grey-6">Planned Budget</div>
           <div
             class="text-weight-bold"
             :class="$q.screen.lt.md ? 'text-subtitle2' : 'text-h6'"
@@ -42,7 +42,7 @@
           </div>
         </div>
         <div class="col">
-          <div class="text-caption text-grey-6">{{ remaining >= 0 ? 'Remaining' : 'Over' }}</div>
+          <div class="text-caption text-grey-6">{{ remaining >= 0 ? 'Still to pay' : 'Over' }}</div>
           <div
             class="text-weight-bold"
             :class="[remainingColorClass, $q.screen.lt.md ? 'text-subtitle2' : 'text-h6']"
@@ -77,10 +77,11 @@ const props = defineProps<{
   plan: (PlanWithItems & { permission_level?: string }) | null
   totalBudget: number
   totalSpent: number
+  stillToPay: number
   currency: CurrencyCode
 }>()
 
-const remaining = computed(() => props.totalBudget - props.totalSpent)
+const remaining = computed(() => props.stillToPay)
 const progressPercentage = computed(() => overallProgress.value * 100)
 const progressColor = computed(() => getBudgetProgressColor(progressPercentage.value))
 const remainingColorClass = computed(() => getBudgetRemainingColorClass(progressPercentage.value))

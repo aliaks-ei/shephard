@@ -72,6 +72,7 @@ describe('PlanSummaryCard', () => {
       plan: mockPlan,
       totalBudget: 1000,
       totalSpent: 500,
+      stillToPay: 500,
       currency: 'USD',
     })
     expect(wrapper.exists()).toBe(true)
@@ -82,6 +83,7 @@ describe('PlanSummaryCard', () => {
       plan: mockPlan,
       totalBudget: 1000,
       totalSpent: 500,
+      stillToPay: 500,
       currency: 'USD',
     })
 
@@ -89,15 +91,16 @@ describe('PlanSummaryCard', () => {
     expect(wrapper.text()).toContain('Jan 1 - Jan 31, 2024')
   })
 
-  it('should display total budget and spent amounts', () => {
+  it('should display planned budget and spent amounts', () => {
     const wrapper = renderPlanSummaryCard({
       plan: mockPlan,
       totalBudget: 1000,
       totalSpent: 500,
+      stillToPay: 500,
       currency: 'USD',
     })
 
-    expect(wrapper.text()).toContain('Total Budget')
+    expect(wrapper.text()).toContain('Planned Budget')
     expect(wrapper.text()).toContain('USD 1000.00')
     expect(wrapper.text()).toContain('Total Spent')
     expect(wrapper.text()).toContain('USD 500.00')
@@ -108,10 +111,11 @@ describe('PlanSummaryCard', () => {
       plan: mockPlan,
       totalBudget: 1000,
       totalSpent: 500,
+      stillToPay: 500,
       currency: 'USD',
     })
 
-    expect(wrapper.text()).toContain('Remaining')
+    expect(wrapper.text()).toContain('Still to pay')
     expect(wrapper.text()).toContain('USD 500.00')
   })
 
@@ -120,6 +124,7 @@ describe('PlanSummaryCard', () => {
       plan: mockPlan,
       totalBudget: 1000,
       totalSpent: 1200,
+      stillToPay: -200,
       currency: 'USD',
     })
 
@@ -132,6 +137,7 @@ describe('PlanSummaryCard', () => {
       plan: mockPlan,
       totalBudget: 1000,
       totalSpent: 500,
+      stillToPay: 500,
       currency: 'USD',
     })
 
@@ -143,6 +149,7 @@ describe('PlanSummaryCard', () => {
       plan: mockPlan,
       totalBudget: 0,
       totalSpent: 0,
+      stillToPay: 0,
       currency: 'USD',
     })
 
@@ -154,6 +161,7 @@ describe('PlanSummaryCard', () => {
       plan: mockPlan,
       totalBudget: 100,
       totalSpent: 50,
+      stillToPay: 50,
       currency: 'USD',
     })
 
@@ -166,6 +174,7 @@ describe('PlanSummaryCard', () => {
       plan: mockPlan,
       totalBudget: 1000,
       totalSpent: 500,
+      stillToPay: 500,
       currency: 'USD',
     })
 

@@ -18,6 +18,7 @@ const createMockItems = (): BaseItemUI[] => [
     amount: 100,
     categoryId: 'cat-1',
     color: '#FF5722',
+    isFixedPayment: true,
   },
   {
     id: 'item-2',
@@ -25,6 +26,7 @@ const createMockItems = (): BaseItemUI[] => [
     amount: 200,
     categoryId: 'cat-1',
     color: '#FF5722',
+    isFixedPayment: true,
   },
 ]
 

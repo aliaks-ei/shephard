@@ -41,7 +41,12 @@ export function useTemplate() {
     name: string,
     duration: string,
     total: number,
-    templateItems: { name: string; category_id: string; amount: number }[],
+    templateItems: {
+      name: string
+      category_id: string
+      amount: number
+      is_fixed_payment: boolean
+    }[],
   ): Promise<ActionResult> {
     const templateResult = await templatesStore.addTemplate({
       name,
@@ -65,7 +70,12 @@ export function useTemplate() {
     name: string,
     duration: string,
     total: number,
-    templateItems: { name: string; category_id: string; amount: number }[],
+    templateItems: {
+      name: string
+      category_id: string
+      amount: number
+      is_fixed_payment: boolean
+    }[],
   ): Promise<ActionResult> {
     if (!routeTemplateId.value || !currentTemplate.value) return { success: false }
 

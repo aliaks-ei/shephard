@@ -51,7 +51,7 @@
                 v-if="scope.opt.remainingAmount !== undefined"
                 :class="scope.opt.remainingAmount >= 0 ? 'text-positive' : 'text-negative'"
               >
-                • Remaining:
+                • Still to pay:
                 {{
                   formatCurrency(
                     scope.opt.remainingAmount,

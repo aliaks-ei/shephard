@@ -747,6 +747,7 @@ describe('plans API', () => {
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z',
         is_completed: false,
+        is_fixed_payment: true,
       },
       {
         id: 'item-2',
@@ -757,6 +758,7 @@ describe('plans API', () => {
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z',
         is_completed: false,
+        is_fixed_payment: true,
       },
     ]
 

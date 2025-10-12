@@ -7,6 +7,7 @@ export type BaseItemUI = {
   categoryId: string
   amount: number
   color: string
+  isFixedPayment: boolean
 }
 
 /**

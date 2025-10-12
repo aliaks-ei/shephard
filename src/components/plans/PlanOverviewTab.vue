@@ -5,6 +5,7 @@
       :plan="plan"
       :total-budget="totalBudget"
       :total-spent="totalSpent"
+      :still-to-pay="remainingBudget"
       :currency="planCurrency"
     />
 
@@ -125,10 +126,11 @@ const planCurrency = computed((): CurrencyCode => {
 
 const planId = computed(() => props.plan?.id || '')
 
-const { categoryBudgets, recentExpenses, totalBudget, totalSpent } = usePlanOverview(
-  planId,
-  computed(() => props.plan),
-)
+const { categoryBudgets, recentExpenses, totalBudget, totalSpent, remainingBudget } =
+  usePlanOverview(
+    planId,
+    computed(() => props.plan),
+  )
 
 const categoryExpenses = computed(() => {
   if (!selectedCategory.value) return []

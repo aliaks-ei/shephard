@@ -185,6 +185,7 @@ const mockTemplate: TemplateWithItems = {
       amount: 500,
       created_at: '2023-01-01T00:00:00Z',
       updated_at: '2023-01-01T00:00:00Z',
+      is_fixed_payment: true,
     },
   ],
 }
@@ -211,6 +212,7 @@ const mockPlan: PlanWithItems = {
       created_at: '2023-01-01T00:00:00Z',
       updated_at: '2023-01-01T00:00:00Z',
       is_completed: false,
+      is_fixed_payment: true,
     },
   ],
 }
@@ -222,6 +224,7 @@ const mockPlanItems: PlanItemUI[] = [
     categoryId: 'cat-1',
     amount: 500,
     color: '#FF5722',
+    isFixedPayment: true,
   },
 ]
 

@@ -147,7 +147,7 @@ describe('CRUD flows', () => {
 
     const { createNewPlanWithItems } = usePlan()
     const result = await createNewPlanWithItems('tpl', 'Name', '2024-01-01', '2024-01-31', 100, [
-      { name: 'A', category_id: 'c', amount: 1 },
+      { name: 'A', category_id: 'c', amount: 1, is_fixed_payment: true },
     ])
 
     expect(result.success).toBe(true)
@@ -159,7 +159,7 @@ describe('CRUD flows', () => {
       total: 100,
     })
     expect(plansStore.savePlanItems).toHaveBeenCalledWith('np', [
-      { name: 'A', category_id: 'c', amount: 1, plan_id: 'np' },
+      { name: 'A', category_id: 'c', amount: 1, is_fixed_payment: true, plan_id: 'np' },
     ])
   })
 
@@ -197,6 +197,7 @@ describe('CRUD flows', () => {
           created_at: 'c',
           updated_at: 'u',
           is_completed: false,
+          is_fixed_payment: true,
         },
       ],
     }
@@ -206,7 +207,7 @@ describe('CRUD flows', () => {
     plansStore.loadPlanWithItems = vi.fn().mockResolvedValue({ id: 'plan-123' })
 
     const result = await p.updateExistingPlanWithItems('N', 's2', 'e2', 2, [
-      { name: 'A', category_id: 'c', amount: 2 },
+      { name: 'A', category_id: 'c', amount: 2, is_fixed_payment: true },
     ])
     expect(result.success).toBe(true)
     expect(plansStore.editPlan).toHaveBeenCalledWith('plan-123', {
@@ -217,7 +218,7 @@ describe('CRUD flows', () => {
     })
     expect(plansStore.removePlanItems).toHaveBeenCalledWith(['i1'])
     expect(plansStore.savePlanItems).toHaveBeenCalledWith('plan-123', [
-      { name: 'A', category_id: 'c', amount: 2, plan_id: 'plan-123' },
+      { name: 'A', category_id: 'c', amount: 2, is_fixed_payment: true, plan_id: 'plan-123' },
     ])
   })
 

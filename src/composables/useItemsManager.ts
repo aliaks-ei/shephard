@@ -9,7 +9,12 @@ export type CategoryGroup<T extends BaseItemUI = BaseItemUI> = BaseCategoryUI & 
 
 export interface ItemsConfig<T extends BaseItemUI> {
   itemsPropertyName: string
-  createItemForSave: (item: T) => { name: string; category_id: string; amount: number }
+  createItemForSave: (item: T) => {
+    name: string
+    category_id: string
+    amount: number
+    is_fixed_payment: boolean
+  }
 }
 
 export type ItemForSave = {
@@ -17,6 +22,7 @@ export type ItemForSave = {
   name: string
   category_id: string
   amount: number
+  is_fixed_payment: boolean
 }
 
 export function useItemsManager<T extends BaseItemUI>(config: ItemsConfig<T>) {
@@ -78,6 +84,7 @@ export function useItemsManager<T extends BaseItemUI>(config: ItemsConfig<T>) {
       categoryId,
       amount: 0,
       color: categoryColor,
+      isFixedPayment: true,
     } as T
 
     items.value.push(newItem)
@@ -100,6 +107,7 @@ export function useItemsManager<T extends BaseItemUI>(config: ItemsConfig<T>) {
       categoryId: updates.categoryId ?? currentItem.categoryId,
       amount: updates.amount ?? currentItem.amount,
       color: updates.color ?? currentItem.color,
+      isFixedPayment: updates.isFixedPayment ?? currentItem.isFixedPayment,
     } as T
   }
 
@@ -113,6 +121,7 @@ export function useItemsManager<T extends BaseItemUI>(config: ItemsConfig<T>) {
       name: string
       category_id: string
       amount: number
+      is_fixed_payment?: boolean
     }>
 
     const loadedItems = entityItems.reduce((acc, item) => {
@@ -125,6 +134,7 @@ export function useItemsManager<T extends BaseItemUI>(config: ItemsConfig<T>) {
           categoryId: item.category_id,
           amount: item.amount,
           color: category.color || '',
+          isFixedPayment: item.is_fixed_payment ?? true,
         } as T)
       }
 
@@ -135,7 +145,13 @@ export function useItemsManager<T extends BaseItemUI>(config: ItemsConfig<T>) {
   }
 
   function loadItemsFromTemplate(
-    templateItems: { id: string; name: string; category_id: string; amount: number }[],
+    templateItems: {
+      id: string
+      name: string
+      category_id: string
+      amount: number
+      is_fixed_payment?: boolean
+    }[],
   ): void {
     const loadedItems = templateItems.reduce((acc, item) => {
       const category = categoriesStore.getCategoryById(item.category_id)
@@ -147,6 +163,7 @@ export function useItemsManager<T extends BaseItemUI>(config: ItemsConfig<T>) {
           categoryId: item.category_id,
           amount: item.amount,
           color: category.color || '',
+          isFixedPayment: item.is_fixed_payment ?? true,
         } as T)
       }
 
