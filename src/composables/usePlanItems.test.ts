@@ -79,6 +79,7 @@ describe('plan items manager mapping', () => {
           created_at: '2024-01-01',
           updated_at: '2024-01-02',
           is_completed: false,
+          is_fixed_payment: true,
         },
       ],
     }
@@ -93,7 +94,7 @@ describe('plan items manager mapping', () => {
     const id = p.planItems.value[0]!.id
     p.updatePlanItem(id, { name: ' Milk ', amount: 2, categoryId: 'food', color: '#f00' })
     const out = p.getPlanItemsForSave()
-    expect(out).toEqual([{ name: 'Milk', category_id: 'food', amount: 2 }])
+    expect(out).toEqual([{ name: 'Milk', category_id: 'food', amount: 2, is_fixed_payment: true }])
     p.clearPlanItems()
     expect(p.planItems.value.length).toBe(0)
   })

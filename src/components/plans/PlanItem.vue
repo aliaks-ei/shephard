@@ -35,9 +35,24 @@
       />
     </q-item-section>
 
+    <q-item-section style="flex: 0 0 auto">
+      <q-checkbox
+        :model-value="modelValue.isFixedPayment"
+        :readonly="readonly"
+        :disable="readonly"
+        :dense="$q.screen.lt.md"
+        label="Fixed"
+        @update:model-value="updateIsFixedPayment"
+      >
+        <q-tooltip v-if="!readonly">
+          Mark as fixed payment if this must be paid every period
+        </q-tooltip>
+      </q-checkbox>
+    </q-item-section>
+
     <q-item-section
       v-if="!readonly"
-      side
+      style="flex: 0 0 auto"
     >
       <q-btn
         flat
@@ -114,6 +129,17 @@ function updateAmount(amount: string | number | null): void {
     ...props.modelValue,
     amount: numericAmount,
   }
+  emit('update:modelValue', updatedItem)
+}
+
+function updateIsFixedPayment(value: boolean): void {
+  if (props.readonly) return
+
+  const updatedItem: PlanItemUI = {
+    ...props.modelValue,
+    isFixedPayment: value,
+  }
+
   emit('update:modelValue', updatedItem)
 }
 

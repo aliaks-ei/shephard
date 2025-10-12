@@ -343,8 +343,8 @@ describe('createNewTemplateWithItems', () => {
     const templatesStore = useTemplatesStore()
     const mockTemplate = { id: 'new-template-id', name: 'Test Template' }
     const mockItems = [
-      { name: 'Item 1', category_id: 'cat-1', amount: 100 },
-      { name: 'Item 2', category_id: 'cat-2', amount: 200 },
+      { name: 'Item 1', category_id: 'cat-1', amount: 100, is_fixed_payment: true },
+      { name: 'Item 2', category_id: 'cat-2', amount: 200, is_fixed_payment: true },
     ]
 
     templatesStore.addTemplate = vi.fn().mockResolvedValue({ success: true, data: mockTemplate })
@@ -361,8 +361,20 @@ describe('createNewTemplateWithItems', () => {
       total: 300,
     })
     expect(templatesStore.addItemsToTemplate).toHaveBeenCalledWith([
-      { name: 'Item 1', category_id: 'cat-1', amount: 100, template_id: 'new-template-id' },
-      { name: 'Item 2', category_id: 'cat-2', amount: 200, template_id: 'new-template-id' },
+      {
+        name: 'Item 1',
+        category_id: 'cat-1',
+        amount: 100,
+        is_fixed_payment: true,
+        template_id: 'new-template-id',
+      },
+      {
+        name: 'Item 2',
+        category_id: 'cat-2',
+        amount: 200,
+        is_fixed_payment: true,
+        template_id: 'new-template-id',
+      },
     ])
   })
 
@@ -408,8 +420,8 @@ describe('updateExistingTemplateWithItems', () => {
       { id: 'item-2', name: 'Old Item 2' },
     ]
     const newItems = [
-      { name: 'New Item 1', category_id: 'cat-1', amount: 150 },
-      { name: 'New Item 2', category_id: 'cat-2', amount: 250 },
+      { name: 'New Item 1', category_id: 'cat-1', amount: 150, is_fixed_payment: true },
+      { name: 'New Item 2', category_id: 'cat-2', amount: 250, is_fixed_payment: true },
     ]
 
     currentTemplate.value = {
@@ -443,8 +455,20 @@ describe('updateExistingTemplateWithItems', () => {
     })
     expect(templatesStore.removeItemsFromTemplate).toHaveBeenCalledWith(['item-1', 'item-2'])
     expect(templatesStore.addItemsToTemplate).toHaveBeenCalledWith([
-      { name: 'New Item 1', category_id: 'cat-1', amount: 150, template_id: 'template-123' },
-      { name: 'New Item 2', category_id: 'cat-2', amount: 250, template_id: 'template-123' },
+      {
+        name: 'New Item 1',
+        category_id: 'cat-1',
+        amount: 150,
+        is_fixed_payment: true,
+        template_id: 'template-123',
+      },
+      {
+        name: 'New Item 2',
+        category_id: 'cat-2',
+        amount: 250,
+        is_fixed_payment: true,
+        template_id: 'template-123',
+      },
     ])
   })
 
@@ -690,8 +714,8 @@ describe('integration scenarios', () => {
 
     const mockTemplate = { id: 'new-template-id', name: 'My Budget' }
     const templateItems = [
-      { name: 'Groceries', category_id: 'food-cat', amount: 400 },
-      { name: 'Rent', category_id: 'housing-cat', amount: 1200 },
+      { name: 'Groceries', category_id: 'food-cat', amount: 400, is_fixed_payment: true },
+      { name: 'Rent', category_id: 'housing-cat', amount: 1200, is_fixed_payment: true },
     ]
 
     templatesStore.addTemplate = vi.fn().mockResolvedValue({ success: true, data: mockTemplate })
@@ -711,8 +735,20 @@ describe('integration scenarios', () => {
       total: 1600,
     })
     expect(templatesStore.addItemsToTemplate).toHaveBeenCalledWith([
-      { name: 'Groceries', category_id: 'food-cat', amount: 400, template_id: 'new-template-id' },
-      { name: 'Rent', category_id: 'housing-cat', amount: 1200, template_id: 'new-template-id' },
+      {
+        name: 'Groceries',
+        category_id: 'food-cat',
+        amount: 400,
+        is_fixed_payment: true,
+        template_id: 'new-template-id',
+      },
+      {
+        name: 'Rent',
+        category_id: 'housing-cat',
+        amount: 1200,
+        is_fixed_payment: true,
+        template_id: 'new-template-id',
+      },
     ])
   })
 
@@ -740,7 +776,9 @@ describe('integration scenarios', () => {
     } as TemplateWithItems
 
     const updatedTemplate = { id: 'template-456', name: 'New Budget' }
-    const newItems = [{ name: 'Updated Groceries', category_id: 'food-cat', amount: 500 }]
+    const newItems = [
+      { name: 'Updated Groceries', category_id: 'food-cat', amount: 500, is_fixed_payment: true },
+    ]
 
     templatesStore.loadTemplateWithItems = vi.fn().mockResolvedValue(existingTemplate)
     templatesStore.editTemplate = vi
@@ -785,6 +823,7 @@ describe('integration scenarios', () => {
         name: 'Updated Groceries',
         category_id: 'food-cat',
         amount: 500,
+        is_fixed_payment: true,
         template_id: 'template-456',
       },
     ])

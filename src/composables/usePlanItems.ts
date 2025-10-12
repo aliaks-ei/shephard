@@ -12,6 +12,7 @@ export function usePlanItems() {
       name: item.name.trim(),
       category_id: item.categoryId,
       amount: item.amount,
+      is_fixed_payment: item.isFixedPayment,
     }),
   })
 

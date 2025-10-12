@@ -58,6 +58,7 @@ describe('useExpenseRegistration', () => {
       name: 'Groceries',
       amount: 100,
       is_completed: false,
+      is_fixed_payment: true,
       created_at: '2024-01-01',
       updated_at: '2024-01-01',
     },
@@ -181,8 +182,25 @@ describe('useExpenseRegistration', () => {
         },
       ]
 
-      const { form, categoryOptions } = useExpenseRegistration()
+      const { form, categoryOptions, allPlanItems } = useExpenseRegistration()
       form.value.planId = 'plan-1'
+
+      // Set up plan items to match the expected calculation
+      // With non-fixed items of 500 and expenses of 150:
+      // Still to pay = 0 + max(0, 500 - 150) = 350
+      allPlanItems.value = [
+        {
+          id: 'item-1',
+          plan_id: 'plan-1',
+          category_id: 'cat-1',
+          name: 'Groceries',
+          amount: 500,
+          is_completed: false,
+          is_fixed_payment: false, // Non-fixed item
+          created_at: '2024-01-01',
+          updated_at: '2024-01-01',
+        },
+      ]
 
       expect(categoryOptions.value).toHaveLength(1)
       expect(categoryOptions.value[0]).toMatchObject({
@@ -219,10 +237,28 @@ describe('useExpenseRegistration', () => {
         },
       ]
 
-      const { form, budgetWarning } = useExpenseRegistration()
+      const { form, budgetWarning, allPlanItems } = useExpenseRegistration()
       form.value.planId = 'plan-1'
       form.value.categoryId = 'cat-1'
       form.value.amount = 50
+
+      // Set up plan items to match the expected calculation
+      // With non-fixed items of 100 and expenses of 80:
+      // Still to pay = 0 + max(0, 100 - 80) = 20
+      // Adding 50 expense: 20 - 50 = -30 (exceeds budget)
+      allPlanItems.value = [
+        {
+          id: 'item-1',
+          plan_id: 'plan-1',
+          category_id: 'cat-1',
+          name: 'Groceries',
+          amount: 100,
+          is_completed: false,
+          is_fixed_payment: false, // Non-fixed item
+          created_at: '2024-01-01',
+          updated_at: '2024-01-01',
+        },
+      ]
 
       expect(budgetWarning.value).toContain('exceed the budget')
     })
@@ -244,10 +280,28 @@ describe('useExpenseRegistration', () => {
         },
       ]
 
-      const { form, budgetWarning } = useExpenseRegistration()
+      const { form, budgetWarning, allPlanItems } = useExpenseRegistration()
       form.value.planId = 'plan-1'
       form.value.categoryId = 'cat-1'
       form.value.amount = 20
+
+      // Set up plan items to match the expected calculation
+      // With non-fixed items of 100 and expenses of 50:
+      // Still to pay = 0 + max(0, 100 - 50) = 50
+      // Adding 20 expense: 50 - 20 = 30 (still within budget)
+      allPlanItems.value = [
+        {
+          id: 'item-1',
+          plan_id: 'plan-1',
+          category_id: 'cat-1',
+          name: 'Groceries',
+          amount: 100,
+          is_completed: false,
+          is_fixed_payment: false, // Non-fixed item
+          created_at: '2024-01-01',
+          updated_at: '2024-01-01',
+        },
+      ]
 
       expect(budgetWarning.value).toBe('')
     })

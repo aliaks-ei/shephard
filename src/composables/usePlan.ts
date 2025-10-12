@@ -49,7 +49,13 @@ export function usePlan() {
     startDate: string,
     endDate: string,
     total: number,
-    planItems: Array<{ id?: string; name: string; category_id: string; amount: number }>,
+    planItems: Array<{
+      id?: string
+      name: string
+      category_id: string
+      amount: number
+      is_fixed_payment: boolean
+    }>,
   ): Promise<ActionResult<PlanWithItems>> {
     const planResult = await plansStore.addPlan({
       template_id: templateId,
@@ -65,6 +71,7 @@ export function usePlan() {
       name: item.name,
       category_id: item.category_id,
       amount: item.amount,
+      is_fixed_payment: item.is_fixed_payment,
       plan_id: planResult.data!.id,
     }))
 
@@ -84,7 +91,13 @@ export function usePlan() {
     startDate: string,
     endDate: string,
     total: number,
-    planItems: Array<{ id?: string; name: string; category_id: string; amount: number }>,
+    planItems: Array<{
+      id?: string
+      name: string
+      category_id: string
+      amount: number
+      is_fixed_payment: boolean
+    }>,
   ): Promise<ActionResult<PlanWithItems>> {
     if (!routePlanId.value || !currentPlan.value) return { success: false }
 
@@ -111,7 +124,13 @@ export function usePlan() {
       operations.push(
         plansStore.updatePlanItems(
           planResult.data.id,
-          itemsToUpdate as Array<{ id: string; name: string; category_id: string; amount: number }>,
+          itemsToUpdate as Array<{
+            id: string
+            name: string
+            category_id: string
+            amount: number
+            is_fixed_payment: boolean
+          }>,
         ),
       )
     }
@@ -121,6 +140,7 @@ export function usePlan() {
         name: item.name,
         category_id: item.category_id,
         amount: item.amount,
+        is_fixed_payment: item.is_fixed_payment,
         plan_id: planResult.data!.id,
       }))
       operations.push(plansStore.savePlanItems(planResult.data.id, newItems))

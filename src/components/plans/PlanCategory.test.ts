@@ -15,8 +15,8 @@ installQuasarPlugin()
 type PlanCategoryProps = ComponentProps<typeof PlanCategory>
 
 const mockItems: PlanItemUI[] = [
-  { id: 'i1', name: 'Item 1', categoryId: 'c1', amount: 100, color: '#111' },
-  { id: 'i2', name: 'Item 2', categoryId: 'c1', amount: 50, color: '#222' },
+  { id: 'i1', name: 'Item 1', categoryId: 'c1', amount: 100, color: '#111', isFixedPayment: true },
+  { id: 'i2', name: 'Item 2', categoryId: 'c1', amount: 50, color: '#222', isFixedPayment: true },
 ]
 
 const renderPlanCategory = (props: PlanCategoryProps) => {

@@ -2,6 +2,7 @@ import { ref, computed, unref, type Ref } from 'vue'
 import { usePlansStore } from 'src/stores/plans'
 import { useExpensesStore } from 'src/stores/expenses'
 import { useCategoriesStore } from 'src/stores/categories'
+import { calculateStillToPay } from 'src/utils/budget-calculations'
 import type { ExpenseWithCategory, PlanWithItems } from 'src/api'
 import type { CategoryBudget } from 'src/types'
 
@@ -27,6 +28,7 @@ export function usePlanOverview(
     const plan = currentPlanWithItems.value
     if (!plan) return 0
 
+    // Budget = sum of ALL items (both fixed and non-fixed)
     const hasItems = Array.isArray(
       (plan as unknown as { plan_items?: { amount: number }[] }).plan_items,
     )
@@ -42,11 +44,29 @@ export function usePlanOverview(
   })
 
   const totalSpent = computed(() => {
+    // Spent = sum of all expenses (unchanged)
     return expensesStore.totalExpensesAmount
   })
 
   const remainingBudget = computed(() => {
-    return totalBudget.value - totalSpent.value
+    const plan = currentPlanWithItems.value
+    if (!plan) return 0
+
+    // Still to pay = (sum of NON-COMPLETED fixed items) + max(0, sum of non-fixed items - total expenses)
+    const nonCompletedFixedItemsTotal =
+      plan.plan_items
+        ?.filter((item) => item.is_fixed_payment && !item.is_completed)
+        .reduce((sum, item) => sum + item.amount, 0) || 0
+
+    const nonFixedItemsTotal =
+      plan.plan_items
+        ?.filter((item) => !item.is_fixed_payment)
+        .reduce((sum, item) => sum + item.amount, 0) || 0
+
+    const stillToPay =
+      nonCompletedFixedItemsTotal + Math.max(0, nonFixedItemsTotal - totalSpent.value)
+
+    return stillToPay
   })
 
   const categoryBudgets = computed((): CategoryBudget[] => {
@@ -54,11 +74,15 @@ export function usePlanOverview(
     const categories = categoriesStore.categories
     const plan = currentPlanWithItems.value
 
-    const plannedAmountsByCategory = new Map<string, number>()
+    // Track planned budget amounts per category
+    const totalAmountsByCategory = new Map<string, number>()
+
     if (plan?.plan_items) {
       plan.plan_items.forEach((item) => {
-        const existing = plannedAmountsByCategory.get(item.category_id) || 0
-        plannedAmountsByCategory.set(item.category_id, existing + item.amount)
+        const categoryId = item.category_id
+        // Planned budget includes ALL items (fixed + non-fixed)
+        const existingTotal = totalAmountsByCategory.get(categoryId) || 0
+        totalAmountsByCategory.set(categoryId, existingTotal + item.amount)
       })
     }
 
@@ -67,8 +91,14 @@ export function usePlanOverview(
         const category = categories.find((c) => c.id === item.category_id)
         if (!category) return null
 
-        const plannedAmount = plannedAmountsByCategory.get(item.category_id) || item.planned_amount
-        const calculatedRemaining = plannedAmount - item.actual_amount
+        const plannedAmount = totalAmountsByCategory.get(item.category_id) || item.planned_amount
+
+        // Calculate "still to pay" using the shared utility function
+        const calculatedRemaining = calculateStillToPay(
+          item.category_id,
+          plan?.plan_items || [],
+          item.actual_amount,
+        )
 
         return {
           categoryId: item.category_id,
@@ -110,7 +140,9 @@ export function usePlanOverview(
       status = 'healthy'
     }
 
-    const overBudgetCategories = categoryBudgets.value.filter((c) => c.remainingAmount < 0).length
+    const overBudgetCategories = categoryBudgets.value.filter(
+      (c) => c.actualAmount > c.plannedAmount,
+    ).length
     const nearLimitCategories = categoryBudgets.value.filter((c) => {
       const percentage = c.plannedAmount > 0 ? c.actualAmount / c.plannedAmount : 0
       return percentage > 0.8 && percentage <= 1

@@ -39,6 +39,7 @@ describe('usePlanOverview', () => {
         name: 'Groceries',
         amount: 500,
         is_completed: false,
+        is_fixed_payment: true,
         created_at: '2024-01-01',
         updated_at: '2024-01-01',
       },
@@ -49,6 +50,7 @@ describe('usePlanOverview', () => {
         name: 'Transport',
         amount: 300,
         is_completed: false,
+        is_fixed_payment: true,
         created_at: '2024-01-01',
         updated_at: '2024-01-01',
       },
@@ -156,14 +158,152 @@ describe('usePlanOverview', () => {
   })
 
   describe('remainingBudget', () => {
-    it('calculates remaining budget correctly', () => {
+    it('calculates remaining budget correctly with only fixed items', () => {
       const expensesStore = useExpensesStore()
       // @ts-expect-error - Testing Pinia computed
       expensesStore.totalExpensesAmount = 350
 
       const { remainingBudget } = usePlanOverview('plan-1', ref(mockPlanWithItems))
 
-      expect(remainingBudget.value).toBe(450)
+      // With only non-completed fixed items ($500 + $300) and no non-fixed items:
+      // Still to pay = $800 + max(0, $0 - $350) = $800
+      expect(remainingBudget.value).toBe(800)
+    })
+
+    it('calculates remaining budget correctly with fixed and non-fixed items', () => {
+      const expensesStore = useExpensesStore()
+      // @ts-expect-error - Testing Pinia computed
+      expensesStore.totalExpensesAmount = 120
+
+      const planWithMixedItems: PlanWithItems = {
+        ...mockPlanWithItems,
+        plan_items: [
+          {
+            id: 'item-1',
+            plan_id: 'plan-1',
+            category_id: 'cat-1',
+            name: 'Rent',
+            amount: 100,
+            is_completed: false,
+            is_fixed_payment: true,
+            created_at: '2024-01-01',
+            updated_at: '2024-01-01',
+          },
+          {
+            id: 'item-2',
+            plan_id: 'plan-1',
+            category_id: 'cat-2',
+            name: 'Bills',
+            amount: 50,
+            is_completed: false,
+            is_fixed_payment: true,
+            created_at: '2024-01-01',
+            updated_at: '2024-01-01',
+          },
+          {
+            id: 'item-3',
+            plan_id: 'plan-1',
+            category_id: 'cat-1',
+            name: 'Groceries',
+            amount: 200,
+            is_completed: false,
+            is_fixed_payment: false,
+            created_at: '2024-01-01',
+            updated_at: '2024-01-01',
+          },
+        ],
+      }
+
+      const { remainingBudget } = usePlanOverview('plan-1', ref(planWithMixedItems))
+
+      // Fixed items: $100 + $50 = $150
+      // Non-fixed items: $200
+      // Expenses: $120
+      // Still to pay = $150 + ($200 - $120) = $230
+      expect(remainingBudget.value).toBe(230)
+    })
+
+    it('calculates remaining budget correctly when expenses exceed non-fixed items', () => {
+      const expensesStore = useExpensesStore()
+      // @ts-expect-error - Testing Pinia computed
+      expensesStore.totalExpensesAmount = 300
+
+      const planWithMixedItems: PlanWithItems = {
+        ...mockPlanWithItems,
+        plan_items: [
+          {
+            id: 'item-1',
+            plan_id: 'plan-1',
+            category_id: 'cat-1',
+            name: 'Rent',
+            amount: 100,
+            is_completed: false,
+            is_fixed_payment: true,
+            created_at: '2024-01-01',
+            updated_at: '2024-01-01',
+          },
+          {
+            id: 'item-2',
+            plan_id: 'plan-1',
+            category_id: 'cat-2',
+            name: 'Groceries',
+            amount: 200,
+            is_completed: false,
+            is_fixed_payment: false,
+            created_at: '2024-01-01',
+            updated_at: '2024-01-01',
+          },
+        ],
+      }
+
+      const { remainingBudget } = usePlanOverview('plan-1', ref(planWithMixedItems))
+
+      // Fixed items: $100
+      // Non-fixed items: $200
+      // Expenses: $300
+      // Still to pay = $100 + max(0, $200 - $300) = $100 + $0 = $100
+      expect(remainingBudget.value).toBe(100)
+    })
+
+    it('excludes completed fixed items from calculation', () => {
+      const expensesStore = useExpensesStore()
+      // @ts-expect-error - Testing Pinia computed
+      expensesStore.totalExpensesAmount = 0
+
+      const planWithCompletedItems: PlanWithItems = {
+        ...mockPlanWithItems,
+        plan_items: [
+          {
+            id: 'item-1',
+            plan_id: 'plan-1',
+            category_id: 'cat-1',
+            name: 'Rent',
+            amount: 100,
+            is_completed: true, // Completed
+            is_fixed_payment: true,
+            created_at: '2024-01-01',
+            updated_at: '2024-01-01',
+          },
+          {
+            id: 'item-2',
+            plan_id: 'plan-1',
+            category_id: 'cat-2',
+            name: 'Bills',
+            amount: 50,
+            is_completed: false, // Not completed
+            is_fixed_payment: true,
+            created_at: '2024-01-01',
+            updated_at: '2024-01-01',
+          },
+        ],
+      }
+
+      const { remainingBudget } = usePlanOverview('plan-1', ref(planWithCompletedItems))
+
+      // Only non-completed fixed items: $50
+      // No non-fixed items, no expenses
+      // Still to pay = $50 + max(0, $0 - $0) = $50
+      expect(remainingBudget.value).toBe(50)
     })
   })
 
@@ -198,7 +338,8 @@ describe('usePlanOverview', () => {
         categoryName: 'Transport',
         plannedAmount: 300,
         actualAmount: 100,
-        remainingAmount: 200,
+        // Still to pay = (non-completed fixed: $300) + max(0, non-fixed: $0 - expenses: $100) = $300
+        remainingAmount: 300,
       })
     })
 

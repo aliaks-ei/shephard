@@ -11,6 +11,7 @@ const createItemForSave = (item: TestItem) => ({
   name: item.name.trim(),
   category_id: item.categoryId,
   amount: item.amount,
+  is_fixed_payment: item.isFixedPayment,
 })
 
 let pinia: TestingPinia
@@ -178,7 +179,7 @@ describe('loading and serialization', () => {
     m.addItem('c2', '#0f0')
     // leave second item invalid
     const saved = m.getItemsForSave()
-    expect(saved).toEqual([{ name: 'Milk', category_id: 'c1', amount: 3 }])
+    expect(saved).toEqual([{ name: 'Milk', category_id: 'c1', amount: 3, is_fixed_payment: true }])
   })
 
   it('clearItems resets items array', () => {

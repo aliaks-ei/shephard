@@ -22,6 +22,7 @@ const mockItems: TemplateItemUI[] = [
     categoryId: 'category-1',
     amount: 50,
     color: '#FF0000',
+    isFixedPayment: true,
   },
   {
     id: 'item-2',
@@ -29,6 +30,7 @@ const mockItems: TemplateItemUI[] = [
     categoryId: 'category-1',
     amount: 30,
     color: '#FF0000',
+    isFixedPayment: true,
   },
 ]
 

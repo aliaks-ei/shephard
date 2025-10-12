@@ -16,6 +16,7 @@ vi.mock('src/composables/usePlanOverview', () => ({
     recentExpenses: ref([]),
     totalBudget: ref(0),
     totalSpent: ref(0),
+    remainingBudget: ref(0),
   })),
 }))
 

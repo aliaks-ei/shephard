@@ -99,6 +99,7 @@ export type Database = {
           plan_id: string
           updated_at: string | null
           is_completed: boolean
+          is_fixed_payment: boolean
         }
         Insert: {
           amount: number
@@ -109,6 +110,7 @@ export type Database = {
           plan_id: string
           updated_at?: string | null
           is_completed?: boolean
+          is_fixed_payment?: boolean
         }
         Update: {
           amount?: number
@@ -119,6 +121,7 @@ export type Database = {
           plan_id?: string
           updated_at?: string | null
           is_completed?: boolean
+          is_fixed_payment?: boolean
         }
         Relationships: [
           {
@@ -230,6 +233,7 @@ export type Database = {
           name: string
           template_id: string
           updated_at: string | null
+          is_fixed_payment: boolean
         }
         Insert: {
           amount: number
@@ -239,6 +243,7 @@ export type Database = {
           name: string
           template_id: string
           updated_at?: string | null
+          is_fixed_payment?: boolean
         }
         Update: {
           amount?: number
@@ -248,6 +253,7 @@ export type Database = {
           name?: string
           template_id?: string
           updated_at?: string | null
+          is_fixed_payment?: boolean
         }
         Relationships: [
           {

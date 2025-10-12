@@ -757,6 +757,7 @@ describe('Plans Store', () => {
           created_at: '2023-01-01T00:00:00Z',
           updated_at: '2023-01-01T00:00:00Z',
           is_completed: false,
+          is_fixed_payment: true,
         },
       ]
       vi.mocked(plansApi.createPlanItems).mockResolvedValue(newItems)

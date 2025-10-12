@@ -30,7 +30,7 @@ export function getBudgetRemainingColorClass(percentage: number): string {
 /**
  * Calculates budget usage percentage
  * @param spent - Amount spent
- * @param budget - Total budget
+ * @param budget - Planned budget
  * @returns Percentage of budget used (0-999, capped to prevent overflow)
  */
 export function calculateBudgetPercentage(spent: number, budget: number): number {

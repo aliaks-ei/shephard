@@ -20,6 +20,7 @@ const baseItem: PlanItemUI = {
   categoryId: 'c1',
   amount: 100,
   color: '#111',
+  isFixedPayment: true,
 }
 
 const renderPlanItem = (props: PlanItemProps) => {

@@ -92,6 +92,7 @@ describe('useTemplateItems', () => {
         categoryId: 'cat2',
         amount: 3.5,
         color: '#2196F3',
+        isFixedPayment: true,
       }
 
       composable.updateTemplateItem(itemId, newItem)
@@ -515,6 +516,7 @@ describe('useTemplateItems', () => {
             amount: 12.5,
             created_at: '2024-01-01',
             updated_at: '2024-01-01',
+            is_fixed_payment: true,
           },
           {
             id: 'item2',
@@ -524,6 +526,7 @@ describe('useTemplateItems', () => {
             amount: 3.5,
             created_at: '2024-01-01',
             updated_at: '2024-01-01',
+            is_fixed_payment: true,
           },
         ],
       })
@@ -568,6 +571,7 @@ describe('useTemplateItems', () => {
             amount: 12.5,
             created_at: '2024-01-01',
             updated_at: '2024-01-01',
+            is_fixed_payment: true,
           },
         ],
       }
@@ -598,6 +602,7 @@ describe('useTemplateItems', () => {
             amount: 12.5,
             created_at: '2024-01-01',
             updated_at: '2024-01-01',
+            is_fixed_payment: true,
           },
           {
             id: 'item2',
@@ -607,6 +612,7 @@ describe('useTemplateItems', () => {
             amount: 5.0,
             created_at: '2024-01-01',
             updated_at: '2024-01-01',
+            is_fixed_payment: true,
           },
         ],
       }
@@ -642,6 +648,7 @@ describe('useTemplateItems', () => {
             amount: 10.0,
             created_at: '2024-01-01',
             updated_at: '2024-01-01',
+            is_fixed_payment: true,
           },
         ],
       }
@@ -693,6 +700,7 @@ describe('useTemplateItems', () => {
         name: 'Lunch', // trimmed
         category_id: 'cat1',
         amount: 12.5,
+        is_fixed_payment: true,
       })
     })
 
@@ -739,11 +747,13 @@ describe('useTemplateItems', () => {
           name: 'Lunch',
           category_id: 'cat1',
           amount: 12.5,
+          is_fixed_payment: true,
         },
         {
           name: 'Bus ticket',
           category_id: 'cat2',
           amount: 3.5,
+          is_fixed_payment: true,
         },
       ])
     })

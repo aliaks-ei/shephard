@@ -39,6 +39,7 @@ const mockPlan: PlanWithItems = {
       name: 'Test Item',
       amount: 100,
       is_completed: false,
+      is_fixed_payment: true,
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
     },

@@ -213,7 +213,13 @@ export const usePlansStore = defineStore('plans', () => {
 
   async function updatePlanItems(
     planId: string,
-    items: Array<{ id: string; name: string; category_id: string; amount: number }>,
+    items: Array<{
+      id: string
+      name: string
+      category_id: string
+      amount: number
+      is_fixed_payment: boolean
+    }>,
   ): Promise<ActionResult> {
     if (!userId.value) return { success: false }
 
