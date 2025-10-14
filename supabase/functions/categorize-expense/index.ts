@@ -138,9 +138,9 @@ Deno.serve(async (req) => {
 
       Rules:
       - categoryName must EXACTLY match one from the list above (case-insensitive)
-      - confidence must be between 0 and 1 (use 0.8+ for strong matches, 0.5-0.8 for reasonable matches, below 0.5 for weak matches)
+      - confidence must be between 0 and 1 (use 0.8+ for strong matches, 0.65-0.8 for reasonable matches, below 0.65 for weak matches)
       - reasoning must be concise (max 50 words)
-      - If no good match exists, pick the closest one but use confidence < 0.5
+      - If no good match exists, pick the closest one but use confidence < 0.65
       - Return only a single json object as the answer
     `
 
