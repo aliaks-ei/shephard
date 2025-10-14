@@ -72,11 +72,11 @@ describe('PlanSelectorField', () => {
     expect(wrapper.emitted('plan-selected')?.[0]).toEqual(['plan-1'])
   })
 
-  it('should show auto-select banner when showAutoSelectBanner is true', () => {
+  it('should show auto-select banner when showAutoSelectHint is true', () => {
     const wrapper = mount(PlanSelectorField, {
       props: {
         ...defaultProps,
-        showAutoSelectBanner: true,
+        showAutoSelectHint: true,
       },
     })
 

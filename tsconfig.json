@@ -9,5 +9,6 @@
       "#q-app": ["./node_modules/@quasar/app-vite/types/index.d.ts"],
       "#q-app/wrappers": ["./node_modules/@quasar/app-vite/types/app-wrappers.d.ts"]
     }
-  }
+  },
+  "exclude": ["supabase/functions/**/*"]
 }
