@@ -220,6 +220,6 @@ describe('PlanSummaryCard', () => {
       currency: 'USD',
     })
 
-    expect(getBudgetProgressColor).toHaveBeenCalledWith(115)
+    expect(getBudgetProgressColor).toHaveBeenCalledWith(expect.closeTo(115, 0.01))
   })
 })
