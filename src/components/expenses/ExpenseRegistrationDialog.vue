@@ -96,7 +96,7 @@
               :selected-items-total="selectedItemsTotal"
               :readonly="!!props.defaultPlanId"
               :loading="plansStore.isLoading"
-              :show-auto-select-banner="didAutoSelectPlan"
+              :show-auto-select-hint="didAutoSelectPlan"
               :is-loading-plan-items="isLoadingPlanItems"
               :selected-category-id="props.defaultCategoryId ?? null"
               @plan-selected="handlePlanSelected"
@@ -126,7 +126,7 @@
               :amount-rules="amountRules"
               :readonly="!!props.defaultPlanId"
               :loading="plansStore.isLoading"
-              :show-auto-select-banner="didAutoSelectPlan"
+              :show-auto-select-hint="didAutoSelectPlan"
               :default-category-id="props.defaultCategoryId ?? null"
               @plan-selected="handlePlanSelected"
             />

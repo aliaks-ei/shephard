@@ -13,6 +13,7 @@ alwaysApply: true
 - When adding smaller components to the template, remember to import them
 - Composable functions should only be called directly in `<script setup>` blocks, or from within other composable functions.
 - Don't pass functions as props to child components. Emit events from child components and handle them at parent level.
+- Prefer VueUse utilities (`@vueuse/core`) over manual implementations for common patterns like debouncing (`useDebounceFn`), throttling (`useThrottleFn`), async state (`useAsyncState`), local storage (`useLocalStorage`), etc. VueUse provides battle-tested, optimized implementations.
 
 ## Template Formatting
 

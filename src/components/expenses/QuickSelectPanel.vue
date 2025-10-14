@@ -9,7 +9,7 @@
             :plan-options="planOptions"
             :readonly="readonly ?? false"
             :loading="loading ?? false"
-            :show-auto-select-banner="(showAutoSelectBanner ?? false) && !!selectedPlan"
+            :show-auto-select-hint="(showAutoSelectHint ?? false) && !!selectedPlan"
             :display-value="planDisplayValue"
             @plan-selected="handlePlanSelected"
           />
@@ -191,7 +191,7 @@ interface Props {
   expenseDate: string
   readonly?: boolean
   loading?: boolean
-  showAutoSelectBanner?: boolean
+  showAutoSelectHint?: boolean
   isLoadingPlanItems?: boolean
   selectedCategoryId?: string | null
 }
@@ -199,7 +199,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   readonly: false,
   loading: false,
-  showAutoSelectBanner: false,
+  showAutoSelectHint: false,
   isLoadingPlanItems: false,
   selectedCategoryId: null,
 })

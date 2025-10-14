@@ -8,7 +8,9 @@
   "private": true,
   "scripts": {
     "lint": "eslint -c ./eslint.config.js \"./src*/**/*.{ts,js,cjs,mjs,vue}\"",
+    "lint:changed": "git diff --name-only -z --diff-filter=ACM main | grep -zZ -E '\\.(ts|tsx|vue|js|jsx|mjs|cjs|json|html|css)$' | xargs -0 eslint -c ./eslint.config.js --fix || true",
     "format": "prettier --write \"**/*.{js,ts,vue,scss,html,md,json}\"",
+    "format:changed": "git diff --name-only -z --diff-filter=ACM main | grep -zZ -E '\\.(ts|tsx|vue|js|jsx|mjs|cjs|json|html|css)$' | xargs -0 prettier --write || true",
     "dev": "quasar dev -m pwa",
     "build": "quasar build -m pwa",
     "build:analyze": "quasar build -m pwa --mode analyze",
@@ -17,13 +19,14 @@
     "postinstall": "quasar prepare",
     "test:unit": "vitest",
     "test:unit:ci": "vitest run",
-    "type-check": "vue-tsc --noEmit",
+    "type-check": "vue-tsc --noEmit --composite false",
     "prepare": "husky"
   },
   "lint-staged": {
     "*.{js,ts,vue,scss,html,md,json}": "prettier --write \"**/*.{js,ts,vue,scss,html,md,json}\""
   },
   "dependencies": {
+    "@prettier/plugin-oxc": "^0.0.4",
     "@quasar/extras": "^1.16.4",
     "@supabase/supabase-js": "^2.49.1",
     "@vueuse/core": "^13.2.0",
@@ -52,7 +55,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.1.0",
     "prettier": "^3.3.3",
-    "supabase": "^2.20.3",
+    "supabase": "^2.51.0",
     "typescript": "~5.5.3",
     "vite-plugin-checker": "^0.9.0",
     "vitest": "^2.0.5",

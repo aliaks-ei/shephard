@@ -62,6 +62,7 @@ export type ErrorMessageKey =
   | 'EXPENSES.PLAN_NOT_FOUND'
   | 'EXPENSES.PLAN_ITEM_NOT_FOUND'
   | 'EXPENSES.PERMISSION_DENIED'
+  | 'AI.CATEGORIZATION_FAILED'
   | 'UNKNOWN'
 
 interface ErrorMessageConfig {
@@ -413,6 +414,12 @@ export const ERROR_MESSAGES: Record<ErrorMessageKey, ErrorMessageConfig> = {
     message:
       "You don't have permission to add expenses to this plan. Contact the plan owner for edit access.",
     notify: true,
+    log: true,
+  },
+  'AI.CATEGORIZATION_FAILED': {
+    message:
+      "We couldn't automatically categorize this expense. Please select a category manually.",
+    notify: false,
     log: true,
   },
 

@@ -9,12 +9,12 @@
       outlined
       emit-value
       map-options
-      hide-bottom-space
+      :hide-bottom-space="!showAutoSelectHint"
+      :hint="showAutoSelectHint ? 'Most recently used plan selected' : undefined"
       :readonly="readonly"
       :loading="loading"
       :rules="[(val) => !!val || 'Plan is required']"
       :display-value="displayValue"
-      :class="additionalClass"
       @update:model-value="handlePlanSelected"
     >
       <template #option="scope">
@@ -44,18 +44,6 @@
         </q-item>
       </template>
     </q-select>
-
-    <q-banner
-      v-if="showAutoSelectBanner"
-      class="bg-blue-1 text-blue-8 q-mt-md q-mb-md"
-      dense
-      rounded
-    >
-      <template #avatar>
-        <q-icon name="eva-info-outline" />
-      </template>
-      Most recently used plan selected.
-    </q-banner>
   </div>
 </template>
 
@@ -76,16 +64,14 @@ interface Props {
   planOptions: PlanOption[]
   readonly?: boolean
   loading?: boolean
-  showAutoSelectBanner?: boolean
-  additionalClass?: string
+  showAutoSelectHint?: boolean
   displayValue?: string
 }
 
 withDefaults(defineProps<Props>(), {
   readonly: false,
   loading: false,
-  showAutoSelectBanner: false,
-  additionalClass: '',
+  showAutoSelectHint: false,
   displayValue: '',
 })
 
