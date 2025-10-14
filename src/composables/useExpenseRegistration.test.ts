@@ -546,7 +546,7 @@ describe('useExpenseRegistration', () => {
       expect(form.value.planId).toBeNull()
       expect(form.value.name).toBe('')
       expect(selectedPlanItems.value).toEqual([])
-      expect(currentMode.value).toBe('quick-select')
+      expect(currentMode.value).toBe('custom-entry')
     })
   })
 })

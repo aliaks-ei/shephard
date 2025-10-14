@@ -20,7 +20,7 @@ const renderPlanEditTab = (props: PlanEditTabProps) => {
             '<div class="category-items-manager"><slot name="category" :category="{}" /></div>',
         },
         PlanCategory: { template: '<div class="plan-category" />' },
-        'q-form': { template: '<form @submit="$emit(\'submit\')"><slot /></form>', props: ['ref'] },
+        'q-form': { template: '<form @submit="$emit(\'submit\')"><slot /></form>' },
         'q-card': { template: '<div><slot /></div>' },
         'q-card-section': { template: '<div><slot /></div>' },
       },

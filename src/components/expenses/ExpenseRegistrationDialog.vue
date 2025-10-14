@@ -49,14 +49,14 @@
         class="text-grey-7"
       >
         <q-tab
-          name="quick-select"
-          label="Quick Select Items"
-          icon="eva-checkmark-square-2-outline"
-        />
-        <q-tab
           name="custom-entry"
           label="Custom Entry"
           icon="eva-edit-outline"
+        />
+        <q-tab
+          name="quick-select"
+          label="Quick Select Items"
+          icon="eva-checkmark-square-2-outline"
         />
       </q-tabs>
 
@@ -78,6 +78,32 @@
           class="col overflow-auto"
           style="flex: 1; min-height: 0"
         >
+          <!-- Custom Entry Mode -->
+          <q-tab-panel
+            name="custom-entry"
+            class="q-pa-none"
+          >
+            <CustomEntryPanel
+              v-model:plan-id="form.planId"
+              v-model:category-id="form.categoryId"
+              v-model:name="form.name"
+              v-model:amount="form.amount"
+              v-model:expense-date="form.expenseDate"
+              :selected-plan="selectedPlan"
+              :plan-options="planOptions"
+              :plan-display-value="planDisplayValue"
+              :category-options="categoryOptions"
+              :budget-warning="budgetWarning"
+              :name-rules="nameRules"
+              :amount-rules="amountRules"
+              :readonly="!!props.defaultPlanId"
+              :loading="plansStore.isLoading"
+              :show-auto-select-hint="didAutoSelectPlan"
+              :default-category-id="props.defaultCategoryId ?? null"
+              @plan-selected="handlePlanSelected"
+            />
+          </q-tab-panel>
+
           <!-- Quick Select Items Mode -->
           <q-tab-panel
             name="quick-select"
@@ -103,32 +129,6 @@
               @items-selected="onItemsSelected"
               @selection-changed="onSelectionChanged"
               @remove-item="handleRemoveItem"
-            />
-          </q-tab-panel>
-
-          <!-- Custom Entry Mode -->
-          <q-tab-panel
-            name="custom-entry"
-            class="q-pa-none"
-          >
-            <CustomEntryPanel
-              v-model:plan-id="form.planId"
-              v-model:category-id="form.categoryId"
-              v-model:name="form.name"
-              v-model:amount="form.amount"
-              v-model:expense-date="form.expenseDate"
-              :selected-plan="selectedPlan"
-              :plan-options="planOptions"
-              :plan-display-value="planDisplayValue"
-              :category-options="categoryOptions"
-              :budget-warning="budgetWarning"
-              :name-rules="nameRules"
-              :amount-rules="amountRules"
-              :readonly="!!props.defaultPlanId"
-              :loading="plansStore.isLoading"
-              :show-auto-select-hint="didAutoSelectPlan"
-              :default-category-id="props.defaultCategoryId ?? null"
-              @plan-selected="handlePlanSelected"
             />
           </q-tab-panel>
         </q-tab-panels>
@@ -171,14 +171,11 @@
 
 <script setup lang="ts">
 import { ref, watch, toRef } from 'vue'
-import { useQuasar } from 'quasar'
 import QuickSelectPanel from './QuickSelectPanel.vue'
 import CustomEntryPanel from './CustomEntryPanel.vue'
 import { useExpenseRegistration } from 'src/composables/useExpenseRegistration'
 import { usePlansStore } from 'src/stores/plans'
 import type { QForm } from 'quasar'
-
-const $q = useQuasar()
 
 const props = defineProps<{
   modelValue: boolean
