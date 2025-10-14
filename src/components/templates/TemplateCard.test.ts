@@ -4,11 +4,13 @@ import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { ComponentProps } from 'vue-component-type-helpers'
 
 import TemplateCard from './TemplateCard.vue'
-import { setupTestingPinia } from 'test/helpers/pinia-mocks'
+import { createTestingPinia } from '@pinia/testing'
 import { createMockTemplateWithPermission } from 'test/fixtures'
+import * as currencyUtils from 'src/utils/currency'
 
 vi.mock('src/utils/currency', () => ({
   formatCurrency: vi.fn((amount: number, currency: string) => `${currency} ${amount.toFixed(2)}`),
+  formatCurrencyPrivate: vi.fn((currency: string) => `${currency}****`),
 }))
 
 vi.mock('src/utils/templates', () => ({
@@ -28,12 +30,26 @@ const mockTemplate = createMockTemplateWithPermission({
   is_shared: true,
 })
 
-const renderTemplateCard = (props: TemplateCardProps) => {
-  setupTestingPinia({ stubActions: true })
+const renderTemplateCard = (props: TemplateCardProps, isPrivacyModeEnabled = false) => {
+  const pinia = createTestingPinia({
+    createSpy: vi.fn,
+    stubActions: true,
+    initialState: {
+      preferences: {
+        preferences: {
+          theme: 'light',
+          pushNotificationsEnabled: false,
+          currency: 'EUR',
+          isPrivacyModeEnabled,
+        },
+      },
+    },
+  })
 
   return mount(TemplateCard, {
     props,
     global: {
+      plugins: [pinia],
       stubs: {
         TemplateCardMenu: {
           template: '<div data-testid="template-card-menu" />',
@@ -166,5 +182,33 @@ describe('TemplateCard', () => {
     })
 
     expect(shownBadgeWrapper.props('hideSharedBadge')).toBe(false)
+  })
+
+  it('should display real amount when privacy mode is disabled', () => {
+    vi.clearAllMocks()
+
+    renderTemplateCard(
+      {
+        template: mockTemplate,
+      },
+      false,
+    )
+
+    expect(vi.mocked(currencyUtils.formatCurrency)).toHaveBeenCalled()
+    expect(vi.mocked(currencyUtils.formatCurrencyPrivate)).not.toHaveBeenCalled()
+  })
+
+  it('should display masked amount when privacy mode is enabled', () => {
+    vi.clearAllMocks()
+
+    renderTemplateCard(
+      {
+        template: mockTemplate,
+      },
+      true,
+    )
+
+    expect(vi.mocked(currencyUtils.formatCurrencyPrivate)).toHaveBeenCalled()
+    expect(vi.mocked(currencyUtils.formatCurrency)).not.toHaveBeenCalled()
   })
 })

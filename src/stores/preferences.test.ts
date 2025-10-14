@@ -3,6 +3,7 @@ import { createTestingPinia } from '@pinia/testing'
 import { ref, type ComputedRef } from 'vue'
 import { usePreferencesStore } from './preferences'
 import { useAuthStore } from './auth'
+import { useNotificationStore } from './notification'
 import * as userApi from 'src/api/user'
 import { useError } from 'src/composables/useError'
 import { useTheme } from 'src/composables/useTheme'
@@ -10,6 +11,10 @@ import type { User } from 'src/api/user'
 
 vi.mock('./auth', () => ({
   useAuthStore: vi.fn(),
+}))
+
+vi.mock('./notification', () => ({
+  useNotificationStore: vi.fn(),
 }))
 
 vi.mock('src/composables/useError', () => ({
@@ -27,11 +32,13 @@ vi.mock('src/api/user', () => ({
     theme: 'light',
     pushNotificationsEnabled: false,
     currency: 'EUR',
+    isPrivacyModeEnabled: false,
   },
 }))
 
 describe('Preferences Store', () => {
   const mockHandleError = vi.fn()
+  const mockShowInfo = vi.fn()
   const mockSystemDarkMode = ref(false)
   const mockIsDark = ref(false)
   let mockUser: User | null = null
@@ -59,6 +66,10 @@ describe('Preferences Store', () => {
       isAuthenticated: true,
     } as unknown as ReturnType<typeof useAuthStore>)
 
+    vi.mocked(useNotificationStore).mockReturnValue({
+      showInfo: mockShowInfo,
+    } as unknown as ReturnType<typeof useNotificationStore>)
+
     createTestingPinia({
       createSpy: vi.fn,
       stubActions: false,
@@ -81,6 +92,7 @@ describe('Preferences Store', () => {
       expect(preferencesStore.isDark).toBe(false)
       expect(preferencesStore.arePushNotificationsEnabled).toBe(false)
       expect(preferencesStore.currency).toBe('EUR')
+      expect(preferencesStore.isPrivacyModeEnabled).toBe(false)
     })
   })
 
@@ -98,6 +110,7 @@ describe('Preferences Store', () => {
         theme: 'dark' as const,
         pushNotificationsEnabled: true,
         currency: 'USD',
+        isPrivacyModeEnabled: false,
       }
 
       vi.mocked(userApi.getUserPreferences).mockResolvedValue(mockPreferences)
@@ -208,6 +221,34 @@ describe('Preferences Store', () => {
     })
   })
 
+  describe('togglePrivacyMode()', () => {
+    it('should toggle privacy mode from false to true', async () => {
+      expect(preferencesStore.isPrivacyModeEnabled).toBe(false)
+
+      await preferencesStore.togglePrivacyMode()
+
+      expect(preferencesStore.preferences.isPrivacyModeEnabled).toBe(true)
+      expect(userApi.saveUserPreferences).toHaveBeenCalledWith('test-user-id', {
+        ...userApi.DEFAULT_PREFERENCES,
+        isPrivacyModeEnabled: true,
+      })
+      expect(mockShowInfo).toHaveBeenCalledWith('Privacy mode activated')
+    })
+
+    it('should toggle privacy mode from true to false', async () => {
+      preferencesStore.preferences.isPrivacyModeEnabled = true
+
+      await preferencesStore.togglePrivacyMode()
+
+      expect(preferencesStore.preferences.isPrivacyModeEnabled).toBe(false)
+      expect(userApi.saveUserPreferences).toHaveBeenCalledWith('test-user-id', {
+        ...userApi.DEFAULT_PREFERENCES,
+        isPrivacyModeEnabled: false,
+      })
+      expect(mockShowInfo).toHaveBeenCalledWith('Privacy mode deactivated')
+    })
+  })
+
   describe('Computed properties', () => {
     it('theme should reflect theme preference', () => {
       expect(preferencesStore.theme).toBe('light')
@@ -231,6 +272,14 @@ describe('Preferences Store', () => {
       preferencesStore.preferences.pushNotificationsEnabled = true
 
       expect(preferencesStore.arePushNotificationsEnabled).toBe(true)
+    })
+
+    it('isPrivacyModeEnabled should reflect isPrivacyModeEnabled preference', () => {
+      expect(preferencesStore.isPrivacyModeEnabled).toBe(false)
+
+      preferencesStore.preferences.isPrivacyModeEnabled = true
+
+      expect(preferencesStore.isPrivacyModeEnabled).toBe(true)
     })
   })
 })

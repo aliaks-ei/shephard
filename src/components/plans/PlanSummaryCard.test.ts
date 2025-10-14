@@ -182,4 +182,44 @@ describe('PlanSummaryCard', () => {
     expect(chip.exists()).toBe(true)
     expect(chip.text()).toContain('Active')
   })
+
+  it('should display percentage over 100% when over budget', () => {
+    const wrapper = renderPlanSummaryCard({
+      plan: mockPlan,
+      totalBudget: 1000,
+      totalSpent: 1200,
+      stillToPay: -200,
+      currency: 'USD',
+    })
+
+    expect(wrapper.text()).toContain('120%')
+  })
+
+  it('should call getBudgetProgressColor with correct percentage', async () => {
+    const { getBudgetProgressColor } = await import('src/utils/budget')
+
+    renderPlanSummaryCard({
+      plan: mockPlan,
+      totalBudget: 1000,
+      totalSpent: 500,
+      stillToPay: 500,
+      currency: 'USD',
+    })
+
+    expect(getBudgetProgressColor).toHaveBeenCalledWith(50)
+  })
+
+  it('should call getBudgetProgressColor with over 100% when over budget', async () => {
+    const { getBudgetProgressColor } = await import('src/utils/budget')
+
+    renderPlanSummaryCard({
+      plan: mockPlan,
+      totalBudget: 1000,
+      totalSpent: 1150,
+      stillToPay: -150,
+      currency: 'USD',
+    })
+
+    expect(getBudgetProgressColor).toHaveBeenCalledWith(115)
+  })
 })

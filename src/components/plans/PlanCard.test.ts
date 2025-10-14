@@ -8,6 +8,7 @@ import { ref } from 'vue'
 import PlanCard from './PlanCard.vue'
 import type { PlanWithPermission } from 'src/api'
 import { useUserStore } from 'src/stores/user'
+import * as currencyUtils from 'src/utils/currency'
 
 installQuasarPlugin()
 
@@ -19,6 +20,7 @@ vi.mock('src/utils/currency', () => ({
   formatCurrency: vi.fn(
     (amount: number, currency: string) => `${currency} ${amount?.toFixed(2) ?? '0.00'}`,
   ),
+  formatCurrencyPrivate: vi.fn((currency: string) => `${currency}****`),
 }))
 
 vi.mock('src/utils/plans', () => ({
@@ -53,7 +55,11 @@ const mockPlan: PlanWithPermission = {
   is_shared: true,
 }
 
-const renderPlanCard = (props: PlanCardProps, userProfile = { id: 'user-1' }) => {
+const renderPlanCard = (
+  props: PlanCardProps,
+  userProfile = { id: 'user-1' },
+  isPrivacyModeEnabled = false,
+) => {
   vi.mocked(useUserStore).mockReturnValue({
     userProfile: ref(userProfile),
   } as unknown as ReturnType<typeof useUserStore>)
@@ -65,6 +71,16 @@ const renderPlanCard = (props: PlanCardProps, userProfile = { id: 'user-1' }) =>
         createTestingPinia({
           createSpy: vi.fn,
           stubActions: true,
+          initialState: {
+            preferences: {
+              preferences: {
+                theme: 'light',
+                pushNotificationsEnabled: false,
+                currency: 'EUR',
+                isPrivacyModeEnabled,
+              },
+            },
+          },
         }),
       ],
       stubs: {
@@ -370,5 +386,35 @@ describe('PlanCard', () => {
 
     const menu = wrapper.findComponent('.plan-card-menu')
     expect(menu.exists()).toBe(false)
+  })
+
+  it('should display real amount when privacy mode is disabled', () => {
+    vi.clearAllMocks()
+
+    renderPlanCard(
+      {
+        plan: mockPlan,
+      },
+      { id: 'user-1' },
+      false,
+    )
+
+    expect(vi.mocked(currencyUtils.formatCurrency)).toHaveBeenCalled()
+    expect(vi.mocked(currencyUtils.formatCurrencyPrivate)).not.toHaveBeenCalled()
+  })
+
+  it('should display masked amount when privacy mode is enabled', () => {
+    vi.clearAllMocks()
+
+    renderPlanCard(
+      {
+        plan: mockPlan,
+      },
+      { id: 'user-1' },
+      true,
+    )
+
+    expect(vi.mocked(currencyUtils.formatCurrencyPrivate)).toHaveBeenCalled()
+    expect(vi.mocked(currencyUtils.formatCurrency)).not.toHaveBeenCalled()
   })
 })

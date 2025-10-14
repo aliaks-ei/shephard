@@ -109,8 +109,9 @@ import { computed, ref } from 'vue'
 
 import TemplateCardMenu from './TemplateCardMenu.vue'
 import DeleteDialog from 'src/components/shared/DeleteDialog.vue'
-import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
+import { formatCurrency, formatCurrencyPrivate, type CurrencyCode } from 'src/utils/currency'
 import { useUserStore } from 'src/stores/user'
+import { usePreferencesStore } from 'src/stores/preferences'
 import type { TemplateWithPermission } from 'src/api'
 
 const emit = defineEmits<{
@@ -132,6 +133,7 @@ const props = withDefaults(
 )
 
 const userStore = useUserStore()
+const preferencesStore = usePreferencesStore()
 
 const isDeleteDialogOpen = ref(false)
 
@@ -140,6 +142,11 @@ const isViewOnly = computed(() => props.template.permission_level === 'view')
 
 function formatAmount(amount: number | null | undefined): string {
   const currency = props.template.currency as CurrencyCode
+
+  if (preferencesStore.isPrivacyModeEnabled) {
+    return formatCurrencyPrivate(currency)
+  }
+
   return formatCurrency(amount, currency)
 }
 
