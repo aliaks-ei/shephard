@@ -18,7 +18,7 @@ vi.mock('vue-router', () => ({
 
 vi.mock('src/composables/usePwaInstall', () => ({
   usePwaInstall: () => ({
-    isInstallable: { value: false },
+    isInstallable: false,
     promptInstall: vi.fn(),
     dismissInstall: vi.fn(),
   }),
