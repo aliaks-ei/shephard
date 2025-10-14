@@ -6,9 +6,10 @@ const openai = new OpenAI({
   apiKey: Deno.env.get('OPENAI_API_KEY'),
 })
 
-interface CategorizeRequest {
-  expenseName: string
+interface AnalyzePhotoRequest {
+  imageBase64: string
   planId?: string
+  currency: string
 }
 
 Deno.serve(async (req) => {
@@ -63,15 +64,52 @@ Deno.serve(async (req) => {
       })
     }
 
-    const { expenseName, planId } = requestBody as CategorizeRequest
+    const { imageBase64, planId, currency } = requestBody as AnalyzePhotoRequest
 
-    if (!expenseName || expenseName.trim().length < 3) {
+    if (!imageBase64) {
+      return new Response(JSON.stringify({ error: 'Image data is required' }), {
+        status: 400,
+        headers: corsHeaders,
+      })
+    }
+
+    // Validate data URL format
+    if (!imageBase64.startsWith('data:image/')) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid image data format. Expected data URL.' }),
+        { status: 400, headers: corsHeaders },
+      )
+    }
+
+    // Validate image format - only allow formats OpenAI supports
+    const mimeType = imageBase64.split(',')[0]?.split(':')[1]?.split(';')[0]
+    const allowedFormats = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+
+    if (!mimeType || !allowedFormats.includes(mimeType)) {
       return new Response(
         JSON.stringify({
-          error: 'Expense name must be at least 3 characters',
+          error: `Unsupported image format: ${mimeType}. Please use JPEG, PNG, WebP, or HEIC (which will be converted to JPEG).`,
+          receivedFormat: mimeType,
         }),
         { status: 400, headers: corsHeaders },
       )
+    }
+
+    // Extract base64 portion for size check
+    const base64Data = imageBase64.split(',')[1]
+    if (!base64Data) {
+      return new Response(JSON.stringify({ error: 'Invalid base64 image data' }), {
+        status: 400,
+        headers: corsHeaders,
+      })
+    }
+
+    const imageSizeBytes = (base64Data.length * 3) / 4
+    if (imageSizeBytes > 5 * 1024 * 1024) {
+      return new Response(JSON.stringify({ error: 'Image size exceeds 5MB limit' }), {
+        status: 400,
+        headers: corsHeaders,
+      })
     }
 
     let categories
@@ -125,31 +163,57 @@ Deno.serve(async (req) => {
     const categoryList = categories.map((c, idx) => `${idx + 1}. ${c.name}`).join('\n')
 
     const instructions = `
-      You are an expense categorization assistant.
-      Analyze the expense name and suggest the most appropriate category from the user's list.
+      You are an expense receipt analyzer. Analyze this expense receipt/photo and extract:
 
-      User's categories:
-      ${categoryList}
+      1. The expense name/description (keep it brief and descriptive)
+      2. The total amount (numbers only, no currency symbols)
+      3. The most appropriate category from the user's list
 
-      Respond ONLY with valid json in this exact format:
+      User's categories: ${categoryList}
+      User's currency: ${currency}
+
+      You must respond in JSON format. Respond ONLY with valid JSON in this exact format:
       {
+        "expenseName": "brief-descriptive-name",
+        "amount": 123.45,
         "categoryName": "exact-category-name-from-list",
         "confidence": 0.95,
-        "reasoning": "brief one-sentence explanation"
+        "reasoning": "brief explanation of what you see"
       }
 
       Rules:
+      - expenseName should be concise (2-5 words max), like "Grocery Shopping" or "Gas Station"
+      - amount must be a number (extract from receipt total, ignore currency symbols)
       - categoryName must EXACTLY match one from the list above (case-insensitive)
-      - confidence must be between 0 and 1 (use 0.8+ for strong matches, 0.65-0.8 for reasonable matches, below 0.65 for weak matches)
-      - reasoning must be concise (max 50 words)
-      - If no good match exists, pick the closest one but use confidence < 0.65
-      - Return only a single json object as the answer
+      - confidence must be between 0 and 1:
+        * 0.8-1.0: Clear receipt with readable text and obvious category match
+        * 0.5-0.8: Partial information visible or uncertain category
+        * 0-0.5: Unclear image, can't read text, or no receipt visible
+      - reasoning: briefly explain what text/details you recognized (max 50 words)
+      - If image is too blurry or unclear to read, use low confidence (< 0.5)
+      - If no receipt/expense document is visible, use confidence 0
+
+      Return only a single JSON object.
     `
 
     const response = await openai.responses.create({
       model: 'gpt-5-nano',
       instructions,
-      input: `Categorize this expense: "${expenseName}". Return a JSON object.`,
+      input: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'input_text',
+              text: 'Analyze this expense receipt and extract the details in JSON format.',
+            },
+            {
+              type: 'input_image',
+              image_url: imageBase64,
+            },
+          ],
+        },
+      ],
       reasoning: { effort: 'minimal' },
       text: {
         format: {
@@ -165,29 +229,37 @@ Deno.serve(async (req) => {
       (c) => c.name.toLowerCase() === result.categoryName?.toLowerCase(),
     )
 
-    if (matchedCategory) {
-      result.categoryId = matchedCategory.id
-      result.categoryName = matchedCategory.name
-    } else {
+    if (!matchedCategory) {
       result.categoryId = categories[0].id
       result.categoryName = categories[0].name
-      result.confidence = 0
-      result.reasoning = 'No strong match found, suggesting default category'
+      result.confidence = Math.min(result.confidence || 0, 0.3)
+      result.reasoning = 'Could not match category, using default'
+    } else {
+      result.categoryId = matchedCategory.id
+      result.categoryName = matchedCategory.name
+    }
+
+    if (!result.expenseName || !result.amount || result.amount <= 0) {
+      result.confidence = Math.min(result.confidence || 0, 0.3)
+      result.reasoning = 'Could not extract valid expense details from image'
     }
 
     return new Response(
       JSON.stringify({
         success: true,
         data: {
+          expenseName: result.expenseName || 'Unknown Expense',
+          amount: result.amount || 0,
           categoryId: result.categoryId,
           categoryName: result.categoryName,
-          confidence: result.confidence,
-          reasoning: result.reasoning,
+          confidence: result.confidence || 0,
+          reasoning: result.reasoning || 'No details provided',
         },
       }),
       { headers: corsHeaders },
     )
   } catch (error) {
+    console.error('Error in analyze-expense-photo:', error)
     return new Response(
       JSON.stringify({
         error: error instanceof Error ? error.message : 'Unknown error',

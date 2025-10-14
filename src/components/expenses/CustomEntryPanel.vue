@@ -1,5 +1,93 @@
 <template>
   <q-card-section class="q-pt-md">
+    <!-- Photo Upload Section -->
+    <div class="q-mb-md">
+      <q-uploader
+        ref="uploaderRef"
+        label="Upload Receipt Photo"
+        accept="image/jpeg,image/png,image/webp,image/heic"
+        :max-file-size="5242880"
+        :multiple="false"
+        :auto-upload="false"
+        :disable="readonly ?? false"
+        color="primary"
+        class="full-width"
+        flat
+        bordered
+        @added="handlePhotoAdded"
+        @removed="handlePhotoRemoved"
+      />
+
+      <!-- Analysis Status -->
+      <div
+        v-if="photoAnalysis.isAnalyzing.value"
+        class="q-mt-sm q-pa-md text-center"
+      >
+        <q-spinner
+          color="primary"
+          size="32px"
+        />
+        <div class="text-body2 q-mt-sm">Analyzing photo...</div>
+      </div>
+
+      <!-- Analysis Results -->
+      <div
+        v-else-if="photoAnalysis.hasPhoto.value && photoAnalysis.analysisResult.value"
+        class="q-mt-sm"
+      >
+        <div class="row items-center justify-between q-px-sm">
+          <div class="text-caption text-positive">
+            <q-icon
+              name="eva-checkmark-circle-outline"
+              size="18px"
+              class="q-mr-xs"
+            />
+            Analysis complete ({{
+              Math.round(photoAnalysis.analysisResult.value.confidence * 100)
+            }}% confidence)
+          </div>
+          <q-btn
+            label="Re-analyze"
+            color="primary"
+            flat
+            dense
+            no-caps
+            size="sm"
+            @click="photoAnalysis.analyzePhoto()"
+          />
+        </div>
+      </div>
+
+      <!-- Low Confidence Warning -->
+      <q-banner
+        v-if="photoAnalysis.hasError.value"
+        class="bg-orange-1 text-orange-9 q-mt-sm"
+        dense
+      >
+        <template #avatar>
+          <q-icon
+            name="eva-alert-triangle-outline"
+            color="orange-9"
+          />
+        </template>
+        {{ photoAnalysis.errorMessage.value }}
+      </q-banner>
+
+      <p class="text-caption text-grey-7 q-mt-sm q-mb-none text-center">
+        Supports JPEG, PNG, WebP, HEIC • Max 5MB
+      </p>
+    </div>
+
+    <!-- Divider with "OR" -->
+    <div
+      v-if="photoAnalysis.hasPhoto.value"
+      class="row items-center q-mb-md"
+    >
+      <q-separator class="col" />
+      <span class="q-mx-md text-grey-6 text-caption text-weight-medium"> OR EDIT MANUALLY </span>
+      <q-separator class="col" />
+    </div>
+
     <!-- Plan Selection -->
     <PlanSelectorField
       v-model="localPlanId"
@@ -153,7 +241,7 @@
             color="blue-9"
           />
         </template>
-        <div class="column items-end">
+        <div class="column">
           <div class="col">
             AI suggests:
             <strong>{{ aiCategorization.lowConfidenceSuggestion.value.categoryName }}</strong>
@@ -164,6 +252,7 @@
           <q-btn
             label="Apply"
             color="blue-9"
+            class="ml-auto"
             flat
             dense
             no-caps
@@ -229,10 +318,12 @@
 
 <script setup lang="ts">
 import { computed, watch, ref, toRef } from 'vue'
+import type { QUploader } from 'quasar'
 import PlanSelectorField, { type PlanOption } from './PlanSelectorField.vue'
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import { useAICategorization } from 'src/composables/useAICategorization'
+import { usePhotoExpenseAnalysis } from 'src/composables/usePhotoExpenseAnalysis'
 
 interface Plan {
   id: string
@@ -285,8 +376,12 @@ const emit = defineEmits<{
   (e: 'plan-selected', value: string | null): void
 }>()
 
+const uploaderRef = ref<QUploader | null>(null)
 const planIdRef = toRef(props, 'planId')
+const currencyRef = computed(() => props.selectedPlan?.currency ?? null)
+
 const aiCategorization = useAICategorization(planIdRef)
+const photoAnalysis = usePhotoExpenseAnalysis(planIdRef, currencyRef)
 const aiSelectedCategoryId = ref<string | null>(null)
 
 const localPlanId = computed({
@@ -302,9 +397,28 @@ const selectedCategoryOption = computed(() => {
   return props.categoryOptions.find((opt) => opt.value === props.categoryId)
 })
 
+async function handlePhotoAdded(files: readonly File[]) {
+  await photoAnalysis.handleFileAdded(files)
+
+  const result = photoAnalysis.analysisResult.value
+  if (result && result.confidence >= 0.5) {
+    emit('update:name', result.expenseName)
+    emit('update:amount', result.amount)
+    emit('update:categoryId', result.categoryId)
+    aiSelectedCategoryId.value = result.categoryId
+  }
+}
+
+function handlePhotoRemoved() {
+  photoAnalysis.clearPhoto()
+}
+
 const handlePlanSelected = (planId: string | null) => {
   aiCategorization.clearSuggestion()
   aiSelectedCategoryId.value = null
+  if (uploaderRef.value) {
+    uploaderRef.value.reset()
+  }
   emit('plan-selected', planId)
 }
 
@@ -355,6 +469,9 @@ watch(
   () => {
     aiCategorization.clearSuggestion()
     aiSelectedCategoryId.value = null
+    if (uploaderRef.value) {
+      uploaderRef.value.reset()
+    }
   },
 )
 </script>

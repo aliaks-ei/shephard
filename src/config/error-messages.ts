@@ -63,6 +63,11 @@ export type ErrorMessageKey =
   | 'EXPENSES.PLAN_ITEM_NOT_FOUND'
   | 'EXPENSES.PERMISSION_DENIED'
   | 'AI.CATEGORIZATION_FAILED'
+  | 'AI.PHOTO_ANALYSIS_FAILED'
+  | 'AI.PHOTO_TOO_LARGE'
+  | 'AI.PHOTO_INVALID_FORMAT'
+  | 'AI.PHOTO_LOW_CONFIDENCE'
+  | 'AI.PHOTO_CONVERSION_FAILED'
   | 'UNKNOWN'
 
 interface ErrorMessageConfig {
@@ -420,6 +425,33 @@ export const ERROR_MESSAGES: Record<ErrorMessageKey, ErrorMessageConfig> = {
     message:
       "We couldn't automatically categorize this expense. Please select a category manually.",
     notify: false,
+    log: true,
+  },
+  'AI.PHOTO_ANALYSIS_FAILED': {
+    message:
+      "We couldn't analyze the receipt photo. Please try again or enter the details manually.",
+    notify: false,
+    log: true,
+  },
+  'AI.PHOTO_TOO_LARGE': {
+    message: 'Photo size exceeds 5MB limit. Please choose a smaller image.',
+    notify: true,
+    log: true,
+  },
+  'AI.PHOTO_INVALID_FORMAT': {
+    message: 'Unsupported image format. Please use JPEG, PNG, WebP, or HEIC.',
+    notify: true,
+    log: true,
+  },
+  'AI.PHOTO_LOW_CONFIDENCE': {
+    message:
+      'Could not recognize expense details clearly. Please try a clearer photo or enter details manually.',
+    notify: false,
+    log: true,
+  },
+  'AI.PHOTO_CONVERSION_FAILED': {
+    message: 'Failed to convert HEIC image. Please try JPEG or PNG format.',
+    notify: true,
     log: true,
   },
 

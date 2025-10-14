@@ -31,7 +31,7 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
   const isLoading = ref(false)
   const isLoadingPlanItems = ref(false)
   const didAutoSelectPlan = ref(false)
-  const currentMode = ref<ExpenseMode>('quick-select')
+  const currentMode = ref<ExpenseMode>('custom-entry')
   const quickSelectPhase = ref<QuickSelectPhase>('selection')
 
   const planItems = ref<PlanItem[]>([])
@@ -252,7 +252,7 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
     didAutoSelectPlan.value = false
     selectedPlanItems.value = []
     planItems.value = []
-    currentMode.value = 'quick-select'
+    currentMode.value = 'custom-entry'
     quickSelectPhase.value = 'selection'
   }
 
@@ -355,10 +355,9 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
   function determineInitialMode() {
     if (form.value.planId) {
       setTimeout(() => {
-        currentMode.value = planItems.value.length > 0 ? 'quick-select' : 'custom-entry'
-        if (currentMode.value === 'quick-select') {
-          quickSelectPhase.value = 'selection'
-        }
+        // Default to custom-entry, keep quick-select phase ready if user switches
+        currentMode.value = 'custom-entry'
+        quickSelectPhase.value = 'selection'
       }, 100)
     }
   }
