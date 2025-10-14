@@ -9,7 +9,6 @@
         :max-file-size="5242880"
         :multiple="false"
         :auto-upload="false"
-        :disable="readonly ?? false"
         color="primary"
         class="full-width"
         flat
@@ -404,8 +403,11 @@ async function handlePhotoAdded(files: readonly File[]) {
   if (result && result.confidence >= 0.5) {
     emit('update:name', result.expenseName)
     emit('update:amount', result.amount)
-    emit('update:categoryId', result.categoryId)
-    aiSelectedCategoryId.value = result.categoryId
+    // Only update category if not preselected
+    if (!props.defaultCategoryId) {
+      emit('update:categoryId', result.categoryId)
+      aiSelectedCategoryId.value = result.categoryId
+    }
   }
 }
 
@@ -441,6 +443,11 @@ function applyLowConfidenceSuggestion() {
 async function handleUpdateName(value: string | number | null) {
   const nameValue = String(value || '')
   emit('update:name', nameValue)
+
+  // Skip AI categorization if category is preselected
+  if (props.defaultCategoryId) {
+    return
+  }
 
   if (!props.selectedPlan || nameValue.trim().length < 3) {
     aiCategorization.clearSuggestion()

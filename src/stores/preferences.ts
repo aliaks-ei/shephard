@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
 import { useAuthStore } from 'src/stores/auth'
+import { useNotificationStore } from 'src/stores/notification'
 import {
   getUserPreferences,
   saveUserPreferences,
@@ -22,6 +23,7 @@ export const usePreferencesStore = defineStore('preferences', () => {
   const theme = computed(() => preferences.value.theme)
   const arePushNotificationsEnabled = computed(() => preferences.value.pushNotificationsEnabled)
   const currency = computed(() => preferences.value.currency)
+  const isPrivacyModeEnabled = computed(() => preferences.value.isPrivacyModeEnabled)
 
   const { isDark } = useTheme(theme)
 
@@ -46,6 +48,8 @@ export const usePreferencesStore = defineStore('preferences', () => {
         pushNotificationsEnabled:
           userPreferences.pushNotificationsEnabled ?? DEFAULT_PREFERENCES.pushNotificationsEnabled,
         currency: userPreferences.currency ?? DEFAULT_PREFERENCES.currency,
+        isPrivacyModeEnabled:
+          userPreferences.isPrivacyModeEnabled ?? DEFAULT_PREFERENCES.isPrivacyModeEnabled,
       }
     } catch (err) {
       handleError('USER.PREFERENCES_LOAD_FAILED', err, { userId: authStore.user?.id })
@@ -69,6 +73,15 @@ export const usePreferencesStore = defineStore('preferences', () => {
     }
   }
 
+  async function togglePrivacyMode() {
+    const notificationStore = useNotificationStore()
+    const newValue = !preferences.value.isPrivacyModeEnabled
+
+    await updatePreferences({ isPrivacyModeEnabled: newValue })
+
+    notificationStore.showInfo(newValue ? 'Privacy mode activated' : 'Privacy mode deactivated')
+  }
+
   function reset() {
     preferences.value = { ...DEFAULT_PREFERENCES }
     isLoading.value = false
@@ -81,8 +94,10 @@ export const usePreferencesStore = defineStore('preferences', () => {
     isDark,
     arePushNotificationsEnabled,
     currency,
+    isPrivacyModeEnabled,
     loadPreferences,
     updatePreferences,
+    togglePrivacyMode,
     initializeWithDefaults,
     reset,
   }

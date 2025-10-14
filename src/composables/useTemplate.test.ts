@@ -25,6 +25,7 @@ const createMockPreferences = (currency = 'USD') => ({
   currency,
   theme: 'light' as const,
   pushNotificationsEnabled: true,
+  isPrivacyModeEnabled: false,
 })
 
 const mockRoute = ref<{

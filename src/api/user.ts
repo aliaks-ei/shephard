@@ -10,6 +10,7 @@ export type UserPreferences = Partial<{
   theme: ThemePreference
   pushNotificationsEnabled: boolean
   currency: string
+  isPrivacyModeEnabled: boolean
 }>
 
 export type CompleteUserPreferences = Required<UserPreferences>
@@ -18,6 +19,7 @@ export const DEFAULT_PREFERENCES: CompleteUserPreferences = {
   theme: 'light',
   pushNotificationsEnabled: false,
   currency: 'EUR',
+  isPrivacyModeEnabled: false,
 } as const
 
 export type UserSearchResult = {

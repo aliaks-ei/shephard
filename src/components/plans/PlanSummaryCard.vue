@@ -60,7 +60,7 @@
       />
 
       <div class="text-caption text-grey-6 q-mt-xs">
-        {{ Math.round(overallProgress * 100) }}% of budget spent
+        {{ Math.round(progressPercentage) }}% of budget spent
       </div>
     </q-card-section>
   </q-card>
@@ -82,7 +82,12 @@ const props = defineProps<{
 }>()
 
 const remaining = computed(() => props.stillToPay)
-const progressPercentage = computed(() => overallProgress.value * 100)
+
+const progressPercentage = computed(() => {
+  if (props.totalBudget === 0) return 0
+  return (props.totalSpent / props.totalBudget) * 100
+})
+
 const progressColor = computed(() => getBudgetProgressColor(progressPercentage.value))
 const remainingColorClass = computed(() => getBudgetRemainingColorClass(progressPercentage.value))
 

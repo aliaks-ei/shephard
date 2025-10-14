@@ -19,19 +19,25 @@
             />
           </q-toolbar-title>
 
-          <UserDropdownMenu v-if="$q.screen.gt.sm" />
+          <template v-if="$q.screen.gt.sm">
+            <PrivacyModeToggle class="q-mr-sm" />
+            <UserDropdownMenu />
+          </template>
 
-          <q-btn
-            v-else
-            round
-            flat
-            @click="showMobileUserDialog = true"
-          >
-            <UserAvatar
-              :avatar-url="userStore.userProfile?.avatarUrl"
-              :name-initial="userStore.userProfile?.nameInitial"
-            />
-          </q-btn>
+          <template v-else>
+            <PrivacyModeToggle class="q-mr-sm" />
+
+            <q-btn
+              round
+              flat
+              @click="showMobileUserDialog = true"
+            >
+              <UserAvatar
+                :avatar-url="userStore.userProfile?.avatarUrl"
+                :name-initial="userStore.userProfile?.nameInitial"
+              />
+            </q-btn>
+          </template>
         </q-toolbar>
       </q-header>
 
@@ -83,6 +89,7 @@ import { useQuasar } from 'quasar'
 
 import UserDropdownMenu from 'src/components/UserDropdownMenu.vue'
 import UserAvatar from 'src/components/UserAvatar.vue'
+import PrivacyModeToggle from 'src/components/PrivacyModeToggle.vue'
 import NavigationDrawer from 'src/components/NavigationDrawer.vue'
 import MobileBottomNavigation from 'src/components/MobileBottomNavigation.vue'
 import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'

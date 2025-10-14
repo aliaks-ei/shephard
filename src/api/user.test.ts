@@ -187,5 +187,64 @@ it('DEFAULT_PREFERENCES should have expected default values', () => {
     theme: 'light',
     pushNotificationsEnabled: false,
     currency: 'EUR',
+    isPrivacyModeEnabled: false,
+  })
+})
+
+it('saveUserPreferences should save privacy mode preference successfully', async () => {
+  const mockEq = vi.fn().mockResolvedValue({
+    data: null,
+    error: null,
+  })
+
+  const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
+  const mockFrom = vi.fn().mockReturnValue({ update: mockUpdate })
+
+  mockSupabase.from.mockImplementation(mockFrom)
+
+  const userId = 'user-id'
+  const preferences = { isPrivacyModeEnabled: true }
+
+  await saveUserPreferences(userId, preferences)
+
+  expect(mockFrom).toHaveBeenCalledWith('users')
+  expect(mockUpdate).toHaveBeenCalledWith({
+    preferences,
+    updated_at: '2023-01-01T12:00:00.000Z',
+  })
+  expect(mockEq).toHaveBeenCalledWith('id', userId)
+})
+
+it('getUserPreferences should return privacy mode preference when user exists with full preferences', async () => {
+  const mockMaybeSingle = vi.fn().mockResolvedValue({
+    data: {
+      id: 'user-id',
+      preferences: {
+        theme: 'dark',
+        pushNotificationsEnabled: true,
+        currency: 'USD',
+        isPrivacyModeEnabled: true,
+      },
+    },
+    error: null,
+  })
+
+  const mockEq = vi.fn().mockReturnValue({ maybeSingle: mockMaybeSingle })
+  const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
+  const mockFrom = vi.fn().mockReturnValue({ select: mockSelect })
+
+  mockSupabase.from.mockImplementation(mockFrom)
+
+  const userId = 'user-id'
+  const result = await getUserPreferences(userId)
+
+  expect(mockFrom).toHaveBeenCalledWith('users')
+  expect(mockSelect).toHaveBeenCalledWith('*')
+  expect(mockEq).toHaveBeenCalledWith('id', userId)
+  expect(result).toEqual({
+    theme: 'dark',
+    pushNotificationsEnabled: true,
+    currency: 'USD',
+    isPrivacyModeEnabled: true,
   })
 })

@@ -33,6 +33,10 @@ export function formatCurrency(
   return `${symbol}${formattedAmount}`
 }
 
+export function formatCurrencyPrivate(currencyCode: CurrencyCode): string {
+  return `${getCurrencySymbol(currencyCode)}****`
+}
+
 export function isValidCurrencyCode(code: string): code is CurrencyCode {
   return Object.keys(CURRENCY_SYMBOLS).includes(code)
 }

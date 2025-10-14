@@ -61,6 +61,7 @@ const renderMainLayout = (props: MainLayoutProps = {}) => {
         'router-view': true,
         UserDropdownMenu: true,
         UserAvatar: true,
+        PrivacyModeToggle: true,
         NavigationDrawer: {
           template:
             '<div data-testid="navigation-drawer" :items="items" :is-mini-mode="isMiniMode" />',
@@ -139,4 +140,10 @@ it('should render dialogs', () => {
   const mobileUserDialog = wrapper.findComponent({ name: 'MobileUserDialog' })
   expect(expenseDialog.exists()).toBe(true)
   expect(mobileUserDialog.exists()).toBe(true)
+})
+
+it('should render PrivacyModeToggle component', () => {
+  const wrapper = renderMainLayout()
+  const privacyToggle = wrapper.findComponent({ name: 'PrivacyModeToggle' })
+  expect(privacyToggle.exists()).toBe(true)
 })

@@ -116,8 +116,9 @@ import { computed, ref } from 'vue'
 
 import PlanCardMenu from './PlanCardMenu.vue'
 import DeleteDialog from 'src/components/shared/DeleteDialog.vue'
-import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
+import { formatCurrency, formatCurrencyPrivate, type CurrencyCode } from 'src/utils/currency'
 import { useUserStore } from 'src/stores/user'
+import { usePreferencesStore } from 'src/stores/preferences'
 import {
   getPlanStatus,
   getStatusText,
@@ -145,6 +146,7 @@ const props = withDefaults(
 )
 
 const userStore = useUserStore()
+const preferencesStore = usePreferencesStore()
 
 const isDeleteDialogOpen = ref(false)
 const isCancelDialogOpen = ref(false)
@@ -155,6 +157,11 @@ const isViewOnly = computed(() => props.plan.permission_level === 'view')
 
 function formatAmount(amount: number | null | undefined): string {
   const currency = props.plan.currency as CurrencyCode
+
+  if (preferencesStore.isPrivacyModeEnabled) {
+    return formatCurrencyPrivate(currency)
+  }
+
   return formatCurrency(amount, currency)
 }
 
