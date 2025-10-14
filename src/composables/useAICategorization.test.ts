@@ -143,12 +143,12 @@ describe('useAICategorization', () => {
       expect(lowConfidenceSuggestion.value).toEqual(mockSuggestion)
     })
 
-    it('should handle exactly 0.5 confidence as low confidence', async () => {
+    it('should handle exactly 0.65 confidence as low confidence', async () => {
       const { categorizeName, lowConfidenceSuggestion } = useAICategorization()
       const mockSuggestion: CategorySuggestion = {
         categoryId: '789',
         categoryName: 'Entertainment',
-        confidence: 0.5,
+        confidence: 0.65,
         reasoning: 'Border case',
       }
       mockSuggestExpenseCategory.mockResolvedValue(mockSuggestion)

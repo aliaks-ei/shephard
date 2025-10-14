@@ -29,7 +29,7 @@ export function useAICategorization(planId?: Ref<string | null>) {
       const suggestion = await suggestExpenseCategory(expenseName, currentPlanId)
       lastSuggestion.value = suggestion
 
-      if (suggestion.confidence <= 0.5) {
+      if (suggestion.confidence <= 0.65) {
         lowConfidenceSuggestion.value = suggestion
         return null
       }
