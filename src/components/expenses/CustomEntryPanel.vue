@@ -78,12 +78,9 @@
     </div>
 
     <!-- Divider with "OR" -->
-    <div
-      v-if="photoAnalysis.hasPhoto.value"
-      class="row items-center q-mb-md"
-    >
+    <div class="row items-center q-mb-md">
       <q-separator class="col" />
-      <span class="q-mx-md text-grey-6 text-caption text-weight-medium"> OR EDIT MANUALLY </span>
+      <span class="q-mx-md text-grey-6 text-caption text-weight-medium"> OR ENTER MANUALLY </span>
       <q-separator class="col" />
     </div>
 
@@ -300,18 +297,13 @@
       </template>
     </q-input>
 
-    <!-- Budget Warning -->
-    <q-banner
-      v-if="budgetWarning"
-      class="bg-orange-1 text-orange-8 q-mb-md"
-      dense
-      rounded
-    >
-      <template #avatar>
-        <q-icon name="eva-alert-triangle-outline" />
-      </template>
-      {{ budgetWarning }}
-    </q-banner>
+    <!-- Budget Impact Display -->
+    <BudgetImpactCard
+      :category-id="categoryId"
+      :amount="amount"
+      :currency="(selectedPlan?.currency as CurrencyCode) ?? null"
+      :category-option="selectedCategoryOption ?? null"
+    />
   </q-card-section>
 </template>
 
@@ -320,6 +312,7 @@ import { computed, watch, ref, toRef } from 'vue'
 import type { QUploader } from 'quasar'
 import PlanSelectorField, { type PlanOption } from './PlanSelectorField.vue'
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
+import BudgetImpactCard from './BudgetImpactCard.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import { useAICategorization } from 'src/composables/useAICategorization'
 import { usePhotoExpenseAnalysis } from 'src/composables/usePhotoExpenseAnalysis'
@@ -350,7 +343,6 @@ interface Props {
   name: string
   amount: number | null
   expenseDate: string
-  budgetWarning: string
   nameRules: ((val: string) => boolean | string)[]
   amountRules: ((val: number) => boolean | string)[]
   readonly?: boolean
