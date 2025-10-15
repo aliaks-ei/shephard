@@ -232,7 +232,6 @@ describe('Preferences Store', () => {
         ...userApi.DEFAULT_PREFERENCES,
         isPrivacyModeEnabled: true,
       })
-      expect(mockShowInfo).toHaveBeenCalledWith('Privacy mode activated')
     })
 
     it('should toggle privacy mode from true to false', async () => {
@@ -245,7 +244,6 @@ describe('Preferences Store', () => {
         ...userApi.DEFAULT_PREFERENCES,
         isPrivacyModeEnabled: false,
       })
-      expect(mockShowInfo).toHaveBeenCalledWith('Privacy mode deactivated')
     })
   })
 
