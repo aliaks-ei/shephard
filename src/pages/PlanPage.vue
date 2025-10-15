@@ -38,6 +38,7 @@
     <div v-else-if="!isNewPlan">
       <q-tabs
         v-model="activeTab"
+        :dense="$q.screen.lt.md"
         no-caps
         inline-label
         align="justify"

@@ -4,7 +4,6 @@ import { usePlansStore } from 'src/stores/plans'
 import { useCategoriesStore } from 'src/stores/categories'
 import { useNotificationStore } from 'src/stores/notification'
 import { getPlanItems, updatePlanItemCompletion } from 'src/api/plans'
-import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import { getPlanStatus } from 'src/utils/plans'
 import { calculateStillToPay } from 'src/utils/budget-calculations'
 import type { PlanItem } from 'src/api/plans'
@@ -111,22 +110,6 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
 
   const selectedItemsTotal = computed(() => {
     return selectedPlanItems.value.reduce((total, item) => total + item.amount, 0)
-  })
-
-  const budgetWarning = computed(() => {
-    if (!form.value.categoryId || !form.value.amount || !selectedPlan.value) return ''
-
-    const category = categoryOptions.value.find((c) => c.value === form.value.categoryId)
-    if (!category) return ''
-
-    const newRemaining = category.remainingAmount - form.value.amount
-    const currency = selectedPlan.value.currency as CurrencyCode
-
-    if (newRemaining < 0) {
-      return `This expense will exceed the budget by ${formatCurrency(Math.abs(newRemaining), currency)}`
-    }
-
-    return ''
   })
 
   const nameRules = computed(() => [
@@ -378,7 +361,6 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
     planDisplayValue,
     categoryOptions,
     selectedItemsTotal,
-    budgetWarning,
     nameRules,
     amountRules,
     getSubmitButtonLabel,

@@ -33,7 +33,6 @@ vi.mock('src/composables/useExpenseRegistration', () => ({
     planDisplayValue: '',
     categoryOptions: [],
     selectedItemsTotal: 0,
-    budgetWarning: '',
     nameRules: [],
     amountRules: [],
     getSubmitButtonLabel: 'Continue',

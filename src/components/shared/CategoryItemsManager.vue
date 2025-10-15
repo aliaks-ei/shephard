@@ -10,6 +10,8 @@
     :show-duplicate-warning="showDuplicateWarning ?? true"
     :duplicate-banner-position="duplicateBannerPosition ?? 'top'"
     :duplicate-banner-class="duplicateBannerClass ?? ''"
+    :bordered="bordered ?? true"
+    :padding="padding ?? true"
     :empty-message="emptyMessage ?? 'No items yet'"
     @toggle-expand="$emit('toggle-expand')"
   >
@@ -77,6 +79,8 @@ interface Props<T extends BaseItemUI = BaseItemUI> {
   summaryLabel?: string
   amountSizeMobile?: string
   amountSizeDesktop?: string
+  bordered?: boolean
+  padding?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -91,6 +95,8 @@ const props = withDefaults(defineProps<Props>(), {
   summaryLabel: 'Total Amount',
   amountSizeMobile: 'text-h6',
   amountSizeDesktop: 'text-h5',
+  bordered: true,
+  padding: true,
 })
 
 defineEmits<{

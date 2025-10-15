@@ -57,7 +57,6 @@ describe('CustomEntryPanel', () => {
     name: '',
     amount: null,
     expenseDate: '2024-01-15',
-    budgetWarning: '',
     nameRules: [(val: string) => !!val || 'Required'],
     amountRules: [(val: number) => !!val || 'Required'],
   }
@@ -202,27 +201,53 @@ describe('CustomEntryPanel', () => {
     expect(wrapper.emitted('update:expenseDate')).toBeTruthy()
   })
 
-  it('should display budget warning when provided', () => {
+  it('should always display budget impact card', () => {
     const wrapper = mount(CustomEntryPanel, {
-      props: {
-        ...defaultProps,
-        budgetWarning: 'This expense will exceed the budget by $10.00',
-      },
+      props: defaultProps,
     })
 
-    expect(wrapper.text()).toContain('This expense will exceed the budget by $10.00')
+    expect(wrapper.text()).toContain('Budget Impact')
   })
 
-  it('should not display budget warning when empty', () => {
+  it('should show empty state when no category is selected', () => {
+    const wrapper = mount(CustomEntryPanel, {
+      props: defaultProps,
+    })
+
+    expect(wrapper.text()).toContain('Select a category and enter amount to see budget impact')
+  })
+
+  it('should show current budget state when category selected but no amount', () => {
     const wrapper = mount(CustomEntryPanel, {
       props: {
         ...defaultProps,
-        budgetWarning: '',
+        planId: 'plan-1',
+        selectedPlan: mockPlan,
+        categoryId: 'cat-1',
+        categoryOptions: mockCategoryOptions,
+        amount: null,
       },
     })
 
-    const banner = wrapper.findComponent({ name: 'QBanner' })
-    expect(banner.exists()).toBe(false)
+    expect(wrapper.text()).toContain('Remaining:')
+    expect(wrapper.text()).toContain('Enter an amount to see the impact on this budget')
+  })
+
+  it('should show full impact analysis when category and amount are provided', () => {
+    const wrapper = mount(CustomEntryPanel, {
+      props: {
+        ...defaultProps,
+        planId: 'plan-1',
+        selectedPlan: mockPlan,
+        categoryId: 'cat-1',
+        categoryOptions: mockCategoryOptions,
+        amount: 25,
+      },
+    })
+
+    expect(wrapper.text()).toContain('Current:')
+    expect(wrapper.text()).toContain('Adding:')
+    expect(wrapper.text()).toContain('After:')
   })
 
   it('should display currency suffix in amount input when plan is selected', () => {

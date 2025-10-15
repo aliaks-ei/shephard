@@ -93,7 +93,6 @@
               :plan-options="planOptions"
               :plan-display-value="planDisplayValue"
               :category-options="categoryOptions"
-              :budget-warning="budgetWarning"
               :name-rules="nameRules"
               :amount-rules="amountRules"
               :readonly="!!props.defaultPlanId"
@@ -210,7 +209,6 @@ const {
   planDisplayValue,
   categoryOptions,
   selectedItemsTotal,
-  budgetWarning,
   nameRules,
   amountRules,
   getSubmitButtonLabel,

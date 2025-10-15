@@ -4,7 +4,7 @@
     @submit="$emit('submit')"
   >
     <q-card flat>
-      <q-card-section>
+      <q-card-section :class="$q.screen.lt.md ? 'q-px-sm' : 'q-px-md'">
         <PlanInformationForm
           :model-value="form"
           :template-duration="templateDuration"
@@ -14,7 +14,7 @@
     </q-card>
 
     <q-card flat>
-      <q-card-section>
+      <q-card-section :class="$q.screen.lt.md ? 'q-px-sm' : 'q-px-md'">
         <CategoryItemsManager
           :category-groups="categoryGroups"
           :categories="categories"
@@ -26,6 +26,8 @@
           :has-duplicates="hasDuplicates"
           duplicate-banner-position="bottom"
           :duplicate-banner-class="$q.dark.isActive ? 'bg-red-9 text-red-3' : 'bg-red-1 text-red-8'"
+          :bordered="false"
+          :padding="false"
           empty-message="No items in this plan"
           amount-size-mobile="text-h6"
           amount-size-desktop="text-h5"

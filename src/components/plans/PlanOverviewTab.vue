@@ -11,7 +11,7 @@
 
     <!-- Category Budget Cards Grid -->
     <q-card flat>
-      <q-card-section>
+      <q-card-section :class="$q.screen.lt.md ? 'q-px-sm' : 'q-px-md'">
         <div class="row items-center q-mb-md">
           <q-icon
             name="eva-pie-chart-outline"

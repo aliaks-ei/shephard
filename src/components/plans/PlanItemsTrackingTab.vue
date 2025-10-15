@@ -2,7 +2,10 @@
   <div>
     <!-- Header with Statistics -->
     <q-card flat>
-      <q-card-section class="q-pb-sm">
+      <q-card-section
+        :class="$q.screen.lt.md ? 'q-px-sm' : 'q-px-md'"
+        class="q-pb-sm"
+      >
         <!-- Responsive Title and Progress Layout -->
         <div class="row items-center q-col-gutter-md">
           <!-- Title -->
@@ -125,6 +128,7 @@
       <q-card-section
         v-else
         class="q-gutter-sm"
+        :class="$q.screen.lt.md ? 'q-px-sm' : 'q-px-md'"
       >
         <q-card
           v-for="group in categoryGroups"
