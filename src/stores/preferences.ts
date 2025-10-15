@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
 import { useAuthStore } from 'src/stores/auth'
-import { useNotificationStore } from 'src/stores/notification'
 import {
   getUserPreferences,
   saveUserPreferences,
@@ -74,12 +73,9 @@ export const usePreferencesStore = defineStore('preferences', () => {
   }
 
   async function togglePrivacyMode() {
-    const notificationStore = useNotificationStore()
     const newValue = !preferences.value.isPrivacyModeEnabled
 
     await updatePreferences({ isPrivacyModeEnabled: newValue })
-
-    notificationStore.showInfo(newValue ? 'Privacy mode activated' : 'Privacy mode deactivated')
   }
 
   function reset() {
