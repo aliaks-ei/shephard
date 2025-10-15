@@ -1,6 +1,6 @@
 <template>
   <q-card flat>
-    <q-card-section>
+    <q-card-section :class="$q.screen.lt.md ? 'q-px-sm' : 'q-px-md'">
       <div class="row items-center justify-between q-mb-md">
         <div class="row items-center">
           <q-icon

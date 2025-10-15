@@ -1,8 +1,8 @@
 <template>
   <q-card
     flat
-    bordered
-    class="q-pa-md"
+    :bordered="bordered"
+    :class="padding ? 'q-pa-md' : ''"
   >
     <!-- Header -->
     <div class="row items-center justify-between q-mb-lg">
@@ -122,6 +122,8 @@ interface Props {
   duplicateBannerClass?: string
   emptyMessage?: string
   emptyStateClass?: string
+  bordered?: boolean
+  padding?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -135,6 +137,8 @@ const props = withDefaults(defineProps<Props>(), {
   duplicateBannerClass: '',
   emptyMessage: 'No items yet',
   emptyStateClass: '',
+  bordered: true,
+  padding: true,
 })
 
 defineEmits<{

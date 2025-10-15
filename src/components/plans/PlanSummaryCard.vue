@@ -1,6 +1,6 @@
 <template>
   <q-card flat>
-    <q-card-section>
+    <q-card-section :class="$q.screen.lt.md ? 'q-px-sm' : 'q-px-md'">
       <div class="row items-center justify-between q-mb-md">
         <div>
           <h6 class="text-h6 q-my-none">{{ plan?.name }}</h6>
@@ -10,8 +10,10 @@
         </div>
         <q-chip
           :color="statusColor"
-          text-color="white"
           :icon="statusIcon"
+          text-color="white"
+          :size="$q.screen.lt.md ? 'sm' : 'md'"
+          square
         >
           {{ statusText }}
         </q-chip>

@@ -43,7 +43,7 @@
             :loading="action.loading"
             :label="action.label"
             :disabled="action.loading"
-            size="sm"
+            class="text-caption text-weight-medium"
             flat
             stack
             no-caps
