@@ -146,6 +146,7 @@ describe('plans API', () => {
       start_date: '2024-01-01',
       end_date: '2024-01-31',
       template_id: 'template-123',
+      status: 'active',
     }
 
     it('should create a new plan successfully', async () => {

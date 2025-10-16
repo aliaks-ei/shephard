@@ -244,9 +244,9 @@ export const useExpensesStore = defineStore('expenses', () => {
     remainingAmount: number
     progress: number
   } {
-    const isCompleted = planItem.is_completed
-    const remainingAmount = planItem.is_completed ? 0 : planItem.amount
-    const progress = planItem.is_completed ? 1 : 0
+    const isCompleted = planItem.is_completed ?? false
+    const remainingAmount = isCompleted ? 0 : planItem.amount
+    const progress = isCompleted ? 1 : 0
 
     return {
       isCompleted,

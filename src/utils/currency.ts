@@ -1,15 +1,17 @@
-export type CurrencyCode = 'EUR' | 'USD' | 'GBP'
+export type CurrencyCode = 'EUR' | 'USD' | 'GBP' | 'JPY'
 
 export const CURRENCY_SYMBOLS: Record<CurrencyCode, string> = {
   EUR: '€',
   USD: '$',
   GBP: '£',
+  JPY: '¥',
 } as const
 
 export const CURRENCY_LOCALES: Record<CurrencyCode, string> = {
   EUR: 'de-DE',
   USD: 'en-US',
   GBP: 'en-GB',
+  JPY: 'ja-JP',
 } as const
 
 export function getCurrencySymbol(currencyCode: CurrencyCode): string {
@@ -46,6 +48,7 @@ export function getCurrencyDisplayName(currencyCode: CurrencyCode): string {
     EUR: 'Euro',
     USD: 'US Dollar',
     GBP: 'British Pound',
+    JPY: 'Japanese Yen',
   }
   return names[currencyCode] || currencyCode
 }

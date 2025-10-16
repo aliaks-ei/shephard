@@ -8,6 +8,7 @@
 
     <q-input
       :model-value="modelValue.name"
+      :dense="$q.screen.lt.md"
       label="Plan Name"
       outlined
       no-error-icon
@@ -21,9 +22,10 @@
       class="row"
       :class="$q.screen.lt.md ? 'q-col-gutter-sm' : 'q-col-gutter-md'"
     >
-      <div class="col-12 col-sm-6">
+      <div class="col-6">
         <q-input
           :model-value="modelValue.startDate"
+          :dense="$q.screen.lt.md"
           label="Start Date"
           outlined
           no-error-icon
@@ -61,9 +63,10 @@
           </template>
         </q-input>
       </div>
-      <div class="col-12 col-sm-6">
+      <div class="col-6">
         <q-input
           :model-value="modelValue.endDate"
+          :dense="$q.screen.lt.md"
           label="End Date"
           no-error-icon
           outlined

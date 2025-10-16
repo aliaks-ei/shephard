@@ -3,6 +3,7 @@ import type { PostgrestError } from '@supabase/supabase-js'
 import { supabase } from 'src/lib/supabase/client'
 import {
   getExpensesByPlan,
+  getLastExpenseForPlan,
   createExpense,
   updateExpense,
   deleteExpense,
@@ -34,6 +35,9 @@ const mockExpense: Expense = {
   created_at: '2023-01-15T12:00:00Z',
   updated_at: '2023-01-15T12:00:00Z',
   plan_item_id: null,
+  currency: null,
+  original_amount: null,
+  original_currency: null,
 }
 
 const mockExpenseWithCategory: ExpenseWithCategory = {
@@ -60,7 +64,9 @@ vi.mock('src/lib/supabase/client', () => ({
       lte: vi.fn().mockReturnThis(),
       match: vi.fn().mockReturnThis(),
       order: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
       single: vi.fn(),
+      maybeSingle: vi.fn(),
     })),
     rpc: vi.fn(),
   },
@@ -128,7 +134,7 @@ describe('getExpensesByPlan', () => {
 })
 
 describe('createExpense', () => {
-  it('should create a new expense successfully', async () => {
+  it('should create a new expense successfully and update plan timestamp', async () => {
     const newExpense: ExpenseInsert = {
       plan_id: 'plan-1',
       category_id: 'category-1',
@@ -144,7 +150,24 @@ describe('createExpense', () => {
     })
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
-    const mockFrom = vi.fn().mockReturnValue({ insert: mockInsert })
+
+    // Mock for updating plan timestamp
+    const mockPlanEq = vi.fn().mockResolvedValue({
+      data: null,
+      error: null,
+    })
+    const mockPlanUpdate = vi.fn().mockReturnValue({ eq: mockPlanEq })
+
+    // Setup mock to handle both expenses table and plans table
+    const mockFrom = vi.fn().mockImplementation((table: string) => {
+      if (table === 'expenses') {
+        return { insert: mockInsert }
+      }
+      if (table === 'plans') {
+        return { update: mockPlanUpdate }
+      }
+      return {}
+    })
 
     mockSupabase.from.mockImplementation(mockFrom)
 
@@ -154,6 +177,64 @@ describe('createExpense', () => {
     expect(mockInsert).toHaveBeenCalledWith(newExpense)
     expect(mockSelect).toHaveBeenCalledWith()
     expect(result).toEqual({ ...mockExpense, ...newExpense })
+
+    // Verify plan timestamp was updated
+    expect(mockFrom).toHaveBeenCalledWith('plans')
+    expect(mockPlanUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        updated_at: expect.any(String),
+      }),
+    )
+    expect(mockPlanEq).toHaveBeenCalledWith('id', 'plan-1')
+  })
+
+  it('should create expense successfully even if plan timestamp update fails', async () => {
+    const newExpense: ExpenseInsert = {
+      plan_id: 'plan-1',
+      category_id: 'category-1',
+      user_id: 'user-1',
+      amount: 75.5,
+      name: 'New expense',
+      expense_date: '2023-01-20',
+    }
+
+    const mockSingle = vi.fn().mockResolvedValue({
+      data: { ...mockExpense, ...newExpense },
+      error: null,
+    })
+    const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
+    const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
+
+    // Mock plan update to fail
+    const mockPlanEq = vi.fn().mockResolvedValue({
+      data: null,
+      error: createPostgrestError('Failed to update plan'),
+    })
+    const mockPlanUpdate = vi.fn().mockReturnValue({ eq: mockPlanEq })
+
+    const mockFrom = vi.fn().mockImplementation((table: string) => {
+      if (table === 'expenses') {
+        return { insert: mockInsert }
+      }
+      if (table === 'plans') {
+        return { update: mockPlanUpdate }
+      }
+      return {}
+    })
+
+    mockSupabase.from.mockImplementation(mockFrom)
+
+    const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    const result = await createExpense(newExpense)
+
+    expect(result).toEqual({ ...mockExpense, ...newExpense })
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      'Failed to update plan timestamp:',
+      expect.any(Object),
+    )
+
+    consoleWarnSpy.mockRestore()
   })
 
   it('should throw error when creation fails', async () => {
@@ -428,5 +509,66 @@ describe('getExpensesByCategory', () => {
     await expect(getExpensesByCategory('plan-1', 'category-1')).rejects.toThrow(
       'Failed to fetch expenses by category',
     )
+  })
+})
+
+describe('getLastExpenseForPlan', () => {
+  it('should return the most recent expense for a plan', async () => {
+    const mockMaybeSingle = vi.fn().mockResolvedValue({
+      data: mockExpense,
+      error: null,
+    })
+    const mockLimit = vi.fn().mockReturnValue({ maybeSingle: mockMaybeSingle })
+    const mockOrder = vi.fn().mockReturnValue({ limit: mockLimit })
+    const mockEq = vi.fn().mockReturnValue({ order: mockOrder })
+    const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
+    const mockFrom = vi.fn().mockReturnValue({ select: mockSelect })
+
+    mockSupabase.from.mockImplementation(mockFrom)
+
+    const result = await getLastExpenseForPlan('plan-1')
+
+    expect(mockFrom).toHaveBeenCalledWith('expenses')
+    expect(mockSelect).toHaveBeenCalledWith('*')
+    expect(mockEq).toHaveBeenCalledWith('plan_id', 'plan-1')
+    expect(mockOrder).toHaveBeenCalledWith('created_at', { ascending: false })
+    expect(mockLimit).toHaveBeenCalledWith(1)
+    expect(mockMaybeSingle).toHaveBeenCalled()
+    expect(result).toEqual(mockExpense)
+  })
+
+  it('should return null when no expenses found', async () => {
+    const mockMaybeSingle = vi.fn().mockResolvedValue({
+      data: null,
+      error: null,
+    })
+    const mockLimit = vi.fn().mockReturnValue({ maybeSingle: mockMaybeSingle })
+    const mockOrder = vi.fn().mockReturnValue({ limit: mockLimit })
+    const mockEq = vi.fn().mockReturnValue({ order: mockOrder })
+    const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
+    const mockFrom = vi.fn().mockReturnValue({ select: mockSelect })
+
+    mockSupabase.from.mockImplementation(mockFrom)
+
+    const result = await getLastExpenseForPlan('plan-1')
+
+    expect(result).toBeNull()
+  })
+
+  it('should throw error when query fails', async () => {
+    const mockError = createPostgrestError('Failed to fetch last expense')
+    const mockMaybeSingle = vi.fn().mockResolvedValue({
+      data: null,
+      error: mockError,
+    })
+    const mockLimit = vi.fn().mockReturnValue({ maybeSingle: mockMaybeSingle })
+    const mockOrder = vi.fn().mockReturnValue({ limit: mockLimit })
+    const mockEq = vi.fn().mockReturnValue({ order: mockOrder })
+    const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
+    const mockFrom = vi.fn().mockReturnValue({ select: mockSelect })
+
+    mockSupabase.from.mockImplementation(mockFrom)
+
+    await expect(getLastExpenseForPlan('plan-1')).rejects.toThrow('Failed to fetch last expense')
   })
 })

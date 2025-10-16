@@ -94,7 +94,7 @@ import { useDetailPageState } from 'src/composables/useDetailPageState'
 import { useEditablePage } from 'src/composables/useEditablePage'
 import { useCategoryRefs } from 'src/composables/useCategoryRefs'
 import { validateItemForm } from 'src/composables/useItemFormValidation'
-import type { Category } from 'src/api'
+import type { Category, CurrencyCode } from 'src/api'
 
 const router = useRouter()
 const templatesStore = useTemplatesStore()
@@ -159,6 +159,7 @@ const showDeleteDialog = ref(false)
 const form = ref({
   name: '',
   duration: 'monthly' as string,
+  currency: templateCurrency.value,
 })
 
 const nameError = ref(false)
@@ -279,6 +280,7 @@ async function saveTemplate(): Promise<void> {
     result = await createNewTemplateWithItems(
       form.value.name.trim(),
       form.value.duration,
+      form.value.currency,
       totalAmount.value,
       templateItemsForSave,
     )
@@ -286,6 +288,7 @@ async function saveTemplate(): Promise<void> {
     result = await updateExistingTemplateWithItems(
       form.value.name.trim(),
       form.value.duration,
+      form.value.currency,
       totalAmount.value,
       templateItemsForSave,
     )
@@ -306,6 +309,7 @@ async function loadCurrentTemplate(): Promise<void> {
 
   form.value.name = template.name
   form.value.duration = template.duration
+  form.value.currency = (template.currency as CurrencyCode) || templateCurrency.value
 
   loadTemplateItems(template)
 }

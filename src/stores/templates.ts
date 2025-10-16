@@ -22,7 +22,6 @@ import {
 import { useError } from 'src/composables/useError'
 import { useEntitySharing } from 'src/composables/useEntitySharing'
 import { useUserStore } from 'src/stores/user'
-import type { CurrencyCode } from 'src/utils/currency'
 import type { ActionResult } from 'src/types'
 
 export const useTemplatesStore = defineStore('templates', () => {
@@ -92,19 +91,16 @@ export const useTemplatesStore = defineStore('templates', () => {
   }
 
   async function addTemplate(
-    templateData: Omit<TemplateInsert, 'owner_id' | 'currency'>,
+    templateData: Omit<TemplateInsert, 'owner_id'>,
   ): Promise<ActionResult<TemplateWithPermission>> {
     if (!userId.value) return { success: false }
 
     isLoading.value = true
 
     try {
-      const userCurrency = userStore.preferences.currency as CurrencyCode
-
       const newTemplate = await createTemplate({
         ...templateData,
         owner_id: userId.value,
-        currency: userCurrency,
       })
 
       return { success: true, data: newTemplate }

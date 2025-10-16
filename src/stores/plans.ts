@@ -107,6 +107,7 @@ export const usePlansStore = defineStore('plans', () => {
         ...planData,
         owner_id: userId.value,
         currency: userCurrency,
+        status: 'active',
       })
 
       return { success: true, data: newPlan }

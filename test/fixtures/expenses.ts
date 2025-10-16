@@ -22,6 +22,9 @@ export const createMockExpense = (overrides: Partial<Expense> = {}): Expense => 
   expense_date: '2024-01-15',
   created_at: '2024-01-15T00:00:00Z',
   updated_at: '2024-01-15T00:00:00Z',
+  currency: null,
+  original_amount: null,
+  original_currency: null,
   ...overrides,
 })
 

@@ -44,6 +44,9 @@ const mockExpenses: ExpenseWithCategory[] = [
     updated_at: '2024-01-01T00:00:00Z',
     user_id: 'user-1',
     plan_item_id: null,
+    currency: null,
+    original_amount: null,
+    original_currency: null,
     categories: {
       id: 'cat-1',
       name: 'Food',

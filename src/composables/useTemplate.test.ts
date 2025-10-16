@@ -353,12 +353,19 @@ describe('createNewTemplateWithItems', () => {
 
     const { createNewTemplateWithItems } = useTemplate()
 
-    const result = await createNewTemplateWithItems('Test Template', 'monthly', 300, mockItems)
+    const result = await createNewTemplateWithItems(
+      'Test Template',
+      'monthly',
+      'EUR',
+      300,
+      mockItems,
+    )
 
     expect(result.success).toBe(true)
     expect(templatesStore.addTemplate).toHaveBeenCalledWith({
       name: 'Test Template',
       duration: 'monthly',
+      currency: 'EUR',
       total: 300,
     })
     expect(templatesStore.addItemsToTemplate).toHaveBeenCalledWith([
@@ -386,7 +393,7 @@ describe('createNewTemplateWithItems', () => {
 
     const { createNewTemplateWithItems } = useTemplate()
 
-    const result = await createNewTemplateWithItems('Test Template', 'monthly', 300, [])
+    const result = await createNewTemplateWithItems('Test Template', 'monthly', 'EUR', 300, [])
 
     expect(result.success).toBe(false)
     expect(templatesStore.addItemsToTemplate).not.toHaveBeenCalled()
@@ -401,7 +408,7 @@ describe('createNewTemplateWithItems', () => {
 
     const { createNewTemplateWithItems } = useTemplate()
 
-    const result = await createNewTemplateWithItems('Test Template', 'monthly', 0, [])
+    const result = await createNewTemplateWithItems('Test Template', 'monthly', 'EUR', 0, [])
 
     expect(result.success).toBe(true)
     expect(templatesStore.addItemsToTemplate).toHaveBeenCalledWith([])
@@ -444,6 +451,7 @@ describe('updateExistingTemplateWithItems', () => {
     const result = await updateExistingTemplateWithItems(
       'Updated Template',
       'weekly',
+      'EUR',
       400,
       newItems,
     )
@@ -452,6 +460,7 @@ describe('updateExistingTemplateWithItems', () => {
     expect(templatesStore.editTemplate).toHaveBeenCalledWith('template-123', {
       name: 'Updated Template',
       duration: 'weekly',
+      currency: 'EUR',
       total: 400,
     })
     expect(templatesStore.removeItemsFromTemplate).toHaveBeenCalledWith(['item-1', 'item-2'])
@@ -478,7 +487,7 @@ describe('updateExistingTemplateWithItems', () => {
 
     const { updateExistingTemplateWithItems } = useTemplate()
 
-    const result = await updateExistingTemplateWithItems('Test', 'monthly', 100, [])
+    const result = await updateExistingTemplateWithItems('Test', 'monthly', 'EUR', 100, [])
 
     expect(result.success).toBe(false)
   })
@@ -490,7 +499,7 @@ describe('updateExistingTemplateWithItems', () => {
 
     currentTemplate.value = null
 
-    const result = await updateExistingTemplateWithItems('Test', 'monthly', 100, [])
+    const result = await updateExistingTemplateWithItems('Test', 'monthly', 'EUR', 100, [])
 
     expect(result.success).toBe(false)
   })
@@ -515,7 +524,7 @@ describe('updateExistingTemplateWithItems', () => {
 
     templatesStore.editTemplate = vi.fn().mockResolvedValue({ success: false })
 
-    const result = await updateExistingTemplateWithItems('Test', 'monthly', 100, [])
+    const result = await updateExistingTemplateWithItems('Test', 'monthly', 'EUR', 100, [])
 
     expect(result.success).toBe(false)
   })
@@ -545,7 +554,7 @@ describe('updateExistingTemplateWithItems', () => {
     templatesStore.removeItemsFromTemplate = vi.fn().mockResolvedValue({ success: true })
     templatesStore.addItemsToTemplate = vi.fn().mockResolvedValue({ success: true, data: [] })
 
-    const result = await updateExistingTemplateWithItems('Updated Template', 'weekly', 0, [])
+    const result = await updateExistingTemplateWithItems('Updated Template', 'weekly', 'EUR', 0, [])
 
     expect(result.success).toBe(true)
     expect(templatesStore.removeItemsFromTemplate).toHaveBeenCalledWith(['item-1'])
@@ -727,12 +736,19 @@ describe('integration scenarios', () => {
     expect(isNewTemplate.value).toBe(true)
     expect(templateCurrency.value).toBe('EUR')
 
-    const result = await createNewTemplateWithItems('My Budget', 'monthly', 1600, templateItems)
+    const result = await createNewTemplateWithItems(
+      'My Budget',
+      'monthly',
+      'EUR',
+      1600,
+      templateItems,
+    )
 
     expect(result.success).toBe(true)
     expect(templatesStore.addTemplate).toHaveBeenCalledWith({
       name: 'My Budget',
       duration: 'monthly',
+      currency: 'EUR',
       total: 1600,
     })
     expect(templatesStore.addItemsToTemplate).toHaveBeenCalledWith([
@@ -808,6 +824,7 @@ describe('integration scenarios', () => {
     const updateResult = await updateExistingTemplateWithItems(
       'New Budget',
       'weekly',
+      'EUR',
       500,
       newItems,
     )
@@ -816,6 +833,7 @@ describe('integration scenarios', () => {
     expect(templatesStore.editTemplate).toHaveBeenCalledWith('template-456', {
       name: 'New Budget',
       duration: 'weekly',
+      currency: 'EUR',
       total: 500,
     })
     expect(templatesStore.removeItemsFromTemplate).toHaveBeenCalledWith(['item-1', 'item-2'])

@@ -60,6 +60,7 @@ interface Props {
   form: {
     name: string
     duration: string
+    currency: CurrencyCode
   }
   categoryGroups: CategoryGroup<TemplateItemUI>[]
   categories: Category[]

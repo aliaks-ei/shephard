@@ -56,6 +56,7 @@ describe('CustomEntryPanel', () => {
     categoryOptions: [],
     name: '',
     amount: null,
+    currency: null,
     expenseDate: '2024-01-15',
     nameRules: [(val: string) => !!val || 'Required'],
     amountRules: [(val: number) => !!val || 'Required'],

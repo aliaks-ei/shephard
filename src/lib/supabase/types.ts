@@ -40,37 +40,46 @@ export type Database = {
           amount: number
           category_id: string
           created_at: string
+          currency: string | null
           expense_date: string
           id: string
           name: string
+          original_amount: number | null
+          original_currency: string | null
           plan_id: string
+          plan_item_id: string | null
           updated_at: string | null
           user_id: string
-          plan_item_id: string | null
         }
         Insert: {
           amount: number
           category_id: string
           created_at?: string | null
+          currency?: string | null
           expense_date?: string
           id?: string
           name: string
+          original_amount?: number | null
+          original_currency?: string | null
           plan_id: string
+          plan_item_id?: string | null
           updated_at?: string | null
           user_id: string
-          plan_item_id?: string | null
         }
         Update: {
           amount?: number
           category_id?: string
           created_at?: string | null
+          currency?: string | null
           expense_date?: string
           id?: string
           name?: string
+          original_amount?: number | null
+          original_currency?: string | null
           plan_id?: string
+          plan_item_id?: string | null
           updated_at?: string | null
           user_id?: string
-          plan_item_id?: string | null
         }
         Relationships: [
           {
@@ -87,6 +96,13 @@ export type Database = {
             referencedRelation: 'plans'
             referencedColumns: ['id']
           },
+          {
+            foreignKeyName: 'expenses_plan_item_id_fkey'
+            columns: ['plan_item_id']
+            isOneToOne: false
+            referencedRelation: 'plan_items'
+            referencedColumns: ['id']
+          },
         ]
       }
       plan_items: {
@@ -95,33 +111,33 @@ export type Database = {
           category_id: string
           created_at: string
           id: string
+          is_completed: boolean
+          is_fixed_payment: boolean
           name: string
           plan_id: string
           updated_at: string | null
-          is_completed: boolean
-          is_fixed_payment: boolean
         }
         Insert: {
           amount: number
           category_id: string
           created_at?: string | null
           id?: string
+          is_completed?: boolean
+          is_fixed_payment?: boolean
           name: string
           plan_id: string
           updated_at?: string | null
-          is_completed?: boolean
-          is_fixed_payment?: boolean
         }
         Update: {
           amount?: number
           category_id?: string
           created_at?: string | null
           id?: string
+          is_completed?: boolean
+          is_fixed_payment?: boolean
           name?: string
           plan_id?: string
           updated_at?: string | null
-          is_completed?: boolean
-          is_fixed_payment?: boolean
         }
         Relationships: [
           {
@@ -197,6 +213,7 @@ export type Database = {
           name: string
           owner_id: string
           start_date: string
+          status: string
           template_id: string
           total?: number | null
           updated_at?: string | null
@@ -230,30 +247,30 @@ export type Database = {
           category_id: string
           created_at: string
           id: string
+          is_fixed_payment: boolean
           name: string
           template_id: string
           updated_at: string | null
-          is_fixed_payment: boolean
         }
         Insert: {
           amount: number
           category_id: string
           created_at?: string | null
           id?: string
+          is_fixed_payment?: boolean
           name: string
           template_id: string
           updated_at?: string | null
-          is_fixed_payment?: boolean
         }
         Update: {
           amount?: number
           category_id?: string
           created_at?: string | null
           id?: string
+          is_fixed_payment?: boolean
           name?: string
           template_id?: string
           updated_at?: string | null
-          is_fixed_payment?: boolean
         }
         Relationships: [
           {
@@ -407,6 +424,38 @@ export type Database = {
           expense_count: number
           planned_amount: number
           remaining_amount: number
+        }[]
+      }
+      get_plan_items_with_tracking: {
+        Args: { p_plan_id: string }
+        Returns: {
+          amount: number
+          category_id: string
+          created_at: string
+          expense_count: number
+          id: string
+          is_completed: boolean
+          name: string
+          plan_id: string
+          remaining_amount: number
+          spent_amount: number
+          updated_at: string
+        }[]
+      }
+      get_plan_items_with_tracking_by_category: {
+        Args: { p_category_id: string; p_plan_id: string }
+        Returns: {
+          amount: number
+          category_id: string
+          created_at: string
+          expense_count: number
+          id: string
+          is_completed: boolean
+          name: string
+          plan_id: string
+          remaining_amount: number
+          spent_amount: number
+          updated_at: string
         }[]
       }
       get_plan_shared_users: {
@@ -563,29 +612,15 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
-    : never = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
-  : never
+  EnumName extends
+    keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'] = never,
+> = DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
-    : never = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
-  : never
+  CompositeTypeName extends
+    keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'] = never,
+> = DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
 
 export const Constants = {
   public: {

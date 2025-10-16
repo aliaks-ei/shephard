@@ -4,16 +4,20 @@ import { usePlansStore } from 'src/stores/plans'
 import { useCategoriesStore } from 'src/stores/categories'
 import { useNotificationStore } from 'src/stores/notification'
 import { getPlanItems, updatePlanItemCompletion } from 'src/api/plans'
+import { getLastExpenseForPlan } from 'src/api/expenses'
 import { getPlanStatus } from 'src/utils/plans'
 import { calculateStillToPay } from 'src/utils/budget-calculations'
+import { convertCurrency } from 'src/api/currency'
 import type { PlanItem } from 'src/api/plans'
 import type { PlanOption } from 'src/components/expenses/PlanSelectorField.vue'
+import type { CurrencyCode } from 'src/utils/currency'
 
 export interface ExpenseRegistrationForm {
   planId: string | null
   categoryId: string | null
   name: string
   amount: number | null
+  currency: string | null
   expenseDate: string
   planItemId: string | null
 }
@@ -36,12 +40,14 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
   const planItems = ref<PlanItem[]>([])
   const allPlanItems = ref<PlanItem[]>([]) // Unfiltered items for calculations
   const selectedPlanItems = ref<PlanItem[]>([])
+  const lastExpenseCurrency = ref<string | null>(null)
 
   const form = ref<ExpenseRegistrationForm>({
     planId: null,
     categoryId: null,
     name: '',
     amount: null,
+    currency: null,
     expenseDate: new Date().toISOString().split('T')[0]!,
     planItemId: null,
   })
@@ -79,6 +85,16 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
     if (!id) return ''
     const plan = plansStore.plans.find((p) => p.id === id)
     return plan?.name || ''
+  })
+
+  const defaultExpenseCurrency = computed(() => {
+    if (!selectedPlan.value) return null
+
+    if (lastExpenseCurrency.value) {
+      return lastExpenseCurrency.value
+    }
+
+    return selectedPlan.value.currency || 'EUR'
   })
 
   const categoryOptions = computed(() => {
@@ -169,6 +185,15 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
     }
   }
 
+  async function loadLastExpenseCurrency(planId: string) {
+    try {
+      const lastExpense = await getLastExpenseForPlan(planId)
+      lastExpenseCurrency.value = lastExpense?.original_currency ?? null
+    } catch {
+      lastExpenseCurrency.value = null
+    }
+  }
+
   async function onPlanSelected(
     planId: string | null,
     planItemSelectorRef?: { clearSelection: () => void },
@@ -179,7 +204,12 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
     quickSelectPhase.value = 'selection'
 
     if (planId) {
-      await Promise.all([expensesStore.loadExpenseSummaryForPlan(planId), loadPlanItems(planId)])
+      await Promise.all([
+        expensesStore.loadExpenseSummaryForPlan(planId),
+        loadLastExpenseCurrency(planId),
+        loadPlanItems(planId),
+      ])
+      form.value.currency = defaultExpenseCurrency.value
     }
 
     if (planItemSelectorRef?.clearSelection) {
@@ -229,6 +259,7 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
       categoryId: null,
       name: '',
       amount: null,
+      currency: null,
       expenseDate: new Date().toISOString().split('T')[0]!,
       planItemId: null,
     }
@@ -294,11 +325,33 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
     }
 
     try {
+      const expenseCurrency = (form.value.currency || selectedPlan.value?.currency) as CurrencyCode
+      const planCurrency = selectedPlan.value?.currency as CurrencyCode
+      const originalAmount = form.value.amount
+
+      let finalAmount = originalAmount
+      let originalCurrencyToStore: string | null = null
+      let originalAmountToStore: number | null = null
+
+      if (expenseCurrency !== planCurrency) {
+        const conversionResult = await convertCurrency(
+          expenseCurrency,
+          planCurrency,
+          originalAmount,
+        )
+        finalAmount = conversionResult.convertedAmount
+        originalCurrencyToStore = expenseCurrency
+        originalAmountToStore = originalAmount
+      }
+
       await expensesStore.addExpense({
         plan_id: form.value.planId,
         category_id: form.value.categoryId,
         name: form.value.name.trim(),
-        amount: form.value.amount,
+        amount: finalAmount,
+        currency: planCurrency,
+        original_amount: originalAmountToStore,
+        original_currency: originalCurrencyToStore,
         expense_date: form.value.expenseDate,
         plan_item_id: form.value.planItemId || null,
       })
@@ -323,15 +376,19 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
       form.value.planId = defaultPlanId.value
       await Promise.all([
         expensesStore.loadExpenseSummaryForPlan(defaultPlanId.value),
+        loadLastExpenseCurrency(defaultPlanId.value),
         loadPlanItems(defaultPlanId.value),
       ])
+      form.value.currency = defaultExpenseCurrency.value
     } else if (autoSelectRecentPlan && mostRecentlyUsedPlan.value) {
       form.value.planId = mostRecentlyUsedPlan.value.id
       didAutoSelectPlan.value = true
       await Promise.all([
         expensesStore.loadExpenseSummaryForPlan(mostRecentlyUsedPlan.value.id),
+        loadLastExpenseCurrency(mostRecentlyUsedPlan.value.id),
         loadPlanItems(mostRecentlyUsedPlan.value.id),
       ])
+      form.value.currency = defaultExpenseCurrency.value
     }
   }
 
@@ -359,6 +416,7 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
     planOptions,
     selectedPlan,
     planDisplayValue,
+    defaultExpenseCurrency,
     categoryOptions,
     selectedItemsTotal,
     nameRules,
