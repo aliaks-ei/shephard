@@ -65,7 +65,11 @@ describe('TemplateReadOnlyView', () => {
       allExpanded: false,
     })
     const basicInfo = wrapper.findComponent({ name: 'TemplateBasicInfoSection' })
-    expect(basicInfo.props('modelValue')).toEqual({ name: 'Test Template', duration: 'weekly' })
+    expect(basicInfo.props('modelValue')).toEqual({
+      name: 'Test Template',
+      duration: 'weekly',
+      currency: 'EUR',
+    })
     expect(basicInfo.props('readonly')).toBe(true)
   })
 

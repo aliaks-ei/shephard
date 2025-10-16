@@ -251,7 +251,7 @@ describe('CustomEntryPanel', () => {
     expect(wrapper.text()).toContain('After:')
   })
 
-  it('should display currency suffix in amount input when plan is selected', () => {
+  it('should display currency selector when plan is selected', () => {
     const wrapper = mount(CustomEntryPanel, {
       props: {
         ...defaultProps,
@@ -260,9 +260,10 @@ describe('CustomEntryPanel', () => {
       },
     })
 
-    const inputs = wrapper.findAllComponents({ name: 'QInput' })
-    const amountInput = inputs.find((i) => i.props('label') === 'Amount *')
-    expect(amountInput?.props('suffix')).toBe('USD')
+    const selects = wrapper.findAllComponents({ name: 'QSelect' })
+    const currencySelect = selects.find((s) => s.props('label') === 'Currency')
+    expect(currencySelect).toBeDefined()
+    expect(currencySelect?.props('disable')).toBe(false)
   })
 
   it('should pass readonly prop to PlanSelectorField', () => {

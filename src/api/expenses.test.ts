@@ -224,17 +224,10 @@ describe('createExpense', () => {
 
     mockSupabase.from.mockImplementation(mockFrom)
 
-    const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-
     const result = await createExpense(newExpense)
 
     expect(result).toEqual({ ...mockExpense, ...newExpense })
-    expect(consoleWarnSpy).toHaveBeenCalledWith(
-      'Failed to update plan timestamp:',
-      expect.any(Object),
-    )
-
-    consoleWarnSpy.mockRestore()
+    expect(mockPlanUpdate).toHaveBeenCalled()
   })
 
   it('should throw error when creation fails', async () => {

@@ -248,6 +248,7 @@ describe('Plans Store', () => {
         ...planData,
         owner_id: 'user-1',
         currency: 'USD',
+        status: 'active',
       })
       expect(result.success).toBe(true)
       expect(result.data).toEqual(newPlan)

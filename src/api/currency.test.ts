@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { convertCurrency } from './currency'
 
-const mockInvoke = vi.fn()
+const { mockInvoke } = vi.hoisted(() => ({
+  mockInvoke: vi.fn(),
+}))
 
 vi.mock('src/lib/supabase/client', () => ({
   supabase: {
