@@ -17,6 +17,7 @@
 
     <q-select
       :model-value="modelValue"
+      :dense="$q.screen.lt.md"
       :options="templateOptions"
       option-label="name"
       option-value="id"
@@ -67,10 +68,7 @@
       </template>
     </q-select>
 
-    <div
-      v-if="selectedTemplate"
-      class="q-mt-lg"
-    >
+    <div v-if="selectedTemplate">
       <div class="text-subtitle2 q-mb-sm">Selected Template:</div>
       <TemplateCard
         :template="selectedTemplate"

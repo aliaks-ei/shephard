@@ -238,9 +238,23 @@
                 class="items-end"
               >
                 <div class="row items-center q-gutter-sm">
-                  <q-item-label class="text-weight-bold text-primary">
-                    {{ formatCurrency(expense.amount, currency) }}
-                  </q-item-label>
+                  <div class="column items-end">
+                    <q-item-label class="text-weight-bold text-primary">
+                      {{ formatCurrency(expense.amount, currency) }}
+                    </q-item-label>
+                    <q-item-label
+                      v-if="expense.original_amount && expense.original_currency"
+                      caption
+                      class="text-caption text-grey-6"
+                    >
+                      {{
+                        formatCurrency(
+                          expense.original_amount,
+                          expense.original_currency as CurrencyCode,
+                        )
+                      }}
+                    </q-item-label>
+                  </div>
                   <q-btn
                     v-if="canEdit"
                     flat

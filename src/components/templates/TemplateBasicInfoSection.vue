@@ -16,6 +16,7 @@
         <q-input
           v-if="readonly"
           :model-value="modelValue.name"
+          :dense="$q.screen.lt.md"
           label="Template Name"
           outlined
           readonly
@@ -29,6 +30,7 @@
           label="Template Name"
           outlined
           no-error-icon
+          :dense="$q.screen.lt.md"
           :hide-bottom-space="$q.screen.lt.md"
           :rules="nameRules"
           :error="nameError"
@@ -37,7 +39,7 @@
           @update:model-value="(val) => updateName(String(val ?? ''))"
         />
       </div>
-      <div class="col-12 col-sm">
+      <div class="col-6 col-sm-2">
         <SectionHeader
           icon="eva-calendar-outline"
           title="Duration"
@@ -56,11 +58,36 @@
           v-else
           :model-value="modelValue.duration"
           :options="durationOptions"
+          :dense="$q.screen.lt.md"
           outlined
           emit-value
           map-options
-          style="min-width: 120px"
           @update:model-value="updateDuration"
+        />
+      </div>
+      <div class="col-6 col-sm-2">
+        <SectionHeader
+          icon="eva-credit-card-outline"
+          title="Currency"
+          icon-size="24px"
+        />
+        <q-chip
+          v-if="readonly"
+          :label="modelValue.currency"
+          color="primary"
+          text-color="primary"
+          :ripple="false"
+          outline
+        />
+        <q-select
+          v-else
+          :model-value="modelValue.currency"
+          :options="currencyOptions"
+          :dense="$q.screen.lt.md"
+          outlined
+          emit-value
+          map-options
+          @update:model-value="updateCurrency"
         />
       </div>
     </div>
@@ -70,10 +97,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import SectionHeader from 'src/components/shared/SectionHeader.vue'
+import type { CurrencyCode } from 'src/utils/currency'
 
 interface TemplateBasicInfo {
   name: string
   duration: string
+  currency: CurrencyCode
 }
 
 const props = withDefaults(
@@ -122,6 +151,25 @@ const durationOptions = computed(() => [
   },
 ])
 
+const currencyOptions = computed(() => [
+  {
+    label: 'EUR',
+    value: 'EUR',
+  },
+  {
+    label: 'USD',
+    value: 'USD',
+  },
+  {
+    label: 'GBP',
+    value: 'GBP',
+  },
+  {
+    label: 'JPY',
+    value: 'JPY',
+  },
+])
+
 function updateName(name: string): void {
   emit('update:modelValue', { ...props.modelValue, name })
   emit('clear-name-error')
@@ -129,5 +177,9 @@ function updateName(name: string): void {
 
 function updateDuration(duration: string): void {
   emit('update:modelValue', { ...props.modelValue, duration })
+}
+
+function updateCurrency(currency: CurrencyCode): void {
+  emit('update:modelValue', { ...props.modelValue, currency })
 }
 </script>

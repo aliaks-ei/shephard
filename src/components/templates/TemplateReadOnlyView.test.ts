@@ -45,7 +45,7 @@ describe('TemplateReadOnlyView', () => {
 
   it('should mount component properly', () => {
     const wrapper = renderComponent({
-      form: { name: 'Test Template', duration: 'weekly' },
+      form: { name: 'Test Template', duration: 'weekly', currency: 'EUR' },
       categoryGroups: mockCategoryGroups,
       categories: createMockCategories(),
       totalAmount: 100,
@@ -57,7 +57,7 @@ describe('TemplateReadOnlyView', () => {
 
   it('should pass form data to TemplateBasicInfoSection', () => {
     const wrapper = renderComponent({
-      form: { name: 'Test Template', duration: 'weekly' },
+      form: { name: 'Test Template', duration: 'weekly', currency: 'EUR' },
       categoryGroups: mockCategoryGroups,
       categories: createMockCategories(),
       totalAmount: 100,
@@ -65,13 +65,17 @@ describe('TemplateReadOnlyView', () => {
       allExpanded: false,
     })
     const basicInfo = wrapper.findComponent({ name: 'TemplateBasicInfoSection' })
-    expect(basicInfo.props('modelValue')).toEqual({ name: 'Test Template', duration: 'weekly' })
+    expect(basicInfo.props('modelValue')).toEqual({
+      name: 'Test Template',
+      duration: 'weekly',
+      currency: 'EUR',
+    })
     expect(basicInfo.props('readonly')).toBe(true)
   })
 
   it('should pass category data to CategoryItemsManager', () => {
     const wrapper = renderComponent({
-      form: { name: 'Test Template', duration: 'weekly' },
+      form: { name: 'Test Template', duration: 'weekly', currency: 'EUR' },
       categoryGroups: mockCategoryGroups,
       categories: createMockCategories(),
       totalAmount: 150,
@@ -87,7 +91,7 @@ describe('TemplateReadOnlyView', () => {
 
   it('should emit toggle-expand event', async () => {
     const wrapper = renderComponent({
-      form: { name: 'Test Template', duration: 'weekly' },
+      form: { name: 'Test Template', duration: 'weekly', currency: 'EUR' },
       categoryGroups: mockCategoryGroups,
       categories: createMockCategories(),
       totalAmount: 100,
@@ -101,7 +105,7 @@ describe('TemplateReadOnlyView', () => {
 
   it('should handle empty category groups', () => {
     const wrapper = renderComponent({
-      form: { name: 'Empty Template', duration: 'monthly' },
+      form: { name: 'Empty Template', duration: 'monthly', currency: 'EUR' },
       categoryGroups: [],
       categories: [],
       totalAmount: 0,
@@ -115,7 +119,7 @@ describe('TemplateReadOnlyView', () => {
     const currencies = ['USD', 'EUR', 'GBP']
     currencies.forEach((currency) => {
       const wrapper = renderComponent({
-        form: { name: 'Test', duration: 'weekly' },
+        form: { name: 'Test', duration: 'weekly', currency: 'EUR' },
         categoryGroups: mockCategoryGroups,
         categories: createMockCategories(),
         totalAmount: 100,
@@ -129,7 +133,7 @@ describe('TemplateReadOnlyView', () => {
 
   it('should pass show-duplicate-warning as false', () => {
     const wrapper = renderComponent({
-      form: { name: 'Test', duration: 'weekly' },
+      form: { name: 'Test', duration: 'weekly', currency: 'EUR' },
       categoryGroups: mockCategoryGroups,
       categories: createMockCategories(),
       totalAmount: 100,
@@ -142,7 +146,7 @@ describe('TemplateReadOnlyView', () => {
 
   it('should pass show-item-count as true', () => {
     const wrapper = renderComponent({
-      form: { name: 'Test', duration: 'weekly' },
+      form: { name: 'Test', duration: 'weekly', currency: 'EUR' },
       categoryGroups: mockCategoryGroups,
       categories: createMockCategories(),
       totalAmount: 100,

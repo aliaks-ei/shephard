@@ -33,8 +33,30 @@ export async function getExpensesByPlan(planId: string): Promise<ExpenseWithCate
   return data || []
 }
 
+export async function getLastExpenseForPlan(planId: string): Promise<Expense | null> {
+  const { data, error } = await expenseService.supabase
+    .from('expenses')
+    .select('*')
+    .eq('plan_id', planId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (error) throw error
+  return data
+}
+
 export async function createExpense(expense: ExpenseInsert): Promise<Expense> {
-  return expenseService.create(expense)
+  const createdExpense = await expenseService.create(expense)
+
+  if (expense.plan_id) {
+    await expenseService.supabase
+      .from('plans')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', expense.plan_id)
+  }
+
+  return createdExpense
 }
 
 export async function updateExpense(id: string, updates: ExpenseUpdate): Promise<Expense> {

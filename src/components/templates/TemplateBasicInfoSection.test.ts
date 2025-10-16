@@ -27,14 +27,14 @@ describe('TemplateBasicInfoSection', () => {
 
   it('should mount component properly', () => {
     const wrapper = renderComponent({
-      modelValue: { name: 'Test Template', duration: 'weekly' },
+      modelValue: { name: 'Test Template', duration: 'weekly', currency: 'EUR' },
     })
     expect(wrapper.exists()).toBe(true)
   })
 
   it('should display template name in readonly mode', () => {
     const wrapper = renderComponent({
-      modelValue: { name: 'Test Template', duration: 'weekly' },
+      modelValue: { name: 'Test Template', duration: 'weekly', currency: 'EUR' },
       readonly: true,
     })
     const nameInput = wrapper.findComponent({ name: 'QInput' })
@@ -44,7 +44,7 @@ describe('TemplateBasicInfoSection', () => {
 
   it('should display duration as chip in readonly mode', () => {
     const wrapper = renderComponent({
-      modelValue: { name: 'Test Template', duration: 'weekly' },
+      modelValue: { name: 'Test Template', duration: 'weekly', currency: 'EUR' },
       readonly: true,
     })
     expect(wrapper.text()).toContain('weekly')
@@ -52,7 +52,7 @@ describe('TemplateBasicInfoSection', () => {
 
   it('should emit update:modelValue when name changes', async () => {
     const wrapper = renderComponent({
-      modelValue: { name: 'Test Template', duration: 'weekly' },
+      modelValue: { name: 'Test Template', duration: 'weekly', currency: 'EUR' },
     })
     const nameInput = wrapper.findComponent({ name: 'QInput' })
     await nameInput.vm.$emit('update:model-value', 'Updated Template')
@@ -66,7 +66,7 @@ describe('TemplateBasicInfoSection', () => {
 
   it('should emit clear-name-error when name changes', async () => {
     const wrapper = renderComponent({
-      modelValue: { name: 'Test Template', duration: 'weekly' },
+      modelValue: { name: 'Test Template', duration: 'weekly', currency: 'EUR' },
       nameError: true,
       nameErrorMessage: 'Name already exists',
     })
@@ -77,7 +77,7 @@ describe('TemplateBasicInfoSection', () => {
 
   it('should emit update:modelValue when duration changes', async () => {
     const wrapper = renderComponent({
-      modelValue: { name: 'Test Template', duration: 'weekly' },
+      modelValue: { name: 'Test Template', duration: 'weekly', currency: 'EUR' },
     })
     const durationSelect = wrapper.findComponent({ name: 'QSelect' })
     await durationSelect.vm.$emit('update:model-value', 'monthly')
@@ -91,7 +91,7 @@ describe('TemplateBasicInfoSection', () => {
 
   it('should use default props', () => {
     const wrapper = renderComponent({
-      modelValue: { name: 'Test', duration: 'weekly' },
+      modelValue: { name: 'Test', duration: 'weekly', currency: 'EUR' },
     })
     expect(wrapper.props('readonly')).toBe(false)
     expect(wrapper.props('nameError')).toBe(false)
@@ -100,7 +100,7 @@ describe('TemplateBasicInfoSection', () => {
 
   it('should display name error', () => {
     const wrapper = renderComponent({
-      modelValue: { name: '', duration: 'weekly' },
+      modelValue: { name: '', duration: 'weekly', currency: 'EUR' },
       nameError: true,
       nameErrorMessage: 'Name is required',
     })
@@ -110,7 +110,7 @@ describe('TemplateBasicInfoSection', () => {
 
   it('should validate name is required', () => {
     const wrapper = renderComponent({
-      modelValue: { name: '', duration: 'weekly' },
+      modelValue: { name: '', duration: 'weekly', currency: 'EUR' },
     })
     const nameInput = wrapper.findComponent({ name: 'QInput' })
     const rules = nameInput.props('rules') as Array<(val: string) => boolean | string> | undefined
@@ -121,7 +121,7 @@ describe('TemplateBasicInfoSection', () => {
 
   it('should validate name max length', () => {
     const wrapper = renderComponent({
-      modelValue: { name: 'Test', duration: 'weekly' },
+      modelValue: { name: 'Test', duration: 'weekly', currency: 'EUR' },
     })
     const nameInput = wrapper.findComponent({ name: 'QInput' })
     const rules = nameInput.props('rules') as Array<(val: string) => boolean | string> | undefined
@@ -133,7 +133,7 @@ describe('TemplateBasicInfoSection', () => {
 
   it('should not show rules in readonly mode', () => {
     const wrapper = renderComponent({
-      modelValue: { name: 'Test', duration: 'weekly' },
+      modelValue: { name: 'Test', duration: 'weekly', currency: 'EUR' },
       readonly: true,
     })
     const inputs = wrapper.findAllComponents({ name: 'QInput' })
@@ -146,7 +146,7 @@ describe('TemplateBasicInfoSection', () => {
     const durations = ['weekly', 'monthly', 'yearly']
     durations.forEach((duration) => {
       const wrapper = renderComponent({
-        modelValue: { name: 'Test', duration },
+        modelValue: { name: 'Test', duration, currency: 'EUR' },
       })
       expect(wrapper.props('modelValue').duration).toBe(duration)
     })
@@ -154,7 +154,7 @@ describe('TemplateBasicInfoSection', () => {
 
   it('should not emit update:modelValue in readonly mode', () => {
     const wrapper = renderComponent({
-      modelValue: { name: 'Test', duration: 'weekly' },
+      modelValue: { name: 'Test', duration: 'weekly', currency: 'EUR' },
       readonly: true,
     })
     const nameInputs = wrapper.findAllComponents({ name: 'QInput' })

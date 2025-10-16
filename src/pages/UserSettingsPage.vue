@@ -156,6 +156,7 @@ const currencyOptions = [
   { label: 'Euro (EUR)', value: 'EUR' },
   { label: 'US Dollar (USD)', value: 'USD' },
   { label: 'British Pound (GBP)', value: 'GBP' },
+  { label: 'Japanese Yen (JPY)', value: 'JPY' },
 ]
 
 const themeOptions = [

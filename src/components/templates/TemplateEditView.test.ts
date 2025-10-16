@@ -47,7 +47,7 @@ describe('TemplateEditView', () => {
 
   it('should mount component properly', () => {
     const wrapper = renderComponent({
-      form: { name: 'Test Template', duration: 'weekly' },
+      form: { name: 'Test Template', duration: 'weekly', currency: 'EUR' },
       categoryGroups: mockCategoryGroups,
       categories: createMockCategories(),
       totalAmount: 100,
@@ -64,7 +64,7 @@ describe('TemplateEditView', () => {
 
   it('should expose formRef', () => {
     const wrapper = renderComponent({
-      form: { name: 'Test', duration: 'weekly' },
+      form: { name: 'Test', duration: 'weekly', currency: 'EUR' },
       categoryGroups: [],
       categories: [],
       totalAmount: 0,
@@ -81,7 +81,7 @@ describe('TemplateEditView', () => {
 
   it('should emit submit event when form is submitted', async () => {
     const wrapper = renderComponent({
-      form: { name: 'Test', duration: 'weekly' },
+      form: { name: 'Test', duration: 'weekly', currency: 'EUR' },
       categoryGroups: [],
       categories: [],
       totalAmount: 0,
@@ -100,7 +100,7 @@ describe('TemplateEditView', () => {
 
   it('should emit update:form when form data changes', async () => {
     const wrapper = renderComponent({
-      form: { name: 'Test', duration: 'weekly' },
+      form: { name: 'Test', duration: 'weekly', currency: 'EUR' },
       categoryGroups: [],
       categories: [],
       totalAmount: 0,
@@ -120,7 +120,7 @@ describe('TemplateEditView', () => {
 
   it('should emit clear-name-error when triggered', async () => {
     const wrapper = renderComponent({
-      form: { name: 'Test', duration: 'weekly' },
+      form: { name: 'Test', duration: 'weekly', currency: 'EUR' },
       categoryGroups: [],
       categories: [],
       totalAmount: 0,
@@ -139,7 +139,7 @@ describe('TemplateEditView', () => {
 
   it('should emit toggle-expand when triggered', async () => {
     const wrapper = renderComponent({
-      form: { name: 'Test', duration: 'weekly' },
+      form: { name: 'Test', duration: 'weekly', currency: 'EUR' },
       categoryGroups: mockCategoryGroups,
       categories: createMockCategories(),
       totalAmount: 100,
@@ -158,7 +158,7 @@ describe('TemplateEditView', () => {
 
   it('should emit open-category-dialog when triggered', () => {
     const wrapper = renderComponent({
-      form: { name: 'Test', duration: 'weekly' },
+      form: { name: 'Test', duration: 'weekly', currency: 'EUR' },
       categoryGroups: [],
       categories: [],
       totalAmount: 0,
@@ -176,7 +176,7 @@ describe('TemplateEditView', () => {
 
   it('should emit update-item when item is updated', () => {
     const wrapper = renderComponent({
-      form: { name: 'Test', duration: 'weekly' },
+      form: { name: 'Test', duration: 'weekly', currency: 'EUR' },
       categoryGroups: mockCategoryGroups,
       categories: createMockCategories(),
       totalAmount: 100,
@@ -202,7 +202,7 @@ describe('TemplateEditView', () => {
 
   it('should emit remove-item when item is removed', () => {
     const wrapper = renderComponent({
-      form: { name: 'Test', duration: 'weekly' },
+      form: { name: 'Test', duration: 'weekly', currency: 'EUR' },
       categoryGroups: mockCategoryGroups,
       categories: createMockCategories(),
       totalAmount: 100,
@@ -221,7 +221,7 @@ describe('TemplateEditView', () => {
 
   it('should emit add-item when item is added', () => {
     const wrapper = renderComponent({
-      form: { name: 'Test', duration: 'weekly' },
+      form: { name: 'Test', duration: 'weekly', currency: 'EUR' },
       categoryGroups: mockCategoryGroups,
       categories: createMockCategories(),
       totalAmount: 100,
@@ -240,7 +240,7 @@ describe('TemplateEditView', () => {
 
   it('should pass hasDuplicates prop to CategoryItemsManager', () => {
     const wrapper = renderComponent({
-      form: { name: 'Test', duration: 'weekly' },
+      form: { name: 'Test', duration: 'weekly', currency: 'EUR' },
       categoryGroups: mockCategoryGroups,
       categories: createMockCategories(),
       totalAmount: 100,
@@ -258,7 +258,7 @@ describe('TemplateEditView', () => {
 
   it('should pass name error props to TemplateBasicInfoSection', () => {
     const wrapper = renderComponent({
-      form: { name: 'Test', duration: 'weekly' },
+      form: { name: 'Test', duration: 'weekly', currency: 'EUR' },
       categoryGroups: [],
       categories: [],
       totalAmount: 0,
@@ -277,7 +277,7 @@ describe('TemplateEditView', () => {
 
   it('should handle empty category groups', () => {
     const wrapper = renderComponent({
-      form: { name: 'Empty', duration: 'weekly' },
+      form: { name: 'Empty', duration: 'weekly', currency: 'EUR' },
       categoryGroups: [],
       categories: [],
       totalAmount: 0,

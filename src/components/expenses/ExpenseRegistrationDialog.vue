@@ -88,6 +88,7 @@
               v-model:category-id="form.categoryId"
               v-model:name="form.name"
               v-model:amount="form.amount"
+              v-model:currency="form.currency"
               v-model:expense-date="form.expenseDate"
               :selected-plan="selectedPlan"
               :plan-options="planOptions"
@@ -95,6 +96,7 @@
               :category-options="categoryOptions"
               :name-rules="nameRules"
               :amount-rules="amountRules"
+              :default-expense-currency="defaultExpenseCurrency"
               :readonly="!!props.defaultPlanId"
               :loading="plansStore.isLoading"
               :show-auto-select-hint="didAutoSelectPlan"
@@ -207,6 +209,7 @@ const {
   planOptions,
   selectedPlan,
   planDisplayValue,
+  defaultExpenseCurrency,
   categoryOptions,
   selectedItemsTotal,
   nameRules,

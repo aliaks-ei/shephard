@@ -98,6 +98,7 @@ interface Props {
   form: {
     name: string
     duration: string
+    currency: CurrencyCode
   }
   categoryGroups: CategoryGroup<TemplateItemUI>[]
   categories: Category[]
@@ -115,7 +116,7 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{
   (e: 'submit'): void
-  (e: 'update:form', value: { name: string; duration: string }): void
+  (e: 'update:form', value: { name: string; duration: string; currency: CurrencyCode }): void
   (e: 'clear-name-error'): void
   (e: 'toggle-expand'): void
   (e: 'open-category-dialog'): void
@@ -130,7 +131,7 @@ function handleSubmit(): void {
   emit('submit')
 }
 
-function handleFormUpdate(value: { name: string; duration: string }): void {
+function handleFormUpdate(value: { name: string; duration: string; currency: CurrencyCode }): void {
   emit('update:form', value)
 }
 

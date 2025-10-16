@@ -14,6 +14,7 @@ describe('currency utilities', () => {
       expect(CURRENCY_SYMBOLS.EUR).toBe('€')
       expect(CURRENCY_SYMBOLS.USD).toBe('$')
       expect(CURRENCY_SYMBOLS.GBP).toBe('£')
+      expect(CURRENCY_SYMBOLS.JPY).toBe('¥')
     })
   })
 
@@ -22,6 +23,7 @@ describe('currency utilities', () => {
       expect(CURRENCY_LOCALES.EUR).toBe('de-DE')
       expect(CURRENCY_LOCALES.USD).toBe('en-US')
       expect(CURRENCY_LOCALES.GBP).toBe('en-GB')
+      expect(CURRENCY_LOCALES.JPY).toBe('ja-JP')
     })
   })
 
@@ -36,6 +38,10 @@ describe('currency utilities', () => {
 
     it('should return correct symbol for GBP', () => {
       expect(getCurrencySymbol('GBP')).toBe('£')
+    })
+
+    it('should return correct symbol for JPY', () => {
+      expect(getCurrencySymbol('JPY')).toBe('¥')
     })
   })
 
@@ -58,16 +64,24 @@ describe('currency utilities', () => {
       expect(formatCurrency(1000, 'GBP')).toBe('£1,000.00')
     })
 
+    it('should format JPY amounts correctly', () => {
+      expect(formatCurrency(1234.56, 'JPY')).toBe('¥1,234.56')
+      expect(formatCurrency(0, 'JPY')).toBe('¥0.00')
+      expect(formatCurrency(1000, 'JPY')).toBe('¥1,000.00')
+    })
+
     it('should handle null amounts', () => {
       expect(formatCurrency(null, 'EUR')).toBe('€0.00')
       expect(formatCurrency(null, 'USD')).toBe('$0.00')
       expect(formatCurrency(null, 'GBP')).toBe('£0.00')
+      expect(formatCurrency(null, 'JPY')).toBe('¥0.00')
     })
 
     it('should handle undefined amounts', () => {
       expect(formatCurrency(undefined, 'EUR')).toBe('€0.00')
       expect(formatCurrency(undefined, 'USD')).toBe('$0.00')
       expect(formatCurrency(undefined, 'GBP')).toBe('£0.00')
+      expect(formatCurrency(undefined, 'JPY')).toBe('¥0.00')
     })
 
     it('should handle decimal amounts', () => {
@@ -92,11 +106,12 @@ describe('currency utilities', () => {
       expect(isValidCurrencyCode('EUR')).toBe(true)
       expect(isValidCurrencyCode('USD')).toBe(true)
       expect(isValidCurrencyCode('GBP')).toBe(true)
+      expect(isValidCurrencyCode('JPY')).toBe(true)
     })
 
     it('should return false for invalid currency codes', () => {
       expect(isValidCurrencyCode('CAD')).toBe(false)
-      expect(isValidCurrencyCode('JPY')).toBe(false)
+      expect(isValidCurrencyCode('CNY')).toBe(false)
       expect(isValidCurrencyCode('invalid')).toBe(false)
       expect(isValidCurrencyCode('')).toBe(false)
       expect(isValidCurrencyCode('eur')).toBe(false)
@@ -116,6 +131,7 @@ describe('currency utilities', () => {
       expect(getCurrencyDisplayName('EUR')).toBe('Euro')
       expect(getCurrencyDisplayName('USD')).toBe('US Dollar')
       expect(getCurrencyDisplayName('GBP')).toBe('British Pound')
+      expect(getCurrencyDisplayName('JPY')).toBe('Japanese Yen')
     })
   })
 })

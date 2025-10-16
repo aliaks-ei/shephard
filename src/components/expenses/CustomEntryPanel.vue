@@ -108,25 +108,92 @@
       @update:model-value="handleUpdateName"
     />
 
-    <!-- Expense Amount -->
-    <q-input
-      :model-value="amount"
-      label="Amount *"
-      type="number"
-      step="0.01"
-      min="0.01"
-      outlined
-      no-error-icon
-      :rules="amountRules"
-      :suffix="selectedPlan?.currency || ''"
-      :disable="!selectedPlan"
-      class="q-mb-sm"
-      @update:model-value="handleUpdateAmount"
+    <!-- Amount and Currency Row -->
+    <div class="row q-col-gutter-sm q-mb-sm">
+      <!-- Expense Amount -->
+      <div class="col">
+        <q-input
+          :model-value="amount"
+          label="Amount *"
+          type="number"
+          step="0.01"
+          min="0.01"
+          outlined
+          no-error-icon
+          :hide-bottom-space="!!shouldShowConversion"
+          :rules="amountRules"
+          :disable="!selectedPlan"
+          @update:model-value="handleUpdateAmount"
+        >
+          <template #prepend>
+            <q-icon name="eva-credit-card-outline" />
+          </template>
+        </q-input>
+      </div>
+
+      <!-- Currency Selection -->
+      <div class="col-auto">
+        <q-select
+          v-model="selectedCurrency"
+          :options="currencyOptions"
+          label="Currency"
+          outlined
+          emit-value
+          map-options
+          style="min-width: 150px"
+          :disable="!selectedPlan"
+        >
+          <template #prepend>
+            <q-icon name="eva-globe-outline" />
+          </template>
+        </q-select>
+      </div>
+    </div>
+
+    <!-- Currency Conversion Display -->
+    <div
+      v-if="shouldShowConversion"
+      class="q-mb-md q-px-sm"
     >
-      <template #prepend>
-        <q-icon name="eva-credit-card-outline" />
-      </template>
-    </q-input>
+      <div
+        v-if="isConverting"
+        class="text-caption text-grey-7"
+      >
+        <q-spinner
+          size="12px"
+          class="q-mr-xs"
+        />
+        Converting...
+      </div>
+      <div
+        v-else-if="hasConversionError"
+        class="text-caption text-negative"
+      >
+        <q-icon
+          name="eva-alert-circle-outline"
+          size="14px"
+          class="q-mr-xs"
+        />
+        {{ conversionError }}
+      </div>
+      <div
+        v-else-if="conversionResult"
+        class="text-caption"
+      >
+        <q-icon
+          name="eva-swap-outline"
+          size="14px"
+          class="q-mr-xs text-primary"
+        />
+        <span class="text-grey-7">Converted amount:</span>
+        <span class="text-weight-bold q-ml-xs">
+          {{
+            formatCurrency(conversionResult.convertedAmount, selectedPlan?.currency as CurrencyCode)
+          }}
+        </span>
+        <span class="text-grey-6 q-ml-xs"> (Rate: {{ conversionResult.rate.toFixed(4) }}) </span>
+      </div>
+    </div>
 
     <!-- Category Selection -->
     <div class="column">
@@ -248,7 +315,7 @@
           <q-btn
             label="Apply"
             color="blue-9"
-            class="ml-auto"
+            class="self-end"
             flat
             dense
             no-caps
@@ -300,7 +367,7 @@
     <!-- Budget Impact Display -->
     <BudgetImpactCard
       :category-id="categoryId"
-      :amount="amount"
+      :amount="effectiveAmount"
       :currency="(selectedPlan?.currency as CurrencyCode) ?? null"
       :category-option="selectedCategoryOption ?? null"
     />
@@ -308,7 +375,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch, ref, toRef } from 'vue'
+import { computed, watch, ref, toRef, watchEffect } from 'vue'
 import type { QUploader } from 'quasar'
 import PlanSelectorField, { type PlanOption } from './PlanSelectorField.vue'
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
@@ -316,6 +383,7 @@ import BudgetImpactCard from './BudgetImpactCard.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import { useAICategorization } from 'src/composables/useAICategorization'
 import { usePhotoExpenseAnalysis } from 'src/composables/usePhotoExpenseAnalysis'
+import { useCurrencyConversion } from 'src/composables/useCurrencyConversion'
 
 interface Plan {
   id: string
@@ -342,6 +410,7 @@ interface Props {
   categoryOptions: CategoryOption[]
   name: string
   amount: number | null
+  currency: string | null
   expenseDate: string
   nameRules: ((val: string) => boolean | string)[]
   amountRules: ((val: number) => boolean | string)[]
@@ -349,6 +418,7 @@ interface Props {
   loading?: boolean
   showAutoSelectHint?: boolean
   defaultCategoryId?: string | null
+  defaultExpenseCurrency?: string | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -363,6 +433,7 @@ const emit = defineEmits<{
   (e: 'update:categoryId', value: string | null): void
   (e: 'update:name', value: string): void
   (e: 'update:amount', value: number | null): void
+  (e: 'update:currency', value: string | null): void
   (e: 'update:expenseDate', value: string): void
   (e: 'plan-selected', value: string | null): void
 }>()
@@ -374,6 +445,59 @@ const currencyRef = computed(() => props.selectedPlan?.currency ?? null)
 const aiCategorization = useAICategorization(planIdRef)
 const photoAnalysis = usePhotoExpenseAnalysis(planIdRef, currencyRef)
 const aiSelectedCategoryId = ref<string | null>(null)
+
+const {
+  convertWithDebounce,
+  conversionResult,
+  isConverting,
+  hasConversionError,
+  conversionError,
+  reset: resetConversion,
+} = useCurrencyConversion()
+
+const selectedCurrency = computed({
+  get: () =>
+    props.currency ||
+    props.defaultExpenseCurrency ||
+    (props.selectedPlan?.currency as CurrencyCode) ||
+    'EUR',
+  set: (value: string) => emit('update:currency', value),
+})
+
+const currencyOptions = [
+  { label: 'EUR', value: 'EUR' },
+  { label: 'USD', value: 'USD' },
+  { label: 'GBP', value: 'GBP' },
+  { label: 'JPY', value: 'JPY' },
+]
+
+const shouldShowConversion = computed(() => {
+  return (
+    props.selectedPlan &&
+    props.amount &&
+    props.amount > 0 &&
+    selectedCurrency.value !== (props.selectedPlan.currency as CurrencyCode)
+  )
+})
+
+const effectiveAmount = computed(() => {
+  if (conversionResult.value && shouldShowConversion.value) {
+    return conversionResult.value.convertedAmount
+  }
+  return props.amount
+})
+
+watchEffect(() => {
+  if (shouldShowConversion.value && props.selectedPlan) {
+    convertWithDebounce(
+      selectedCurrency.value as CurrencyCode,
+      props.selectedPlan.currency as CurrencyCode,
+      props.amount!,
+    )
+  } else {
+    resetConversion()
+  }
+})
 
 const localPlanId = computed({
   get: () => props.planId,

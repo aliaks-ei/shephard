@@ -40,6 +40,7 @@ export function useTemplate() {
   async function createNewTemplateWithItems(
     name: string,
     duration: string,
+    currency: CurrencyCode,
     total: number,
     templateItems: {
       name: string
@@ -52,6 +53,7 @@ export function useTemplate() {
       name,
       duration,
       total,
+      currency,
     })
 
     if (!templateResult.success || !templateResult.data) return { success: false }
@@ -69,6 +71,7 @@ export function useTemplate() {
   async function updateExistingTemplateWithItems(
     name: string,
     duration: string,
+    currency: CurrencyCode,
     total: number,
     templateItems: {
       name: string
@@ -82,6 +85,7 @@ export function useTemplate() {
     const templateResult = await templatesStore.editTemplate(routeTemplateId.value, {
       name,
       duration,
+      currency,
       total,
     })
 

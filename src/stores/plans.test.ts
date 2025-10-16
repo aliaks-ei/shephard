@@ -231,7 +231,7 @@ describe('Plans Store', () => {
   })
 
   describe('addPlan', () => {
-    const planData: Omit<PlanInsert, 'owner_id' | 'currency'> = {
+    const planData: Omit<PlanInsert, 'owner_id' | 'currency' | 'status'> = {
       name: 'New Plan',
       start_date: '2023-01-01',
       end_date: '2023-01-08',
@@ -248,6 +248,7 @@ describe('Plans Store', () => {
         ...planData,
         owner_id: 'user-1',
         currency: 'USD',
+        status: 'active',
       })
       expect(result.success).toBe(true)
       expect(result.data).toEqual(newPlan)

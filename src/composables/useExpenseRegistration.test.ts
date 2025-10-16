@@ -376,6 +376,9 @@ describe('useExpenseRegistration', () => {
         category_id: 'cat-1',
         name: 'Test Expense',
         amount: 50,
+        currency: undefined,
+        original_amount: null,
+        original_currency: null,
         expense_date: expect.any(String),
         plan_item_id: null,
       })

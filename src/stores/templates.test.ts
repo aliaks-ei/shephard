@@ -251,7 +251,6 @@ describe('Templates Store', () => {
       expect(templatesApi.createTemplate).toHaveBeenCalledWith({
         ...templateData,
         owner_id: mockUserStoreData.userProfile.id,
-        currency: mockUserStoreData.preferences.currency,
       })
       expect(result.success).toBe(true)
       expect(result.data).toEqual(newTemplate)
