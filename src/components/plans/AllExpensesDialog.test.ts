@@ -75,6 +75,7 @@ const renderAllExpensesDialog = (props: AllExpensesDialogProps) => {
           template: '<button @click="$emit(\'click\')"><slot /></button>',
           props: ['icon'],
         },
+        'q-scroll-area': { template: '<div class="scroll-area"><slot /></div>' },
         'q-virtual-scroll': {
           template: '<div><slot v-for="item in items" :item="item" :index="0" /></div>',
           props: ['items'],
