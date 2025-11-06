@@ -41,81 +41,87 @@
       <q-separator />
 
       <!-- Virtual Scroll Container -->
-      <q-card-section class="q-pt-none overflow-auto col">
-        <q-virtual-scroll
-          :items="expenses"
-          virtual-scroll-item-size="52"
-          virtual-scroll-slice-size="10"
-          class="scroll-area"
+      <q-card-section class="q-pa-none col">
+        <q-scroll-area
+          :style="$q.screen.xs ? 'height: calc(100vh - 68px)' : 'height: 550px'"
+          :class="$q.screen.lt.md ? 'q-px-sm' : 'q-px-md'"
+          class="scroll-area q-py-sm"
         >
-          <template #default="{ item: expense, index }">
-            <q-item
-              :key="expense.id"
-              class="q-px-none q-py-sm"
-              :class="index > 0 ? 'q-border-top' : ''"
-            >
-              <q-item-section
-                style="min-width: auto"
-                avatar
+          <q-virtual-scroll
+            :items="expenses"
+            virtual-scroll-item-size="52"
+            virtual-scroll-slice-size="10"
+            scroll-target=".scroll-area > .q-scrollarea__container"
+          >
+            <template #default="{ item: expense, index }">
+              <q-item
+                :key="expense.id"
+                class="q-px-none q-py-sm"
+                :class="index > 0 ? 'q-border-top' : ''"
               >
-                <CategoryIcon
-                  :color="getCategoryColor(expense.category_id)"
-                  :icon="getCategoryIcon(expense.category_id)"
-                  size="sm"
-                />
-              </q-item-section>
-
-              <q-item-section>
-                <q-item-label class="text-weight-medium">
-                  {{ expense.name }}
-                </q-item-label>
-                <q-item-label
-                  caption
-                  class="q-mt-xs"
+                <q-item-section
+                  style="min-width: auto"
+                  avatar
                 >
-                  {{ getCategoryName(expense.category_id) }} •
-                  {{ formatDate(expense.expense_date) }}
-                </q-item-label>
-              </q-item-section>
-
-              <q-item-section
-                side
-                class="items-end"
-              >
-                <div class="row items-center q-gutter-sm">
-                  <div class="column items-end">
-                    <q-item-label class="text-weight-bold text-primary">
-                      {{ formatCurrency(expense.amount, currency) }}
-                    </q-item-label>
-                    <q-item-label
-                      v-if="expense.original_amount && expense.original_currency"
-                      caption
-                      class="text-caption text-grey-6"
-                    >
-                      {{
-                        formatCurrency(
-                          expense.original_amount,
-                          expense.original_currency as CurrencyCode,
-                        )
-                      }}
-                    </q-item-label>
-                  </div>
-                  <q-btn
-                    v-if="canEdit"
-                    flat
-                    round
+                  <CategoryIcon
+                    :color="getCategoryColor(expense.category_id)"
+                    :icon="getCategoryIcon(expense.category_id)"
                     size="sm"
-                    icon="eva-trash-2-outline"
-                    color="negative"
-                    @click="confirmDeleteExpense(expense, () => emit('refresh'))"
+                  />
+                </q-item-section>
+
+                <q-item-section>
+                  <q-item-label class="text-weight-medium">
+                    {{ expense.name }}
+                  </q-item-label>
+                  <q-item-label
+                    caption
+                    class="q-mt-xs"
                   >
-                    <q-tooltip v-if="!$q.screen.lt.md">Delete expense</q-tooltip>
-                  </q-btn>
-                </div>
-              </q-item-section>
-            </q-item>
-          </template>
-        </q-virtual-scroll>
+                    {{ getCategoryName(expense.category_id) }} •
+                    {{ formatDate(expense.expense_date) }}
+                  </q-item-label>
+                </q-item-section>
+
+                <q-item-section
+                  side
+                  class="items-end"
+                >
+                  <div class="row items-center q-gutter-sm">
+                    <div class="column items-end">
+                      <q-item-label class="text-weight-bold text-primary">
+                        {{ formatCurrency(expense.amount, currency) }}
+                      </q-item-label>
+                      <q-item-label
+                        v-if="expense.original_amount && expense.original_currency"
+                        caption
+                        class="text-caption text-grey-6"
+                      >
+                        {{
+                          formatCurrency(
+                            expense.original_amount,
+                            expense.original_currency as CurrencyCode,
+                          )
+                        }}
+                      </q-item-label>
+                    </div>
+                    <q-btn
+                      v-if="canEdit"
+                      flat
+                      round
+                      size="sm"
+                      icon="eva-trash-2-outline"
+                      color="negative"
+                      @click="confirmDeleteExpense(expense, () => emit('refresh'))"
+                    >
+                      <q-tooltip v-if="!$q.screen.lt.md">Delete expense</q-tooltip>
+                    </q-btn>
+                  </div>
+                </q-item-section>
+              </q-item>
+            </template>
+          </q-virtual-scroll>
+        </q-scroll-area>
       </q-card-section>
     </q-card>
   </q-dialog>

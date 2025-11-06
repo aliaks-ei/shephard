@@ -163,18 +163,38 @@ describe('usePlanOverview', () => {
   describe('remainingBudget', () => {
     it('calculates remaining budget correctly with only fixed items', () => {
       const expensesStore = useExpensesStore()
+      const categoriesStore = useCategoriesStore()
+
       // @ts-expect-error - Testing Pinia computed
       expensesStore.totalExpensesAmount = 350
 
+      expensesStore.expenseSummary = [
+        {
+          category_id: 'cat-1',
+          planned_amount: 500,
+          actual_amount: 150,
+          remaining_amount: 500, // Fixed item, not completed, so full amount remains
+          expense_count: 1,
+        },
+        {
+          category_id: 'cat-2',
+          planned_amount: 300,
+          actual_amount: 200,
+          remaining_amount: 300, // Fixed item, not completed, so full amount remains
+          expense_count: 1,
+        },
+      ]
+      categoriesStore.categories = mockCategories.map((c) => ({ ...c, templates: [] }))
+
       const { remainingBudget } = usePlanOverview('plan-1', ref(mockPlanWithItems))
 
-      // With only non-completed fixed items ($500 + $300) and no non-fixed items:
-      // Still to pay = $800 + max(0, $0 - $350) = $800
       expect(remainingBudget.value).toBe(800)
     })
 
     it('calculates remaining budget correctly with fixed and non-fixed items', () => {
       const expensesStore = useExpensesStore()
+      const categoriesStore = useCategoriesStore()
+
       // @ts-expect-error - Testing Pinia computed
       expensesStore.totalExpensesAmount = 120
 
@@ -217,17 +237,34 @@ describe('usePlanOverview', () => {
         ],
       }
 
+      // Set up expense summary for each category
+      expensesStore.expenseSummary = [
+        {
+          category_id: 'cat-1',
+          planned_amount: 300,
+          actual_amount: 100,
+          remaining_amount: 200, // calculated by the utility
+          expense_count: 1,
+        },
+        {
+          category_id: 'cat-2',
+          planned_amount: 50,
+          actual_amount: 20,
+          remaining_amount: 50, // fixed item, not completed
+          expense_count: 1,
+        },
+      ]
+      categoriesStore.categories = mockCategories.map((c) => ({ ...c, templates: [] }))
+
       const { remainingBudget } = usePlanOverview('plan-1', ref(planWithMixedItems))
 
-      // Fixed items: $100 + $50 = $150
-      // Non-fixed items: $200
-      // Expenses: $120
-      // Still to pay = $150 + ($200 - $120) = $230
-      expect(remainingBudget.value).toBe(230)
+      expect(remainingBudget.value).toBe(250)
     })
 
     it('calculates remaining budget correctly when expenses exceed non-fixed items', () => {
       const expensesStore = useExpensesStore()
+      const categoriesStore = useCategoriesStore()
+
       // @ts-expect-error - Testing Pinia computed
       expensesStore.totalExpensesAmount = 300
 
@@ -259,17 +296,34 @@ describe('usePlanOverview', () => {
         ],
       }
 
+      // Set up expense summary for each category
+      expensesStore.expenseSummary = [
+        {
+          category_id: 'cat-1',
+          planned_amount: 100,
+          actual_amount: 50,
+          remaining_amount: 100, // fixed, not completed
+          expense_count: 1,
+        },
+        {
+          category_id: 'cat-2',
+          planned_amount: 200,
+          actual_amount: 250,
+          remaining_amount: 0, // non-fixed, expenses exceed budget
+          expense_count: 1,
+        },
+      ]
+      categoriesStore.categories = mockCategories.map((c) => ({ ...c, templates: [] }))
+
       const { remainingBudget } = usePlanOverview('plan-1', ref(planWithMixedItems))
 
-      // Fixed items: $100
-      // Non-fixed items: $200
-      // Expenses: $300
-      // Still to pay = $100 + max(0, $200 - $300) = $100 + $0 = $100
       expect(remainingBudget.value).toBe(100)
     })
 
     it('excludes completed fixed items from calculation', () => {
       const expensesStore = useExpensesStore()
+      const categoriesStore = useCategoriesStore()
+
       // @ts-expect-error - Testing Pinia computed
       expensesStore.totalExpensesAmount = 0
 
@@ -301,11 +355,27 @@ describe('usePlanOverview', () => {
         ],
       }
 
+      // Set up expense summary for each category
+      expensesStore.expenseSummary = [
+        {
+          category_id: 'cat-1',
+          planned_amount: 100,
+          actual_amount: 100,
+          remaining_amount: 0, // completed, so nothing remaining
+          expense_count: 1,
+        },
+        {
+          category_id: 'cat-2',
+          planned_amount: 50,
+          actual_amount: 0,
+          remaining_amount: 50, // not completed, full amount remains
+          expense_count: 0,
+        },
+      ]
+      categoriesStore.categories = mockCategories.map((c) => ({ ...c, templates: [] }))
+
       const { remainingBudget } = usePlanOverview('plan-1', ref(planWithCompletedItems))
 
-      // Only non-completed fixed items: $50
-      // No non-fixed items, no expenses
-      // Still to pay = $50 + max(0, $0 - $0) = $50
       expect(remainingBudget.value).toBe(50)
     })
   })

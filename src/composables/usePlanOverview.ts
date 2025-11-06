@@ -48,27 +48,6 @@ export function usePlanOverview(
     return expensesStore.totalExpensesAmount
   })
 
-  const remainingBudget = computed(() => {
-    const plan = currentPlanWithItems.value
-    if (!plan) return 0
-
-    // Still to pay = (sum of NON-COMPLETED fixed items) + max(0, sum of non-fixed items - total expenses)
-    const nonCompletedFixedItemsTotal =
-      plan.plan_items
-        ?.filter((item) => item.is_fixed_payment && !item.is_completed)
-        .reduce((sum, item) => sum + item.amount, 0) || 0
-
-    const nonFixedItemsTotal =
-      plan.plan_items
-        ?.filter((item) => !item.is_fixed_payment)
-        .reduce((sum, item) => sum + item.amount, 0) || 0
-
-    const stillToPay =
-      nonCompletedFixedItemsTotal + Math.max(0, nonFixedItemsTotal - totalSpent.value)
-
-    return stillToPay
-  })
-
   const categoryBudgets = computed((): CategoryBudget[] => {
     const summary = expensesStore.expenseSummary
     const categories = categoriesStore.categories
@@ -117,6 +96,10 @@ export function usePlanOverview(
         const bPercentage = b.plannedAmount > 0 ? b.actualAmount / b.plannedAmount : 0
         return bPercentage - aPercentage
       })
+  })
+
+  const remainingBudget = computed(() => {
+    return categoryBudgets.value.reduce((sum, category) => sum + category.remainingAmount, 0)
   })
 
   const recentExpenses = computed((): ExpenseWithCategory[] => {
