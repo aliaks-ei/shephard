@@ -19,14 +19,12 @@
 
     <q-item-section :style="$q.screen.lt.md ? 'max-width: 80px' : 'max-width: 112px'">
       <q-input
-        :model-value="modelValue.amount"
+        :model-value="displayAmount"
         :readonly="readonly"
         :rules="amountRules"
         :dense="$q.screen.lt.md"
         :prefix="currencySymbol"
-        type="number"
-        min="0"
-        step="1"
+        type="text"
         label="Amount"
         class="q-px-none"
         outlined
@@ -75,6 +73,7 @@
 import { ref, computed } from 'vue'
 import type { QInput } from 'quasar'
 import { getCurrencySymbol, type CurrencyCode } from 'src/utils/currency'
+import { parseDecimalInput } from 'src/utils/decimal'
 import type { PlanItemUI } from 'src/types'
 
 const nameInputRef = ref<QInput | null>(null)
@@ -96,6 +95,8 @@ const props = withDefaults(
 )
 
 const currencySymbol = computed(() => getCurrencySymbol(props.currency))
+const displayAmount = computed(() => (props.modelValue.amount ? props.modelValue.amount : ''))
+
 const nameRules = computed(() =>
   props.readonly
     ? []
@@ -105,9 +106,14 @@ const amountRules = computed(() =>
   props.readonly
     ? []
     : [
-        (val: number | null | undefined) =>
-          (val !== null && val !== undefined) || 'Amount is required',
-        (val: number | null | undefined) => (val && val > 0) || 'Amount must be greater than 0',
+        (val: string | number | null | undefined) => {
+          const parsed = parseDecimalInput(val)
+          return parsed !== null || 'Amount is required'
+        },
+        (val: string | number | null | undefined) => {
+          const parsed = parseDecimalInput(val)
+          return (parsed && parsed > 0) || 'Amount must be greater than 0'
+        },
       ],
 )
 
@@ -125,8 +131,7 @@ function updateName(name: string | number | null): void {
 function updateAmount(amount: string | number | null): void {
   if (props.readonly) return
 
-  const numericAmount =
-    amount === null || amount === undefined || amount === '' ? 0 : Number(amount)
+  const numericAmount = parseDecimalInput(amount) ?? 0
   const updatedItem: PlanItemUI = {
     ...props.modelValue,
     amount: numericAmount,

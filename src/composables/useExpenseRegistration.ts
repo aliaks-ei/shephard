@@ -8,6 +8,7 @@ import { getLastExpenseForPlan } from 'src/api/expenses'
 import { getPlanStatus } from 'src/utils/plans'
 import { calculateStillToPay } from 'src/utils/budget-calculations'
 import { convertCurrency } from 'src/api/currency'
+import { parseDecimalInput } from 'src/utils/decimal'
 import type { PlanItem } from 'src/api/plans'
 import type { PlanOption } from 'src/components/expenses/PlanSelectorField.vue'
 import type { CurrencyCode } from 'src/utils/currency'
@@ -134,9 +135,18 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
   ])
 
   const amountRules = computed(() => [
-    (val: number) => !!val || 'Amount is required',
-    (val: number) => val > 0 || 'Amount must be greater than 0',
-    (val: number) => val <= 999999.99 || 'Amount too large',
+    (val: string | number) => {
+      const parsed = parseDecimalInput(val)
+      return parsed !== null || 'Amount is required'
+    },
+    (val: string | number) => {
+      const parsed = parseDecimalInput(val)
+      return (parsed && parsed > 0) || 'Amount must be greater than 0'
+    },
+    (val: string | number) => {
+      const parsed = parseDecimalInput(val)
+      return (parsed && parsed <= 999999.99) || 'Amount too large'
+    },
   ])
 
   const getSubmitButtonLabel = computed(() => {

@@ -114,11 +114,9 @@
       <!-- Expense Amount -->
       <div class="col">
         <q-input
-          :model-value="amount"
+          :model-value="displayAmount"
           label="Amount *"
-          type="number"
-          step="0.01"
-          min="0.01"
+          type="text"
           outlined
           no-error-icon
           inputmode="decimal"
@@ -384,6 +382,7 @@ import PlanSelectorField, { type PlanOption } from './PlanSelectorField.vue'
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import BudgetImpactCard from './BudgetImpactCard.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
+import { parseDecimalInput } from 'src/utils/decimal'
 import { useAICategorization } from 'src/composables/useAICategorization'
 import { usePhotoExpenseAnalysis } from 'src/composables/usePhotoExpenseAnalysis'
 import { useCurrencyConversion } from 'src/composables/useCurrencyConversion'
@@ -581,8 +580,12 @@ async function handleUpdateName(value: string | number | null) {
   }
 }
 
+const displayAmount = computed(() => {
+  return props.amount !== null ? props.amount : ''
+})
+
 const handleUpdateAmount = (value: number | string | null) => {
-  const numValue = typeof value === 'string' ? parseFloat(value) : value
+  const numValue = parseDecimalInput(value)
   emit('update:amount', numValue)
 }
 
