@@ -48,10 +48,15 @@ describe('parseDecimalInput', () => {
     expect(parseDecimalInput('-5,5')).toBe(-5.5)
   })
 
-  it('returns null for invalid strings', () => {
+  it('returns null for invalid strings that cannot be parsed', () => {
     expect(parseDecimalInput('abc')).toBeNull()
-    expect(parseDecimalInput('12.34.56')).toBeNull()
     expect(parseDecimalInput('test123')).toBeNull()
+  })
+
+  it('parses partial numbers (parseFloat behavior)', () => {
+    // parseFloat stops at the first invalid character, so '12.34.56' becomes 12.34
+    expect(parseDecimalInput('12.34.56')).toBe(12.34)
+    expect(parseDecimalInput('42abc')).toBe(42)
   })
 
   it('handles leading/trailing whitespace by parsing as much as possible', () => {
@@ -90,8 +95,13 @@ describe('isValidDecimalInput', () => {
     expect(isValidDecimalInput('3,14')).toBe(true)
   })
 
-  it('returns false for invalid strings', () => {
+  it('returns false for completely invalid strings', () => {
     expect(isValidDecimalInput('abc')).toBe(false)
-    expect(isValidDecimalInput('12.34.56')).toBe(false)
+  })
+
+  it('returns true for partially valid strings (parseFloat behavior)', () => {
+    // parseFloat stops at first invalid char, so these are considered valid
+    expect(isValidDecimalInput('12.34.56')).toBe(true)
+    expect(isValidDecimalInput('42abc')).toBe(true)
   })
 })
