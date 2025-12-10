@@ -102,6 +102,7 @@
       label="Expense Name *"
       outlined
       no-error-icon
+      inputmode="text"
       :rules="nameRules"
       :disable="!selectedPlan"
       class="q-mb-sm"
@@ -120,6 +121,7 @@
           min="0.01"
           outlined
           no-error-icon
+          inputmode="decimal"
           :hide-bottom-space="!!shouldShowConversion"
           :rules="amountRules"
           :disable="!selectedPlan"
@@ -330,6 +332,7 @@
       label="Expense Date *"
       outlined
       no-error-icon
+      inputmode="none"
       :rules="[(val: string) => !!val || 'Date is required']"
       class="q-mb-sm"
       @update:model-value="handleUpdateExpenseDate"

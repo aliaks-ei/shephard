@@ -12,6 +12,7 @@
       label="Plan Name"
       outlined
       no-error-icon
+      inputmode="text"
       :readonly="readonly"
       :rules="[(val) => !!val || 'Plan name is required']"
       :class="$q.screen.lt.md ? 'q-mb-sm' : 'q-mb-md'"
@@ -29,6 +30,7 @@
           label="Start Date"
           outlined
           no-error-icon
+          inputmode="none"
           :readonly="readonly"
           :rules="startDateRules"
           @update:model-value="(val) => handleStartDateUpdate(String(val ?? ''))"

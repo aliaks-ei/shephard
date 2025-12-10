@@ -11,6 +11,7 @@
       :disable="userStore.auth.isEmailSent"
       outlined
       no-error-icon
+      inputmode="email"
       :rules="emailRules()"
       lazy-rules="ondemand"
     />

@@ -12,6 +12,7 @@
         no-error-icon
         outlined
         item-aligned
+        inputmode="text"
         @update:model-value="updateName"
       />
     </q-item-section>
@@ -31,6 +32,7 @@
         outlined
         item-aligned
         no-error-icon
+        inputmode="decimal"
         @update:model-value="updateAmount"
       />
     </q-item-section>
