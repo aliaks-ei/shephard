@@ -12,13 +12,14 @@
         no-error-icon
         outlined
         item-aligned
+        inputmode="text"
         @update:model-value="updateName"
       />
     </q-item-section>
 
     <q-item-section :style="$q.screen.lt.md ? 'max-width: 80px' : 'max-width: 112px'">
       <q-input
-        :model-value="modelValue.amount || undefined"
+        :model-value="modelValue.amount"
         :readonly="readonly"
         :rules="amountRules"
         :dense="$q.screen.lt.md"
@@ -31,6 +32,7 @@
         outlined
         item-aligned
         no-error-icon
+        inputmode="decimal"
         @update:model-value="updateAmount"
       />
     </q-item-section>

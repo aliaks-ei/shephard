@@ -18,6 +18,7 @@
             outlined
             clearable
             no-error-icon
+            inputmode="search"
             @update:model-value="emit('update:searchQuery', $event?.toString() ?? '')"
           >
             <template #prepend>

@@ -127,6 +127,7 @@
             label="Expense Date *"
             outlined
             no-error-icon
+            inputmode="none"
             :rules="[(val: string) => !!val || 'Date is required']"
             class="q-mb-md"
             @update:model-value="handleUpdateExpenseDate"

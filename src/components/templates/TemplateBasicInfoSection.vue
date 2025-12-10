@@ -21,6 +21,7 @@
           outlined
           readonly
           no-error-icon
+          inputmode="text"
           :hide-bottom-space="$q.screen.lt.md"
           :class="$q.screen.lt.md ? 'q-mb-sm' : 'q-mb-md'"
         />
@@ -30,6 +31,7 @@
           label="Template Name"
           outlined
           no-error-icon
+          inputmode="text"
           :dense="$q.screen.lt.md"
           :hide-bottom-space="$q.screen.lt.md"
           :rules="nameRules"
