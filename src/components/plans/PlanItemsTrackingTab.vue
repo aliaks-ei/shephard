@@ -158,7 +158,8 @@
                   {{ group.categoryName }}
                 </q-item-label>
                 <q-item-label caption>
-                  {{ group.items.length }} {{ group.items.length === 1 ? 'item' : 'items' }}
+                  {{ group.items.length + group.nonFixedItems.length }}
+                  {{ group.items.length + group.nonFixedItems.length === 1 ? 'item' : 'items' }}
                 </q-item-label>
               </q-item-section>
 
@@ -179,6 +180,7 @@
 
             <q-card-section class="q-pt-none">
               <q-list>
+                <!-- Fixed payment items (trackable with checkbox) -->
                 <q-item
                   v-for="item in group.items"
                   :key="item.id"
@@ -212,6 +214,50 @@
                     </q-item-label>
                   </q-item-section>
                 </q-item>
+
+                <!-- Non-fixed items (read-only reference) -->
+                <template v-if="group.nonFixedItems.length > 0">
+                  <q-separator
+                    v-if="group.items.length > 0"
+                    class="q-my-sm"
+                  />
+                  <q-item-label
+                    header
+                    class="text-caption q-py-xs q-px-sm"
+                    :class="$q.dark.isActive ? 'text-grey-5' : 'text-grey-6'"
+                  >
+                    For Reference
+                  </q-item-label>
+
+                  <q-item
+                    v-for="item in group.nonFixedItems"
+                    :key="item.id"
+                    :dense="$q.screen.lt.md"
+                    class="q-px-sm text-grey-6"
+                  >
+                    <q-item-section
+                      style="min-width: auto"
+                      avatar
+                    >
+                      <q-icon
+                        name="eva-bookmark-outline"
+                        size="24px"
+                        :class="$q.dark.isActive ? 'text-grey-6' : 'text-grey-5'"
+                      />
+                    </q-item-section>
+
+                    <q-item-section>
+                      <q-item-label :class="$q.dark.isActive ? 'text-grey-5' : 'text-grey-6'">
+                        {{ item.name }}
+                      </q-item-label>
+                      <q-item-label caption>
+                        <span :class="$q.dark.isActive ? 'text-grey-6' : 'text-grey-7'">
+                          {{ formatCurrency(item.amount, currency) }}
+                        </span>
+                      </q-item-label>
+                    </q-item-section>
+                  </q-item>
+                </template>
               </q-list>
             </q-card-section>
           </q-expansion-item>
@@ -238,6 +284,7 @@ interface CategoryGroup {
   categoryColor: string
   categoryIcon: string
   items: PlanItem[]
+  nonFixedItems: PlanItem[]
   totalPlanned: number
   completedCount: number
 }
@@ -266,9 +313,6 @@ const categoryGroups = computed((): CategoryGroup[] => {
   const groups = new Map<string, CategoryGroup>()
 
   for (const item of planItems.value) {
-    // Skip non-fixed payment items
-    if (!item.is_fixed_payment) continue
-
     if (!groups.has(item.category_id)) {
       const category = categoriesStore.getCategoryById(item.category_id)
       if (!category) continue
@@ -279,22 +323,29 @@ const categoryGroups = computed((): CategoryGroup[] => {
         categoryColor: category.color,
         categoryIcon: category.icon,
         items: [],
+        nonFixedItems: [],
         totalPlanned: 0,
         completedCount: 0,
       })
     }
 
-    // Add the current item to the group
     const group = groups.get(item.category_id)!
-    group.items.push(item)
-    group.totalPlanned += item.amount
 
-    if (item.is_completed) {
-      group.completedCount++
+    if (item.is_fixed_payment) {
+      // Fixed payment items (trackable)
+      group.items.push(item)
+      group.totalPlanned += item.amount
+
+      if (item.is_completed) {
+        group.completedCount++
+      }
+    } else {
+      // Non-fixed items (read-only reference)
+      group.nonFixedItems.push(item)
     }
   }
 
-  // Sort items: incomplete first, then completed
+  // Sort fixed items: incomplete first, then completed
   for (const group of groups.values()) {
     group.items.sort((a, b) => {
       const aCompleted = a.is_completed
@@ -304,9 +355,9 @@ const categoryGroups = computed((): CategoryGroup[] => {
     })
   }
 
-  // Filter out categories with no items (all were non-fixed)
+  // Include categories that have any items (fixed or non-fixed)
   return Array.from(groups.values())
-    .filter((group) => group.items.length > 0)
+    .filter((group) => group.items.length > 0 || group.nonFixedItems.length > 0)
     .sort((a, b) => a.categoryName.localeCompare(b.categoryName))
 })
 
