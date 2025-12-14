@@ -191,8 +191,9 @@ const budgetStatusTextClass = computed(() =>
 
 const budgetStatusIcon = computed(() => {
   const percentage = budgetPercentageAfter.value
-  if (percentage <= 100) return 'eva-checkmark-circle-outline'
-  if (percentage <= 110) return 'eva-alert-triangle-outline'
+  if (percentage < 90) return 'eva-checkmark-circle-outline'
+  if (percentage < 100) return 'eva-alert-triangle-outline'
+  if (percentage === 100) return 'eva-checkmark-circle-outline'
   return 'eva-alert-circle-outline'
 })
 
@@ -200,8 +201,9 @@ const budgetImpactCardClass = computed(() => {
   const percentage =
     props.amount && props.amount > 0 ? budgetPercentageAfter.value : currentBudgetPercentage.value
 
-  if (percentage <= 100) return ''
-  if (percentage <= 110) return 'bg-orange-1'
+  if (percentage < 90) return ''
+  if (percentage < 100) return 'bg-orange-1'
+  if (percentage === 100) return ''
   return 'bg-red-1'
 })
 </script>

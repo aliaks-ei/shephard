@@ -202,12 +202,12 @@ describe('BudgetImpactCard', () => {
       expect(statusIcon?.exists()).toBe(true)
     })
 
-    it('should display warning icon when approaching budget limit', () => {
+    it('should display warning icon when approaching budget limit (90-100%)', () => {
       const wrapper = mount(BudgetImpactCard, {
         props: {
           ...defaultProps,
           categoryId: 'cat-1',
-          amount: 55,
+          amount: 45, // 50 + 45 = 95% of budget
           currency: 'USD',
           categoryOption: mockCategoryOption,
         },
@@ -220,12 +220,12 @@ describe('BudgetImpactCard', () => {
       expect(statusIcon?.exists()).toBe(true)
     })
 
-    it('should display alert icon when over budget significantly', () => {
+    it('should display alert icon when over budget (>100%)', () => {
       const wrapper = mount(BudgetImpactCard, {
         props: {
           ...defaultProps,
           categoryId: 'cat-1',
-          amount: 75,
+          amount: 55, // 50 + 55 = 105% of budget
           currency: 'USD',
           categoryOption: mockCategoryOption,
         },
@@ -266,12 +266,12 @@ describe('BudgetImpactCard', () => {
       expect(progressBar.props('color')).toBe('positive')
     })
 
-    it('should apply warning color when 101-110% of budget', () => {
+    it('should apply warning color when 90-100% of budget', () => {
       const wrapper = mount(BudgetImpactCard, {
         props: {
           ...defaultProps,
           categoryId: 'cat-1',
-          amount: 55,
+          amount: 45, // 50 + 45 = 95% of budget
           currency: 'USD',
           categoryOption: mockCategoryOption,
         },
@@ -281,12 +281,12 @@ describe('BudgetImpactCard', () => {
       expect(progressBar.props('color')).toBe('warning')
     })
 
-    it('should apply negative color when over 110% of budget', () => {
+    it('should apply negative color when over 100% of budget', () => {
       const wrapper = mount(BudgetImpactCard, {
         props: {
           ...defaultProps,
           categoryId: 'cat-1',
-          amount: 75,
+          amount: 55, // 50 + 55 = 105% of budget
           currency: 'USD',
           categoryOption: mockCategoryOption,
         },
@@ -314,12 +314,12 @@ describe('BudgetImpactCard', () => {
       expect(card.classes()).not.toContain('bg-red-1')
     })
 
-    it('should have orange background when 101-110% of budget', () => {
+    it('should have orange background when 90-100% of budget', () => {
       const wrapper = mount(BudgetImpactCard, {
         props: {
           ...defaultProps,
           categoryId: 'cat-1',
-          amount: 55,
+          amount: 45, // 50 + 45 = 95% of budget
           currency: 'USD',
           categoryOption: mockCategoryOption,
         },
@@ -329,12 +329,12 @@ describe('BudgetImpactCard', () => {
       expect(card.classes()).toContain('bg-orange-1')
     })
 
-    it('should have red background when over 110% of budget', () => {
+    it('should have red background when over 100% of budget', () => {
       const wrapper = mount(BudgetImpactCard, {
         props: {
           ...defaultProps,
           categoryId: 'cat-1',
-          amount: 75,
+          amount: 55, // 50 + 55 = 105% of budget
           currency: 'USD',
           categoryOption: mockCategoryOption,
         },
