@@ -121,7 +121,7 @@
         indicator-color="primary"
       >
         <q-tab
-          v-if="sortedPlanItems.length > 0"
+          v-if="hasAnyPlanItems"
           name="items"
           label="Items to Track"
           icon="eva-checkmark-square-2-outline"
@@ -166,13 +166,14 @@
       >
         <!-- Items to Track Panel -->
         <q-tab-panel
-          v-if="sortedPlanItems.length > 0"
+          v-if="hasAnyPlanItems"
           name="items"
           class="q-pa-none"
         >
           <q-list class="q-py-sm">
+            <!-- Fixed payment items (trackable with checkbox) -->
             <q-item
-              v-for="item in sortedPlanItems"
+              v-for="item in fixedPlanItems"
               :key="item.id"
               clickable
               dense
@@ -203,6 +204,52 @@
                 </q-item-label>
               </q-item-section>
             </q-item>
+
+            <!-- Separator for non-fixed items -->
+            <template v-if="nonFixedPlanItems.length > 0">
+              <q-separator
+                v-if="fixedPlanItems.length > 0"
+                class="q-my-sm"
+              />
+              <q-item-label
+                header
+                class="text-caption q-py-xs"
+                :class="$q.dark.isActive ? 'text-grey-5' : 'text-grey-6'"
+              >
+                For Reference
+              </q-item-label>
+
+              <!-- Non-fixed items (read-only, greyed out) -->
+              <q-item
+                v-for="item in nonFixedPlanItems"
+                :key="item.id"
+                dense
+                class="text-grey-6"
+              >
+                <q-item-section
+                  class="q-pr-sm"
+                  style="min-width: auto"
+                  avatar
+                >
+                  <q-icon
+                    name="eva-bookmark-outline"
+                    size="24px"
+                    :class="$q.dark.isActive ? 'text-grey-6' : 'text-grey-5'"
+                  />
+                </q-item-section>
+
+                <q-item-section>
+                  <q-item-label :class="$q.dark.isActive ? 'text-grey-5' : 'text-grey-6'">
+                    {{ item.name }}
+                  </q-item-label>
+                  <q-item-label caption>
+                    <span :class="$q.dark.isActive ? 'text-grey-6' : 'text-grey-7'">
+                      {{ formatCurrency(item.amount, currency) }}
+                    </span>
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
+            </template>
           </q-list>
         </q-tab-panel>
 
@@ -367,10 +414,10 @@ const expensesStore = useExpensesStore()
 const notificationStore = useNotificationStore()
 const { confirmDeleteExpense } = useExpenseActions()
 
-const sortedPlanItems = computed(() => {
+const fixedPlanItems = computed(() => {
   if (!props.planItems || props.planItems.length === 0) return []
 
-  // Only show fixed payment items in the tracking tab
+  // Fixed payment items that can be tracked (checkable)
   return [...props.planItems]
     .filter((item) => item.is_fixed_payment)
     .sort((a, b) => {
@@ -381,14 +428,25 @@ const sortedPlanItems = computed(() => {
     })
 })
 
+const nonFixedPlanItems = computed(() => {
+  if (!props.planItems || props.planItems.length === 0) return []
+
+  // Non-fixed items shown as read-only reference
+  return [...props.planItems].filter((item) => !item.is_fixed_payment)
+})
+
+const hasAnyPlanItems = computed(
+  () => fixedPlanItems.value.length > 0 || nonFixedPlanItems.value.length > 0,
+)
+
 const showExpenseDialog = ref(false)
 const activeTab = ref('expenses')
 
 const completedItemsCount = computed(
-  () => sortedPlanItems.value.filter((item) => item.is_completed).length,
+  () => fixedPlanItems.value.filter((item) => item.is_completed).length,
 )
 
-const totalItemsCount = computed(() => sortedPlanItems.value.length)
+const totalItemsCount = computed(() => fixedPlanItems.value.length)
 
 const progressPercentage = computed(() => {
   if (!props.category || props.category.plannedAmount === 0) return 0
@@ -471,9 +529,9 @@ async function toggleItemCompletion(item: PlanItem, value?: boolean) {
 }
 
 watch(
-  sortedPlanItems,
+  hasAnyPlanItems,
   () => {
-    if (sortedPlanItems.value.length > 0) {
+    if (hasAnyPlanItems.value) {
       activeTab.value = 'items'
     } else {
       activeTab.value = 'expenses'

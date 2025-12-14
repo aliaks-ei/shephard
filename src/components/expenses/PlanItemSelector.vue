@@ -156,7 +156,10 @@
                 class="q-pa-sm"
                 @click="toggleItemSelection(item)"
               >
-                <q-item-section avatar>
+                <q-item-section
+                  style="min-width: auto"
+                  avatar
+                >
                   <q-checkbox
                     :model-value="isItemSelected(item.id)"
                     color="primary"
