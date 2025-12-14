@@ -9,9 +9,9 @@
  * @returns Quasar color name for progress indicators
  */
 export function getBudgetProgressColor(percentage: number): string {
-  if (percentage < 100) return 'primary'
+  if (percentage < 90) return 'primary'
+  if (percentage < 100) return 'warning'
   if (percentage === 100) return 'positive'
-  if (percentage <= 110) return 'warning'
   return 'negative'
 }
 
@@ -21,9 +21,9 @@ export function getBudgetProgressColor(percentage: number): string {
  * @returns Quasar text color class name
  */
 export function getBudgetRemainingColorClass(percentage: number): string {
-  if (percentage < 100) return 'text-primary'
+  if (percentage < 90) return 'text-primary'
+  if (percentage < 100) return 'text-warning'
   if (percentage === 100) return 'text-positive'
-  if (percentage <= 110) return 'text-warning'
   return 'text-negative'
 }
 

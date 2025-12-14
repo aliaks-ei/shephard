@@ -153,18 +153,18 @@ const remainingAmountColor = computed(() => getBudgetRemainingColorClass(percent
 const statusIcon = computed(() => {
   const percentage = percentageUsed.value
 
-  // No icon when under or at budget
-  if (percentage <= 100) return null
+  // No icon when under 90% or exactly at budget
+  if (percentage < 90 || percentage === 100) return null
 
-  // Warning icon when 101-110%
-  if (percentage <= 110) {
+  // Warning icon when approaching limit (90% to <100%)
+  if (percentage < 100) {
     return {
       icon: 'eva-alert-triangle-outline',
       color: 'warning',
     }
   }
 
-  // Over budget icon when > 110%
+  // Over budget icon when > 100%
   return {
     icon: 'eva-alert-circle-outline',
     color: 'negative',
@@ -174,8 +174,8 @@ const statusIcon = computed(() => {
 const statusTooltip = computed(() => {
   const percentage = percentageUsed.value
 
-  if (percentage <= 100) return ''
-  if (percentage <= 110) return 'Budget Warning: Approaching limit'
-  return 'Over Budget: Exceeded by more than 10%'
+  if (percentage < 90 || percentage === 100) return ''
+  if (percentage < 100) return 'Budget Warning: Approaching limit'
+  return 'Over Budget'
 })
 </script>

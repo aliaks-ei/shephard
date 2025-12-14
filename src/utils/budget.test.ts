@@ -7,48 +7,50 @@ import {
 
 describe('budget utils', () => {
   describe('getBudgetProgressColor', () => {
-    it('should return "primary" for percentage below 100', () => {
+    it('should return "primary" for percentage below 90', () => {
       expect(getBudgetProgressColor(0)).toBe('primary')
       expect(getBudgetProgressColor(50)).toBe('primary')
-      expect(getBudgetProgressColor(99.9)).toBe('primary')
+      expect(getBudgetProgressColor(89.9)).toBe('primary')
+    })
+
+    it('should return "warning" for percentage between 90 and 100 (approaching limit)', () => {
+      expect(getBudgetProgressColor(90)).toBe('warning')
+      expect(getBudgetProgressColor(95)).toBe('warning')
+      expect(getBudgetProgressColor(99.9)).toBe('warning')
     })
 
     it('should return "positive" for percentage exactly 100', () => {
       expect(getBudgetProgressColor(100)).toBe('positive')
     })
 
-    it('should return "warning" for percentage between 100 and 110', () => {
-      expect(getBudgetProgressColor(100.1)).toBe('warning')
-      expect(getBudgetProgressColor(105)).toBe('warning')
-      expect(getBudgetProgressColor(110)).toBe('warning')
-    })
-
-    it('should return "negative" for percentage above 110', () => {
-      expect(getBudgetProgressColor(110.1)).toBe('negative')
+    it('should return "negative" for percentage above 100', () => {
+      expect(getBudgetProgressColor(100.1)).toBe('negative')
+      expect(getBudgetProgressColor(110)).toBe('negative')
       expect(getBudgetProgressColor(150)).toBe('negative')
       expect(getBudgetProgressColor(999)).toBe('negative')
     })
   })
 
   describe('getBudgetRemainingColorClass', () => {
-    it('should return "text-primary" for percentage below 100', () => {
+    it('should return "text-primary" for percentage below 90', () => {
       expect(getBudgetRemainingColorClass(0)).toBe('text-primary')
       expect(getBudgetRemainingColorClass(50)).toBe('text-primary')
-      expect(getBudgetRemainingColorClass(99.9)).toBe('text-primary')
+      expect(getBudgetRemainingColorClass(89.9)).toBe('text-primary')
+    })
+
+    it('should return "text-warning" for percentage between 90 and 100 (approaching limit)', () => {
+      expect(getBudgetRemainingColorClass(90)).toBe('text-warning')
+      expect(getBudgetRemainingColorClass(95)).toBe('text-warning')
+      expect(getBudgetRemainingColorClass(99.9)).toBe('text-warning')
     })
 
     it('should return "text-positive" for percentage exactly 100', () => {
       expect(getBudgetRemainingColorClass(100)).toBe('text-positive')
     })
 
-    it('should return "text-warning" for percentage between 100 and 110', () => {
-      expect(getBudgetRemainingColorClass(100.1)).toBe('text-warning')
-      expect(getBudgetRemainingColorClass(105)).toBe('text-warning')
-      expect(getBudgetRemainingColorClass(110)).toBe('text-warning')
-    })
-
-    it('should return "text-negative" for percentage above 110', () => {
-      expect(getBudgetRemainingColorClass(110.1)).toBe('text-negative')
+    it('should return "text-negative" for percentage above 100', () => {
+      expect(getBudgetRemainingColorClass(100.1)).toBe('text-negative')
+      expect(getBudgetRemainingColorClass(110)).toBe('text-negative')
       expect(getBudgetRemainingColorClass(150)).toBe('text-negative')
       expect(getBudgetRemainingColorClass(999)).toBe('text-negative')
     })
