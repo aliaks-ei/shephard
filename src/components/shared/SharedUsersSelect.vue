@@ -18,6 +18,7 @@
       outlined
       dense
       :loading="loading"
+      hide-bottom-space
       @filter="filterUsers"
       @update:model-value="emit('update:model-value', $event)"
     >

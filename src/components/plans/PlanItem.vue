@@ -13,6 +13,7 @@
         outlined
         item-aligned
         inputmode="text"
+        hide-bottom-space
         @update:model-value="updateName"
       />
     </q-item-section>
@@ -31,6 +32,7 @@
         item-aligned
         no-error-icon
         inputmode="decimal"
+        hide-bottom-space
         @update:model-value="updateAmount"
       />
     </q-item-section>
@@ -57,7 +59,7 @@
       <q-btn
         flat
         round
-        :size="$q.screen.lt.md ? 'sm' : 'md'"
+        size="sm"
         dense
         icon="eva-trash-2-outline"
         color="negative"

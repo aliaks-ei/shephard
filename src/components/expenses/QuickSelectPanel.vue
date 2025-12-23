@@ -138,6 +138,7 @@
               no-error-icon
               inputmode="none"
               :rules="[(val: string) => !!val || 'Date is required']"
+              hide-bottom-space
               @update:model-value="handleUpdateExpenseDate"
             >
               <template #append>

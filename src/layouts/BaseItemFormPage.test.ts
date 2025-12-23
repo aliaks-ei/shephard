@@ -12,7 +12,6 @@ type BaseItemFormPageProps = ComponentProps<typeof BaseItemFormPage>
 const renderBaseItemFormPage = (props: Partial<BaseItemFormPageProps> = {}) => {
   const defaultProps: BaseItemFormPageProps = {
     pageTitle: 'Test Form',
-    pageIcon: 'eva-edit-outline',
   }
 
   return mount(BaseItemFormPage, {
@@ -44,7 +43,6 @@ it('should emit back event when DetailPageLayout emits back', async () => {
   const wrapper = mount(BaseItemFormPage, {
     props: {
       pageTitle: 'Test Form',
-      pageIcon: 'eva-edit-outline',
     },
     global: {
       stubs: {
@@ -65,7 +63,6 @@ it('should emit action-clicked event when DetailPageLayout emits it', async () =
   const wrapper = mount(BaseItemFormPage, {
     props: {
       pageTitle: 'Test Form',
-      pageIcon: 'eva-edit-outline',
     },
     global: {
       stubs: {
@@ -87,7 +84,6 @@ it('should render default slot content', () => {
   const wrapper = mount(BaseItemFormPage, {
     props: {
       pageTitle: 'Test Form',
-      pageIcon: 'eva-edit-outline',
     },
     slots: {
       default: '<div data-testid="form-content">Form fields here</div>',
@@ -110,7 +106,6 @@ it('should render dialogs slot content', () => {
   const wrapper = mount(BaseItemFormPage, {
     props: {
       pageTitle: 'Test Form',
-      pageIcon: 'eva-edit-outline',
     },
     slots: {
       dialogs: '<div data-testid="dialog-content">Dialog here</div>',

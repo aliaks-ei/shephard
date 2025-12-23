@@ -12,7 +12,6 @@ type DetailPageLayoutProps = ComponentProps<typeof DetailPageLayout>
 const renderDetailPageLayout = (props: Partial<DetailPageLayoutProps> = {}) => {
   const defaultProps: DetailPageLayoutProps = {
     pageTitle: 'Test Page',
-    pageIcon: 'eva-settings-outline',
   }
 
   return mount(DetailPageLayout, {
@@ -70,21 +69,16 @@ it('should emit back event when back button is clicked', async () => {
   expect(wrapper.emitted('back')).toHaveLength(1)
 })
 
-it('should render page title with icon in toolbar', () => {
+it('should render page title in toolbar', () => {
   const wrapper = renderDetailPageLayout({
     pageTitle: 'Custom Title',
-    pageIcon: 'eva-star-outline',
   })
 
   const toolbarTitle = wrapper.find('.q-toolbar__title')
   const titleRow = toolbarTitle.find('.row.items-center')
-  const icon = titleRow.find('.q-icon')
 
   expect(toolbarTitle.exists()).toBe(true)
   expect(titleRow.exists()).toBe(true)
-  expect(icon.exists()).toBe(true)
-  expect(icon.classes()).toContain('eva-star-outline')
-  expect(icon.classes()).toContain('q-mr-sm')
   expect(toolbarTitle.text()).toContain('Custom Title')
 })
 
@@ -140,7 +134,6 @@ it('should render content slot when isLoading is false', () => {
   const wrapper = mount(DetailPageLayout, {
     props: {
       pageTitle: 'Test Page',
-      pageIcon: 'eva-settings-outline',
       isLoading: false,
     },
     slots: {
@@ -166,7 +159,6 @@ it('should render content slot by default when isLoading is not provided', () =>
   const wrapper = mount(DetailPageLayout, {
     props: {
       pageTitle: 'Test Page',
-      pageIcon: 'eva-settings-outline',
     },
     slots: {
       default: '<div data-testid="default-content">Default content</div>',
@@ -190,7 +182,6 @@ it('should render dialogs slot', () => {
   const wrapper = mount(DetailPageLayout, {
     props: {
       pageTitle: 'Test Page',
-      pageIcon: 'eva-settings-outline',
     },
     slots: {
       dialogs: '<div data-testid="dialogs-slot">Dialog content</div>',
@@ -212,7 +203,6 @@ it('should render all slots simultaneously', () => {
   const wrapper = mount(DetailPageLayout, {
     props: {
       pageTitle: 'Test Page',
-      pageIcon: 'eva-settings-outline',
       isLoading: false,
     },
     slots: {
@@ -245,7 +235,6 @@ it('should pass actions to ActionBar', () => {
   const wrapper = mount(DetailPageLayout, {
     props: {
       pageTitle: 'Test Page',
-      pageIcon: 'eva-settings-outline',
       actions,
     },
     global: {
@@ -268,7 +257,6 @@ it('should emit action-clicked event when ActionBar emits it', async () => {
   const wrapper = mount(DetailPageLayout, {
     props: {
       pageTitle: 'Test Page',
-      pageIcon: 'eva-settings-outline',
       actions: [
         {
           key: 'save',

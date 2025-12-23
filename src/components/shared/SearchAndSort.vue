@@ -19,6 +19,7 @@
             clearable
             no-error-icon
             inputmode="search"
+            hide-bottom-space
             @update:model-value="emit('update:searchQuery', $event?.toString() ?? '')"
           >
             <template #prepend>
@@ -39,6 +40,7 @@
             outlined
             emit-value
             map-options
+            hide-bottom-space
             @update:model-value="emit('update:sortBy', $event)"
           >
             <template

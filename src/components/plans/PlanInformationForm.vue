@@ -26,6 +26,7 @@
         inputmode="text"
         :readonly="readonly"
         :rules="[(val) => !!val || 'Plan name is required']"
+        hide-bottom-space
         @update:model-value="(val) => updateField('name', String(val ?? ''))"
       />
     </div>
@@ -48,6 +49,7 @@
           inputmode="none"
           :readonly="readonly"
           :rules="startDateRules"
+          hide-bottom-space
           @update:model-value="(val) => handleStartDateUpdate(String(val ?? ''))"
         >
           <template #append>
@@ -97,6 +99,7 @@
           readonly
           :rules="[(val: string) => !!val || 'End date is required']"
           hint="Auto-calculated from template"
+          :hide-bottom-space="false"
         />
       </div>
     </div>

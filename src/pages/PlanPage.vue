@@ -1,7 +1,6 @@
 <template>
   <BaseItemFormPage
     :page-title="pageTitle"
-    :page-icon="pageIcon"
     :is-loading="isPlanLoading"
     :actions="actionBarActions"
     :actions-visible="actionsVisible"
@@ -241,12 +240,9 @@ const pageConfig = {
   entityNamePlural: 'Plans',
   listRoute: '/plans',
   listIcon: 'eva-calendar-outline',
-  createIcon: 'eva-plus-circle-outline',
-  editIcon: 'eva-edit-outline',
-  viewIcon: 'eva-eye-outline',
 }
 
-const { pageTitle, pageIcon } = useDetailPageState(pageConfig, isNewPlan.value, !isEditMode.value)
+const { pageTitle } = useDetailPageState(pageConfig, isNewPlan.value, !isEditMode.value)
 
 const { openDialog, closeDialog, getDialogState } = useEditablePage()
 

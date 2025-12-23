@@ -202,23 +202,15 @@ describe('CustomEntryPanel', () => {
     expect(wrapper.emitted('update:expenseDate')).toBeTruthy()
   })
 
-  it('should always display budget impact card', () => {
+  it('should not display budget impact card when no category is selected', () => {
     const wrapper = mount(CustomEntryPanel, {
       props: defaultProps,
     })
 
-    expect(wrapper.text()).toContain('Budget Impact')
+    expect(wrapper.text()).not.toContain('Budget Impact')
   })
 
-  it('should show empty state when no category is selected', () => {
-    const wrapper = mount(CustomEntryPanel, {
-      props: defaultProps,
-    })
-
-    expect(wrapper.text()).toContain('Select a category and enter amount to see budget impact')
-  })
-
-  it('should show current budget state when category selected but no amount', () => {
+  it('should not display budget impact card when no amount is provided', () => {
     const wrapper = mount(CustomEntryPanel, {
       props: {
         ...defaultProps,
@@ -230,11 +222,25 @@ describe('CustomEntryPanel', () => {
       },
     })
 
-    expect(wrapper.text()).toContain('Remaining:')
-    expect(wrapper.text()).toContain('Enter an amount to see the impact on this budget')
+    expect(wrapper.text()).not.toContain('Budget Impact')
   })
 
-  it('should show full impact analysis when category and amount are provided', () => {
+  it('should not display budget impact card when amount is zero', () => {
+    const wrapper = mount(CustomEntryPanel, {
+      props: {
+        ...defaultProps,
+        planId: 'plan-1',
+        selectedPlan: mockPlan,
+        categoryId: 'cat-1',
+        categoryOptions: mockCategoryOptions,
+        amount: 0,
+      },
+    })
+
+    expect(wrapper.text()).not.toContain('Budget Impact')
+  })
+
+  it('should display budget impact card when all required information is provided', () => {
     const wrapper = mount(CustomEntryPanel, {
       props: {
         ...defaultProps,
@@ -246,6 +252,7 @@ describe('CustomEntryPanel', () => {
       },
     })
 
+    expect(wrapper.text()).toContain('Budget Impact')
     expect(wrapper.text()).toContain('Current:')
     expect(wrapper.text()).toContain('Adding:')
     expect(wrapper.text()).toContain('After:')

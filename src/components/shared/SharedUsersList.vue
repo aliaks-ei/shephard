@@ -34,6 +34,7 @@
             emit-value
             map-options
             style="min-width: 100px"
+            hide-bottom-space
             @update:model-value="(value) => emit('update:user-permission', user.user_id, value)"
           />
           <q-btn

@@ -100,7 +100,6 @@ vi.mock('src/composables/usePlanItems', () => ({
 
 const mockUseDetailPageState = {
   pageTitle: ref('Edit Plan'),
-  pageIcon: ref('eva-edit-outline'),
 }
 
 vi.mock('src/composables/useDetailPageState', () => ({

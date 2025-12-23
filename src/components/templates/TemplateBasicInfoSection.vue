@@ -1,105 +1,110 @@
 <template>
   <q-card
     flat
-    bordered
-    :class="$q.screen.lt.md ? 'q-pa-md q-mb-md' : 'q-px-md q-pt-md q-mb-lg'"
+    :class="$q.screen.lt.md ? 'q-mb-md' : ' q-mb-lg'"
   >
-    <div
-      class="row"
-      :class="$q.screen.lt.md ? 'q-col-gutter-sm' : 'q-col-gutter-md'"
-    >
-      <div class="col-12 col-sm-8">
-        <SectionHeader
-          icon="eva-info-outline"
-          title="Basic Information"
-        />
-        <label
-          for="template-name-label"
-          class="form-label form-label--required"
-        >
-          Template Name
-        </label>
-        <q-input
-          v-if="readonly"
-          for="template-name-label"
-          :model-value="modelValue.name"
-          dense
-          outlined
-          readonly
-          no-error-icon
-          inputmode="text"
-        />
-        <q-input
-          v-else
-          for="template-name-label"
-          :model-value="modelValue.name"
-          placeholder="e.g., Monthly Expenses"
-          dense
-          outlined
-          no-error-icon
-          inputmode="text"
-          :rules="nameRules"
-          :error="nameError"
-          :error-message="nameErrorMessage"
-          @update:model-value="(val) => updateName(String(val ?? ''))"
-        />
+    <q-card-section>
+      <SectionHeader
+        icon="eva-info-outline"
+        title="Basic Information"
+      />
+      <div
+        class="row"
+        :class="$q.screen.lt.md ? 'q-col-gutter-sm' : 'q-col-gutter-md'"
+      >
+        <div class="col-12 col-sm-8">
+          <label
+            for="template-name-label"
+            class="form-label form-label--required"
+          >
+            Template Name
+          </label>
+          <q-input
+            v-if="readonly"
+            for="template-name-label"
+            :model-value="modelValue.name"
+            dense
+            outlined
+            readonly
+            no-error-icon
+            inputmode="text"
+            hide-bottom-space
+          />
+          <q-input
+            v-else
+            for="template-name-label"
+            :model-value="modelValue.name"
+            placeholder="e.g., Monthly Expenses"
+            dense
+            outlined
+            no-error-icon
+            inputmode="text"
+            :rules="nameRules"
+            :error="nameError"
+            :error-message="nameErrorMessage"
+            :hide-bottom-space="!nameError"
+            @update:model-value="(val) => updateName(String(val ?? ''))"
+          />
+        </div>
+        <div class="col-6 col-sm-2">
+          <label
+            for="template-duration-label"
+            class="form-label"
+          >
+            Duration
+          </label>
+          <q-chip
+            v-if="readonly"
+            :label="modelValue.duration"
+            color="primary"
+            text-color="primary"
+            class="text-capitalize"
+            :ripple="false"
+            outline
+          />
+          <q-select
+            v-else
+            for="template-duration-label"
+            :model-value="modelValue.duration"
+            :options="durationOptions"
+            dense
+            outlined
+            emit-value
+            map-options
+            hide-bottom-space
+            @update:model-value="updateDuration"
+          />
+        </div>
+        <div class="col-6 col-sm-2">
+          <label
+            for="template-currency-label"
+            class="form-label"
+          >
+            Currency
+          </label>
+          <q-chip
+            v-if="readonly"
+            :label="modelValue.currency"
+            color="primary"
+            text-color="primary"
+            :ripple="false"
+            outline
+          />
+          <q-select
+            v-else
+            for="template-currency-label"
+            :model-value="modelValue.currency"
+            :options="currencyOptions"
+            dense
+            outlined
+            emit-value
+            map-options
+            hide-bottom-space
+            @update:model-value="updateCurrency"
+          />
+        </div>
       </div>
-      <div class="col-6 col-sm-2">
-        <label
-          for="template-duration-label"
-          class="form-label"
-        >
-          Duration
-        </label>
-        <q-chip
-          v-if="readonly"
-          :label="modelValue.duration"
-          color="primary"
-          text-color="primary"
-          class="text-capitalize"
-          :ripple="false"
-          outline
-        />
-        <q-select
-          v-else
-          for="template-duration-label"
-          :model-value="modelValue.duration"
-          :options="durationOptions"
-          dense
-          outlined
-          emit-value
-          map-options
-          @update:model-value="updateDuration"
-        />
-      </div>
-      <div class="col-6 col-sm-2">
-        <label
-          for="template-currency-label"
-          class="form-label"
-        >
-          Currency
-        </label>
-        <q-chip
-          v-if="readonly"
-          :label="modelValue.currency"
-          color="primary"
-          text-color="primary"
-          :ripple="false"
-          outline
-        />
-        <q-select
-          v-else
-          for="template-currency-label"
-          :model-value="modelValue.currency"
-          :options="currencyOptions"
-          dense
-          outlined
-          emit-value
-          map-options
-          @update:model-value="updateCurrency"
-        />
-      </div>
-    </div>
+    </q-card-section>
   </q-card>
 </template>
 

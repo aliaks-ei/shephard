@@ -33,6 +33,7 @@
       :loading="loading"
       :error="error"
       :error-message="errorMessage"
+      :hide-bottom-space="!error"
       @update:model-value="handleTemplateSelected"
     >
       <template #option="scope">

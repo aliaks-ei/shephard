@@ -45,6 +45,7 @@
           no-error-icon
           clearable
           inputmode="search"
+          hide-bottom-space
         >
           <template #prepend>
             <q-icon name="eva-search-outline" />

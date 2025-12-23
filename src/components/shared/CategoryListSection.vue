@@ -101,7 +101,10 @@
     </div>
 
     <!-- Summary Section (Total Amount) -->
-    <slot name="summary" />
+    <slot
+      v-if="showSummary"
+      name="summary"
+    />
   </q-card>
 </template>
 
@@ -125,6 +128,7 @@ interface Props {
   bordered?: boolean
   padding?: boolean
   transparent?: boolean
+  showSummary?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -141,6 +145,7 @@ const props = withDefaults(defineProps<Props>(), {
   bordered: true,
   padding: true,
   transparent: false,
+  showSummary: true,
 })
 
 defineEmits<{

@@ -11,37 +11,13 @@
       @clear-name-error="handleClearNameError"
     />
 
-    <CategoryItemsManager
-      :category-groups="categoryGroups"
-      :categories="categories"
-      :total-amount="totalAmount"
-      :currency="currency"
-      header-icon="eva-grid-outline"
-      header-title="Categories"
-      :all-expanded="allExpanded"
-      :has-duplicates="hasDuplicates"
-      duplicate-banner-position="top"
-      duplicate-banner-class="bg-orange-1 text-orange-8"
-      show-item-count
-      @toggle-expand="handleToggleExpand"
+    <!-- Empty state as separate card when no categories -->
+    <q-card
+      v-if="categoryGroups.length === 0"
+      flat
+      class="q-mb-md"
     >
-      <template #header-actions>
-        <q-btn
-          v-if="!$q.screen.lt.md"
-          icon="eva-plus-outline"
-          label="Add category"
-          color="primary"
-          no-caps
-          @click="handleOpenCategoryDialog"
-        />
-      </template>
-
-      <template #duplicate-message>
-        You have duplicate item names within the same category. Please use unique names for each
-        item.
-      </template>
-
-      <template #empty-state>
+      <q-card-section>
         <div class="text-center q-py-xl">
           <q-icon
             name="eva-grid-outline"
@@ -54,37 +30,103 @@
           </div>
           <q-btn
             color="primary"
-            icon="eva-plus-outline"
             label="Add Your First Category"
             unelevated
             no-caps
             @click="handleOpenCategoryDialog"
           />
         </div>
-      </template>
+      </q-card-section>
+    </q-card>
 
-      <template #category="{ category }">
-        <TemplateCategory
-          :ref="(el) => props.setCategoryRef(el, category.categoryId)"
-          :category-id="category.categoryId"
-          :category-name="category.categoryName"
-          :category-color="category.categoryColor"
-          :category-icon="category.categoryIcon"
-          :items="category.items"
-          :currency="currency"
-          :readonly="false"
-          :default-expanded="props.allExpanded || category.categoryId === props.lastAddedCategoryId"
-          @update-item="handleUpdateItem"
-          @remove-item="handleRemoveItem"
-          @add-item="handleAddItem"
-        />
-      </template>
-    </CategoryItemsManager>
+    <!-- Categories section when there are items -->
+    <template v-else>
+      <CategoryItemsManager
+        :category-groups="categoryGroups"
+        :categories="categories"
+        :total-amount="totalAmount"
+        :currency="currency"
+        header-icon="eva-grid-outline"
+        header-title="Categories"
+        :all-expanded="allExpanded"
+        :has-duplicates="hasDuplicates"
+        duplicate-banner-position="top"
+        duplicate-banner-class="bg-orange-1 text-orange-8"
+        show-item-count
+        :bordered="false"
+        :padding="false"
+        transparent
+        :show-summary="false"
+        @toggle-expand="handleToggleExpand"
+      >
+        <template #header-actions>
+          <q-btn
+            v-if="!$q.screen.lt.md"
+            label="Add category"
+            color="primary"
+            no-caps
+            @click="handleOpenCategoryDialog"
+          />
+        </template>
+
+        <template #duplicate-message>
+          You have duplicate item names within the same category. Please use unique names for each
+          item.
+        </template>
+
+        <template #category="{ category }">
+          <TemplateCategory
+            :ref="(el) => props.setCategoryRef(el, category.categoryId)"
+            :category-id="category.categoryId"
+            :category-name="category.categoryName"
+            :category-color="category.categoryColor"
+            :category-icon="category.categoryIcon"
+            :items="category.items"
+            :currency="currency"
+            :readonly="false"
+            :default-expanded="
+              props.allExpanded || category.categoryId === props.lastAddedCategoryId
+            "
+            @update-item="handleUpdateItem"
+            @remove-item="handleRemoveItem"
+            @add-item="handleAddItem"
+          />
+        </template>
+      </CategoryItemsManager>
+
+      <!-- Total Amount as separate card -->
+      <q-card
+        flat
+        class="q-mt-md"
+      >
+        <q-card-section>
+          <div class="row items-center justify-between">
+            <div class="row items-center">
+              <q-icon
+                name="eva-credit-card-outline"
+                class="q-mr-sm"
+                size="20px"
+              />
+              <h3 class="text-h6 q-my-none">Total Amount</h3>
+            </div>
+            <div
+              :class="['text-primary text-weight-bold', $q.screen.lt.md ? 'text-h5' : 'text-h4']"
+            >
+              {{ formattedTotal }}
+            </div>
+          </div>
+          <div class="text-body2 text-grey-6">
+            Total across {{ categoryGroups.length }}
+            {{ categoryGroups.length === 1 ? 'category' : 'categories' }}
+          </div>
+        </q-card-section>
+      </q-card>
+    </template>
   </q-form>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import type { QForm } from 'quasar'
 import TemplateBasicInfoSection from './TemplateBasicInfoSection.vue'
 import TemplateCategory from './TemplateCategory.vue'
@@ -92,7 +134,7 @@ import CategoryItemsManager from 'src/components/shared/CategoryItemsManager.vue
 import type { Category } from 'src/api'
 import type { TemplateItemUI } from 'src/types'
 import type { CategoryGroup } from 'src/composables/useItemsManager'
-import type { CurrencyCode } from 'src/utils/currency'
+import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 
 interface Props {
   form: {
@@ -113,6 +155,8 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
+const formattedTotal = computed(() => formatCurrency(props.totalAmount, props.currency))
 
 const emit = defineEmits<{
   (e: 'submit'): void

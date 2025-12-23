@@ -23,6 +23,7 @@
         inputmode="email"
         :rules="emailRules()"
         lazy-rules="ondemand"
+        hide-bottom-space
       />
     </div>
 

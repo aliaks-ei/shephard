@@ -112,6 +112,7 @@
         inputmode="text"
         :rules="nameRules"
         :disable="!selectedPlan"
+        hide-bottom-space
         @update:model-value="handleUpdateName"
       />
     </label>
@@ -133,7 +134,7 @@
           dense
           no-error-icon
           inputmode="decimal"
-          :hide-bottom-space="!!shouldShowConversion"
+          hide-bottom-space
           :rules="amountRules"
           :disable="!selectedPlan"
           @update:model-value="handleUpdateAmount"
@@ -152,10 +153,12 @@
           :options="currencyOptions"
           outlined
           dense
+          no-error-icon
           emit-value
           map-options
-          style="min-width: 80px"
+          class="currency-select"
           :disable="!selectedPlan"
+          hide-bottom-space
         />
       </label>
     </div>
@@ -232,6 +235,7 @@
                 ? 'Category selected by AI'
                 : undefined
           "
+          :hide-bottom-space="!aiCategorization.isCategorizing.value && !isAiSelected"
           @update:model-value="handleUpdateCategoryId"
         >
           <template
@@ -241,7 +245,7 @@
             <CategoryIcon
               :color="selectedCategoryOption.color"
               :icon="selectedCategoryOption.icon"
-              size="sm"
+              size="xs"
             />
           </template>
           <template #append>
@@ -355,6 +359,7 @@
         no-error-icon
         inputmode="none"
         :rules="[(val: string) => !!val || 'Date is required']"
+        hide-bottom-space
         @update:model-value="handleUpdateExpenseDate"
       >
         <template #append>
@@ -390,7 +395,7 @@
 
     <!-- Budget Impact Display -->
     <BudgetImpactCard
-      v-if="categoryId && effectiveAmount !== null && effectiveAmount > 0"
+      v-if="categoryId && effectiveAmount && effectiveAmount > 0 && selectedCategoryOption"
       :category-id="categoryId"
       :amount="effectiveAmount"
       :currency="(selectedPlan?.currency as CurrencyCode) ?? null"
@@ -628,3 +633,13 @@ watch(
   },
 )
 </script>
+
+<style lang="scss" scoped>
+.currency-select {
+  min-width: 80px;
+
+  :deep(.q-field__control) {
+    height: 40px;
+  }
+}
+</style>
