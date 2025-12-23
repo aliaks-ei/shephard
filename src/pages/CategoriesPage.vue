@@ -17,8 +17,32 @@
     <!-- Loading State -->
     <ListPageSkeleton
       v-if="categoriesStore.isLoading"
-      :count="8"
-    />
+      :count="12"
+      column-class="col-6 col-sm-4 col-md-3 col-lg-2"
+    >
+      <q-item class="q-pa-sm full-height column flex-center text-center">
+        <q-item-section class="q-mb-xs">
+          <q-skeleton
+            type="QAvatar"
+            :size="$q.screen.lt.sm ? '32px' : '48px'"
+          />
+        </q-item-section>
+
+        <q-item-section class="full-width">
+          <q-skeleton
+            type="text"
+            width="60%"
+            class="q-mx-auto"
+          />
+          <q-skeleton
+            type="text"
+            width="30%"
+            height="10px"
+            class="q-mx-auto q-mt-xs"
+          />
+        </q-item-section>
+      </q-item>
+    </ListPageSkeleton>
 
     <!-- Categories Grid -->
     <div
@@ -29,7 +53,7 @@
       <div
         v-for="category in filteredCategories"
         :key="category.id"
-        class="col-12 col-sm-6 col-md-4"
+        class="col-6 col-sm-4 col-md-3 col-lg-2"
       >
         <q-card
           :bordered="$q.dark.isActive"
@@ -37,55 +61,36 @@
         >
           <q-item
             clickable
-            class="q-pa-md full-height"
+            class="q-pa-sm full-height column flex-center text-center"
             @click="openCategoryPreview(category)"
           >
-            <!-- Mobile Layout: Icon + Title in same row -->
-            <q-item-section
-              v-if="$q.screen.xs"
-              avatar
-            >
+            <q-item-section class="q-mb-xs">
               <CategoryIcon
                 :color="category.color"
                 :icon="category.icon"
-                size="sm"
+                :size="$q.screen.lt.sm ? 'sm' : 'md'"
               />
             </q-item-section>
 
-            <q-item-section v-if="$q.screen.xs">
-              <q-item-label class="text-weight-medium text-body1">
+            <q-item-section>
+              <q-item-label
+                class="text-weight-medium text-body2"
+                :class="{ 'text-caption': $q.screen.lt.sm }"
+              >
                 {{ category.name }}
               </q-item-label>
-              <q-item-label caption>
+              <q-item-label
+                caption
+                style="font-size: 0.7rem"
+              >
                 {{ category.templates.length }}
                 {{ category.templates.length === 1 ? 'template' : 'templates' }}
               </q-item-label>
             </q-item-section>
 
-            <!-- Desktop Layout: Centered vertical layout -->
-            <q-item-section
-              v-if="!$q.screen.xs"
-              class="column items-center text-center"
-            >
-              <CategoryIcon
-                :color="category.color"
-                :icon="category.icon"
-                size="md"
-                class="q-mb-md"
-              />
-
-              <h3 class="text-weight-medium text-body1 q-my-none">
-                {{ category.name }}
-              </h3>
-
-              <p class="text-caption text-grey-7 q-mb-none">
-                {{ category.templates.length }}
-                {{ category.templates.length === 1 ? 'template' : 'templates' }}
-              </p>
-            </q-item-section>
             <div
               class="absolute-bottom"
-              :style="{ backgroundColor: category.color, height: '4px' }"
+              :style="{ backgroundColor: category.color, height: '3px' }"
             ></div>
           </q-item>
         </q-card>
