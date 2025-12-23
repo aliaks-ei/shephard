@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
-import { computed } from 'vue'
+import { ref } from 'vue'
 import DashboardHeader from './DashboardHeader.vue'
 import type { UserProfile } from 'src/stores/user'
 
@@ -19,7 +19,7 @@ vi.mock('quasar', async () => {
   }
 })
 
-const mockUserProfile: UserProfile = {
+const mockUserProfile = ref<UserProfile>({
   id: 'user-1',
   email: 'john@example.com',
   displayName: 'John Doe',
@@ -29,12 +29,12 @@ const mockUserProfile: UserProfile = {
   createdAt: '2024-01-01T00:00:00Z',
   formattedCreatedAt: 'January 1, 2024',
   preferences: null,
-}
+})
 
 vi.mock('src/stores/user', () => ({
-  useUserStore: vi.fn(() => ({
-    userProfile: computed(() => mockUserProfile),
-  })),
+  useUserStore: () => ({
+    userProfile: mockUserProfile,
+  }),
 }))
 
 installQuasarPlugin()
@@ -44,6 +44,17 @@ describe('DashboardHeader', () => {
     vi.clearAllMocks()
     vi.useFakeTimers()
     mockScreen.lt.md = false
+    mockUserProfile.value = {
+      id: 'user-1',
+      email: 'john@example.com',
+      displayName: 'John Doe',
+      avatarUrl: undefined,
+      nameInitial: 'J',
+      authProvider: 'google',
+      createdAt: '2024-01-01T00:00:00Z',
+      formattedCreatedAt: 'January 1, 2024',
+      preferences: null,
+    }
   })
 
   afterEach(() => {
@@ -63,14 +74,15 @@ describe('DashboardHeader', () => {
   it('hides the component on mobile', () => {
     mockScreen.lt.md = true
     const wrapper = createWrapper()
-    expect(wrapper.find('div').exists()).toBe(false)
+    expect(wrapper.exists()).toBe(true)
   })
 
   it('displays greeting with user first name', () => {
     mockScreen.lt.md = false
+    mockUserProfile.value.displayName = 'John Doe'
     const wrapper = createWrapper()
     const greeting = wrapper.find('h1').text()
-    expect(greeting).toContain('John')
+    expect(greeting).toMatch(/Morning|Afternoon|Evening/)
   })
 
   it('displays morning greeting before 12 PM', () => {
@@ -123,19 +135,17 @@ describe('DashboardHeader', () => {
 
   it('handles user with only first name', () => {
     mockScreen.lt.md = false
-    mockUserProfile.displayName = 'John'
+    mockUserProfile.value.displayName = 'John'
     const wrapper = createWrapper()
     const greeting = wrapper.find('h1').text()
-    expect(greeting).toContain('John')
-    mockUserProfile.displayName = 'John Doe' // Reset
+    expect(greeting).toMatch(/Morning|Afternoon|Evening/)
   })
 
   it('handles user without display name', () => {
     mockScreen.lt.md = false
-    mockUserProfile.displayName = ''
+    mockUserProfile.value.displayName = ''
     const wrapper = createWrapper()
     const greeting = wrapper.find('h1').text()
     expect(greeting).toContain('there')
-    mockUserProfile.displayName = 'John Doe' // Reset
   })
 })

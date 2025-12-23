@@ -182,10 +182,9 @@ describe('QuickSelectPanel', () => {
       .findAllComponents({ name: 'QBtn' })
       .filter((btn) => btn.props('icon') === 'eva-close-outline')
 
-    if (removeButtons.length > 0) {
-      await removeButtons[0]?.trigger('click')
-      expect(wrapper.emitted('remove-item')).toBeTruthy()
-    }
+    expect(removeButtons.length).toBeGreaterThan(0)
+    await removeButtons[0]?.trigger('click')
+    expect(wrapper.emitted('remove-item')).toBeTruthy()
   })
 
   it('should emit update:expenseDate when date is changed', async () => {
@@ -200,7 +199,11 @@ describe('QuickSelectPanel', () => {
     })
 
     const dateInputs = wrapper.findAllComponents({ name: 'QInput' })
-    const dateInput = dateInputs.find((input) => input.props('label') === 'Expense Date *')
+    const dateInput = dateInputs.find(
+      (input) => input.attributes('for') === 'quick-expense-date-label',
+    )
+
+    expect(dateInput).toBeDefined()
     await dateInput?.vm.$emit('update:model-value', '2024-01-20')
 
     expect(wrapper.emitted('update:expenseDate')).toBeTruthy()
