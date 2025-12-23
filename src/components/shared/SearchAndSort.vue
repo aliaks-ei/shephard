@@ -1,10 +1,9 @@
 <template>
   <q-card
-    class="q-mb-lg"
+    class="bg-transparent q-mb-lg"
     flat
-    bordered
   >
-    <q-card-section>
+    <q-card-section class="q-pa-none">
       <div
         class="row items-center"
         :class="$q.screen.lt.md ? 'q-col-gutter-sm' : 'q-col-gutter-md'"
@@ -19,6 +18,7 @@
             clearable
             no-error-icon
             inputmode="search"
+            bg-color="white"
             hide-bottom-space
             @update:model-value="emit('update:searchQuery', $event?.toString() ?? '')"
           >
@@ -41,6 +41,7 @@
             emit-value
             map-options
             hide-bottom-space
+            bg-color="white"
             @update:model-value="emit('update:sortBy', $event)"
           >
             <template

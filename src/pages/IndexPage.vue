@@ -1,5 +1,5 @@
 <template>
-  <section class="q-pa-sm q-pa-md-md">
+  <section class="q-pa-xs q-pa-md-md">
     <div class="row justify-center">
       <div class="col-12 col-md-10 col-lg-8 col-xl-6">
         <!-- Dashboard Header -->
