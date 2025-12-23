@@ -1,7 +1,6 @@
 <template>
   <DetailPageLayout
     :page-title="pageTitle"
-    :page-icon="pageIcon"
     :banners="computedBanners"
     :is-loading="isLoading ?? false"
     :actions="actions ?? []"
@@ -25,7 +24,6 @@ import type { ActionBarAction } from 'src/components/shared/ActionBar.vue'
 
 interface Props {
   pageTitle: string
-  pageIcon: string
   isLoading?: boolean
   actions?: ActionBarAction[]
   actionsVisible?: boolean

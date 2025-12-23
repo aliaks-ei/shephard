@@ -7,6 +7,7 @@
       :src="avatarUrl"
       :ratio="1"
       no-spinner
+      alt=""
       referrerpolicy="no-referrer"
       crossorigin="anonymous"
       @error="imageError = true"

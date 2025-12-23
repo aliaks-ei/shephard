@@ -85,4 +85,25 @@ export default defineConfigWithVueTs(
 
   prettierSkipFormatting,
   ...pluginVueA11y.configs['flat/recommended'],
+  {
+    files: ['**/*.vue'],
+    rules: {
+      // Quasar commonly associates labels via the component `for` prop (native id/for)
+      // or wraps controls; accept either pattern to avoid false positives.
+      'vuejs-accessibility/label-has-for': [
+        'error',
+        {
+          required: { some: ['nesting', 'id'] },
+        },
+      ],
+
+      // Quasar uses `autofocus` on components (not necessarily DOM attrs);
+      // ignore non-DOM to prevent false positives.
+      'vuejs-accessibility/no-autofocus': ['error', { ignoreNonDOM: true }],
+
+      // Treat Quasar's QImg as <img> for alt text checks.
+      // This is opt-in here because it can surface new findings across the app.
+      'vuejs-accessibility/alt-text': ['error', { img: ['q-img'] }],
+    },
+  },
 )

@@ -6,9 +6,6 @@ export interface DetailPageConfig {
   entityNamePlural: string
   listRoute: string
   listIcon: string
-  createIcon: string
-  editIcon: string
-  viewIcon: string
 }
 
 export function useDetailPageState(config: DetailPageConfig, isNew: boolean, isReadOnly: boolean) {
@@ -16,12 +13,6 @@ export function useDetailPageState(config: DetailPageConfig, isNew: boolean, isR
     if (isNew) return `Create ${config.entityName}`
     if (isReadOnly) return `View ${config.entityName}`
     return `Edit ${config.entityName}`
-  })
-
-  const pageIcon = computed(() => {
-    if (isNew) return config.createIcon
-    if (isReadOnly) return config.viewIcon
-    return config.editIcon
   })
 
   const banners = computed((): BannerConfig[] => {
@@ -41,7 +32,6 @@ export function useDetailPageState(config: DetailPageConfig, isNew: boolean, isR
 
   return {
     pageTitle,
-    pageIcon,
     banners,
   }
 }

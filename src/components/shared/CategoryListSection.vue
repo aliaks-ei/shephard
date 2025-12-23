@@ -2,10 +2,10 @@
   <q-card
     flat
     :bordered="bordered"
-    :class="padding ? 'q-pa-md' : ''"
+    :class="[padding ? 'q-pa-md' : '', transparent ? 'bg-transparent' : 'bg-white']"
   >
     <!-- Header -->
-    <div class="row items-center justify-between q-mb-lg">
+    <div class="row items-center justify-between q-mb-md">
       <div class="row items-center">
         <q-icon
           :name="headerIcon"
@@ -101,7 +101,10 @@
     </div>
 
     <!-- Summary Section (Total Amount) -->
-    <slot name="summary" />
+    <slot
+      v-if="showSummary"
+      name="summary"
+    />
   </q-card>
 </template>
 
@@ -124,6 +127,8 @@ interface Props {
   emptyStateClass?: string
   bordered?: boolean
   padding?: boolean
+  transparent?: boolean
+  showSummary?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -139,6 +144,8 @@ const props = withDefaults(defineProps<Props>(), {
   emptyStateClass: '',
   bordered: true,
   padding: true,
+  transparent: false,
+  showSummary: true,
 })
 
 defineEmits<{

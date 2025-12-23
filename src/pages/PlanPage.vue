@@ -1,7 +1,6 @@
 <template>
   <BaseItemFormPage
     :page-title="pageTitle"
-    :page-icon="pageIcon"
     :is-loading="isPlanLoading"
     :actions="actionBarActions"
     :actions-visible="actionsVisible"
@@ -72,7 +71,7 @@
         :swipeable="$q.screen.lt.md"
         :transition-prev="$q.screen.lt.md ? 'slide-right' : 'fade'"
         :transition-next="$q.screen.lt.md ? 'slide-left' : 'fade'"
-        class="q-mt-md"
+        class="q-mt-md bg-transparent"
       >
         <q-tab-panel
           class="q-pa-none q-pa-md-sm"
@@ -241,12 +240,9 @@ const pageConfig = {
   entityNamePlural: 'Plans',
   listRoute: '/plans',
   listIcon: 'eva-calendar-outline',
-  createIcon: 'eva-plus-circle-outline',
-  editIcon: 'eva-edit-outline',
-  viewIcon: 'eva-eye-outline',
 }
 
-const { pageTitle, pageIcon } = useDetailPageState(pageConfig, isNewPlan.value, !isEditMode.value)
+const { pageTitle } = useDetailPageState(pageConfig, isNewPlan.value, !isEditMode.value)
 
 const { openDialog, closeDialog, getDialogState } = useEditablePage()
 

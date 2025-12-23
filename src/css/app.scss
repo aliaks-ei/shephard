@@ -66,12 +66,18 @@ body {
     serif;
   min-height: 100vh;
   min-height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  letter-spacing: -0.011em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 // Global Dialog Styles - Consistent 480px width on desktop
 .q-dialog__inner > .q-card {
   width: 90vw;
   min-width: 300px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  border: var(--border-width) solid var(--border-color);
 
   @media (min-width: $breakpoint-sm-min) {
     width: 480px;
@@ -93,4 +99,453 @@ body {
 // Safe Area Bottom Padding - Reusable class for iOS PWA bottom spacing
 .safe-area-bottom {
   padding-bottom: max(8px, calc(8px + env(safe-area-inset-bottom, 0px)));
+}
+
+// --------------------------------------------
+// Buttons (q-btn)
+// --------------------------------------------
+.q-btn {
+  border-radius: var(--radius);
+  font-weight: 500;
+  letter-spacing: -0.011em;
+  text-transform: none;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+
+  &:not(.q-btn--flat):not(.q-btn--outline) {
+    box-shadow: var(--shadow-sm);
+
+    &:hover {
+      box-shadow: var(--shadow-md);
+    }
+  }
+
+  &.q-btn--outline {
+    border-width: var(--border-width);
+
+    &:hover {
+      background: var(--muted);
+    }
+  }
+
+  &:focus-visible {
+    outline: var(--ring-width) solid var(--ring-color-primary);
+    outline-offset: var(--ring-offset);
+  }
+
+  &.q-btn--round {
+    border-radius: var(--radius-full);
+  }
+}
+
+// --------------------------------------------
+// Cards (q-card)
+// --------------------------------------------
+.q-card {
+  border-radius: var(--radius);
+  transition:
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+
+  &:not(.q-card--flat) {
+    box-shadow: var(--shadow-sm);
+  }
+
+  &.q-card--bordered {
+    border: var(--border-width) solid var(--border-color);
+  }
+
+  &.q-card--flat {
+    box-shadow: none;
+  }
+
+  .q-card__section {
+    &:first-child {
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    &:last-child {
+      border-radius: 0 0 var(--radius) var(--radius);
+    }
+
+    &:only-child {
+      border-radius: var(--radius);
+    }
+  }
+
+  .q-card__actions {
+    border-top: var(--border-width) solid var(--border-color-subtle);
+  }
+}
+
+// --------------------------------------------
+// Form Fields (q-field, q-input, q-select)
+// --------------------------------------------
+.q-field {
+  &--outlined {
+    .q-field__control {
+      border-radius: var(--radius);
+      border: var(--border-width) solid var(--border-color);
+      transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+
+      &::before {
+        border: none;
+      }
+
+      &::after {
+        border: none;
+      }
+
+      &:focus-within {
+        border-color: var(--ring-color-primary);
+        box-shadow: 0 0 0 calc(var(--ring-width) - 1px) rgba(0, 145, 154, 0.15);
+      }
+    }
+
+    &.q-field--readonly .q-field__control {
+      border: none;
+
+      &::before {
+        border: 1px dashed var(--border-color-readonly);
+        border-radius: var(--radius);
+      }
+    }
+
+    &.q-field--error .q-field__control {
+      border-color: $negative;
+    }
+
+    &.q-field--focused.q-field--error .q-field__control {
+      box-shadow: 0 0 0 calc(var(--ring-width) - 1px) rgba(247, 55, 79, 0.15);
+    }
+  }
+
+  &--filled {
+    .q-field__control {
+      border-radius: var(--radius);
+      background: var(--muted);
+      border: var(--border-width) solid transparent;
+      transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+
+      &::before {
+        background: transparent;
+      }
+
+      &:focus-within {
+        border-color: var(--ring-color-primary);
+        box-shadow: 0 0 0 calc(var(--ring-width) - 1px) rgba(0, 145, 154, 0.15);
+      }
+    }
+
+    &.q-field--readonly .q-field__control {
+      border: none;
+
+      &::before {
+        border: 1px dashed var(--border-color-readonly);
+        border-radius: var(--radius);
+        background: transparent;
+      }
+    }
+  }
+
+  .q-field__label {
+    font-weight: 500;
+  }
+
+  .q-field__native {
+    letter-spacing: -0.011em;
+  }
+}
+
+.q-menu {
+  border-radius: var(--radius);
+  border: var(--border-width) solid var(--border-color);
+  box-shadow: var(--shadow-md);
+
+  .q-item {
+    border-radius: var(--radius-sm);
+    margin: 2px 4px;
+
+    &:hover {
+      background: var(--muted);
+    }
+
+    &.q-item--active {
+      background: var(--muted);
+    }
+  }
+}
+
+// --------------------------------------------
+// Dialogs (q-dialog)
+// --------------------------------------------
+.q-dialog {
+  &__backdrop {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+  }
+}
+
+// --------------------------------------------
+// Chips (q-chip)
+// --------------------------------------------
+.q-chip {
+  padding: 0.5rem;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  letter-spacing: -0.011em;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+
+  &--square {
+    border-radius: var(--radius-sm);
+  }
+
+  &--outline {
+    border: var(--border-width) solid currentColor;
+  }
+
+  &--clickable:hover {
+    opacity: 0.9;
+  }
+}
+
+// --------------------------------------------
+// Badges (q-badge)
+// --------------------------------------------
+.q-badge {
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  letter-spacing: -0.011em;
+
+  &--outline {
+    border: var(--border-width) solid currentColor;
+  }
+}
+
+// --------------------------------------------
+// Banners (q-banner)
+// --------------------------------------------
+.q-banner {
+  border-radius: var(--radius);
+  border: var(--border-width) solid var(--border-color);
+
+  &--rounded {
+    border-radius: var(--radius);
+  }
+
+  &--dense {
+    padding: 0.75rem 1rem;
+  }
+}
+
+// --------------------------------------------
+// Separators (q-separator)
+// --------------------------------------------
+.q-separator {
+  background: var(--separator-color);
+
+  &--spaced {
+    margin: 1rem 0;
+  }
+}
+
+// --------------------------------------------
+// Toolbar (q-toolbar)
+// --------------------------------------------
+.q-toolbar {
+  border-radius: var(--radius);
+}
+
+// --------------------------------------------
+// List Items (q-item)
+// --------------------------------------------
+.q-item {
+  border-radius: var(--radius-sm);
+  transition: background-color 0.15s ease;
+
+  &--clickable:hover {
+    background: var(--muted);
+  }
+
+  &--active {
+    background: var(--muted);
+  }
+}
+
+// --------------------------------------------
+// Linear Progress (q-linear-progress)
+// --------------------------------------------
+.q-linear-progress {
+  border-radius: var(--radius-full);
+  overflow: hidden;
+
+  &__track {
+    border-radius: var(--radius-full);
+  }
+
+  &__model {
+    border-radius: var(--radius-full);
+  }
+}
+
+// --------------------------------------------
+// Skeleton (q-skeleton)
+// --------------------------------------------
+.q-skeleton {
+  border-radius: var(--radius-sm);
+
+  &--type-rect {
+    border-radius: var(--radius);
+  }
+
+  &--type-circle {
+    border-radius: var(--radius-full);
+  }
+}
+
+// --------------------------------------------
+// Tooltip (q-tooltip)
+// --------------------------------------------
+.q-tooltip {
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+// ============================================
+// Typography Adjustments (shadcn-inspired)
+// ============================================
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.text-h1,
+.text-h2,
+.text-h3,
+.text-h4,
+.text-h5,
+.text-h6 {
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+
+.text-subtitle1 {
+  letter-spacing: -0.011em;
+  font-weight: 500;
+}
+
+.text-subtitle2 {
+  letter-spacing: -0.011em;
+  font-weight: 500;
+}
+
+.text-body1,
+.text-body2 {
+  letter-spacing: -0.011em;
+}
+
+.text-caption {
+  letter-spacing: 0;
+  color: var(--muted-foreground);
+}
+
+.text-overline {
+  letter-spacing: 0.05em;
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 0.625rem;
+}
+
+.text-weight-thin {
+  font-weight: 300;
+}
+
+.text-weight-light {
+  font-weight: 300;
+}
+
+.text-weight-regular {
+  font-weight: 400;
+}
+
+.text-weight-medium {
+  font-weight: 500;
+}
+
+.text-weight-bold {
+  font-weight: 600;
+}
+
+.text-weight-bolder {
+  font-weight: 700;
+}
+
+// Mobile typography adjustments
+@media (max-width: calc(#{$breakpoint-sm-min} - 1px)) {
+  .text-h6 {
+    font-size: 1rem;
+    line-height: 1.25;
+  }
+}
+
+// ============================================
+// Utility Classes (shadcn-inspired)
+// ============================================
+
+.text-muted {
+  color: var(--muted-foreground);
+}
+
+.bg-muted {
+  background-color: var(--muted);
+}
+
+.border-subtle {
+  border: var(--border-width) solid var(--border-color);
+}
+
+.shadow-subtle {
+  box-shadow: var(--shadow-sm);
+}
+
+.shadow-elevated {
+  box-shadow: var(--shadow-md);
+}
+
+.focus-ring {
+  &:focus-visible {
+    outline: var(--ring-width) solid var(--ring-color-primary);
+    outline-offset: var(--ring-offset);
+  }
+}
+
+// ============================================
+// Form Labels (accessible label pattern)
+// ============================================
+
+.form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-color);
+  margin-bottom: 0.375rem;
+  letter-spacing: -0.011em;
+  cursor: pointer;
+}
+
+.form-label--required::after {
+  content: ' *';
+  color: $negative;
 }

@@ -6,13 +6,14 @@
         :model-value="modelValue.name"
         :readonly="readonly"
         :rules="nameRules"
-        :dense="$q.screen.lt.md"
+        placeholder="Item name"
+        dense
         class="q-px-none"
-        label="Item name"
         no-error-icon
         outlined
         item-aligned
         inputmode="text"
+        hide-bottom-space
         @update:model-value="updateName"
       />
     </q-item-section>
@@ -22,15 +23,16 @@
         :model-value="displayAmount"
         :readonly="readonly"
         :rules="amountRules"
-        :dense="$q.screen.lt.md"
         :prefix="currencySymbol"
+        placeholder="Amount"
+        dense
         type="text"
-        label="Amount"
         class="q-px-none"
         outlined
         item-aligned
         no-error-icon
         inputmode="decimal"
+        hide-bottom-space
         @update:model-value="updateAmount"
       />
     </q-item-section>
@@ -40,7 +42,7 @@
         :model-value="modelValue.isFixedPayment"
         :readonly="readonly"
         :disable="readonly"
-        :dense="$q.screen.lt.md"
+        dense
         label="Fixed"
         @update:model-value="updateIsFixedPayment"
       >
@@ -57,7 +59,7 @@
       <q-btn
         flat
         round
-        :size="$q.screen.lt.md ? 'sm' : 'md'"
+        size="sm"
         dense
         icon="eva-trash-2-outline"
         color="negative"

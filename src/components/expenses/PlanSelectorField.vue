@@ -1,12 +1,19 @@
 <template>
   <div>
+    <label
+      for="plan-selector-label"
+      class="form-label form-label--required"
+    >
+      Plan
+    </label>
     <q-select
       :model-value="modelValue"
+      for="plan-selector-label"
       :options="planOptions"
       option-label="label"
       option-value="value"
-      label="Select Plan *"
       outlined
+      dense
       emit-value
       map-options
       :hide-bottom-space="!showAutoSelectHint"

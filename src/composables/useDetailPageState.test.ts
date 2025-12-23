@@ -6,28 +6,22 @@ const baseConfig: DetailPageConfig = {
   entityNamePlural: 'Plans',
   listRoute: '/plans',
   listIcon: 'eva-calendar-outline',
-  createIcon: 'eva-plus-outline',
-  editIcon: 'eva-edit-2-outline',
-  viewIcon: 'eva-eye-outline',
 }
 
-describe('titles and icons', () => {
-  it('returns Create title and create icon for new entity', () => {
-    const { pageTitle, pageIcon } = useDetailPageState(baseConfig, true, false)
+describe('titles', () => {
+  it('returns Create title for new entity', () => {
+    const { pageTitle } = useDetailPageState(baseConfig, true, false)
     expect(pageTitle.value).toBe('Create Plan')
-    expect(pageIcon.value).toBe('eva-plus-outline')
   })
 
-  it('returns View title and view icon for read-only state', () => {
-    const { pageTitle, pageIcon } = useDetailPageState(baseConfig, false, true)
+  it('returns View title for read-only state', () => {
+    const { pageTitle } = useDetailPageState(baseConfig, false, true)
     expect(pageTitle.value).toBe('View Plan')
-    expect(pageIcon.value).toBe('eva-eye-outline')
   })
 
-  it('returns Edit title and edit icon by default', () => {
-    const { pageTitle, pageIcon } = useDetailPageState(baseConfig, false, false)
+  it('returns Edit title by default', () => {
+    const { pageTitle } = useDetailPageState(baseConfig, false, false)
     expect(pageTitle.value).toBe('Edit Plan')
-    expect(pageIcon.value).toBe('eva-edit-2-outline')
   })
 })
 

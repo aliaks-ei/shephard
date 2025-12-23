@@ -14,45 +14,52 @@
       @template-selected="handleTemplateSelected"
     />
 
-    <PlanInformationForm
-      :model-value="form"
-      class="q-pa-md"
-      :template-duration="selectedTemplate?.duration ?? ''"
-      @update:model-value="handleFormUpdate"
-    />
+    <template v-if="selectedTemplateOption">
+      <PlanInformationForm
+        :model-value="form"
+        class="q-mb-md"
+        :template-duration="selectedTemplate?.duration ?? ''"
+        @update:model-value="handleFormUpdate"
+      />
 
-    <CategoryItemsManager
-      :category-groups="categoryGroups"
-      :categories="categories"
-      :total-amount="totalAmount"
-      :currency="currency"
-      header-icon="eva-list-outline"
-      header-title="Plan Items"
-      :all-expanded="allExpanded"
-      :has-duplicates="hasDuplicates"
-      duplicate-banner-position="bottom"
-      :duplicate-banner-class="$q.dark.isActive ? 'bg-red-9 text-red-3' : 'bg-red-1 text-red-8'"
-      empty-message="Select a template to load plan items"
-      amount-size-mobile="text-h5"
-      amount-size-desktop="text-h4"
-      @toggle-expand="$emit('toggle-expand')"
-    >
-      <template #category="{ category }">
-        <PlanCategory
-          :ref="(el) => props.setCategoryRef(el, category.categoryId)"
-          :category-id="category.categoryId"
-          :category-name="category.categoryName"
-          :category-color="category.categoryColor"
-          :category-icon="category.categoryIcon"
-          :items="category.items"
-          :currency="currency"
-          :default-expanded="props.allExpanded || category.categoryId === props.lastAddedCategoryId"
-          @update-item="handleUpdateItem"
-          @remove-item="handleRemoveItem"
-          @add-item="handleAddItem"
-        />
-      </template>
-    </CategoryItemsManager>
+      <CategoryItemsManager
+        :category-groups="categoryGroups"
+        :categories="categories"
+        :total-amount="totalAmount"
+        :currency="currency"
+        header-icon="eva-list-outline"
+        header-title="Plan Items"
+        :all-expanded="allExpanded"
+        :has-duplicates="hasDuplicates"
+        duplicate-banner-position="bottom"
+        :duplicate-banner-class="$q.dark.isActive ? 'bg-red-9 text-red-3' : 'bg-red-1 text-red-8'"
+        empty-message="Select a template to load plan items"
+        amount-size-mobile="text-h5"
+        amount-size-desktop="text-h4"
+        :bordered="false"
+        :padding="false"
+        :transparent="true"
+        @toggle-expand="$emit('toggle-expand')"
+      >
+        <template #category="{ category }">
+          <PlanCategory
+            :ref="(el) => props.setCategoryRef(el, category.categoryId)"
+            :category-id="category.categoryId"
+            :category-name="category.categoryName"
+            :category-color="category.categoryColor"
+            :category-icon="category.categoryIcon"
+            :items="category.items"
+            :currency="currency"
+            :default-expanded="
+              props.allExpanded || category.categoryId === props.lastAddedCategoryId
+            "
+            @update-item="handleUpdateItem"
+            @remove-item="handleRemoveItem"
+            @add-item="handleAddItem"
+          />
+        </template>
+      </CategoryItemsManager>
+    </template>
   </q-form>
 </template>
 

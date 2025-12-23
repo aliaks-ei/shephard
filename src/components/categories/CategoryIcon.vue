@@ -14,7 +14,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-type CategoryIconSize = 'sm' | 'md' | 'lg'
+type CategoryIconSize = 'xs' | 'sm' | 'md' | 'lg'
 
 interface Props {
   color: string
@@ -28,6 +28,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const avatarSize = computed(() => {
   const sizeMap: Record<CategoryIconSize, string> = {
+    xs: '24px',
     sm: '32px',
     md: '48px',
     lg: '64px',
@@ -37,6 +38,7 @@ const avatarSize = computed(() => {
 
 const iconSize = computed(() => {
   const sizeMap: Record<CategoryIconSize, string> = {
+    xs: '12px',
     sm: '16px',
     md: '24px',
     lg: '32px',

@@ -12,7 +12,9 @@
     :duplicate-banner-class="duplicateBannerClass ?? ''"
     :bordered="bordered ?? true"
     :padding="padding ?? true"
+    :transparent="transparent ?? false"
     :empty-message="emptyMessage ?? 'No items yet'"
+    :show-summary="showSummary ?? true"
     @toggle-expand="$emit('toggle-expand')"
   >
     <template #header-actions>
@@ -81,6 +83,8 @@ interface Props<T extends BaseItemUI = BaseItemUI> {
   amountSizeDesktop?: string
   bordered?: boolean
   padding?: boolean
+  transparent?: boolean
+  showSummary?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -97,6 +101,8 @@ const props = withDefaults(defineProps<Props>(), {
   amountSizeDesktop: 'text-h5',
   bordered: true,
   padding: true,
+  transparent: false,
+  showSummary: true,
 })
 
 defineEmits<{

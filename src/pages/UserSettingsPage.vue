@@ -1,5 +1,5 @@
 <template>
-  <div class="row justify-center q-pa-sm q-pa-md-md">
+  <div class="row justify-center q-pa-xs q-pa-md-md">
     <div class="col-12 col-md-10 col-lg-8 col-xl-6">
       <div class="q-mb-md">
         <div class="row items-center">
@@ -48,6 +48,7 @@
                   dense
                   outlined
                   emit-value
+                  hide-bottom-space
                   @update:model-value="updatePreference('currency', $event)"
                 />
               </q-item-section>
@@ -73,6 +74,7 @@
                   outlined
                   emit-value
                   map-options
+                  hide-bottom-space
                   @update:model-value="updatePreference('theme', $event)"
                 />
               </q-item-section>

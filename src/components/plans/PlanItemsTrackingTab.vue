@@ -1,10 +1,13 @@
 <template>
   <div>
     <!-- Header with Statistics -->
-    <q-card flat>
+    <q-card
+      class="bg-transparent"
+      flat
+    >
       <q-card-section
         :class="$q.screen.lt.md ? 'q-px-sm' : 'q-px-md'"
-        class="q-pb-sm"
+        class="bg-white"
       >
         <!-- Responsive Title and Progress Layout -->
         <div class="row items-center q-col-gutter-md">
@@ -40,11 +43,16 @@
           </div>
         </div>
       </q-card-section>
+    </q-card>
 
+    <q-card
+      class="bg-transparent"
+      flat
+    >
       <!-- Loading State -->
       <q-card-section
         v-if="!props.plan"
-        class="q-gutter-sm"
+        class="q-gutter-sm q-px-none"
       >
         <!-- Skeleton for category groups -->
         <div
@@ -113,7 +121,7 @@
       <!-- Empty State -->
       <q-card-section
         v-else-if="categoryGroups.length === 0"
-        class="text-center q-py-xl"
+        class="text-center q-py-xl q-px-none"
       >
         <q-icon
           name="eva-checkmark-square-2-outline"
@@ -127,8 +135,7 @@
       <!-- Items by Category -->
       <q-card-section
         v-else
-        class="q-gutter-sm"
-        :class="$q.screen.lt.md ? 'q-px-sm' : 'q-px-md'"
+        class="q-gutter-sm q-px-none"
       >
         <q-card
           v-for="group in categoryGroups"
@@ -163,7 +170,10 @@
                 </q-item-label>
               </q-item-section>
 
-              <q-item-section side>
+              <q-item-section
+                v-if="group.items.length > 0"
+                side
+              >
                 <div class="row items-center q-gutter-xs">
                   <div class="text-caption text-weight-bold text-primary">
                     {{ group.completedCount }}/{{ group.items.length }}

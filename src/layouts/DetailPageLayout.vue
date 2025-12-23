@@ -12,11 +12,6 @@
 
         <q-toolbar-title>
           <div class="row items-center no-wrap">
-            <q-icon
-              :name="pageIcon"
-              size="sm"
-              class="q-mr-sm"
-            />
             {{ pageTitle }}
           </div>
         </q-toolbar-title>
@@ -85,11 +80,6 @@
 
             <q-toolbar-title style="flex-basis: 30%">
               <div class="row items-center no-wrap">
-                <q-icon
-                  :name="pageIcon"
-                  size="sm"
-                  class="q-mr-sm"
-                />
                 {{ pageTitle }}
                 <q-badge
                   v-if="showReadOnlyBadge && !isLoading"
@@ -195,7 +185,6 @@ const emit = defineEmits<{
 
 const props = defineProps<{
   pageTitle: string
-  pageIcon: string
   banners?: BannerConfig[]
   isLoading?: boolean
   actions?: ActionBarAction[]

@@ -47,3 +47,21 @@ $positive: #118b50;
 $negative: #f7374f;
 $info: #5d7c80;
 $warning: #fe7743;
+
+// ============================================
+// shadcn/ui inspired design token overrides
+// ============================================
+
+$generic-border-radius: 8px !default;
+
+$letter-spacing: -0.011em !default;
+
+$button-border-radius: 8px !default;
+$button-font-weight: 500 !default;
+$button-padding: 8px 16px !default;
+
+$card-border-radius: 8px !default;
+
+$input-border-radius: 8px !default;
+
+$chip-border-radius: 6px !default;
