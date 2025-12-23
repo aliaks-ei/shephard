@@ -13,40 +13,44 @@
           icon="eva-info-outline"
           title="Basic Information"
         />
+        <label
+          for="template-name-label"
+          class="form-label form-label--required"
+        >
+          Template Name
+        </label>
         <q-input
           v-if="readonly"
+          for="template-name-label"
           :model-value="modelValue.name"
-          :dense="$q.screen.lt.md"
-          label="Template Name"
+          dense
           outlined
           readonly
           no-error-icon
           inputmode="text"
-          :hide-bottom-space="$q.screen.lt.md"
-          :class="$q.screen.lt.md ? 'q-mb-sm' : 'q-mb-md'"
         />
         <q-input
           v-else
+          for="template-name-label"
           :model-value="modelValue.name"
-          label="Template Name"
+          placeholder="e.g., Monthly Expenses"
+          dense
           outlined
           no-error-icon
           inputmode="text"
-          :dense="$q.screen.lt.md"
-          :hide-bottom-space="$q.screen.lt.md"
           :rules="nameRules"
           :error="nameError"
           :error-message="nameErrorMessage"
-          :class="$q.screen.lt.md ? 'q-mb-sm' : 'q-mb-md'"
           @update:model-value="(val) => updateName(String(val ?? ''))"
         />
       </div>
       <div class="col-6 col-sm-2">
-        <SectionHeader
-          icon="eva-calendar-outline"
-          title="Duration"
-          icon-size="24px"
-        />
+        <label
+          for="template-duration-label"
+          class="form-label"
+        >
+          Duration
+        </label>
         <q-chip
           v-if="readonly"
           :label="modelValue.duration"
@@ -58,9 +62,10 @@
         />
         <q-select
           v-else
+          for="template-duration-label"
           :model-value="modelValue.duration"
           :options="durationOptions"
-          :dense="$q.screen.lt.md"
+          dense
           outlined
           emit-value
           map-options
@@ -68,11 +73,12 @@
         />
       </div>
       <div class="col-6 col-sm-2">
-        <SectionHeader
-          icon="eva-credit-card-outline"
-          title="Currency"
-          icon-size="24px"
-        />
+        <label
+          for="template-currency-label"
+          class="form-label"
+        >
+          Currency
+        </label>
         <q-chip
           v-if="readonly"
           :label="modelValue.currency"
@@ -83,9 +89,10 @@
         />
         <q-select
           v-else
+          for="template-currency-label"
           :model-value="modelValue.currency"
           :options="currencyOptions"
-          :dense="$q.screen.lt.md"
+          dense
           outlined
           emit-value
           map-options

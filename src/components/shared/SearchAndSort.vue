@@ -13,7 +13,7 @@
           <q-input
             :model-value="searchQuery"
             :placeholder="searchPlaceholder"
-            :dense="$q.screen.lt.md"
+            dense
             debounce="300"
             outlined
             clearable
@@ -31,7 +31,7 @@
             :model-value="sortBy"
             :options="sortOptions"
             :label="sortLabel"
-            :dense="$q.screen.lt.md"
+            dense
             :display-value="displayValue"
             :hide-dropdown-icon="$q.screen.lt.md"
             option-label="label"

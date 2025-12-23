@@ -6,9 +6,9 @@
         :model-value="modelValue.name"
         :readonly="readonly"
         :rules="nameRules"
-        :dense="$q.screen.lt.md"
+        placeholder="Item name"
+        dense
         class="q-px-none"
-        label="Item name"
         no-error-icon
         outlined
         item-aligned
@@ -22,10 +22,10 @@
         :model-value="displayAmount"
         :readonly="readonly"
         :rules="amountRules"
-        :dense="$q.screen.lt.md"
         :prefix="currencySymbol"
+        placeholder="Amount"
+        dense
         type="text"
-        label="Amount"
         class="q-px-none"
         outlined
         item-aligned
@@ -40,7 +40,7 @@
         :model-value="modelValue.isFixedPayment"
         :readonly="readonly"
         :disable="readonly"
-        :dense="$q.screen.lt.md"
+        dense
         label="Fixed"
         @update:model-value="updateIsFixedPayment"
       >

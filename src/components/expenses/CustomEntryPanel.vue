@@ -97,57 +97,67 @@
     />
 
     <!-- Expense Name -->
-    <q-input
-      :model-value="name"
-      label="Expense Name *"
-      outlined
-      no-error-icon
-      inputmode="text"
-      :rules="nameRules"
-      :disable="!selectedPlan"
-      class="q-mb-sm"
-      @update:model-value="handleUpdateName"
-    />
+    <label
+      class="q-mb-sm block"
+      for="expense-name-input"
+    >
+      <span class="form-label form-label--required">Expense Name</span>
+      <q-input
+        id="expense-name-input"
+        :model-value="name"
+        placeholder="e.g., Grocery shopping"
+        outlined
+        dense
+        no-error-icon
+        inputmode="text"
+        :rules="nameRules"
+        :disable="!selectedPlan"
+        @update:model-value="handleUpdateName"
+      />
+    </label>
 
     <!-- Amount and Currency Row -->
     <div class="row q-col-gutter-sm q-mb-sm">
       <!-- Expense Amount -->
-      <div class="col">
+      <label
+        class="col block"
+        for="expense-amount-input"
+      >
+        <span class="form-label form-label--required">Amount</span>
         <q-input
+          id="expense-amount-input"
           :model-value="displayAmount"
-          label="Amount *"
+          placeholder="0.00"
           type="text"
           outlined
+          dense
           no-error-icon
           inputmode="decimal"
           :hide-bottom-space="!!shouldShowConversion"
           :rules="amountRules"
           :disable="!selectedPlan"
           @update:model-value="handleUpdateAmount"
-        >
-          <template #prepend>
-            <q-icon name="eva-credit-card-outline" />
-          </template>
-        </q-input>
-      </div>
+        />
+      </label>
 
       <!-- Currency Selection -->
-      <div class="col-auto">
+      <label
+        class="col-auto block"
+        for="expense-currency-input"
+      >
+        <span class="form-label">Currency</span>
         <q-select
           v-model="selectedCurrency"
+          id="expense-currency-input"
           :options="currencyOptions"
-          label="Currency"
           outlined
+          dense
           emit-value
           map-options
-          style="min-width: 150px"
+          style="min-width: 80px"
           :disable="!selectedPlan"
-        >
-          <template #prepend>
-            <q-icon name="eva-globe-outline" />
-          </template>
-        </q-select>
-      </div>
+        />
+      </label>
     </div>
 
     <!-- Currency Conversion Display -->
@@ -196,100 +206,106 @@
     </div>
 
     <!-- Category Selection -->
-    <div class="column">
-      <q-select
-        :model-value="categoryId"
-        :options="categoryOptions"
-        option-label="label"
-        option-value="value"
-        label="Select Category *"
-        outlined
-        emit-value
-        map-options
-        :disable="!selectedPlan"
-        :readonly="!!defaultCategoryId"
-        :rules="[(val: string) => !!val || 'Category is required']"
-        :hint="
-          aiCategorization.isCategorizing.value
-            ? 'AI is analyzing the expense name...'
-            : isAiSelected
-              ? 'Category selected by AI'
-              : undefined
-        "
-        class="q-mb-sm"
-        @update:model-value="handleUpdateCategoryId"
+    <div class="column q-mb-sm">
+      <label
+        class="block"
+        for="expense-category-input"
       >
-        <template
-          v-if="categoryId && selectedCategoryOption"
-          #prepend
+        <span class="form-label form-label--required">Category</span>
+        <q-select
+          id="expense-category-input"
+          :model-value="categoryId"
+          :options="categoryOptions"
+          option-label="label"
+          option-value="value"
+          outlined
+          dense
+          emit-value
+          map-options
+          :disable="!selectedPlan"
+          :readonly="!!defaultCategoryId"
+          :rules="[(val: string) => !!val || 'Category is required']"
+          :hint="
+            aiCategorization.isCategorizing.value
+              ? 'AI is analyzing the expense name...'
+              : isAiSelected
+                ? 'Category selected by AI'
+                : undefined
+          "
+          @update:model-value="handleUpdateCategoryId"
         >
-          <CategoryIcon
-            :color="selectedCategoryOption.color"
-            :icon="selectedCategoryOption.icon"
-            size="sm"
-          />
-        </template>
-        <template #append>
-          <q-spinner
-            v-if="aiCategorization.isCategorizing.value"
-            color="primary"
-            size="20px"
-            class="q-mr-xs"
-          />
-          <q-chip
-            v-else-if="isAiSelected"
-            size="sm"
-            color="blue-1"
-            text-color="blue-9"
-            icon="eva-bulb-outline"
-            class="q-mr-xs"
+          <template
+            v-if="categoryId && selectedCategoryOption"
+            #prepend
           >
-            AI
-          </q-chip>
-        </template>
-        <template #option="scope">
-          <q-item v-bind="scope.itemProps">
-            <q-item-section avatar>
-              <CategoryIcon
-                :color="scope.opt.color"
-                :icon="scope.opt.icon"
-                size="sm"
-              />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>{{ scope.opt.label }}</q-item-label>
-              <q-item-label caption>
-                Budget:
-                {{
-                  formatCurrency(
-                    scope.opt.plannedAmount,
-                    (selectedPlan?.currency || 'USD') as CurrencyCode,
-                  )
-                }}
-                <span
-                  v-if="scope.opt.remainingAmount !== undefined"
-                  :class="scope.opt.remainingAmount >= 0 ? 'text-positive' : 'text-negative'"
-                >
-                  • Still to pay:
+            <CategoryIcon
+              :color="selectedCategoryOption.color"
+              :icon="selectedCategoryOption.icon"
+              size="sm"
+            />
+          </template>
+          <template #append>
+            <q-spinner
+              v-if="aiCategorization.isCategorizing.value"
+              color="primary"
+              size="20px"
+              class="q-mr-xs"
+            />
+            <q-chip
+              v-else-if="isAiSelected"
+              size="sm"
+              color="blue-1"
+              text-color="blue-9"
+              icon="eva-bulb-outline"
+              class="q-mr-xs"
+            >
+              AI
+            </q-chip>
+          </template>
+          <template #option="scope">
+            <q-item v-bind="scope.itemProps">
+              <q-item-section avatar>
+                <CategoryIcon
+                  :color="scope.opt.color"
+                  :icon="scope.opt.icon"
+                  size="sm"
+                />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>{{ scope.opt.label }}</q-item-label>
+                <q-item-label caption>
+                  Budget:
                   {{
                     formatCurrency(
-                      scope.opt.remainingAmount,
+                      scope.opt.plannedAmount,
                       (selectedPlan?.currency || 'USD') as CurrencyCode,
                     )
                   }}
-                </span>
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-        </template>
-        <template #no-option>
-          <q-item>
-            <q-item-section class="text-grey">
-              {{ selectedPlan ? 'No categories in selected plan' : 'Select a plan first' }}
-            </q-item-section>
-          </q-item>
-        </template>
-      </q-select>
+                  <span
+                    v-if="scope.opt.remainingAmount !== undefined"
+                    :class="scope.opt.remainingAmount >= 0 ? 'text-positive' : 'text-negative'"
+                  >
+                    • Still to pay:
+                    {{
+                      formatCurrency(
+                        scope.opt.remainingAmount,
+                        (selectedPlan?.currency || 'USD') as CurrencyCode,
+                      )
+                    }}
+                  </span>
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+          </template>
+          <template #no-option>
+            <q-item>
+              <q-item-section class="text-grey">
+                {{ selectedPlan ? 'No categories in selected plan' : 'Select a plan first' }}
+              </q-item-section>
+            </q-item>
+          </template>
+        </q-select>
+      </label>
 
       <!-- AI Suggestion Banner (Low Confidence) -->
       <q-banner
@@ -325,48 +341,56 @@
       </q-banner>
     </div>
 
-    <q-input
-      :model-value="expenseDate"
-      label="Expense Date *"
-      outlined
-      no-error-icon
-      inputmode="none"
-      :rules="[(val: string) => !!val || 'Date is required']"
-      class="q-mb-sm"
-      @update:model-value="handleUpdateExpenseDate"
+    <label
+      class="q-mb-sm block"
+      for="expense-date-input"
     >
-      <template #append>
-        <q-icon
-          name="eva-calendar-outline"
-          class="cursor-pointer"
-        >
-          <q-popup-proxy
-            cover
-            transition-show="scale"
-            transition-hide="scale"
+      <span class="form-label form-label--required">Expense Date</span>
+      <q-input
+        id="expense-date-input"
+        :model-value="expenseDate"
+        placeholder="YYYY-MM-DD"
+        outlined
+        dense
+        no-error-icon
+        inputmode="none"
+        :rules="[(val: string) => !!val || 'Date is required']"
+        @update:model-value="handleUpdateExpenseDate"
+      >
+        <template #append>
+          <q-icon
+            name="eva-calendar-outline"
+            class="cursor-pointer"
           >
-            <q-date
-              :model-value="expenseDate"
-              mask="YYYY-MM-DD"
-              @update:model-value="handleUpdateExpenseDate"
+            <q-popup-proxy
+              cover
+              transition-show="scale"
+              transition-hide="scale"
             >
-              <div class="row items-center justify-end">
-                <q-btn
-                  v-close-popup
-                  label="Cancel"
-                  color="primary"
-                  flat
-                  no-caps
-                />
-              </div>
-            </q-date>
-          </q-popup-proxy>
-        </q-icon>
-      </template>
-    </q-input>
+              <q-date
+                :model-value="expenseDate"
+                mask="YYYY-MM-DD"
+                @update:model-value="handleUpdateExpenseDate"
+              >
+                <div class="row items-center justify-end">
+                  <q-btn
+                    v-close-popup
+                    label="Cancel"
+                    color="primary"
+                    flat
+                    no-caps
+                  />
+                </div>
+              </q-date>
+            </q-popup-proxy>
+          </q-icon>
+        </template>
+      </q-input>
+    </label>
 
     <!-- Budget Impact Display -->
     <BudgetImpactCard
+      v-if="categoryId && effectiveAmount !== null && effectiveAmount > 0"
       :category-id="categoryId"
       :amount="effectiveAmount"
       :currency="(selectedPlan?.currency as CurrencyCode) ?? null"

@@ -122,45 +122,54 @@
           </q-card>
 
           <!-- Expense Date Selection -->
-          <q-input
-            :model-value="expenseDate"
-            label="Expense Date *"
-            outlined
-            no-error-icon
-            inputmode="none"
-            :rules="[(val: string) => !!val || 'Date is required']"
-            class="q-mb-md"
-            @update:model-value="handleUpdateExpenseDate"
-          >
-            <template #append>
-              <q-icon
-                name="eva-calendar-outline"
-                class="cursor-pointer"
-              >
-                <q-popup-proxy
-                  cover
-                  transition-show="scale"
-                  transition-hide="scale"
+          <div class="q-mb-md">
+            <label
+              for="quick-expense-date-label"
+              class="form-label form-label--required"
+            >
+              Expense Date
+            </label>
+            <q-input
+              for="quick-expense-date-label"
+              :model-value="expenseDate"
+              placeholder="YYYY-MM-DD"
+              outlined
+              dense
+              no-error-icon
+              inputmode="none"
+              :rules="[(val: string) => !!val || 'Date is required']"
+              @update:model-value="handleUpdateExpenseDate"
+            >
+              <template #append>
+                <q-icon
+                  name="eva-calendar-outline"
+                  class="cursor-pointer"
                 >
-                  <q-date
-                    :model-value="expenseDate"
-                    mask="YYYY-MM-DD"
-                    @update:model-value="handleUpdateExpenseDate"
+                  <q-popup-proxy
+                    cover
+                    transition-show="scale"
+                    transition-hide="scale"
                   >
-                    <div class="row items-center justify-end">
-                      <q-btn
-                        v-close-popup
-                        label="Cancel"
-                        color="primary"
-                        flat
-                        no-caps
-                      />
-                    </div>
-                  </q-date>
-                </q-popup-proxy>
-              </q-icon>
-            </template>
-          </q-input>
+                    <q-date
+                      :model-value="expenseDate"
+                      mask="YYYY-MM-DD"
+                      @update:model-value="handleUpdateExpenseDate"
+                    >
+                      <div class="row items-center justify-end">
+                        <q-btn
+                          v-close-popup
+                          label="Cancel"
+                          color="primary"
+                          flat
+                          no-caps
+                        />
+                      </div>
+                    </q-date>
+                  </q-popup-proxy>
+                </q-icon>
+              </template>
+            </q-input>
+          </div>
         </q-card-section>
       </div>
     </q-slide-transition>

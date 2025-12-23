@@ -14,13 +14,19 @@
       Select a template to base your plan on. You can modify the items and amounts after selection.
     </div>
 
+    <label
+      for="template-select-label"
+      class="form-label form-label--required"
+    >
+      Template
+    </label>
     <q-select
       :model-value="modelValue"
-      :dense="$q.screen.lt.md"
+      for="template-select-label"
+      dense
       :options="templateOptions"
       option-label="name"
       option-value="id"
-      label="Choose Template"
       outlined
       emit-value
       map-options

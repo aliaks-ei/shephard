@@ -4,17 +4,27 @@
     novalidate
     @submit.prevent="handleEmailSubmit"
   >
-    <q-input
-      v-model="email"
-      label="Email"
-      type="email"
-      :disable="userStore.auth.isEmailSent"
-      outlined
-      no-error-icon
-      inputmode="email"
-      :rules="emailRules()"
-      lazy-rules="ondemand"
-    />
+    <div class="q-mb-sm">
+      <label
+        for="email-label"
+        class="form-label form-label--required"
+      >
+        Email
+      </label>
+      <q-input
+        v-model="email"
+        for="email-label"
+        placeholder="you@example.com"
+        type="email"
+        :disable="userStore.auth.isEmailSent"
+        outlined
+        dense
+        no-error-icon
+        inputmode="email"
+        :rules="emailRules()"
+        lazy-rules="ondemand"
+      />
+    </div>
 
     <p
       v-if="userStore.auth.emailError"

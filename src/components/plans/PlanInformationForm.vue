@@ -9,28 +9,40 @@
       icon-size="24px"
     />
 
-    <q-input
-      :model-value="modelValue.name"
-      :dense="$q.screen.lt.md"
-      label="Plan Name"
-      outlined
-      no-error-icon
-      inputmode="text"
-      :readonly="readonly"
-      :rules="[(val) => !!val || 'Plan name is required']"
-      :class="$q.screen.lt.md ? 'q-mb-sm' : 'q-mb-md'"
-      @update:model-value="(val) => updateField('name', String(val ?? ''))"
-    />
+    <div class="q-mb-md">
+      <label
+        for="plan-name-label"
+        class="form-label form-label--required"
+      >
+        Plan Name
+      </label>
+      <q-input
+        for="plan-name-label"
+        :model-value="modelValue.name"
+        placeholder="e.g., March Budget"
+        dense
+        outlined
+        no-error-icon
+        inputmode="text"
+        :readonly="readonly"
+        :rules="[(val) => !!val || 'Plan name is required']"
+        @update:model-value="(val) => updateField('name', String(val ?? ''))"
+      />
+    </div>
 
-    <div
-      class="row"
-      :class="$q.screen.lt.md ? 'q-col-gutter-sm' : 'q-col-gutter-md'"
-    >
+    <div class="row q-col-gutter-sm">
       <div class="col-6">
+        <label
+          for="plan-start-date-label"
+          class="form-label form-label--required"
+        >
+          Start Date
+        </label>
         <q-input
+          for="plan-start-date-label"
           :model-value="modelValue.startDate"
-          :dense="$q.screen.lt.md"
-          label="Start Date"
+          placeholder="YYYY-MM-DD"
+          dense
           outlined
           no-error-icon
           inputmode="none"
@@ -69,10 +81,17 @@
         </q-input>
       </div>
       <div class="col-6">
+        <label
+          for="plan-end-date-label"
+          class="form-label form-label--required"
+        >
+          End Date
+        </label>
         <q-input
+          for="plan-end-date-label"
           :model-value="modelValue.endDate"
-          :dense="$q.screen.lt.md"
-          label="End Date"
+          placeholder="YYYY-MM-DD"
+          dense
           no-error-icon
           outlined
           readonly
