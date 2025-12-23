@@ -542,7 +542,7 @@ describe('PlanPage', () => {
   })
 
   it('should show duplicate items warning when duplicates exist', () => {
-    const { wrapper } = createWrapper({ hasItems: true, hasDuplicates: true, isNewPlan: true })
+    createWrapper({ hasItems: true, hasDuplicates: true, isNewPlan: true })
 
     expect(mockUsePlanItems.hasDuplicateItems.value).toBe(true)
   })
@@ -664,7 +664,7 @@ describe('PlanPage', () => {
   })
 
   it('should display formatted total amount when items exist', () => {
-    const { wrapper } = createWrapper({ hasItems: true, isNewPlan: true })
+    createWrapper({ hasItems: true, isNewPlan: true })
 
     expect(mockUsePlanItems.totalAmount.value).toBe(500)
   })
@@ -716,53 +716,26 @@ describe('PlanPage', () => {
     expect(wrapper.findComponent({ name: 'PlanTemplateSelection' }).exists()).toBe(true)
   })
 
-  it('should handle plan item updates', async () => {
-    const { wrapper } = createWrapper({ hasItems: true, isNewPlan: true })
+  it('should handle plan item updates', () => {
+    createWrapper({ hasItems: true, isNewPlan: true })
 
     expect(mockUsePlanItems.updatePlanItem).toBeDefined()
   })
 
-  it('should handle plan item removal', async () => {
-    const { wrapper } = createWrapper({ hasItems: true, isNewPlan: true })
+  it('should handle plan item removal', () => {
+    createWrapper({ hasItems: true, isNewPlan: true })
 
     expect(mockUsePlanItems.removePlanItem).toBeDefined()
   })
 
-  it('should handle adding new plan item', async () => {
-    const { wrapper } = createWrapper({ hasItems: true, isNewPlan: true })
+  it('should handle adding new plan item', () => {
+    createWrapper({ hasItems: true, isNewPlan: true })
 
     expect(mockUsePlanItems.addPlanItem).toBeDefined()
   })
 
-  it('should show expand/collapse all button when multiple categories', () => {
-    const multipleCategoryGroups = [
-      {
-        categoryId: 'cat-1',
-        categoryName: 'Food',
-        categoryColor: '#FF5722',
-        categoryIcon: 'eva-pricetags-outline',
-        items: [],
-        subtotal: 0,
-      },
-      {
-        categoryId: 'cat-2',
-        categoryName: 'Transport',
-        categoryColor: '#2196F3',
-        categoryIcon: 'eva-pricetags-outline',
-        items: [],
-        subtotal: 0,
-      },
-    ]
-
-    const { wrapper } = createWrapper({ hasItems: true })
-    mockUsePlanItems.planCategoryGroups.value = multipleCategoryGroups
-
-    // The expand/collapse button is shown based on category count
-    expect(wrapper.exists()).toBe(true)
-  })
-
   it('should show correct singular/plural text for category count', () => {
-    const { wrapper } = createWrapper({ hasItems: true, isNewPlan: true })
+    createWrapper({ hasItems: true, isNewPlan: true })
 
     expect(mockUsePlanItems.planCategoryGroups.value.length).toBe(1)
   })
