@@ -1,5 +1,8 @@
 <template>
-  <q-card flat>
+  <q-card
+    class="bg-white q-pa-md"
+    flat
+  >
     <SectionHeader
       icon="eva-info-outline"
       title="Plan Information"

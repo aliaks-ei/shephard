@@ -10,8 +10,11 @@
     />
 
     <!-- Category Budget Cards Grid -->
-    <q-card flat>
-      <q-card-section :class="$q.screen.lt.md ? 'q-px-sm' : 'q-px-md'">
+    <q-card
+      class="bg-transparent"
+      flat
+    >
+      <q-card-section class="q-px-none">
         <div class="row items-center q-mb-md">
           <q-icon
             name="eva-pie-chart-outline"

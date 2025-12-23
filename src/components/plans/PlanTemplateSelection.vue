@@ -1,7 +1,6 @@
 <template>
   <q-card
     flat
-    bordered
     class="q-pa-md q-mb-lg"
   >
     <SectionHeader

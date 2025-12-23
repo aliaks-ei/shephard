@@ -72,7 +72,7 @@
         :swipeable="$q.screen.lt.md"
         :transition-prev="$q.screen.lt.md ? 'slide-right' : 'fade'"
         :transition-next="$q.screen.lt.md ? 'slide-left' : 'fade'"
-        class="q-mt-md"
+        class="q-mt-md bg-transparent"
       >
         <q-tab-panel
           class="q-pa-none q-pa-md-sm"
