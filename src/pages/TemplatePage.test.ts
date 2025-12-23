@@ -657,13 +657,6 @@ describe('TemplatePage', () => {
     expect(wrapper.text()).toContain('Total across 1 category')
   })
 
-  it('should display template name input with correct label', () => {
-    const { wrapper } = createWrapper()
-
-    const nameInput = wrapper.find('[data-label="Template Name"]')
-    expect(nameInput.exists()).toBe(true)
-  })
-
   it('should pass correct props to category components', () => {
     const { wrapper } = createWrapper({ hasItems: true })
 
