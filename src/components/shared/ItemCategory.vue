@@ -52,12 +52,11 @@
 
         <div
           v-if="!readonly"
-          class="q-pt-sm"
+          class="flex justify-end q-pt-sm"
         >
           <q-btn
-            flat
             color="primary"
-            icon="eva-plus-outline"
+            outline
             label="Add Item"
             no-caps
             @click="$emit('add-item', categoryId, categoryColor)"

@@ -351,7 +351,6 @@
         <q-btn
           v-if="canEdit"
           label="Add Expense"
-          icon="eva-plus-outline"
           color="primary"
           unelevated
           no-caps

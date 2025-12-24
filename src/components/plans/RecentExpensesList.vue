@@ -112,7 +112,6 @@
         <q-btn
           color="primary"
           label="Add First Expense"
-          icon="eva-plus-outline"
           no-caps
           @click="$emit('add-expense')"
         />
