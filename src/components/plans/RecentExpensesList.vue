@@ -1,6 +1,9 @@
 <template>
   <q-card flat>
-    <q-card-section :class="$q.screen.lt.md ? 'q-px-sm' : 'q-px-md'">
+    <q-card-section
+      class="q-pb-sm"
+      :class="$q.screen.lt.md ? 'q-px-sm' : 'q-px-md'"
+    >
       <div class="row items-center justify-between q-mb-md">
         <div class="row items-center">
           <q-icon
@@ -47,7 +50,7 @@
             <CategoryIcon
               :color="getCategoryColor(expense.category_id)"
               :icon="getCategoryIcon(expense.category_id)"
-              size="sm"
+              :size="$q.screen.lt.md ? 'xs' : 'sm'"
             />
           </q-item-section>
 
@@ -112,7 +115,6 @@
         <q-btn
           color="primary"
           label="Add First Expense"
-          icon="eva-plus-outline"
           no-caps
           @click="$emit('add-expense')"
         />

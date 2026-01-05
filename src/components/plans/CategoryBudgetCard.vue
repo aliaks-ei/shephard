@@ -30,7 +30,7 @@
           <CategoryIcon
             :color="category.categoryColor"
             :icon="category.categoryIcon"
-            size="sm"
+            :size="$q.screen.lt.md ? 'xs' : 'sm'"
           />
         </q-item-section>
         <div class="column col-grow overflow-hidden">

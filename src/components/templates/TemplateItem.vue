@@ -1,6 +1,6 @@
 <template>
-  <q-item class="q-pb-xs q-pt-sm q-px-none">
-    <q-item-section>
+  <q-item class="q-pa-none">
+    <q-item-section class="self-start">
       <q-input
         ref="nameInputRef"
         :model-value="modelValue.name"
@@ -8,7 +8,7 @@
         :rules="nameRules"
         placeholder="Item name"
         dense
-        class="q-px-none"
+        class="q-pa-none"
         no-error-icon
         outlined
         item-aligned
@@ -18,7 +18,10 @@
       />
     </q-item-section>
 
-    <q-item-section :style="$q.screen.lt.md ? 'max-width: 80px' : 'max-width: 112px'">
+    <q-item-section
+      class="self-start"
+      :style="$q.screen.lt.md ? 'max-width: 80px' : 'max-width: 112px'"
+    >
       <q-input
         :model-value="displayAmount"
         :readonly="readonly"
@@ -27,7 +30,7 @@
         placeholder="Amount"
         dense
         type="text"
-        class="q-px-none"
+        class="q-pa-none"
         outlined
         item-aligned
         no-error-icon
@@ -37,7 +40,10 @@
       />
     </q-item-section>
 
-    <q-item-section style="flex: 0 0 auto">
+    <q-item-section
+      class="self-start q-py-sm"
+      style="flex: 0 0 auto"
+    >
       <q-checkbox
         :model-value="modelValue.isFixedPayment"
         :readonly="readonly"
@@ -54,6 +60,7 @@
 
     <q-item-section
       v-if="!readonly"
+      class="self-start q-py-sm"
       style="flex: 0 0 auto"
     >
       <q-btn
