@@ -72,7 +72,7 @@
               <h3 class="text-h6 q-my-none">Total Amount</h3>
             </div>
             <div
-              :class="['text-primary text-weight-bold', $q.screen.lt.md ? 'text-h5' : 'text-h4']"
+              :class="['text-primary text-weight-bold', $q.screen.lt.md ? 'text-h6' : 'text-h5']"
             >
               {{ formattedTotal }}
             </div>

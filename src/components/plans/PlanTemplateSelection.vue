@@ -74,8 +74,10 @@
       </template>
     </q-select>
 
-    <div v-if="selectedTemplate">
-      <div class="text-subtitle2 q-mb-sm">Selected Template:</div>
+    <div
+      v-if="selectedTemplate"
+      class="q-mt-md"
+    >
       <TemplateCard
         :template="selectedTemplate"
         readonly

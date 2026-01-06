@@ -20,7 +20,7 @@
       class="bg-transparent"
       flat
     >
-      <q-card-section class="q-px-none">
+      <q-card-section class="q-px-none q-pb-none">
         <CategoryItemsManager
           :category-groups="categoryGroups"
           :categories="categories"
@@ -38,6 +38,7 @@
           empty-message="No items in this plan"
           amount-size-mobile="text-h6"
           amount-size-desktop="text-h5"
+          :show-summary="false"
           @toggle-expand="$emit('toggle-expand')"
         >
           <template #category="{ category }">
@@ -60,11 +61,34 @@
         </CategoryItemsManager>
       </q-card-section>
     </q-card>
+
+    <!-- Total Amount as separate card -->
+    <q-card flat>
+      <q-card-section>
+        <div class="row items-center justify-between">
+          <div class="row items-center">
+            <q-icon
+              name="eva-credit-card-outline"
+              class="q-mr-sm"
+              size="20px"
+            />
+            <h3 class="text-h6 q-my-none">Total Amount</h3>
+          </div>
+          <div :class="['text-primary text-weight-bold', $q.screen.lt.md ? 'text-h6' : 'text-h5']">
+            {{ formattedTotal }}
+          </div>
+        </div>
+        <div class="text-caption text-grey-6">
+          Total across {{ categoryGroups.length }}
+          {{ categoryGroups.length === 1 ? 'category' : 'categories' }}
+        </div>
+      </q-card-section>
+    </q-card>
   </q-form>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import type { QForm } from 'quasar'
 import PlanInformationForm from './PlanInformationForm.vue'
 import PlanCategory from './PlanCategory.vue'
@@ -72,7 +96,7 @@ import CategoryItemsManager from 'src/components/shared/CategoryItemsManager.vue
 import type { Category } from 'src/api'
 import type { PlanItemUI } from 'src/types'
 import type { CategoryGroup } from 'src/composables/useItemsManager'
-import type { CurrencyCode } from 'src/utils/currency'
+import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 
 interface Props {
   form: {
@@ -92,6 +116,8 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
+const formattedTotal = computed(() => formatCurrency(props.totalAmount, props.currency))
 
 const emit = defineEmits<{
   (e: 'submit'): void

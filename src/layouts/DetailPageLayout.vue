@@ -6,12 +6,13 @@
         <q-btn
           flat
           round
+          size="sm"
           icon="eva-arrow-back-outline"
           @click="emit('back')"
         />
 
         <q-toolbar-title>
-          <div class="row items-center no-wrap">
+          <div class="row items-center no-wrap text-body1">
             {{ pageTitle }}
           </div>
         </q-toolbar-title>
