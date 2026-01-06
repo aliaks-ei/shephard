@@ -121,11 +121,7 @@ function showPwaInstallNotification() {
         label: 'Install',
         color: 'white',
         handler: () => {
-          void promptInstall().then((result) => {
-            if (result === 'accepted') {
-              notificationStore.showSuccess('App installed successfully!')
-            }
-          })
+          void promptInstall()
         },
       },
       {

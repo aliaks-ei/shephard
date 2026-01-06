@@ -31,9 +31,10 @@ export function useItemsManager<T extends BaseItemUI>(config: ItemsConfig<T>) {
   const items: Ref<T[]> = ref([])
 
   const totalAmount = computed(() => items.value.reduce((total, item) => total + item.amount, 0))
+  const hasItems = computed(() => items.value.length > 0)
   const hasValidItems = computed(
     () =>
-      items.value.length > 0 &&
+      hasItems.value &&
       items.value.every((item) => item.name.trim() && item.categoryId && item.amount > 0),
   )
 
@@ -190,6 +191,7 @@ export function useItemsManager<T extends BaseItemUI>(config: ItemsConfig<T>) {
   return {
     items,
     totalAmount,
+    hasItems,
     hasValidItems,
     hasDuplicateItems,
     isValidForSave,

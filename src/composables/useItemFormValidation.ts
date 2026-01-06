@@ -1,11 +1,12 @@
 import type { Ref } from 'vue'
 import type { QForm } from 'quasar'
-import { useNotificationStore } from 'src/stores/notification'
+import { useBanner } from 'src/composables/useBanner'
 
 export type ItemFormValidationOptions = {
   formRef: Ref<QForm | undefined>
   hasValidItems: boolean
   hasDuplicateItems: boolean
+  hasItems: boolean
   customValidation?: () => { isValid: boolean; errorMessage?: string }
   scrollToFirstInvalid: () => Promise<void>
   onExpandCategories: () => void
@@ -20,16 +21,13 @@ export type ItemFormValidationResult = {
 export async function validateItemForm(
   options: ItemFormValidationOptions,
 ): Promise<ItemFormValidationResult> {
-  const notificationsStore = useNotificationStore()
+  const { showError } = useBanner()
   let hasFormErrors = false
   let hasItemErrors = false
 
   if (options.customValidation) {
     const customResult = options.customValidation()
     if (!customResult.isValid) {
-      if (customResult.errorMessage) {
-        notificationsStore.showError(customResult.errorMessage)
-      }
       hasFormErrors = true
     }
   }
@@ -41,23 +39,21 @@ export async function validateItemForm(
     }
   }
 
-  const isValidForSave = options.hasValidItems && !options.hasDuplicateItems
+  // Only check items if form validation passed
+  if (!hasFormErrors) {
+    const isValidForSave = options.hasValidItems && !options.hasDuplicateItems
 
-  if (!isValidForSave) {
-    hasItemErrors = true
+    if (!isValidForSave) {
+      hasItemErrors = true
 
-    if (!options.hasValidItems) {
-      await options.scrollToFirstInvalid()
-    } else if (options.hasDuplicateItems) {
-      notificationsStore.showError(
-        'You have duplicate item names within the same category. Please use unique names.',
-      )
-      options.onExpandCategories()
+      if (!options.hasItems) {
+        showError('Please add at least one category with items')
+      } else if (!options.hasValidItems) {
+        await options.scrollToFirstInvalid()
+      } else if (options.hasDuplicateItems) {
+        options.onExpandCategories()
+      }
     }
-  }
-
-  if (hasFormErrors) {
-    notificationsStore.showError('Please fix the form errors before saving')
   }
 
   return {

@@ -19,6 +19,7 @@ export function usePlanItems() {
   return {
     planItems: itemsManager.items,
     totalAmount: itemsManager.totalAmount,
+    hasItems: itemsManager.hasItems,
     hasValidItems: itemsManager.hasValidItems,
     hasDuplicateItems: itemsManager.hasDuplicateItems,
     isValidForSave: itemsManager.isValidForSave,

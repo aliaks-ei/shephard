@@ -5,7 +5,6 @@ import { createTestingPinia } from '@pinia/testing'
 import { ref, computed } from 'vue'
 import PlansPage from './PlansPage.vue'
 import { usePlansStore } from 'src/stores/plans'
-import { useNotificationStore } from 'src/stores/notification'
 import { usePlans } from 'src/composables/usePlans'
 import type { PlanWithPermission } from 'src/api'
 
@@ -252,7 +251,6 @@ function createWrapper(
     wrapper,
     mockUsePlans: mockUsePlansReturn,
     plansStore: usePlansStore(),
-    notificationStore: useNotificationStore(),
   }
 }
 
@@ -421,7 +419,7 @@ it('should open share dialog when share button is clicked', async () => {
 })
 
 it('should close share dialog and reload plans when plan is shared', async () => {
-  const { wrapper, plansStore, notificationStore } = createWrapper({
+  const { wrapper, plansStore } = createWrapper({
     ownedPlans: mockOwnedPlans,
     hasPlans: true,
   })
@@ -434,11 +432,10 @@ it('should close share dialog and reload plans when plan is shared', async () =>
   await shareConfirmButton.trigger('click')
 
   expect(plansStore.loadPlans).toHaveBeenCalled()
-  expect(notificationStore.showSuccess).toHaveBeenCalledWith('Plan shared successfully')
 })
 
 it('should call cancelPlan when cancel button is clicked', async () => {
-  const { wrapper, plansStore, notificationStore } = createWrapper({
+  const { wrapper, plansStore } = createWrapper({
     ownedPlans: mockOwnedPlans,
     hasPlans: true,
   })
@@ -449,7 +446,6 @@ it('should call cancelPlan when cancel button is clicked', async () => {
   await cancelButton.trigger('click')
 
   expect(plansStore.cancelPlan).toHaveBeenCalledWith('plan-1')
-  expect(notificationStore.showSuccess).toHaveBeenCalledWith('Plan cancelled successfully')
 })
 
 it('should call loadPlans on mount', () => {

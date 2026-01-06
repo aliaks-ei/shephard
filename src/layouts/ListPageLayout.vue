@@ -31,6 +31,8 @@
         </div>
       </div>
 
+      <BannerContainer />
+
       <slot />
     </div>
   </div>
@@ -38,6 +40,7 @@
 
 <script setup lang="ts">
 import { useQuasar } from 'quasar'
+import BannerContainer from 'src/components/shared/BannerContainer.vue'
 
 const $q = useQuasar()
 

@@ -1,8 +1,21 @@
 import { createTestingPinia, type TestingPinia } from '@pinia/testing'
 import { setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest'
+import { ref } from 'vue'
 import { useError } from './useError'
-import { useNotificationStore } from 'src/stores/notification'
+
+const mockShowError = vi.fn()
+vi.mock('src/composables/useBanner', () => ({
+  useBanner: () => ({
+    showSuccess: vi.fn(),
+    showError: mockShowError,
+    showWarning: vi.fn(),
+    showInfo: vi.fn(),
+    banners: ref([]),
+    dismissBanner: vi.fn(),
+    clearAllBanners: vi.fn(),
+  }),
+}))
 
 let pinia: TestingPinia
 let consoleErrorSpy: MockInstance
@@ -11,6 +24,7 @@ beforeEach(() => {
   pinia = createTestingPinia({ createSpy: vi.fn })
   setActivePinia(pinia)
   consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+  mockShowError.mockClear()
 })
 
 describe('error message extraction', () => {
@@ -167,12 +181,11 @@ describe('message formatting', () => {
 describe('options handling and priority', () => {
   it('uses default options when none provided', () => {
     const { handleError } = useError()
-    const notificationStore = useNotificationStore()
 
     handleError('AUTH.INIT_FAILED', new Error('test'))
 
     // Default: notify=true, log=true, throw=false
-    expect(notificationStore.showError).toHaveBeenCalled()
+    expect(mockShowError).toHaveBeenCalled()
     expect(consoleErrorSpy).toHaveBeenCalled()
   })
 
@@ -187,7 +200,6 @@ describe('options handling and priority', () => {
 
   it('allows user options to override config options', () => {
     const { handleError } = useError()
-    const notificationStore = useNotificationStore()
 
     // USER.GET_FAILED has throw: true, but we override it
     const result = handleError('USER.GET_FAILED', new Error('test'), undefined, {
@@ -197,18 +209,17 @@ describe('options handling and priority', () => {
     })
 
     expect(result).toBeDefined()
-    expect(notificationStore.showError).not.toHaveBeenCalled()
+    expect(mockShowError).not.toHaveBeenCalled()
     expect(consoleErrorSpy).not.toHaveBeenCalled()
   })
 
   it('merges options correctly with partial overrides', () => {
     const { handleError } = useError()
-    const notificationStore = useNotificationStore()
 
     handleError('AUTH.INIT_FAILED', new Error('test'), undefined, { notify: false })
 
     // Should still log (default) but not notify (overridden)
-    expect(notificationStore.showError).not.toHaveBeenCalled()
+    expect(mockShowError).not.toHaveBeenCalled()
     expect(consoleErrorSpy).toHaveBeenCalled()
   })
 })
@@ -242,22 +253,20 @@ describe('side effects', () => {
 
   it('shows notification when notify option is true', () => {
     const { handleError } = useError()
-    const notificationStore = useNotificationStore()
 
     handleError('AUTH.INIT_FAILED', new Error('test'), undefined, { notify: true, log: false })
 
-    expect(notificationStore.showError).toHaveBeenCalledWith(
+    expect(mockShowError).toHaveBeenCalledWith(
       "We couldn't start the sign-in process. Please try again or check your connection.",
     )
   })
 
   it('does not show notification when notify option is false', () => {
     const { handleError } = useError()
-    const notificationStore = useNotificationStore()
 
     handleError('AUTH.INIT_FAILED', new Error('test'), undefined, { notify: false, log: false })
 
-    expect(notificationStore.showError).not.toHaveBeenCalled()
+    expect(mockShowError).not.toHaveBeenCalled()
   })
 
   it('throws error when throw option is true', () => {
@@ -286,7 +295,6 @@ describe('side effects', () => {
 
   it('handles multiple side effects together', () => {
     const { handleError } = useError()
-    const notificationStore = useNotificationStore()
 
     expect(() => {
       handleError(
@@ -297,7 +305,7 @@ describe('side effects', () => {
       )
     }).toThrow()
 
-    expect(notificationStore.showError).toHaveBeenCalled()
+    expect(mockShowError).toHaveBeenCalled()
     expect(consoleErrorSpy).toHaveBeenCalled()
   })
 })
@@ -338,7 +346,6 @@ describe('return value', () => {
 describe('integration scenarios', () => {
   it('handles complete error flow with real configuration', () => {
     const { handleError } = useError()
-    const notificationStore = useNotificationStore()
     const error = new Error('Database connection failed')
     const context = { userId: '123', action: 'loadPreferences' }
     const errorId = handleError('USER.PREFERENCES_LOAD_FAILED', error, context)
@@ -346,7 +353,7 @@ describe('integration scenarios', () => {
     expect(errorId).toBeTruthy()
 
     // Verify notification shows user-friendly message
-    expect(notificationStore.showError).toHaveBeenCalledWith(
+    expect(mockShowError).toHaveBeenCalledWith(
       "We couldn't load your settings. Please try again or check your connection.",
     )
 

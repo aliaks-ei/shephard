@@ -18,6 +18,8 @@
         </q-toolbar-title>
       </q-toolbar>
 
+      <BannerContainer />
+
       <PageBanners
         v-if="!isLoading"
         :banners="banners || []"
@@ -108,6 +110,8 @@
             />
           </q-toolbar>
 
+          <BannerContainer />
+
           <PageBanners
             v-if="!isLoading"
             :banners="banners || []"
@@ -169,6 +173,7 @@
 import { computed } from 'vue'
 import { useQuasar } from 'quasar'
 import PageBanners from 'src/components/shared/PageBanners.vue'
+import BannerContainer from 'src/components/shared/BannerContainer.vue'
 import ActionBar from 'src/components/shared/ActionBar.vue'
 import type { ActionBarAction } from 'src/components/shared/ActionBar.vue'
 

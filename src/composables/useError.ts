@@ -1,5 +1,5 @@
 import { type ErrorMessageKey, ERROR_MESSAGES } from 'src/config/error-messages'
-import { useNotificationStore } from 'src/stores/notification'
+import { useBanner } from 'src/composables/useBanner'
 
 type ErrorOptions = {
   notify?: boolean
@@ -96,8 +96,8 @@ function logError(message: string, originalError: unknown, context?: ErrorContex
 }
 
 function notifyError(message: string): void {
-  const notificationStore = useNotificationStore()
-  notificationStore.showError(message)
+  const { showError } = useBanner()
+  showError(message)
 }
 
 export function useError() {

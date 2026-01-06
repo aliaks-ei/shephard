@@ -259,7 +259,6 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
 
     if (selectedPlanItems.value.length === 0) {
       quickSelectPhase.value = 'selection'
-      notificationStore.showInfo('All items removed. Please select items to continue.')
     }
   }
 
@@ -310,11 +309,6 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
       })
 
       await Promise.all(completionPromises)
-
-      const count = selectedPlanItems.value.length
-      notificationStore.showSuccess(
-        `${count} expense${count !== 1 ? 's' : ''} registered successfully!`,
-      )
 
       onSuccess()
     } catch (error) {
@@ -370,7 +364,6 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
         await updatePlanItemCompletion(form.value.planItemId, true)
       }
 
-      notificationStore.showSuccess('Expense registered successfully!')
       onSuccess()
     } catch (error) {
       console.error('Error registering expense:', error)

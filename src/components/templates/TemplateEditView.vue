@@ -18,14 +18,15 @@
       class="q-mb-md"
     >
       <q-card-section>
-        <div class="text-center q-py-xl">
+        <div class="text-center">
           <q-icon
             name="eva-grid-outline"
-            size="4rem"
-            class="text-grey-4 q-mb-md"
+            size="2rem"
+            color="primary"
+            class="q-mb-sm"
           />
-          <div class="text-h6 q-mb-sm text-grey-6">No categories yet</div>
-          <div class="text-body2 text-grey-5 q-mb-lg">
+          <div class="text-h6 q-mb-sm">No categories yet</div>
+          <div class="text-caption q-mb-md">
             Start building your template by adding named items with categories and amounts
           </div>
           <q-btn

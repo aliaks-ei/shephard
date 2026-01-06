@@ -1,16 +1,23 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
-import { createTestingPinia, type TestingPinia } from '@pinia/testing'
-import { setActivePinia } from 'pinia'
 import { validateItemForm } from './useItemFormValidation'
-import { useNotificationStore } from 'src/stores/notification'
 import type { QForm } from 'quasar'
 
-let pinia: TestingPinia
+const mockShowError = vi.fn()
+vi.mock('src/composables/useBanner', () => ({
+  useBanner: () => ({
+    showSuccess: vi.fn(),
+    showError: mockShowError,
+    showWarning: vi.fn(),
+    showInfo: vi.fn(),
+    banners: ref([]),
+    dismissBanner: vi.fn(),
+    clearAllBanners: vi.fn(),
+  }),
+}))
 
 beforeEach(() => {
-  pinia = createTestingPinia({ createSpy: vi.fn })
-  setActivePinia(pinia)
+  vi.clearAllMocks()
 })
 
 describe('useItemFormValidation', () => {
@@ -22,6 +29,7 @@ describe('useItemFormValidation', () => {
 
       const result = await validateItemForm({
         formRef: mockFormRef,
+        hasItems: true,
         hasValidItems: true,
         hasDuplicateItems: false,
         scrollToFirstInvalid: vi.fn(),
@@ -34,13 +42,13 @@ describe('useItemFormValidation', () => {
     })
 
     it('returns invalid when form validation fails', async () => {
-      const notificationStore = useNotificationStore()
       const mockFormRef = ref({
         validate: vi.fn().mockResolvedValue(false),
       } as unknown as QForm)
 
       const result = await validateItemForm({
         formRef: mockFormRef,
+        hasItems: true,
         hasValidItems: true,
         hasDuplicateItems: false,
         scrollToFirstInvalid: vi.fn(),
@@ -50,12 +58,28 @@ describe('useItemFormValidation', () => {
       expect(result.isValid).toBe(false)
       expect(result.hasFormErrors).toBe(true)
       expect(result.hasItemErrors).toBe(false)
-      expect(notificationStore.showError).toHaveBeenCalledWith(
-        'Please fix the form errors before saving',
-      )
     })
 
-    it('returns invalid when items are not valid', async () => {
+    it('shows error banner when no items exist', async () => {
+      const mockFormRef = ref({
+        validate: vi.fn().mockResolvedValue(true),
+      } as unknown as QForm)
+
+      const result = await validateItemForm({
+        formRef: mockFormRef,
+        hasItems: false,
+        hasValidItems: false,
+        hasDuplicateItems: false,
+        scrollToFirstInvalid: vi.fn(),
+        onExpandCategories: vi.fn(),
+      })
+
+      expect(result.isValid).toBe(false)
+      expect(result.hasItemErrors).toBe(true)
+      expect(mockShowError).toHaveBeenCalledWith('Please add at least one category with items')
+    })
+
+    it('scrolls to first invalid when items exist but are not valid', async () => {
       const mockScrollToFirstInvalid = vi.fn()
       const mockFormRef = ref({
         validate: vi.fn().mockResolvedValue(true),
@@ -63,6 +87,7 @@ describe('useItemFormValidation', () => {
 
       const result = await validateItemForm({
         formRef: mockFormRef,
+        hasItems: true,
         hasValidItems: false,
         hasDuplicateItems: false,
         scrollToFirstInvalid: mockScrollToFirstInvalid,
@@ -73,10 +98,10 @@ describe('useItemFormValidation', () => {
       expect(result.hasFormErrors).toBe(false)
       expect(result.hasItemErrors).toBe(true)
       expect(mockScrollToFirstInvalid).toHaveBeenCalled()
+      expect(mockShowError).not.toHaveBeenCalled()
     })
 
     it('returns invalid when items have duplicates', async () => {
-      const notificationStore = useNotificationStore()
       const mockExpandCategories = vi.fn()
       const mockFormRef = ref({
         validate: vi.fn().mockResolvedValue(true),
@@ -84,6 +109,7 @@ describe('useItemFormValidation', () => {
 
       const result = await validateItemForm({
         formRef: mockFormRef,
+        hasItems: true,
         hasValidItems: true,
         hasDuplicateItems: true,
         scrollToFirstInvalid: vi.fn(),
@@ -94,13 +120,9 @@ describe('useItemFormValidation', () => {
       expect(result.hasFormErrors).toBe(false)
       expect(result.hasItemErrors).toBe(true)
       expect(mockExpandCategories).toHaveBeenCalled()
-      expect(notificationStore.showError).toHaveBeenCalledWith(
-        'You have duplicate item names within the same category. Please use unique names.',
-      )
     })
 
     it('runs custom validation when provided', async () => {
-      const notificationStore = useNotificationStore()
       const customValidation = vi.fn(() => ({
         isValid: false,
         errorMessage: 'Custom error message',
@@ -111,6 +133,7 @@ describe('useItemFormValidation', () => {
 
       const result = await validateItemForm({
         formRef: mockFormRef,
+        hasItems: true,
         hasValidItems: true,
         hasDuplicateItems: false,
         customValidation,
@@ -121,11 +144,9 @@ describe('useItemFormValidation', () => {
       expect(result.isValid).toBe(false)
       expect(result.hasFormErrors).toBe(true)
       expect(customValidation).toHaveBeenCalled()
-      expect(notificationStore.showError).toHaveBeenCalledWith('Custom error message')
     })
 
-    it('does not show custom error message when not provided', async () => {
-      const notificationStore = useNotificationStore()
+    it('returns form errors when custom validation fails without error message', async () => {
       const customValidation = vi.fn(() => ({
         isValid: false,
       }))
@@ -135,6 +156,7 @@ describe('useItemFormValidation', () => {
 
       const result = await validateItemForm({
         formRef: mockFormRef,
+        hasItems: true,
         hasValidItems: true,
         hasDuplicateItems: false,
         customValidation,
@@ -144,9 +166,6 @@ describe('useItemFormValidation', () => {
 
       expect(result.isValid).toBe(false)
       expect(result.hasFormErrors).toBe(true)
-      expect(notificationStore.showError).toHaveBeenCalledWith(
-        'Please fix the form errors before saving',
-      )
     })
 
     it('works without formRef', async () => {
@@ -154,6 +173,7 @@ describe('useItemFormValidation', () => {
 
       const result = await validateItemForm({
         formRef: mockFormRef,
+        hasItems: true,
         hasValidItems: true,
         hasDuplicateItems: false,
         scrollToFirstInvalid: vi.fn(),
@@ -165,26 +185,25 @@ describe('useItemFormValidation', () => {
       expect(result.hasItemErrors).toBe(false)
     })
 
-    it('handles multiple validation failures', async () => {
-      const notificationStore = useNotificationStore()
+    it('skips item validation when form validation fails', async () => {
       const mockFormRef = ref({
         validate: vi.fn().mockResolvedValue(false),
       } as unknown as QForm)
+      const mockScrollToFirstInvalid = vi.fn()
 
       const result = await validateItemForm({
         formRef: mockFormRef,
+        hasItems: true,
         hasValidItems: false,
         hasDuplicateItems: false,
-        scrollToFirstInvalid: vi.fn(),
+        scrollToFirstInvalid: mockScrollToFirstInvalid,
         onExpandCategories: vi.fn(),
       })
 
       expect(result.isValid).toBe(false)
       expect(result.hasFormErrors).toBe(true)
-      expect(result.hasItemErrors).toBe(true)
-      expect(notificationStore.showError).toHaveBeenCalledWith(
-        'Please fix the form errors before saving',
-      )
+      expect(result.hasItemErrors).toBe(false)
+      expect(mockScrollToFirstInvalid).not.toHaveBeenCalled()
     })
   })
 })

@@ -185,7 +185,6 @@ import DeleteDialog from 'src/components/shared/DeleteDialog.vue'
 import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 import { usePlansStore } from 'src/stores/plans'
 import { useCategoriesStore } from 'src/stores/categories'
-import { useNotificationStore } from 'src/stores/notification'
 import { useTemplatesStore } from 'src/stores/templates'
 import { useExpensesStore } from 'src/stores/expenses'
 import { usePlan } from 'src/composables/usePlan'
@@ -203,7 +202,6 @@ const $q = useQuasar()
 const router = useRouter()
 const plansStore = usePlansStore()
 const categoriesStore = useCategoriesStore()
-const notificationsStore = useNotificationStore()
 const templatesStore = useTemplatesStore()
 const expensesStore = useExpensesStore()
 
@@ -224,6 +222,7 @@ const {
 const {
   planItems,
   totalAmount,
+  hasItems,
   hasValidItems,
   hasDuplicateItems,
   planCategoryGroups,
@@ -372,13 +371,13 @@ async function handleSavePlan(): Promise<void> {
 
   const validationResult = await validateItemForm({
     formRef: ref(formRef),
+    hasItems: hasItems.value,
     hasValidItems: hasValidItems.value,
     hasDuplicateItems: hasDuplicateItems.value,
     customValidation: () => {
       if (isNewPlan.value && !selectedTemplate.value) {
         templateError.value = true
         templateErrorMessage.value = 'Please select a template'
-        notificationsStore.showError('Please select a template before creating the plan')
         return { isValid: false }
       }
       return { isValid: true }
@@ -415,10 +414,6 @@ async function savePlan(): Promise<void> {
       )
 
   if (result.success) {
-    notificationsStore.showSuccess(
-      isNewPlan.value ? 'Plan created successfully' : 'Plan updated successfully',
-    )
-
     if (isNewPlan.value) {
       router.push({ name: 'plans' })
     } else if (result.data) {
@@ -432,7 +427,6 @@ async function cancelPlan(): Promise<void> {
 
   if (result.success) {
     showCancelDialog.value = false
-    notificationsStore.showSuccess('Plan cancelled successfully')
     goBack()
   }
 }
@@ -444,13 +438,11 @@ async function deletePlan(): Promise<void> {
 
   if (result.success) {
     showDeleteDialog.value = false
-    notificationsStore.showSuccess('Plan deleted successfully')
     goBack()
   }
 }
 
 function onPlanShared(): void {
-  notificationsStore.showSuccess('Plan shared successfully')
   closeDialog('share')
 }
 

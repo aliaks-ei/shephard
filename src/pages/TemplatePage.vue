@@ -86,7 +86,6 @@ import ShareTemplateDialog from 'src/components/templates/ShareTemplateDialog.vu
 import DeleteDialog from 'src/components/shared/DeleteDialog.vue'
 import { useTemplatesStore } from 'src/stores/templates'
 import { useCategoriesStore } from 'src/stores/categories'
-import { useNotificationStore } from 'src/stores/notification'
 import { useTemplateItems } from 'src/composables/useTemplateItems'
 import { useTemplate } from 'src/composables/useTemplate'
 import { useDetailPageState } from 'src/composables/useDetailPageState'
@@ -98,7 +97,6 @@ import type { Category, CurrencyCode } from 'src/api'
 const router = useRouter()
 const templatesStore = useTemplatesStore()
 const categoriesStore = useCategoriesStore()
-const notificationsStore = useNotificationStore()
 
 const {
   isTemplateLoading,
@@ -115,6 +113,7 @@ const {
 const {
   templateItems,
   totalAmount,
+  hasItems,
   hasValidItems,
   hasDuplicateItems,
   categoryGroups,
@@ -246,6 +245,7 @@ async function saveTemplate(): Promise<void> {
 
   const validationResult = await validateItemForm({
     formRef: editViewRef.value?.formRef ? ref(editViewRef.value.formRef) : ref(undefined),
+    hasItems: hasItems.value,
     hasValidItems: hasValidItems.value,
     hasDuplicateItems: hasDuplicateItems.value,
     customValidation: () => {
@@ -287,9 +287,6 @@ async function saveTemplate(): Promise<void> {
   }
 
   if (result.success) {
-    notificationsStore.showSuccess(
-      isNewTemplate.value ? 'Template created successfully' : 'Template updated successfully',
-    )
     goBack()
   }
 }
@@ -313,13 +310,11 @@ async function deleteTemplate(): Promise<void> {
 
   if (result.success) {
     showDeleteDialog.value = false
-    notificationsStore.showSuccess('Template deleted successfully')
     goBack()
   }
 }
 
 function onTemplateShared(): void {
-  notificationsStore.showSuccess('Template shared successfully')
   templatesStore.loadTemplates()
   closeDialog('share')
 }
