@@ -55,6 +55,7 @@ vi.mock('src/composables/useTemplate', () => ({
 const mockUseTemplateItems = {
   templateItems: ref<TemplateItemUI[]>([]),
   totalAmount: ref(0),
+  hasItems: ref(false),
   hasValidItems: ref(false),
   hasDuplicateItems: ref(false),
   isValidForSave: ref(false),
@@ -181,6 +182,7 @@ function createWrapper(
   if (hasItems) {
     mockUseTemplateItems.templateItems.value = mockTemplateItems
     mockUseTemplateItems.totalAmount.value = 500
+    mockUseTemplateItems.hasItems.value = true
     mockUseTemplateItems.hasValidItems.value = true
     mockUseTemplateItems.isValidForSave.value = !hasDuplicates
     mockUseTemplateItems.categoryGroups.value = [
@@ -196,6 +198,7 @@ function createWrapper(
   } else {
     mockUseTemplateItems.templateItems.value = []
     mockUseTemplateItems.totalAmount.value = 0
+    mockUseTemplateItems.hasItems.value = false
     mockUseTemplateItems.hasValidItems.value = false
     mockUseTemplateItems.isValidForSave.value = false
     mockUseTemplateItems.categoryGroups.value = []
