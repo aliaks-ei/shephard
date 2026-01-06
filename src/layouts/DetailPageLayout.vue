@@ -6,16 +6,19 @@
         <q-btn
           flat
           round
+          size="sm"
           icon="eva-arrow-back-outline"
           @click="emit('back')"
         />
 
         <q-toolbar-title>
-          <div class="row items-center no-wrap">
+          <div class="row items-center no-wrap text-body1">
             {{ pageTitle }}
           </div>
         </q-toolbar-title>
       </q-toolbar>
+
+      <BannerContainer />
 
       <PageBanners
         v-if="!isLoading"
@@ -23,36 +26,34 @@
       />
 
       <div v-if="isLoading">
-        <div class="q-pa-lg">
-          <q-skeleton
-            type="text"
-            width="40%"
-            class="q-mb-md"
-          />
-          <q-skeleton
-            type="QInput"
-            class="q-mb-lg"
-          />
-          <q-skeleton
-            type="text"
-            width="30%"
-            class="q-mb-md"
-          />
-          <q-skeleton
-            type="rect"
-            height="50px"
-            class="q-mb-lg"
-          />
-          <q-skeleton
-            type="text"
-            width="35%"
-            class="q-mb-md"
-          />
-          <q-skeleton
-            type="rect"
-            height="200px"
-          />
-        </div>
+        <q-skeleton
+          type="text"
+          width="40%"
+          class="q-mb-md"
+        />
+        <q-skeleton
+          type="QInput"
+          class="q-mb-lg"
+        />
+        <q-skeleton
+          type="text"
+          width="30%"
+          class="q-mb-md"
+        />
+        <q-skeleton
+          type="rect"
+          height="50px"
+          class="q-mb-lg"
+        />
+        <q-skeleton
+          type="text"
+          width="35%"
+          class="q-mb-md"
+        />
+        <q-skeleton
+          type="rect"
+          height="200px"
+        />
       </div>
 
       <div v-else>
@@ -107,42 +108,42 @@
             />
           </q-toolbar>
 
+          <BannerContainer />
+
           <PageBanners
             v-if="!isLoading"
             :banners="banners || []"
           />
 
           <div v-if="isLoading">
-            <div class="q-pa-lg">
-              <q-skeleton
-                type="text"
-                width="40%"
-                class="q-mb-md"
-              />
-              <q-skeleton
-                type="QInput"
-                class="q-mb-lg"
-              />
-              <q-skeleton
-                type="text"
-                width="30%"
-                class="q-mb-md"
-              />
-              <q-skeleton
-                type="rect"
-                height="50px"
-                class="q-mb-lg"
-              />
-              <q-skeleton
-                type="text"
-                width="35%"
-                class="q-mb-md"
-              />
-              <q-skeleton
-                type="rect"
-                height="200px"
-              />
-            </div>
+            <q-skeleton
+              type="text"
+              width="40%"
+              class="q-mb-md"
+            />
+            <q-skeleton
+              type="QInput"
+              class="q-mb-lg"
+            />
+            <q-skeleton
+              type="text"
+              width="30%"
+              class="q-mb-md"
+            />
+            <q-skeleton
+              type="rect"
+              height="50px"
+              class="q-mb-lg"
+            />
+            <q-skeleton
+              type="text"
+              width="35%"
+              class="q-mb-md"
+            />
+            <q-skeleton
+              type="rect"
+              height="200px"
+            />
           </div>
 
           <div v-else>
@@ -168,6 +169,7 @@
 import { computed } from 'vue'
 import { useQuasar } from 'quasar'
 import PageBanners from 'src/components/shared/PageBanners.vue'
+import BannerContainer from 'src/components/shared/BannerContainer.vue'
 import ActionBar from 'src/components/shared/ActionBar.vue'
 import type { ActionBarAction } from 'src/components/shared/ActionBar.vue'
 

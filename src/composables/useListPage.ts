@@ -1,6 +1,5 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useNotificationStore } from 'src/stores/notification'
 import type { ActionResult } from 'src/types'
 
 type SortOption = {
@@ -27,7 +26,6 @@ export function useListPage<T extends { id: string; name: string }>(
   isLoading: () => boolean,
 ) {
   const router = useRouter()
-  const notificationsStore = useNotificationStore()
 
   const searchQuery = ref('')
   const sortBy = ref(config.defaultSort)
@@ -60,11 +58,7 @@ export function useListPage<T extends { id: string; name: string }>(
   }
 
   async function deleteItem(item: T): Promise<void> {
-    const result = await config.deleteFn(item.id)
-
-    if (result.success) {
-      notificationsStore.showSuccess(`${config.entityName} deleted successfully`)
-    }
+    await config.deleteFn(item.id)
   }
 
   function clearSearch(): void {

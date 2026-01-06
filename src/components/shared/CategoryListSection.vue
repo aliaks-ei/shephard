@@ -29,6 +29,7 @@
           flat
           :icon="allExpanded ? 'eva-collapse-outline' : 'eva-expand-outline'"
           :label="$q.screen.lt.md ? '' : allExpanded ? 'Collapse All' : 'Expand All'"
+          :dense="$q.screen.lt.md"
           color="primary"
           no-caps
           @click="$emit('toggle-expand')"

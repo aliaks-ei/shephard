@@ -115,10 +115,7 @@ it('should pass empty array to PageBanners when banners prop is undefined', () =
 it('should render loading skeleton when isLoading is true', () => {
   const wrapper = renderDetailPageLayout({ isLoading: true })
 
-  const skeletonContainer = wrapper.find('.q-pa-lg')
   const skeletons = wrapper.findAll('.q-skeleton')
-
-  expect(skeletonContainer.exists()).toBe(true)
   expect(skeletons.length).toBeGreaterThan(0)
 
   const textSkeletons = wrapper.findAll('.q-skeleton--type-text')

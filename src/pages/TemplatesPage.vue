@@ -57,11 +57,9 @@ import EmptyState from 'src/components/shared/EmptyState.vue'
 import TemplatesGroup from 'src/components/templates/TemplatesGroup.vue'
 import ShareTemplateDialog from 'src/components/templates/ShareTemplateDialog.vue'
 import { useTemplatesStore } from 'src/stores/templates'
-import { useNotificationStore } from 'src/stores/notification'
 import { useTemplates } from 'src/composables/useTemplates'
 
 const templatesStore = useTemplatesStore()
-const notificationsStore = useNotificationStore()
 
 const {
   searchQuery,
@@ -87,7 +85,6 @@ function openShareDialog(templateId: string): void {
 
 function onTemplateShared(): void {
   templatesStore.loadTemplates()
-  notificationsStore.showSuccess('Template shared successfully')
 }
 
 onMounted(async () => {

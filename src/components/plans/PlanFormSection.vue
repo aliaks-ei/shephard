@@ -22,49 +22,82 @@
         @update:model-value="handleFormUpdate"
       />
 
-      <CategoryItemsManager
-        :category-groups="categoryGroups"
-        :categories="categories"
-        :total-amount="totalAmount"
-        :currency="currency"
-        header-icon="eva-list-outline"
-        header-title="Plan Items"
-        :all-expanded="allExpanded"
-        :has-duplicates="hasDuplicates"
-        duplicate-banner-position="bottom"
-        :duplicate-banner-class="$q.dark.isActive ? 'bg-red-9 text-red-3' : 'bg-red-1 text-red-8'"
-        empty-message="Select a template to load plan items"
-        amount-size-mobile="text-h5"
-        amount-size-desktop="text-h4"
-        :bordered="false"
-        :padding="false"
-        :transparent="true"
-        @toggle-expand="$emit('toggle-expand')"
+      <q-card
+        class="bg-transparent"
+        flat
       >
-        <template #category="{ category }">
-          <PlanCategory
-            :ref="(el) => props.setCategoryRef(el, category.categoryId)"
-            :category-id="category.categoryId"
-            :category-name="category.categoryName"
-            :category-color="category.categoryColor"
-            :category-icon="category.categoryIcon"
-            :items="category.items"
+        <q-card-section class="q-px-none q-pb-none">
+          <CategoryItemsManager
+            :category-groups="categoryGroups"
+            :categories="categories"
+            :total-amount="totalAmount"
             :currency="currency"
-            :default-expanded="
-              props.allExpanded || category.categoryId === props.lastAddedCategoryId
+            header-icon="eva-list-outline"
+            header-title="Plan Items"
+            :all-expanded="allExpanded"
+            :has-duplicates="hasDuplicates"
+            duplicate-banner-position="bottom"
+            :duplicate-banner-class="
+              $q.dark.isActive ? 'bg-red-9 text-red-3' : 'bg-red-1 text-red-8'
             "
-            @update-item="handleUpdateItem"
-            @remove-item="handleRemoveItem"
-            @add-item="handleAddItem"
-          />
-        </template>
-      </CategoryItemsManager>
+            empty-message="Select a template to load plan items"
+            :bordered="false"
+            :padding="false"
+            transparent
+            :show-summary="false"
+            @toggle-expand="$emit('toggle-expand')"
+          >
+            <template #category="{ category }">
+              <PlanCategory
+                :ref="(el) => props.setCategoryRef(el, category.categoryId)"
+                :category-id="category.categoryId"
+                :category-name="category.categoryName"
+                :category-color="category.categoryColor"
+                :category-icon="category.categoryIcon"
+                :items="category.items"
+                :currency="currency"
+                :default-expanded="
+                  props.allExpanded || category.categoryId === props.lastAddedCategoryId
+                "
+                @update-item="handleUpdateItem"
+                @remove-item="handleRemoveItem"
+                @add-item="handleAddItem"
+              />
+            </template>
+          </CategoryItemsManager>
+        </q-card-section>
+      </q-card>
+
+      <!-- Total Amount as separate card -->
+      <q-card flat>
+        <q-card-section>
+          <div class="row items-center justify-between">
+            <div class="row items-center">
+              <q-icon
+                name="eva-credit-card-outline"
+                class="q-mr-sm"
+                size="20px"
+              />
+              <h3 class="text-h6 q-my-none">Total Amount</h3>
+            </div>
+            <div
+              :class="['text-primary text-weight-bold', $q.screen.lt.md ? 'text-h6' : 'text-h5']"
+            >
+              {{ formattedTotal }}
+            </div>
+          </div>
+          <div class="text-caption text-grey-6">
+            Total across {{ categoryGroups.length }}
+            {{ categoryGroups.length === 1 ? 'category' : 'categories' }}
+          </div>
+        </q-card-section>
+      </q-card>
     </template>
   </q-form>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import type { QForm } from 'quasar'
 import PlanTemplateSelection from './PlanTemplateSelection.vue'
 import PlanInformationForm from './PlanInformationForm.vue'
@@ -73,7 +106,7 @@ import CategoryItemsManager from 'src/components/shared/CategoryItemsManager.vue
 import type { Category, TemplateWithItems } from 'src/api'
 import type { PlanItemUI } from 'src/types'
 import type { CategoryGroup } from 'src/composables/useItemsManager'
-import type { CurrencyCode } from 'src/utils/currency'
+import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 
 interface TemplateOption {
   id: string
@@ -107,6 +140,8 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
+const formattedTotal = computed(() => formatCurrency(props.totalAmount, props.currency))
 
 const emit = defineEmits<{
   (e: 'submit'): void

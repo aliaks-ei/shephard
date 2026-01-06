@@ -22,7 +22,10 @@
           class="bg-red-1 text-red-8 q-mb-md"
         >
           <template #avatar>
-            <q-icon name="eva-alert-triangle-outline" />
+            <q-icon
+              size="sm"
+              name="eva-alert-triangle-outline"
+            />
           </template>
           {{ warningMessage }}
         </q-banner>

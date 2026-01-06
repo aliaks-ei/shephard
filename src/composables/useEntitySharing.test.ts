@@ -7,13 +7,26 @@ import {
   type EntitySharingConfig,
   type ShareableEntity,
 } from './useEntitySharing'
-import { useNotificationStore } from 'src/stores/notification'
+
+const mockShowError = vi.fn()
+vi.mock('src/composables/useBanner', () => ({
+  useBanner: () => ({
+    showSuccess: vi.fn(),
+    showError: mockShowError,
+    showWarning: vi.fn(),
+    showInfo: vi.fn(),
+    banners: ref([]),
+    dismissBanner: vi.fn(),
+    clearAllBanners: vi.fn(),
+  }),
+}))
 
 let pinia: TestingPinia
 
 beforeEach(() => {
   pinia = createTestingPinia({ createSpy: vi.fn })
   setActivePinia(pinia)
+  mockShowError.mockClear()
 })
 
 describe('useEntitySharing', () => {
@@ -63,7 +76,6 @@ describe('useEntitySharing', () => {
     })
 
     it('handles error when loading shared users fails', async () => {
-      const notificationStore = useNotificationStore()
       const config = createConfig({
         loadSharedUsersApi: vi.fn().mockRejectedValue(new Error('Network error')),
       })
@@ -73,7 +85,7 @@ describe('useEntitySharing', () => {
       await loadSharedUsers('entity-1')
 
       expect(isSharing.value).toBe(false)
-      expect(notificationStore.showError).toHaveBeenCalled()
+      expect(mockShowError).toHaveBeenCalled()
     })
   })
 
@@ -133,7 +145,6 @@ describe('useEntitySharing', () => {
     })
 
     it('handles specific error types when configured', async () => {
-      const notificationStore = useNotificationStore()
       const config = createConfig({
         handleSpecificErrors: true,
         shareApi: vi.fn().mockRejectedValue(new Error('User not found')),
@@ -144,11 +155,10 @@ describe('useEntitySharing', () => {
       const result = await shareWithUser('entity-1', 'user@example.com', 'view')
 
       expect(result.success).toBe(false)
-      expect(notificationStore.showError).toHaveBeenCalled()
+      expect(mockShowError).toHaveBeenCalled()
     })
 
     it('handles already shared error when configured', async () => {
-      const notificationStore = useNotificationStore()
       const config = createConfig({
         handleSpecificErrors: true,
         shareApi: vi.fn().mockRejectedValue(new Error('already shared')),
@@ -159,11 +169,10 @@ describe('useEntitySharing', () => {
       const result = await shareWithUser('entity-1', 'user@example.com', 'view')
 
       expect(result.success).toBe(false)
-      expect(notificationStore.showError).toHaveBeenCalled()
+      expect(mockShowError).toHaveBeenCalled()
     })
 
     it('handles generic error when sharing fails', async () => {
-      const notificationStore = useNotificationStore()
       const config = createConfig({
         shareApi: vi.fn().mockRejectedValue(new Error('Network error')),
       })
@@ -173,7 +182,7 @@ describe('useEntitySharing', () => {
       const result = await shareWithUser('entity-1', 'user@example.com', 'view')
 
       expect(result.success).toBe(false)
-      expect(notificationStore.showError).toHaveBeenCalled()
+      expect(mockShowError).toHaveBeenCalled()
     })
   })
 
@@ -253,7 +262,6 @@ describe('useEntitySharing', () => {
     })
 
     it('handles error when unsharing fails', async () => {
-      const notificationStore = useNotificationStore()
       const config = createConfig({
         unshareApi: vi.fn().mockRejectedValue(new Error('Network error')),
       })
@@ -263,7 +271,7 @@ describe('useEntitySharing', () => {
       const result = await unshareWithUser('entity-1', 'user-2')
 
       expect(result.success).toBe(false)
-      expect(notificationStore.showError).toHaveBeenCalled()
+      expect(mockShowError).toHaveBeenCalled()
     })
   })
 
@@ -305,7 +313,6 @@ describe('useEntitySharing', () => {
     })
 
     it('handles error when updating permission fails', async () => {
-      const notificationStore = useNotificationStore()
       const config = createConfig({
         updatePermissionApi: vi.fn().mockRejectedValue(new Error('Network error')),
       })
@@ -324,7 +331,7 @@ describe('useEntitySharing', () => {
       const result = await updateUserPermission('entity-1', 'user-2', 'edit')
 
       expect(result.success).toBe(false)
-      expect(notificationStore.showError).toHaveBeenCalled()
+      expect(mockShowError).toHaveBeenCalled()
     })
   })
 
@@ -367,7 +374,6 @@ describe('useEntitySharing', () => {
     })
 
     it('handles error when searching users fails', async () => {
-      const notificationStore = useNotificationStore()
       const config = createConfig({
         searchUsersApi: vi.fn().mockRejectedValue(new Error('Network error')),
       })
@@ -376,7 +382,7 @@ describe('useEntitySharing', () => {
 
       await searchUsers('john')
 
-      expect(notificationStore.showError).toHaveBeenCalled()
+      expect(mockShowError).toHaveBeenCalled()
     })
   })
 

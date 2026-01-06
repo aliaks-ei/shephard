@@ -2,9 +2,12 @@
   <q-card flat>
     <q-card-section
       class="q-pb-sm"
-      :class="$q.screen.lt.md ? 'q-px-sm' : 'q-px-md'"
+      :class="$q.screen.lt.md ? 'q-pa-sm' : 'q-px-md'"
     >
-      <div class="row items-center justify-between q-mb-md">
+      <div
+        class="row items-center justify-between"
+        :class="$q.screen.lt.md ? 'q-mb-sm' : 'q-mb-md'"
+      >
         <div class="row items-center">
           <q-icon
             name="eva-clock-outline"

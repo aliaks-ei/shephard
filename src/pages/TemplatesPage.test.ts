@@ -4,7 +4,6 @@ import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-v
 import { ref, computed } from 'vue'
 import TemplatesPage from './TemplatesPage.vue'
 import { useTemplatesStore } from 'src/stores/templates'
-import { useNotificationStore } from 'src/stores/notification'
 import { useTemplates } from 'src/composables/useTemplates'
 import type { TemplateWithPermission } from 'src/api'
 import { setupTestingPinia } from 'test/helpers/pinia-mocks'
@@ -215,7 +214,6 @@ function createWrapper(
     wrapper,
     mockUseTemplates: mockTemplatesReturn,
     templatesStore: useTemplatesStore(),
-    notificationStore: useNotificationStore(),
   }
 }
 
@@ -385,7 +383,7 @@ it('should open share dialog when share button is clicked', async () => {
 })
 
 it('should close share dialog and reload templates when template is shared', async () => {
-  const { wrapper, templatesStore, notificationStore } = createWrapper({
+  const { wrapper, templatesStore } = createWrapper({
     ownedTemplates: mockOwnedTemplates,
     hasTemplates: true,
   })
@@ -398,7 +396,6 @@ it('should close share dialog and reload templates when template is shared', asy
   await shareConfirmButton.trigger('click')
 
   expect(templatesStore.loadTemplates).toHaveBeenCalled()
-  expect(notificationStore.showSuccess).toHaveBeenCalledWith('Template shared successfully')
 })
 
 it('should call loadTemplates on mount', () => {

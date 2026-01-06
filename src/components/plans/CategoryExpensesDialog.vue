@@ -492,8 +492,6 @@ async function toggleItemCompletion(item: PlanItem, value?: boolean) {
         expense_date: expenseDate,
         plan_item_id: item.id,
       })
-
-      notificationStore.showSuccess(`${item.name} marked as completed!`)
     } else {
       // Unchecking the item - delete associated expense(s)
       const expensesToDelete = expensesStore.expenses.filter(
@@ -511,8 +509,6 @@ async function toggleItemCompletion(item: PlanItem, value?: boolean) {
       for (const expense of expensesToDelete) {
         await expensesStore.removeExpense(expense.id)
       }
-
-      notificationStore.showSuccess(`${item.name} unmarked as completed!`)
     }
 
     // Update the database completion state

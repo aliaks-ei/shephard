@@ -58,12 +58,10 @@ import EmptyState from 'src/components/shared/EmptyState.vue'
 import PlansGroup from 'src/components/plans/PlansGroup.vue'
 import SharePlanDialog from 'src/components/plans/SharePlanDialog.vue'
 import { usePlansStore } from 'src/stores/plans'
-import { useNotificationStore } from 'src/stores/notification'
 import { usePlans } from 'src/composables/usePlans'
 import type { PlanWithPermission } from 'src/api'
 
 const plansStore = usePlansStore()
-const notificationsStore = useNotificationStore()
 
 const {
   searchQuery,
@@ -87,11 +85,7 @@ function handleDeletePlan(plan: PlanWithPermission): void {
 }
 
 async function cancelPlan(plan: PlanWithPermission): Promise<void> {
-  const result = await plansStore.cancelPlan(plan.id)
-
-  if (result.success) {
-    notificationsStore.showSuccess('Plan cancelled successfully')
-  }
+  await plansStore.cancelPlan(plan.id)
 }
 
 function openShareDialog(planId: string): void {
@@ -101,7 +95,6 @@ function openShareDialog(planId: string): void {
 
 function onPlanShared(): void {
   plansStore.loadPlans()
-  notificationsStore.showSuccess('Plan shared successfully')
 }
 
 onMounted(async () => {

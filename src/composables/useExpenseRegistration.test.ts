@@ -311,7 +311,6 @@ describe('useExpenseRegistration', () => {
   describe('handleQuickSelectSubmit', () => {
     it('registers multiple expenses successfully', async () => {
       const expensesStore = useExpensesStore()
-      const notificationStore = useNotificationStore()
       const { updatePlanItemCompletion } = await import('src/api/plans')
       vi.mocked(updatePlanItemCompletion).mockResolvedValue()
 
@@ -324,9 +323,6 @@ describe('useExpenseRegistration', () => {
 
       expect(expensesStore.addExpense).toHaveBeenCalled()
       expect(updatePlanItemCompletion).toHaveBeenCalledWith('item-1', true)
-      expect(notificationStore.showSuccess).toHaveBeenCalledWith(
-        '1 expense registered successfully!',
-      )
       expect(onSuccess).toHaveBeenCalled()
     })
 
@@ -358,7 +354,6 @@ describe('useExpenseRegistration', () => {
   describe('handleCustomEntrySubmit', () => {
     it('registers single expense successfully', async () => {
       const expensesStore = useExpensesStore()
-      const notificationStore = useNotificationStore()
       const { updatePlanItemCompletion } = await import('src/api/plans')
       vi.mocked(updatePlanItemCompletion).mockResolvedValue()
 
@@ -382,7 +377,6 @@ describe('useExpenseRegistration', () => {
         expense_date: expect.any(String),
         plan_item_id: null,
       })
-      expect(notificationStore.showSuccess).toHaveBeenCalledWith('Expense registered successfully!')
       expect(onSuccess).toHaveBeenCalled()
     })
 

@@ -1,11 +1,9 @@
 import { Dialog } from 'quasar'
 import { useExpensesStore } from 'src/stores/expenses'
-import { useNotificationStore } from 'src/stores/notification'
 import type { ExpenseWithCategory } from 'src/api'
 
 export function useExpenseActions() {
   const expensesStore = useExpensesStore()
-  const notificationStore = useNotificationStore()
 
   function confirmDeleteExpense(expense: ExpenseWithCategory, onSuccess?: () => void) {
     Dialog.create({
@@ -25,7 +23,6 @@ export function useExpenseActions() {
     }).onOk(() => {
       void (async () => {
         await expensesStore.removeExpense(expense.id)
-        notificationStore.showSuccess('Expense deleted successfully')
         onSuccess?.()
       })()
     })

@@ -3,7 +3,6 @@ import { createTestingPinia, type TestingPinia } from '@pinia/testing'
 import { setActivePinia } from 'pinia'
 import { useExpenseActions } from './useExpenseActions'
 import { useExpensesStore } from 'src/stores/expenses'
-import { useNotificationStore } from 'src/stores/notification'
 import type { ExpenseWithCategory } from 'src/api'
 
 vi.mock('quasar', () => ({
@@ -79,10 +78,9 @@ describe('useExpenseActions', () => {
       })
     })
 
-    it('deletes expense and shows success notification when confirmed', async () => {
+    it('deletes expense when confirmed', async () => {
       const { Dialog } = await import('quasar')
       const expensesStore = useExpensesStore()
-      const notificationStore = useNotificationStore()
 
       expensesStore.removeExpense = vi.fn().mockResolvedValue(undefined)
 
@@ -110,7 +108,6 @@ describe('useExpenseActions', () => {
         await new Promise((resolve) => setTimeout(resolve, 0))
 
         expect(expensesStore.removeExpense).toHaveBeenCalledWith('expense-1')
-        expect(notificationStore.showSuccess).toHaveBeenCalledWith('Expense deleted successfully')
       }
     })
 
