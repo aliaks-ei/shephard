@@ -96,10 +96,16 @@ export function useTemplate() {
 
     if (!removeResult.success) return { success: false }
 
-    const items = templateItems.map((item) => ({
-      ...item,
-      template_id: templateResult.data!.id,
-    }))
+    const items = templateItems.map((item) => {
+      // Strip id from items since all items are being created fresh after delete
+      // This prevents Supabase from sending null for items without id when
+      // mixed with items that have id, which causes not-null constraint violations
+      const { id: _id, ...itemWithoutId } = item as typeof item & { id?: string }
+      return {
+        ...itemWithoutId,
+        template_id: templateResult.data!.id,
+      }
+    })
 
     if (items.length > 0) {
       const addResult = await templatesStore.addItemsToTemplate(items)
