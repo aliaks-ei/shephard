@@ -3,77 +3,66 @@ name: quasar-docs
 description: Query Quasar Framework documentation to answer questions, suggest component usage, find plugins, and provide implementation guidance based on official docs.
 ---
 
-This skill provides direct access to Quasar Framework documentation via the `quasar-docs` MCP server. Use it to answer questions about Quasar components, plugins, directives, utilities, and best practices.
+# Quasar Documentation
+
+Query Quasar Framework docs for component APIs, plugins, and implementation patterns.
 
 ## When to Use
 
-Invoke this skill when the user asks about:
-
-- **Component documentation**: Props, events, slots, and examples for any q-\* component
-- **Plugin availability**: What plugins exist (Notify, Dialog, Loading, etc.) and how to use them
-- **Refactoring suggestions**: How to better leverage Quasar components based on official API
-- **Feature discovery**: What Quasar offers for a specific use case
-- **Implementation patterns**: How to correctly use Quasar features
-
-## Available MCP Tools
-
-Use these tools from the `quasar-docs` MCP server:
-
-| Tool                   | Purpose                                                                |
-| ---------------------- | ---------------------------------------------------------------------- |
-| `get_quasar_component` | Get full documentation for a specific component (e.g., q-btn, q-input) |
-| `get_quasar_page`      | Get any documentation page by path (e.g., quasar-plugins/notify)       |
-| `search_quasar_docs`   | Search documentation by keyword or topic                               |
-| `list_quasar_sections` | List available sections or pages within a section                      |
+- Component documentation (props, events, slots)
+- Plugin availability and usage
+- Refactoring suggestions using Quasar features
+- Feature discovery for specific use cases
 
 ## Workflow
 
-1. **Understand the request**: Determine what Quasar feature the user needs information about
-2. **Fetch relevant documentation**: Use the appropriate MCP tool to get official docs
-3. **Synthesize and respond**: Provide a clear, actionable answer based on the documentation
-4. **Include references**: Mention the official docs URL for further reading
+### Step 1: Identify Query Type
 
-## Example Queries and Responses
+- [ ] **Component API query** (props, events, slots) → Use GitHub JSON (see `reference.md`)
+- [ ] **Usage examples** → Use MCP tools (`get_quasar_page`, `search_quasar_docs`)
+- [ ] **Plugin/feature discovery** → Use `list_quasar_sections` or `search_quasar_docs`
 
-### "What Quasar plugins are available?"
+### Step 2: Fetch Documentation
 
-1. Use `list_quasar_sections` with section `quasar-plugins`
-2. List all available plugins with brief descriptions
-3. Recommend relevant ones for this expense tracking app (Notify, Dialog, Loading)
+For **component API** (props, events, slots):
 
-### "How should I refactor this button to use q-btn properly?"
+- [ ] Fetch component JSON from GitHub (see `reference.md` for URL pattern)
+- [ ] Check `mixins` array and fetch each mixin
+- [ ] Merge all props from component + mixins
 
-1. Use `get_quasar_component` with component `btn`
-2. Review the user's current implementation
-3. Suggest improvements based on available props, slots, and patterns from docs
-4. Provide code examples
+For **usage examples**:
 
-### "How do I show loading state while fetching data?"
+- [ ] Use `get_quasar_page` with path like `vue-components/button`
+- [ ] Use `search_quasar_docs` if page path is unknown
 
-1. Use `search_quasar_docs` with query `loading`
-2. Fetch relevant pages (Loading plugin, QSpinner, loading states)
-3. Recommend the best approach for this Vue 3 + Quasar PWA project
+### Step 3: Respond
 
-### "What input validation options does Quasar provide?"
+- [ ] Organize props by category (content, style, behavior)
+- [ ] Include prop types and defaults
+- [ ] Provide Vue 3 Composition API code examples
+- [ ] Link to official docs: `https://quasar.dev/{path}`
 
-1. Use `get_quasar_component` with component `input`
-2. Focus on the `rules` prop and validation patterns
-3. Provide examples relevant to expense/financial data entry
+## Success Criteria
 
-## Response Guidelines
+- [ ] Complete API returned (all props including from mixins)
+- [ ] Props organized by category with types
+- [ ] Code examples use `<script setup>` syntax
+- [ ] Official docs URL included
 
-- **Be specific**: Reference exact prop names, event names, and slot names from docs
-- **Show code**: Include practical Vue 3 Composition API examples
-- **Stay current**: The MCP fetches from the latest Quasar dev branch
-- **Link to source**: Always include the quasar.dev URL for the referenced documentation
-- **Project context**: Tailor suggestions to this Vue 3 + TypeScript + Quasar PWA codebase
+## Project Conventions
 
-## Integration with Project
+When suggesting Quasar features, follow these project patterns:
 
-When suggesting Quasar features, consider this project's conventions:
+- Quasar with Vite
+- Composition API with `<script setup>`
+- Quasar utility classes over custom CSS
+- `$q` used directly in templates
+- Errors handled in stores, not components
 
-- Uses Quasar with Vite
-- Follows Composition API with `<script setup>`
-- Prefers Quasar utility classes over custom CSS
-- Uses `$q` directly in templates (no need for `useQuasar()` in templates)
-- Errors are handled in stores, not components
+## Supporting Files
+
+| File            | Use When                                                  |
+| --------------- | --------------------------------------------------------- |
+| `reference.md`  | Need component mappings, GitHub URL patterns, mixin paths |
+| `examples.md`   | Need example queries and expected workflows               |
+| `edge-cases.md` | MCP tools fail or return incomplete data                  |
