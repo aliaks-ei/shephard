@@ -3,12 +3,6 @@
     "supabase": {
       "type": "http",
       "url": "https://mcp.supabase.com/mcp"
-    },
-    "quasar-docs": {
-      "type": "stdio",
-      "command": "node",
-      "args": ["/Users/aliakseimazheika/Personal/shephard/tools/quasar-docs-mcp/dist/index.js"],
-      "env": {}
     }
   }
 }
