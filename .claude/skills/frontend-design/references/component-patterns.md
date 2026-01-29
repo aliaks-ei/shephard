@@ -288,4 +288,101 @@ text-subtitle1 text-weight-bold text-primary  // Emphasized value
 row items-center justify-between  // Horizontal layout
 col-auto                     // Auto-width column
 full-height                  // 100% height
+window-height                // min-height: 100vh
 ```
+
+## Color & Opacity Classes
+
+Quasar provides color classes with opacity suffixes (1-14 scale, where 1 = 7%, 14 = 100%):
+
+### Text Opacity
+
+```
+text-white-7                 // White text at ~50% opacity
+text-white-10                // White text at ~70% opacity
+text-grey-7                  // Grey text (for secondary/muted text)
+text-grey-6                  // Lighter grey (for captions)
+```
+
+### Background Opacity
+
+```
+bg-white-10                  // Semi-transparent white background
+bg-primary-1                 // Very light primary tint
+bg-red-1 / bg-green-1        // Light semantic backgrounds for alerts
+```
+
+### Component Color Props
+
+```vue
+<!-- q-avatar with semi-transparent background -->
+<q-avatar color="white-10" text-color="white" size="48px">
+  <q-icon name="eva-icon" />
+</q-avatar>
+
+<!-- Solid primary background -->
+<q-avatar color="primary" text-color="white" size="48px">
+  <q-icon name="eva-icon" />
+</q-avatar>
+```
+
+## Responsive Visibility Classes
+
+Show/hide elements at breakpoints:
+
+```
+xs    // 0-599px
+sm    // 600-1023px
+md    // 1024-1439px
+lg    // 1440-1919px
+xl    // 1920px+
+
+gt-xs // > 599px (greater than xs)
+gt-sm // > 1023px
+gt-md // > 1439px
+lt-sm // < 600px (less than sm)
+lt-md // < 1024px
+lt-lg // < 1440px
+```
+
+Example:
+
+```vue
+<!-- Show only on mobile -->
+<div class="lt-md">Mobile only</div>
+
+<!-- Show only on desktop -->
+<div class="gt-sm">Desktop only</div>
+```
+
+## Icon Container Pattern
+
+For fixed-size icon containers, use `q-avatar` instead of custom divs:
+
+```vue
+<!-- WRONG: Custom div with inline styles -->
+<div style="width: 48px; height: 48px; border-radius: 50%;">
+  <q-icon name="eva-home-outline" />
+</div>
+
+<!-- CORRECT: Use q-avatar -->
+<q-avatar size="48px" color="primary" text-color="white">
+  <q-icon name="eva-home-outline" size="24px" />
+</q-avatar>
+```
+
+Common configurations:
+
+- **Solid background**: `color="primary"` or `color="positive"`
+- **Semi-transparent**: `color="white-10"` or `color="primary-2"`
+- **Rounded square**: add `rounded` prop
+- **With image**: `<q-avatar><img src="..." /></q-avatar>`
+
+Sizing guide:
+| Avatar size | Icon size | Use case |
+|-------------|-----------|----------|
+| `24px` | `12px` | Inline with text |
+| `32px` | `16px` | List item icons |
+| `48px` | `24px` | Card headers, features |
+| `64px` | `32px` | Profile pictures |
+| `80px` | `40px` | Hero sections |

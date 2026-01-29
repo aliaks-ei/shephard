@@ -1,19 +1,50 @@
 <template>
   <q-form
-    class="q-mb-md"
     novalidate
     @submit.prevent="handleEmailSubmit"
   >
-    <div class="q-mb-sm">
+    <!-- Error Alert -->
+    <q-banner
+      v-if="userStore.auth.emailError"
+      class="bg-red-1 text-red-9 q-mb-md"
+      rounded
+      dense
+    >
+      <template #avatar>
+        <q-icon
+          name="eva-alert-circle-outline"
+          color="negative"
+        />
+      </template>
+      {{ userStore.auth.emailError }}
+    </q-banner>
+
+    <!-- Success Alert -->
+    <q-banner
+      v-if="userStore.auth.isEmailSent"
+      class="bg-green-1 text-green-9 q-mb-md"
+      rounded
+      dense
+    >
+      <template #avatar>
+        <q-icon
+          name="eva-checkmark-circle-2-outline"
+          color="positive"
+        />
+      </template>
+      We've sent a magic link to your email. Please check your inbox and click the link to sign in.
+    </q-banner>
+
+    <div class="q-mb-md">
       <label
-        for="email-label"
-        class="form-label form-label--required"
+        for="email-input"
+        class="text-body2 text-weight-medium q-mb-xs block"
       >
         Email
       </label>
       <q-input
+        id="email-input"
         v-model="email"
-        for="email-label"
         placeholder="you@example.com"
         type="email"
         :disable="userStore.auth.isEmailSent"
@@ -27,20 +58,6 @@
       />
     </div>
 
-    <p
-      v-if="userStore.auth.emailError"
-      class="text-negative q-mb-sm"
-    >
-      {{ userStore.auth.emailError }}
-    </p>
-
-    <p
-      v-if="userStore.auth.isEmailSent"
-      class="text-positive q-mb-md"
-    >
-      We've sent a magic link to your email. Please check your inbox and click the link to signin.
-    </p>
-
     <q-btn
       type="submit"
       :label="submitBtnLabel"
@@ -48,6 +65,7 @@
       class="full-width"
       :loading="isLoading"
       no-caps
+      unelevated
     />
   </q-form>
 </template>

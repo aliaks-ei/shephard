@@ -41,6 +41,83 @@ Focus on:
 
 Avoid generic, flashy templates. The UI should feel purpose-built for personal finance: clean, reliable, and fast to scan.
 
+## Styling Rules (IMPORTANT)
+
+**NEVER use `<style>` blocks or inline styles.** Always use Quasar utility classes and components.
+
+### Forbidden Patterns
+
+```vue
+<!-- WRONG: Custom CSS in style block -->
+<style scoped>
+.container {
+  padding: 16px;
+  display: flex;
+  gap: 8px;
+}
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+</style>
+
+<!-- WRONG: Inline styles -->
+<div style="display: flex; align-items: center; gap: 12px;"></div>
+```
+
+### Correct Alternatives
+
+| Instead of...                       | Use...                                             |
+| ----------------------------------- | -------------------------------------------------- |
+| `style="display: flex"`             | `class="flex"` or `class="row"` / `class="column"` |
+| `style="align-items: center"`       | `class="items-center"`                             |
+| `style="justify-content: center"`   | `class="justify-center"`                           |
+| `style="gap: 16px"`                 | `class="q-gutter-md"`                              |
+| `style="padding: 16px"`             | `class="q-pa-md"`                                  |
+| `style="margin-bottom: 24px"`       | `class="q-mb-lg"`                                  |
+| `style="width: 48px; height: 48px"` | `<q-avatar size="48px">`                           |
+| `style="border-radius: 50%"`        | `<q-avatar>` (circular by default)                 |
+| `style="min-height: 100vh"`         | `class="window-height"`                            |
+| `style="opacity: 0.7"`              | `class="text-grey-7"` or `class="text-white-7"`    |
+| `style="background: rgba(...)"`     | `class="bg-white-10"` or `color="white-10"` prop   |
+| `style="font-weight: 600"`          | `class="text-weight-medium"`                       |
+| `style="font-size: 1.5rem"`         | `class="text-h5"`                                  |
+
+### When Scoped Styles Are Acceptable
+
+Only use `<style scoped>` for properties with no Quasar equivalent:
+
+- `max-width` constraints
+- Using SCSS variables like `$card-border-radius`, `$primary`
+- Complex CSS that can't be expressed with utility classes
+
+Keep scoped styles minimal (1-3 properties max).
+
+## Layout Rules
+
+### Vue Router Layouts
+
+Files in `src/layouts/` are Vue Router layouts. They render child routes via `<router-view />`:
+
+```vue
+<!-- WRONG: Using slot (for regular components only) -->
+<slot />
+
+<!-- CORRECT: Using router-view (for Vue Router layouts) -->
+<router-view />
+```
+
+### Regular Components
+
+Files in `src/components/` are regular Vue components. They use `<slot />` for content projection:
+
+```vue
+<!-- Card wrapper component -->
+<q-card class="q-pa-md">
+  <slot />
+</q-card>
+```
+
 ## Resources
 
 When implementing UI:

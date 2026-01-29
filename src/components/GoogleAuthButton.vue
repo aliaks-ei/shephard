@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-center flex-column">
+  <div class="flex flex-center">
     <div v-if="isNonceReady">
       <component
         :is="'script'"
@@ -27,15 +27,18 @@
       ></div>
     </div>
 
-    <div v-else>
+    <div
+      v-else
+      class="column items-center q-gutter-y-sm q-pa-md"
+    >
       <q-spinner
         color="primary"
-        size="2em"
-        class="q-mb-sm"
+        size="1.5em"
       />
-      <p class="text-body2 q-mb-sm">Preparing secure authentication...</p>
+      <span class="text-body2 text-grey-7">Preparing secure authentication...</span>
       <q-btn
         flat
+        dense
         color="primary"
         label="Refresh"
         icon="eva-refresh-outline"
