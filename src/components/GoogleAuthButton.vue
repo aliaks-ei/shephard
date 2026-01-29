@@ -36,15 +36,6 @@
         size="1.5em"
       />
       <span class="text-body2 text-grey-7">Preparing secure authentication...</span>
-      <q-btn
-        flat
-        dense
-        color="primary"
-        label="Refresh"
-        icon="eva-refresh-outline"
-        no-caps
-        @click="refreshGoogleAuth"
-      />
     </div>
   </div>
 </template>

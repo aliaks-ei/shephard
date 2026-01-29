@@ -2,7 +2,7 @@
   <q-card
     flat
     bordered
-    class="full-width q-pa-md auth-login-card"
+    class="full-width q-pa-sm auth-login-card"
   >
     <q-card-section class="text-center">
       <!-- Mobile logo (shown only on mobile) -->
@@ -33,6 +33,5 @@
 <style lang="scss" scoped>
 .auth-login-card {
   max-width: 400px;
-  border-radius: $card-border-radius;
 }
 </style>
