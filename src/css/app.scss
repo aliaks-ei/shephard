@@ -102,10 +102,10 @@ body {
 }
 
 // --------------------------------------------
-// Buttons (q-btn)
+// Buttons (q-btn) - shadcn-vue conventions
 // --------------------------------------------
 .q-btn {
-  border-radius: var(--radius);
+  border-radius: var(--radius-md); // 6px
   font-weight: 500;
   letter-spacing: -0.011em;
   text-transform: none;
@@ -115,25 +115,25 @@ body {
     color 0.15s ease,
     box-shadow 0.15s ease;
 
+  // Default variant - no shadow on buttons (shadcn pattern)
   &:not(.q-btn--flat):not(.q-btn--outline) {
-    box-shadow: var(--shadow-sm);
-
-    &:hover {
-      box-shadow: var(--shadow-md);
-    }
+    box-shadow: none;
   }
 
+  // Outline variant
   &.q-btn--outline {
     border-width: var(--border-width);
+    box-shadow: var(--shadow-xs);
 
     &:hover {
       background: var(--muted);
     }
   }
 
+  // Focus ring - 3px with 50% opacity
   &:focus-visible {
-    outline: var(--ring-width) solid var(--ring-color-primary);
-    outline-offset: var(--ring-offset);
+    outline: none;
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.5);
   }
 
   &.q-btn--round {
@@ -142,10 +142,13 @@ body {
 }
 
 // --------------------------------------------
-// Cards (q-card)
+// Cards (q-card) - shadcn-vue conventions
 // --------------------------------------------
 .q-card {
-  border-radius: var(--radius);
+  border-radius: var(--radius-xl); // 12px (shadcn uses rounded-xl)
+  background: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border: 1px solid hsl(var(--border));
   transition:
     box-shadow 0.15s ease,
     border-color 0.15s ease;
@@ -160,19 +163,27 @@ body {
 
   &.q-card--flat {
     box-shadow: none;
+    border: 1px solid hsl(var(--border));
+  }
+
+  // Cards with no-shadow should also have no border
+  &.no-shadow,
+  &.shadow-0 {
+    box-shadow: none;
+    border: none;
   }
 
   .q-card__section {
     &:first-child {
-      border-radius: var(--radius) var(--radius) 0 0;
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
     }
 
     &:last-child {
-      border-radius: 0 0 var(--radius) var(--radius);
+      border-radius: 0 0 var(--radius-xl) var(--radius-xl);
     }
 
     &:only-child {
-      border-radius: var(--radius);
+      border-radius: var(--radius-xl);
     }
   }
 
@@ -182,13 +193,14 @@ body {
 }
 
 // --------------------------------------------
-// Form Fields (q-field, q-input, q-select)
+// Form Fields (q-field, q-input, q-select) - shadcn-vue conventions
 // --------------------------------------------
 .q-field {
   &--outlined {
     .q-field__control {
-      border-radius: var(--radius);
+      border-radius: var(--radius-md); // 6px
       border: var(--border-width) solid var(--border-color);
+      box-shadow: var(--shadow-xs);
       transition:
         border-color 0.15s ease,
         box-shadow 0.15s ease;
@@ -201,9 +213,10 @@ body {
         border: none;
       }
 
+      // Focus state - 3px ring with 50% opacity
       &:focus-within {
         border-color: var(--ring-color-primary);
-        box-shadow: 0 0 0 calc(var(--ring-width) - 1px) rgba(0, 145, 154, 0.15);
+        box-shadow: 0 0 0 3px hsl(var(--ring) / 0.5);
       }
     }
 
@@ -212,7 +225,7 @@ body {
 
       &::before {
         border: 1px dashed var(--border-color-readonly);
-        border-radius: var(--radius);
+        border-radius: var(--radius-md);
       }
     }
 
@@ -221,15 +234,16 @@ body {
     }
 
     &.q-field--focused.q-field--error .q-field__control {
-      box-shadow: 0 0 0 calc(var(--ring-width) - 1px) rgba(247, 55, 79, 0.15);
+      box-shadow: 0 0 0 3px hsl(var(--destructive) / 0.2);
     }
   }
 
   &--filled {
     .q-field__control {
-      border-radius: var(--radius);
+      border-radius: var(--radius-md); // 6px
       background: var(--muted);
       border: var(--border-width) solid transparent;
+      box-shadow: var(--shadow-xs);
       transition:
         border-color 0.15s ease,
         box-shadow 0.15s ease;
@@ -238,9 +252,10 @@ body {
         background: transparent;
       }
 
+      // Focus state - 3px ring with 50% opacity
       &:focus-within {
         border-color: var(--ring-color-primary);
-        box-shadow: 0 0 0 calc(var(--ring-width) - 1px) rgba(0, 145, 154, 0.15);
+        box-shadow: 0 0 0 3px hsl(var(--ring) / 0.5);
       }
     }
 
@@ -249,7 +264,7 @@ body {
 
       &::before {
         border: 1px dashed var(--border-color-readonly);
-        border-radius: var(--radius);
+        border-radius: var(--radius-md);
         background: transparent;
       }
     }
@@ -264,27 +279,35 @@ body {
   }
 }
 
+// --------------------------------------------
+// Dropdowns/Menus (q-menu) - shadcn-vue conventions
+// --------------------------------------------
 .q-menu {
-  border-radius: var(--radius);
-  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--radius-md); // 6px
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
   box-shadow: var(--shadow-md);
+  padding: 4px;
 
   .q-item {
-    border-radius: var(--radius-sm);
-    margin: 2px 4px;
+    border-radius: var(--radius-sm); // 4px
+    margin: 0;
 
     &:hover {
-      background: var(--muted);
+      background: hsl(var(--accent));
+      color: hsl(var(--accent-foreground));
     }
 
     &.q-item--active {
-      background: var(--muted);
+      background: hsl(var(--accent));
+      color: hsl(var(--accent-foreground));
     }
   }
 }
 
 // --------------------------------------------
-// Dialogs (q-dialog)
+// Dialogs (q-dialog) - shadcn-vue conventions
 // --------------------------------------------
 .q-dialog {
   &__backdrop {
@@ -294,12 +317,14 @@ body {
 }
 
 // --------------------------------------------
-// Chips (q-chip)
+// Chips/Badges (q-chip) - shadcn-vue conventions
 // --------------------------------------------
 .q-chip {
-  padding: 0.5rem;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-full); // Full round (9999px)
+  font-size: 12px; // text-xs
   font-weight: 500;
+  padding: 2px 8px; // px-2 py-0.5
+  height: auto;
   letter-spacing: -0.011em;
   transition:
     background-color 0.15s ease,
@@ -310,7 +335,8 @@ body {
   }
 
   &--outline {
-    border: var(--border-width) solid currentColor;
+    border: 1px solid currentColor;
+    background: transparent;
   }
 
   &--clickable:hover {
@@ -348,10 +374,18 @@ body {
 }
 
 // --------------------------------------------
-// Separators (q-separator)
+// Separators (q-separator) - shadcn-vue conventions
 // --------------------------------------------
 .q-separator {
-  background: var(--separator-color);
+  background: hsl(var(--border));
+
+  &--horizontal {
+    height: 1px;
+  }
+
+  &--vertical {
+    width: 1px;
+  }
 
   &--spaced {
     margin: 1rem 0;
@@ -366,10 +400,10 @@ body {
 }
 
 // --------------------------------------------
-// List Items (q-item)
+// List Items (q-item, q-expansion-item)
 // --------------------------------------------
 .q-item {
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md); // Consistent with buttons/inputs
   transition: background-color 0.15s ease;
 
   &--clickable:hover {
@@ -381,11 +415,21 @@ body {
   }
 }
 
+.q-expansion-item {
+  border-radius: var(--radius-md); // Consistent with buttons/inputs
+
+  .q-expansion-item__container {
+    border-radius: var(--radius-md);
+  }
+}
+
 // --------------------------------------------
-// Linear Progress (q-linear-progress)
+// Linear Progress (q-linear-progress) - shadcn-vue conventions
 // --------------------------------------------
 .q-linear-progress {
+  height: 8px; // h-2
   border-radius: var(--radius-full);
+  background: hsl(var(--primary) / 0.2);
   overflow: hidden;
 
   &__track {
@@ -393,6 +437,7 @@ body {
   }
 
   &__model {
+    background: hsl(var(--primary));
     border-radius: var(--radius-full);
   }
 }
@@ -419,6 +464,23 @@ body {
   border-radius: var(--radius-sm);
   font-size: 0.75rem;
   font-weight: 500;
+}
+
+// --------------------------------------------
+// Tabs (q-tabs) - shadcn-vue conventions
+// --------------------------------------------
+.q-tabs {
+  .q-tab {
+    border-radius: var(--radius-md);
+
+    &--active {
+      box-shadow: var(--shadow-sm);
+    }
+  }
+}
+
+.q-tabs__content {
+  border-radius: var(--radius-lg);
 }
 
 // ============================================
@@ -458,7 +520,7 @@ h6,
 
 .text-caption {
   letter-spacing: 0;
-  color: var(--muted-foreground);
+  color: hsl(var(--muted-foreground));
 }
 
 .text-overline {
@@ -505,11 +567,11 @@ h6,
 // ============================================
 
 .text-muted {
-  color: var(--muted-foreground);
+  color: hsl(var(--muted-foreground));
 }
 
 .bg-muted {
-  background-color: var(--muted);
+  background-color: hsl(var(--muted));
 }
 
 .border-subtle {
@@ -526,8 +588,8 @@ h6,
 
 .focus-ring {
   &:focus-visible {
-    outline: var(--ring-width) solid var(--ring-color-primary);
-    outline-offset: var(--ring-offset);
+    outline: none;
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.5);
   }
 }
 
