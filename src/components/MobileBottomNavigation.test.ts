@@ -65,11 +65,10 @@ it('renders all navigation buttons', () => {
   const wrapper = createWrapper()
   const buttons = wrapper.findAll('.q-btn')
 
-  expect(buttons.length).toBeGreaterThanOrEqual(5)
+  expect(buttons.length).toBeGreaterThanOrEqual(4)
   expect(buttons.some((btn) => btn.text().includes('Home'))).toBe(true)
   expect(buttons.some((btn) => btn.text().includes('Plans'))).toBe(true)
   expect(buttons.some((btn) => btn.text().includes('Templates'))).toBe(true)
-  expect(buttons.some((btn) => btn.text().includes('Categories'))).toBe(true)
 })
 
 it('highlights home button when on home route', () => {
@@ -94,16 +93,6 @@ it('highlights templates button when on templates route', () => {
 
   const templatesButton = wrapper.findAll('.q-btn').find((btn) => btn.text().includes('Templates'))
   expect(templatesButton?.attributes('data-color')).toBe('primary')
-})
-
-it('highlights categories button when on categories route', () => {
-  mockRoute.fullPath = '/categories'
-  const wrapper = createWrapper()
-
-  const categoriesButton = wrapper
-    .findAll('.q-btn')
-    .find((btn) => btn.text().includes('Categories'))
-  expect(categoriesButton?.attributes('data-color')).toBe('primary')
 })
 
 it('does not highlight home button when on subroute', () => {
@@ -134,10 +123,8 @@ it('sets correct to attributes for navigation buttons', () => {
   const homeButton = buttons.find((btn) => btn.text().includes('Home'))
   const plansButton = buttons.find((btn) => btn.text().includes('Plans'))
   const templatesButton = buttons.find((btn) => btn.text().includes('Templates'))
-  const categoriesButton = buttons.find((btn) => btn.text().includes('Categories'))
 
   expect(homeButton?.attributes('data-to')).toBe('/')
   expect(plansButton?.attributes('data-to')).toBe('/plans')
   expect(templatesButton?.attributes('data-to')).toBe('/templates')
-  expect(categoriesButton?.attributes('data-to')).toBe('/categories')
 })

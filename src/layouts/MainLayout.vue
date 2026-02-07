@@ -151,11 +151,6 @@ const navigationItems = ref([
     label: 'Templates',
     to: '/templates',
   },
-  {
-    icon: 'eva-grid-outline',
-    label: 'Categories',
-    to: '/categories',
-  },
 ])
 
 const isDetailPage = computed(() => {

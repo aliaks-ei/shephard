@@ -70,22 +70,6 @@
               class="full-width"
             />
           </div>
-
-          <!-- Categories -->
-          <div class="col">
-            <q-btn
-              icon="eva-grid-outline"
-              label="Categories"
-              to="/categories"
-              :color="isActive('/categories') ? 'primary' : undefined"
-              size="sm"
-              flat
-              stack
-              no-caps
-              dense
-              class="full-width"
-            />
-          </div>
         </div>
       </div>
     </q-page-sticky>
