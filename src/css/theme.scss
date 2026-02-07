@@ -58,6 +58,9 @@
   // Border width
   --border-width: 1px;
 
+  // Letter spacing
+  --tracking-tight: -0.011em;
+
   // Legacy compatibility mappings
   --text-primary: hsl(var(--foreground));
   --text-secondary: hsl(var(--muted-foreground));

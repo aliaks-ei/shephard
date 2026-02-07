@@ -63,12 +63,21 @@ npm run build               # Production PWA build
 - Use `withDefaults()` for component props with defaults
 - Avoid logic in templates; extract to `<script setup>`
 - `$q` is available in templates automatically (no need for `useQuasar`)
+- Use Vue 3.3+ object emit syntax: `defineEmits<{ 'event-name': [payload: Type] }>()`
 
 ### Quasar
 
 - Use Quasar utility classes for spacing (`q-pa-*`, `q-ma-*`) over custom CSS
 - Use `q-btn` with `to` prop for navigation instead of `@click="$router.push()"`
 - Leverage Quasar components/plugins over custom implementations
+- Use QDrawer/QFooter for persistent navigation instead of QPageSticky — they integrate with QLayout's view string and handle page container padding automatically
+- QLayout view string: use `hHh Lpr fff` — lowercase `l` in position 1 puts the drawer inside the header row (usually wrong)
+- QFooter forces white text on children — override with explicit text/background color classes on content inside it
+
+### CSS
+
+- Store design tokens (spacing, letter-spacing, border-radius, etc.) as CSS custom properties in `src/css/theme.scss`
+- Add utility classes to `src/css/app.scss` rather than using inline styles for repeated patterns
 
 ## Testing
 

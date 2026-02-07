@@ -66,7 +66,7 @@ body {
     serif;
   min-height: 100vh;
   min-height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
-  letter-spacing: -0.011em;
+  letter-spacing: var(--tracking-tight);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -107,7 +107,7 @@ body {
 .q-btn {
   border-radius: var(--radius-md); // 6px
   font-weight: 500;
-  letter-spacing: -0.011em;
+  letter-spacing: var(--tracking-tight);
   text-transform: none;
   transition:
     background-color 0.15s ease,
@@ -275,7 +275,7 @@ body {
   }
 
   .q-field__native {
-    letter-spacing: -0.011em;
+    letter-spacing: var(--tracking-tight);
   }
 }
 
@@ -295,13 +295,11 @@ body {
     margin: 0;
 
     &:hover {
-      background: hsl(var(--accent));
-      color: hsl(var(--accent-foreground));
+      background: var(--muted);
     }
 
     &.q-item--active {
-      background: hsl(var(--accent));
-      color: hsl(var(--accent-foreground));
+      background: var(--muted);
     }
   }
 }
@@ -325,7 +323,7 @@ body {
   font-weight: 500;
   padding: 2px 8px; // px-2 py-0.5
   height: auto;
-  letter-spacing: -0.011em;
+  letter-spacing: var(--tracking-tight);
   transition:
     background-color 0.15s ease,
     border-color 0.15s ease;
@@ -350,7 +348,7 @@ body {
 .q-badge {
   border-radius: var(--radius-sm);
   font-weight: 500;
-  letter-spacing: -0.011em;
+  letter-spacing: var(--tracking-tight);
 
   &--outline {
     border: var(--border-width) solid currentColor;
@@ -504,18 +502,18 @@ h6,
 }
 
 .text-subtitle1 {
-  letter-spacing: -0.011em;
+  letter-spacing: var(--tracking-tight);
   font-weight: 500;
 }
 
 .text-subtitle2 {
-  letter-spacing: -0.011em;
+  letter-spacing: var(--tracking-tight);
   font-weight: 500;
 }
 
 .text-body1,
 .text-body2 {
-  letter-spacing: -0.011em;
+  letter-spacing: var(--tracking-tight);
 }
 
 .text-caption {
@@ -586,6 +584,10 @@ h6,
   box-shadow: var(--shadow-md);
 }
 
+.min-w-0 {
+  min-width: 0;
+}
+
 .focus-ring {
   &:focus-visible {
     outline: none;
@@ -603,7 +605,7 @@ h6,
   font-weight: 500;
   color: var(--text-color);
   margin-bottom: 0.375rem;
-  letter-spacing: -0.011em;
+  letter-spacing: var(--tracking-tight);
   cursor: pointer;
 }
 

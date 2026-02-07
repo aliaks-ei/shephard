@@ -13,18 +13,10 @@ vi.mock('vue-router', () => ({
   useRoute: () => mockRoute,
 }))
 
-function createWrapper(props = {}) {
+function createWrapper() {
   return mount(MobileBottomNavigation, {
-    props: {
-      visible: true,
-      ...props,
-    },
     global: {
       stubs: {
-        QPageSticky: {
-          template: '<div class="q-page-sticky"><slot /></div>',
-          props: ['position', 'expand', 'offset'],
-        },
         QBtn: {
           template:
             '<button class="q-btn" :data-to="to" :data-color="color" :data-icon="icon" :data-round="round" @click="$emit(\'click\')">{{ label }}<slot /></button>',
@@ -51,24 +43,20 @@ beforeEach(() => {
   mockRoute.fullPath = '/'
 })
 
-it('renders when visible is true', () => {
-  const wrapper = createWrapper({ visible: true })
-  expect(wrapper.find('.mobile-bottom-nav').exists()).toBe(true)
-})
-
-it('does not render when visible is false', () => {
-  const wrapper = createWrapper({ visible: false })
-  expect(wrapper.find('.mobile-bottom-nav').exists()).toBe(false)
+it('renders the navigation content', () => {
+  const wrapper = createWrapper()
+  expect(wrapper.find('.mobile-bottom-nav-content').exists()).toBe(true)
 })
 
 it('renders all navigation buttons', () => {
   const wrapper = createWrapper()
   const buttons = wrapper.findAll('.q-btn')
 
-  expect(buttons.length).toBeGreaterThanOrEqual(4)
+  expect(buttons.length).toBeGreaterThanOrEqual(5)
   expect(buttons.some((btn) => btn.text().includes('Home'))).toBe(true)
   expect(buttons.some((btn) => btn.text().includes('Plans'))).toBe(true)
   expect(buttons.some((btn) => btn.text().includes('Templates'))).toBe(true)
+  expect(buttons.some((btn) => btn.text().includes('Settings'))).toBe(true)
 })
 
 it('highlights home button when on home route', () => {
@@ -123,8 +111,18 @@ it('sets correct to attributes for navigation buttons', () => {
   const homeButton = buttons.find((btn) => btn.text().includes('Home'))
   const plansButton = buttons.find((btn) => btn.text().includes('Plans'))
   const templatesButton = buttons.find((btn) => btn.text().includes('Templates'))
+  const settingsButton = buttons.find((btn) => btn.text().includes('Settings'))
 
   expect(homeButton?.attributes('data-to')).toBe('/')
   expect(plansButton?.attributes('data-to')).toBe('/plans')
   expect(templatesButton?.attributes('data-to')).toBe('/templates')
+  expect(settingsButton?.attributes('data-to')).toBe('/settings')
+})
+
+it('highlights settings button when on settings route', () => {
+  mockRoute.fullPath = '/settings'
+  const wrapper = createWrapper()
+
+  const settingsButton = wrapper.findAll('.q-btn').find((btn) => btn.text().includes('Settings'))
+  expect(settingsButton?.attributes('data-color')).toBe('primary')
 })
