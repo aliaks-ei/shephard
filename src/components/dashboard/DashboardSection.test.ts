@@ -39,7 +39,7 @@ describe('DashboardSection', () => {
     { id: '3', name: 'Item 3' },
   ]
 
-  const createWrapper = (props = {}) => {
+  const createWrapper = (props = {}, slots = {}) => {
     return mount(DashboardSection, {
       props: {
         title: 'Test Section',
@@ -51,14 +51,13 @@ describe('DashboardSection', () => {
       slots: {
         card: '<div class="test-card">{{ item.name }}</div>',
         empty: '<div class="test-empty">No items</div>',
+        ...slots,
       },
       global: {
         stubs: {
           QChip: false,
           QBtn: false,
           QIcon: false,
-          QCarousel: false,
-          QCarouselSlide: false,
         },
       },
     })
@@ -135,21 +134,56 @@ describe('DashboardSection', () => {
     })
   })
 
-  describe('mobile carousel view', () => {
-    it('shows carousel on mobile', () => {
+  describe('mobile list view', () => {
+    it('shows QList when list-item slot is provided on mobile', () => {
       mockScreen.lt.sm = true
       mockScreen.gt.xs = false
-      const wrapper = createWrapper()
-      const carousel = wrapper.findComponent({ name: 'QCarousel' })
-      expect(carousel.exists()).toBe(true)
+      const wrapper = createWrapper(
+        {},
+        {
+          'list-item': '<div class="test-list-item">{{ item.name }}</div>',
+        },
+      )
+      const list = wrapper.findComponent({ name: 'QList' })
+      expect(list.exists()).toBe(true)
     })
 
-    it('renders carousel slides', () => {
+    it('renders list items with separators between them', () => {
+      mockScreen.lt.sm = true
+      mockScreen.gt.xs = false
+      const wrapper = createWrapper(
+        {},
+        {
+          'list-item': '<div class="test-list-item">{{ item.name }}</div>',
+        },
+      )
+      const listItems = wrapper.findAll('.test-list-item')
+      expect(listItems.length).toBe(3)
+      const separators = wrapper.findAllComponents({ name: 'QSeparator' })
+      expect(separators.length).toBe(2)
+    })
+
+    it('wraps list in QCard', () => {
+      mockScreen.lt.sm = true
+      mockScreen.gt.xs = false
+      const wrapper = createWrapper(
+        {},
+        {
+          'list-item': '<div class="test-list-item">{{ item.name }}</div>',
+        },
+      )
+      const card = wrapper.findComponent({ name: 'QCard' })
+      expect(card.exists()).toBe(true)
+    })
+
+    it('falls back to stacked cards when no list-item slot on mobile', () => {
       mockScreen.lt.sm = true
       mockScreen.gt.xs = false
       const wrapper = createWrapper()
-      const slides = wrapper.findAllComponents({ name: 'QCarouselSlide' })
-      expect(slides.length).toBeGreaterThan(0)
+      const cards = wrapper.findAll('.test-card')
+      expect(cards.length).toBe(3)
+      const list = wrapper.findComponent({ name: 'QList' })
+      expect(list.exists()).toBe(false)
     })
 
     it('does not show grid on mobile', () => {

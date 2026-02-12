@@ -1,12 +1,17 @@
 <template>
-  <div
-    v-if="!$q.screen.lt.md"
-    class="q-mb-lg"
-  >
-    <h1 class="text-weight-medium q-my-none text-h4">
+  <div :class="$q.screen.lt.md ? 'q-mb-md q-mt-sm' : 'q-mb-lg'">
+    <h1
+      class="text-weight-medium q-my-none"
+      :class="$q.screen.lt.md ? 'text-h5' : 'text-h4'"
+    >
       {{ greeting }}
     </h1>
-    <p class="q-ma-none text-grey-6 text-body1">What would you like to do today?</p>
+    <p
+      v-if="!$q.screen.lt.md"
+      class="q-ma-none text-grey-6 text-body1"
+    >
+      What would you like to do today?
+    </p>
   </div>
 </template>
 

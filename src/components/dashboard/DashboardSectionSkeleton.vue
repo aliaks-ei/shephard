@@ -1,10 +1,58 @@
 <template>
+  <!-- Mobile: list skeleton -->
+  <q-card
+    v-if="$q.screen.lt.sm"
+    :bordered="$q.dark.isActive"
+  >
+    <q-list>
+      <template
+        v-for="i in skeletonCount"
+        :key="`skeleton-${i}`"
+      >
+        <q-item>
+          <q-item-section
+            side
+            class="q-pr-sm"
+          >
+            <q-skeleton
+              type="QAvatar"
+              size="10px"
+            />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>
+              <q-skeleton
+                type="text"
+                width="50%"
+              />
+            </q-item-label>
+            <q-item-label>
+              <q-skeleton
+                type="text"
+                width="35%"
+              />
+            </q-item-label>
+          </q-item-section>
+          <q-item-section side>
+            <q-skeleton
+              type="text"
+              width="60px"
+            />
+          </q-item-section>
+        </q-item>
+        <q-separator v-if="i < skeletonCount" />
+      </template>
+    </q-list>
+  </q-card>
+
+  <!-- Desktop: card grid skeleton -->
   <div
+    v-else
     class="row"
-    :class="[gridGutterClass, $q.screen.lt.sm ? 'q-mb-xl' : 'q-mb-lg']"
+    :class="gridGutterClass"
   >
     <div
-      v-for="i in skeletonCount"
+      v-for="i in maxDisplayed"
       :key="`skeleton-${i}`"
       class="col-12 col-sm-6 col-md-4"
     >
@@ -47,7 +95,7 @@ const props = withDefaults(defineProps<Props>(), {
 const $q = useQuasar()
 
 const skeletonCount = computed(() => {
-  return $q.screen.lt.sm ? 1 : props.maxDisplayed
+  return Math.min(props.maxDisplayed, 3)
 })
 
 const gridGutterClass = computed(() => {
