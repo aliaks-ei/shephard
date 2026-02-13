@@ -5,10 +5,7 @@
       class="bg-transparent"
       flat
     >
-      <q-card-section
-        :class="$q.screen.lt.md ? 'q-px-sm' : 'q-px-md'"
-        class="bg-white"
-      >
+      <q-card-section :class="$q.screen.lt.md ? 'q-px-sm' : 'q-px-md'">
         <!-- Responsive Title and Progress Layout -->
         <div class="row items-center q-col-gutter-md">
           <!-- Title -->
@@ -94,7 +91,7 @@
             <q-card-section class="q-pt-sm">
               <!-- Skeleton for items -->
               <div
-                v-for="j in 3"
+                v-for="j in $q.screen.lt.md ? 2 : 3"
                 :key="j"
                 class="row items-center q-gutter-md q-py-sm"
               >

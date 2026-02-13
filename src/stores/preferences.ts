@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { useStorage } from '@vueuse/core'
 
 import { useAuthStore } from 'src/stores/auth'
 import {
@@ -16,7 +17,9 @@ export const usePreferencesStore = defineStore('preferences', () => {
   const authStore = useAuthStore()
   const { handleError } = useError()
 
-  const preferences = ref<CompleteUserPreferences>({ ...DEFAULT_PREFERENCES })
+  const preferences = useStorage<CompleteUserPreferences>('user-preferences', {
+    ...DEFAULT_PREFERENCES,
+  })
   const isLoading = ref(false)
 
   const theme = computed(() => preferences.value.theme)
@@ -36,9 +39,6 @@ export const usePreferencesStore = defineStore('preferences', () => {
       return
     }
 
-    isLoading.value = true
-    initializeWithDefaults()
-
     try {
       const userPreferences = await getUserPreferences(authStore.user.id)
 
@@ -52,8 +52,6 @@ export const usePreferencesStore = defineStore('preferences', () => {
       }
     } catch (err) {
       handleError('USER.PREFERENCES_LOAD_FAILED', err, { userId: authStore.user?.id })
-    } finally {
-      isLoading.value = false
     }
   }
 

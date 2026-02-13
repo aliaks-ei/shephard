@@ -48,10 +48,10 @@ export default defineConfig((ctx) => {
       vueDevtools: ctx.dev, // Only enable devtools in development
       // vueOptionsAPI: false,
 
-      // rebuildCache: true, // rebuilds Vite/linter/etc cache on startup
+      rebuildCache: true, // rebuilds Vite/linter/etc cache on startup
 
       // publicPath: '/',
-      analyze: ctx.prod && typeof ctx.mode === 'object' && 'analyze' in ctx.mode, // Enable bundle analyzer on demand
+      analyze: process.env.ANALYZE === 'true', // Run with ANALYZE=true npm run build
       // env: {},
       // rawDefine: {}
       // ignorePublicFolder: true,
@@ -86,7 +86,7 @@ export default defineConfig((ctx) => {
           },
         }
 
-        // Production-only Terser optimizations
+        // Minification: Terser for production (smaller), esbuild for dev (faster)
         if (ctx.prod) {
           viteConf.build.minify = 'terser'
           viteConf.build.terserOptions = {
@@ -99,6 +99,8 @@ export default defineConfig((ctx) => {
               safari10: true,
             },
           }
+        } else {
+          viteConf.build.minify = 'esbuild'
         }
 
         // Optimize dependency pre-bundling
@@ -127,8 +129,14 @@ export default defineConfig((ctx) => {
           // Optimize asset handling
           viteConf.build.assetsInlineLimit = 4096 // Inline assets smaller than 4kb
 
-          // Enable source maps only for debugging (can be disabled for smaller builds)
-          viteConf.build.sourcemap = false
+          // Hidden source maps for error tracking (not exposed to users)
+          viteConf.build.sourcemap = 'hidden'
+        }
+
+        // CSS source maps in development for easier debugging
+        viteConf.css = {
+          ...viteConf.css,
+          devSourcemap: !ctx.prod,
         }
       },
       // viteVuePluginOptions: {},
@@ -137,13 +145,28 @@ export default defineConfig((ctx) => {
         [
           'vite-plugin-checker',
           {
-            vueTsc: true,
+            vueTsc: {
+              tsconfigPath: 'tsconfig.json',
+            },
             eslint: {
               lintCommand: 'eslint -c ./eslint.config.js "./src*/**/*.{ts,js,mjs,cjs,vue}"',
               useFlatConfig: true,
             },
+            overlay: {
+              initialIsOpen: false,
+              position: 'br',
+            },
+            enableBuild: false, // Skip during build (CI handles this)
           },
-          { server: false },
+          { server: true },
+        ],
+        [
+          'vite-plugin-compression',
+          {
+            algorithm: 'gzip',
+            threshold: 1024, // Only compress files > 1kb
+            disable: !ctx.prod, // Only enable in production
+          },
         ],
       ],
     },
@@ -153,6 +176,12 @@ export default defineConfig((ctx) => {
       // https: true,
       open: false, // opens browser window automatically
       port: 9000,
+      warmup: {
+        clientFiles: ['./src/layouts/*.vue', './src/pages/*.vue'],
+      },
+      hmr: {
+        overlay: true,
+      },
     },
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#framework
@@ -243,6 +272,9 @@ export default defineConfig((ctx) => {
 
         // Exclude Netlify configuration files from precaching
         cfg.globIgnores = ['**/_redirects', '**/.DS_Store']
+
+        // Disable offline Google Analytics (not used)
+        cfg.offlineGoogleAnalytics = false
 
         // Optimize runtime caching
         cfg.runtimeCaching = [

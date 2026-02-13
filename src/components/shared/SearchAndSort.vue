@@ -1,6 +1,7 @@
 <template>
   <q-card
-    class="bg-transparent q-mb-lg"
+    class="bg-transparent"
+    :class="$q.screen.lt.md ? 'q-mb-md' : 'q-mb-lg'"
     flat
   >
     <q-card-section class="q-pa-none">
@@ -18,7 +19,6 @@
             clearable
             no-error-icon
             inputmode="search"
-            :bg-color="$q.dark.isActive ? 'transparent' : 'white'"
             hide-bottom-space
             @update:model-value="emit('update:searchQuery', $event?.toString() ?? '')"
           >
@@ -41,7 +41,6 @@
             emit-value
             map-options
             hide-bottom-space
-            :bg-color="$q.dark.isActive ? 'transparent' : 'white'"
             @update:model-value="emit('update:sortBy', $event)"
           >
             <template

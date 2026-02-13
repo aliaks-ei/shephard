@@ -1,17 +1,14 @@
 <template>
   <q-card
     flat
-    :class="$q.screen.lt.md ? 'q-mb-md' : ' q-mb-lg'"
+    class="q-mb-md"
   >
     <q-card-section>
       <SectionHeader
         icon="eva-info-outline"
         title="Basic Information"
       />
-      <div
-        class="row"
-        :class="$q.screen.lt.md ? 'q-col-gutter-sm' : 'q-col-gutter-md'"
-      >
+      <div class="row q-col-gutter-sm">
         <div class="col-12 col-sm-8">
           <label
             for="template-name-label"

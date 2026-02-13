@@ -47,38 +47,39 @@ describe('DashboardSectionSkeleton', () => {
   })
 
   it('renders default 3 skeleton cards on desktop', () => {
-    mockScreen.lt.sm = false
+    mockScreen.lt.md = false
     const wrapper = createWrapper()
     const cards = wrapper.findAllComponents({ name: 'QCard' })
     expect(cards.length).toBe(3)
   })
 
   it('renders 1 skeleton card on mobile', () => {
-    mockScreen.lt.sm = true
+    mockScreen.lt.md = true
     const wrapper = createWrapper()
     const cards = wrapper.findAllComponents({ name: 'QCard' })
     expect(cards.length).toBe(1)
   })
 
   it('renders custom number of skeletons based on maxDisplayed prop', () => {
-    mockScreen.lt.sm = false
+    mockScreen.lt.md = false
     const wrapper = createWrapper({ maxDisplayed: 5 })
     const cards = wrapper.findAllComponents({ name: 'QCard' })
     expect(cards.length).toBe(5)
   })
 
-  it('renders 3 skeleton text elements per card', () => {
+  it('renders skeleton elements per card matching BudgetOverviewCard layout', () => {
     const wrapper = createWrapper()
     const cards = wrapper.findAllComponents({ name: 'QCard' })
     const firstCardSkeletons = cards[0]?.findAllComponents({ name: 'QSkeleton' })
-    expect(firstCardSkeletons?.length).toBe(3)
+    // title + chip + 3x(caption + value) + progress bar + caption = 10
+    expect(firstCardSkeletons?.length).toBe(10)
   })
 
-  it('applies small gutter on mobile', () => {
+  it('does not render grid gutter row on mobile list layout', () => {
     mockScreen.lt.md = true
     const wrapper = createWrapper()
-    const row = wrapper.find('.row')
-    expect(row.classes()).toContain('q-col-gutter-sm')
+    const gridRow = wrapper.find('.row.q-col-gutter-sm')
+    expect(gridRow.exists()).toBe(false)
   })
 
   it('applies medium gutter on desktop', () => {

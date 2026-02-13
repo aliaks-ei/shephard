@@ -57,10 +57,7 @@
       </CategoryItemsManager>
 
       <!-- Total Amount as separate card -->
-      <q-card
-        flat
-        class="q-mt-md"
-      >
+      <q-card flat>
         <q-card-section>
           <div class="row items-center justify-between">
             <div class="row items-center">

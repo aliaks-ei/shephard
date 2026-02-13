@@ -15,12 +15,6 @@ afterEach(() => {
 
 installQuasarPlugin()
 
-const InfoItemStub = {
-  template:
-    '<div class="info-item-mock" :data-icon="icon" :data-label="label" :data-value="value" :data-full-width="fullWidth"></div>',
-  props: ['icon', 'label', 'value', 'fullWidth'],
-}
-
 const mockRouterPush = vi.fn()
 vi.mock('vue-router', () => ({
   useRouter: () => ({
@@ -56,9 +50,6 @@ function createWrapper() {
           },
         }),
       ],
-      stubs: {
-        InfoItem: InfoItemStub,
-      },
     },
   })
 
@@ -70,42 +61,9 @@ function createWrapper() {
 it('renders user profile information correctly', () => {
   const { wrapper } = createWrapper()
 
-  const displayNameEl = wrapper.find('.text-h5, .text-h4')
-  expect(displayNameEl.exists()).toBe(true)
-
-  const emailEl = wrapper.find('.text-subtitle1')
-  expect(emailEl.exists()).toBe(true)
-
-  expect(wrapper.findComponent(InfoItemStub).exists()).toBe(true)
-
-  const signOutBtn = wrapper.find('.q-btn')
-  expect(signOutBtn.exists()).toBe(true)
-})
-
-it('does not render info items when profile data is missing', async () => {
-  const { wrapper, userStore } = createWrapper()
-
-  // @ts-expect-error - Modifying store for testing
-  userStore.userProfile = {
-    id: 'user-123',
-    email: 'test@example.com',
-    displayName: '',
-    avatarUrl: null,
-    nameInitial: 'T',
-    authProvider: undefined,
-    createdAt: undefined,
-    formattedCreatedAt: '',
-    preferences: {
-      theme: 'light',
-      pushNotificationsEnabled: true,
-      currency: 'EUR',
-    },
-  }
-
-  await wrapper.vm.$nextTick()
-
-  const expectedVisibleItems = 2
-  expect(expectedVisibleItems).toBe(2)
+  expect(wrapper.find('.text-h5').exists()).toBe(true)
+  expect(wrapper.find('.text-caption').exists()).toBe(true)
+  expect(wrapper.find('.q-btn').exists()).toBe(true)
 })
 
 it('updates currency preference when select is changed', () => {

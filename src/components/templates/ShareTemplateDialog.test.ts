@@ -6,9 +6,13 @@ import type { ComponentProps } from 'vue-component-type-helpers'
 
 import ShareTemplateDialog from './ShareTemplateDialog.vue'
 
-vi.mock('@vueuse/core', () => ({
-  useDebounceFn: vi.fn((fn) => fn),
-}))
+vi.mock('@vueuse/core', async (importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...(actual as Record<string, unknown>),
+    useDebounceFn: vi.fn((fn) => fn),
+  }
+})
 
 installQuasarPlugin()
 

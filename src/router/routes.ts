@@ -39,11 +39,6 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'categories',
-        component: () => import('pages/CategoriesPage.vue'),
-        name: 'categories',
-      },
-      {
         path: 'plans',
         component: () => import('pages/PlansPage.vue'),
         name: 'plans',
@@ -71,19 +66,22 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/auth',
-    component: () => import('pages/AuthPage.vue'),
-    name: 'auth',
+    component: () => import('layouts/AuthLayout.vue'),
     meta: {
       requiresAuth: false,
     },
-  },
-  {
-    path: '/auth/callback',
-    component: () => import('pages/AuthCallbackPage.vue'),
-    name: 'auth-callback',
-    meta: {
-      requiresAuth: false,
-    },
+    children: [
+      {
+        path: '',
+        component: () => import('pages/AuthPage.vue'),
+        name: 'auth',
+      },
+      {
+        path: 'callback',
+        component: () => import('pages/AuthCallbackPage.vue'),
+        name: 'auth-callback',
+      },
+    ],
   },
   {
     path: '/:catchAll(.*)*',

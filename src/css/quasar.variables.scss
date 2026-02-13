@@ -38,8 +38,8 @@ $primary: #00919a;
 $secondary: #a47b7b;
 $accent: #00919a;
 
-$dark: #131010;
-$dark-page: #121212;
+$dark: #0a0a0a;
+$dark-page: #0a0a0a;
 $bg-color: hsl(0, 0%, 97%);
 $text-color: #32302d;
 
@@ -52,16 +52,13 @@ $warning: #fe7743;
 // shadcn/ui inspired design token overrides
 // ============================================
 
-$generic-border-radius: 8px !default;
+// Border radius - adjusted to match shadcn-vue conventions
+$generic-border-radius: 6px !default; // Match shadcn button default
+$button-border-radius: 6px !default; // shadcn uses rounded-md (radius - 2px)
+$card-border-radius: 12px !default; // shadcn uses rounded-xl for cards
+$input-border-radius: 6px !default; // Match buttons
+$chip-border-radius: 9999px !default; // Full round like shadcn badges
 
 $letter-spacing: -0.011em !default;
-
-$button-border-radius: 8px !default;
 $button-font-weight: 500 !default;
 $button-padding: 8px 16px !default;
-
-$card-border-radius: 8px !default;
-
-$input-border-radius: 8px !default;
-
-$chip-border-radius: 6px !default;

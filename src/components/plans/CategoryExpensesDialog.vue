@@ -39,10 +39,7 @@
       <q-separator />
 
       <!-- Category Summary -->
-      <q-card-section
-        class="q-pa-md"
-        :class="$q.dark.isActive ? 'bg-black-2' : 'bg-grey-1'"
-      >
+      <q-card-section class="q-pa-md themed-muted-surface">
         <!-- Budget Overview -->
         <div class="row q-col-gutter-sm q-mb-sm">
           <div class="col-4">

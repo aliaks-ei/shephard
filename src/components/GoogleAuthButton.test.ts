@@ -2,7 +2,6 @@ import { mount, flushPromises } from '@vue/test-utils'
 import { createTestingPinia } from '@pinia/testing'
 import { it, expect, beforeEach, vi } from 'vitest'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
-import { nextTick } from 'vue'
 import GoogleAuthButton from './GoogleAuthButton.vue'
 
 vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'test-client-id')
@@ -73,8 +72,7 @@ it('renders loading spinner when nonce is not ready', () => {
   expect(wrapper.find('#g_id_onload').exists()).toBe(false)
   expect(wrapper.find('.g_id_signin').exists()).toBe(false)
   expect(wrapper.find('.q-spinner').exists()).toBe(true)
-  expect(wrapper.find('p.text-body2').text()).toBe('Preparing secure authentication...')
-  expect(wrapper.find('button').exists()).toBe(true)
+  expect(wrapper.find('.text-body2').text()).toBe('Preparing secure authentication...')
 })
 
 it('sets correct Google client ID from environment variable', () => {
@@ -107,18 +105,4 @@ it('calls cleanup on unmount', () => {
 
   wrapper.unmount()
   expect(mockCleanup).toHaveBeenCalledTimes(1)
-})
-
-it('calls refreshGoogleAuth when refresh button is clicked', async () => {
-  const { wrapper } = mountComponent(false)
-  await nextTick()
-
-  mockGenerateNonce.mockClear()
-  mockInitGoogleAuth.mockClear()
-
-  await wrapper.find('button').trigger('click')
-  await flushPromises()
-
-  expect(mockGenerateNonce).toHaveBeenCalledTimes(1)
-  expect(mockInitGoogleAuth).toHaveBeenCalledTimes(1)
 })

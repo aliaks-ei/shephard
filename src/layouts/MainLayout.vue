@@ -1,99 +1,78 @@
 <template>
-  <q-layout view="lHh Lpr fff">
-    <q-inner-loading
-      :showing="userStore.isLoading"
-      label="Setting up your profile..."
-      color="primary"
-    />
-
-    <template v-if="!userStore.isLoading">
-      <q-header>
-        <q-toolbar>
-          <q-toolbar-title>
-            <q-btn
-              class="text-h6"
-              label="Shephard"
-              to="/"
-              flat
-              no-caps
-            />
-          </q-toolbar-title>
-
-          <template v-if="$q.screen.gt.sm">
-            <PrivacyModeToggle class="q-mr-sm" />
-            <UserDropdownMenu />
-          </template>
-
-          <template v-else>
-            <PrivacyModeToggle class="q-mr-sm" />
-
-            <q-btn
-              round
-              flat
-              @click="showMobileUserDialog = true"
-            >
-              <UserAvatar
-                :avatar-url="userStore.userProfile?.avatarUrl"
-                :name-initial="userStore.userProfile?.nameInitial"
-              />
-            </q-btn>
-          </template>
-        </q-toolbar>
-      </q-header>
-
-      <q-page-container
-        class="page-container"
-        :class="{ 'mobile-with-bottom-nav': showMobileBottomNav }"
-      >
-        <q-page
-          :class="$q.screen.gt.sm ? 'shadow-1' : ''"
-          padding
-        >
-          <router-view />
-        </q-page>
-
-        <q-page-sticky
-          v-if="$q.screen.gt.sm"
-          position="left"
-          class="navigation-sticky-bg"
-          expand
-        >
-          <NavigationDrawer
-            class="fit q-py-xl q-px-sm"
-            :items="navigationItems"
-            is-mini-mode
+  <q-layout view="hHh Lpr fFf">
+    <q-header>
+      <q-toolbar>
+        <q-toolbar-title>
+          <q-btn
+            class="text-h6"
+            label="Shephard"
+            to="/"
+            flat
+            no-caps
           />
-        </q-page-sticky>
+        </q-toolbar-title>
 
-        <MobileBottomNavigation
-          v-if="showMobileBottomNav"
-          @open-expense-dialog="showExpenseDialog = true"
+        <PrivacyModeToggle
+          v-if="$q.screen.lt.md"
+          class="q-mr-sm"
         />
-      </q-page-container>
+      </q-toolbar>
+    </q-header>
 
-      <!-- Dialogs -->
-      <ExpenseRegistrationDialog
-        v-model="showExpenseDialog"
-        auto-select-recent-plan
+    <q-drawer
+      show-if-above
+      side="left"
+      :width="250"
+      :breakpoint="1024"
+      no-swipe-open
+      no-swipe-close
+      class="navigation-drawer-bg"
+    >
+      <NavigationDrawer
+        class="fit q-pt-lg q-pb-sm q-px-sm"
+        :items="navigationItems"
       />
+    </q-drawer>
 
-      <MobileUserDialog v-model="showMobileUserDialog" />
-    </template>
+    <q-footer
+      v-if="showMobileBottomNav"
+      class="bg-transparent"
+    >
+      <MobileBottomNavigation @open-expense-dialog="showExpenseDialog = true" />
+    </q-footer>
+
+    <q-page-container>
+      <q-page
+        :class="$q.screen.gt.sm ? 'shadow-1' : ''"
+        padding
+      >
+        <q-inner-loading
+          :showing="userStore.isLoading"
+          label="Setting up your profile..."
+          color="primary"
+        />
+
+        <router-view v-if="!userStore.isLoading" />
+      </q-page>
+    </q-page-container>
+
+    <!-- Dialogs -->
+    <ExpenseRegistrationDialog
+      v-model="showExpenseDialog"
+      auto-select-recent-plan
+    />
   </q-layout>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 
-import UserDropdownMenu from 'src/components/UserDropdownMenu.vue'
-import UserAvatar from 'src/components/UserAvatar.vue'
 import PrivacyModeToggle from 'src/components/PrivacyModeToggle.vue'
 import NavigationDrawer from 'src/components/NavigationDrawer.vue'
 import MobileBottomNavigation from 'src/components/MobileBottomNavigation.vue'
 import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
-import MobileUserDialog from 'src/components/MobileUserDialog.vue'
 import { useUserStore } from 'src/stores/user'
 import { usePwaInstall } from 'src/composables/usePwaInstall'
 import { useNotificationStore } from 'src/stores/notification'
@@ -105,7 +84,6 @@ const { isInstallable, promptInstall, dismissInstall } = usePwaInstall()
 const notificationStore = useNotificationStore()
 
 const showExpenseDialog = ref(false)
-const showMobileUserDialog = ref(false)
 
 watch(isInstallable, (installable) => {
   if (installable) {
@@ -135,7 +113,7 @@ function showPwaInstallNotification() {
   })
 }
 
-const navigationItems = ref([
+const navigationItems = [
   {
     icon: 'eva-home-outline',
     label: 'Home',
@@ -151,12 +129,7 @@ const navigationItems = ref([
     label: 'Templates',
     to: '/templates',
   },
-  {
-    icon: 'eva-grid-outline',
-    label: 'Categories',
-    to: '/categories',
-  },
-])
+]
 
 const isDetailPage = computed(() => {
   return !!route.params.id || route.path.includes('/new')
@@ -168,17 +141,8 @@ const showMobileBottomNav = computed(() => {
 </script>
 
 <style lang="scss" scoped>
-.navigation-sticky-bg {
-  background-color: var(--bg-color);
-}
-
-.mobile-with-bottom-nav {
-  padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
-}
-
-@media (min-width: 1024px) {
-  .page-container {
-    padding-left: 115px;
-  }
+.navigation-drawer-bg {
+  background-color: hsl(var(--card));
+  border-right: 1px solid hsl(var(--border));
 }
 </style>

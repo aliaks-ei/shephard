@@ -12,7 +12,7 @@
       class="q-mr-sm"
     />
 
-    <span class="app-banner__message">{{ message }}</span>
+    <span class="col min-w-0">{{ message }}</span>
 
     <q-btn
       v-if="action"
@@ -95,9 +95,10 @@ const variantConfig = computed(() => {
 })
 
 const bannerClasses = computed(() => [
-  'app-banner',
   'row',
   'items-center',
+  'full-width',
+  'rounded-borders',
   'q-pa-sm',
   'q-px-md',
   variantConfig.value.bg,
@@ -137,15 +138,3 @@ onUnmounted(() => {
   }
 })
 </script>
-
-<style lang="scss" scoped>
-.app-banner {
-  width: 100%;
-  border-radius: $generic-border-radius;
-}
-
-.app-banner__message {
-  flex: 1;
-  min-width: 0;
-}
-</style>

@@ -4,7 +4,7 @@
     @submit="$emit('submit')"
   >
     <q-card
-      class="bg-transparent"
+      class="bg-transparent q-mb-md"
       flat
     >
       <q-card-section class="q-px-none">

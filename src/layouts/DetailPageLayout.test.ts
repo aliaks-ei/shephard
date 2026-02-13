@@ -20,6 +20,7 @@ const renderDetailPageLayout = (props: Partial<DetailPageLayoutProps> = {}) => {
       stubs: {
         PageBanners: true,
         ActionBar: true,
+        BannerContainer: true,
       },
     },
   })
@@ -37,7 +38,7 @@ it('should mount component properly', () => {
 it('should render main container with correct layout classes', () => {
   const wrapper = renderDetailPageLayout()
 
-  const container = wrapper.find('.q-pa-md')
+  const container = wrapper.find('.page-content-spacing')
   const row = wrapper.find('.row.justify-center')
   const col = wrapper.find('.col-12.col-md-10.col-lg-8.col-xl-6')
 
@@ -119,12 +120,10 @@ it('should render loading skeleton when isLoading is true', () => {
   expect(skeletons.length).toBeGreaterThan(0)
 
   const textSkeletons = wrapper.findAll('.q-skeleton--type-text')
-  const inputSkeleton = wrapper.find('.q-skeleton--type-QInput')
   const rectSkeletons = wrapper.findAll('.q-skeleton--type-rect')
 
   expect(textSkeletons.length).toBeGreaterThan(0)
-  expect(inputSkeleton.exists()).toBe(true)
-  expect(rectSkeletons).toHaveLength(2)
+  expect(rectSkeletons.length).toBeGreaterThanOrEqual(3)
 })
 
 it('should render content slot when isLoading is false', () => {
@@ -140,6 +139,7 @@ it('should render content slot when isLoading is false', () => {
       stubs: {
         PageBanners: true,
         ActionBar: true,
+        BannerContainer: true,
       },
     },
   })
@@ -164,6 +164,7 @@ it('should render content slot by default when isLoading is not provided', () =>
       stubs: {
         PageBanners: true,
         ActionBar: true,
+        BannerContainer: true,
       },
     },
   })
@@ -187,6 +188,7 @@ it('should render dialogs slot', () => {
       stubs: {
         PageBanners: true,
         ActionBar: true,
+        BannerContainer: true,
       },
     },
   })
@@ -210,6 +212,7 @@ it('should render all slots simultaneously', () => {
       stubs: {
         PageBanners: true,
         ActionBar: true,
+        BannerContainer: true,
       },
     },
   })

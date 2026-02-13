@@ -21,7 +21,7 @@
         >
           <q-item
             clickable
-            :class="$q.screen.lt.sm ? 'q-pa-sm' : 'q-pa-md'"
+            :class="$q.screen.lt.md ? 'q-pa-sm' : 'q-pa-md'"
             @click="$emit('add-expense')"
           >
             <q-item-section>
@@ -44,7 +44,7 @@
         >
           <q-item
             clickable
-            :class="$q.screen.lt.sm ? 'q-pa-sm' : 'q-pa-md'"
+            :class="$q.screen.lt.md ? 'q-pa-sm' : 'q-pa-md'"
             @click="$router.push('/plans/new')"
           >
             <q-item-section>
@@ -67,7 +67,7 @@
         >
           <q-item
             clickable
-            :class="$q.screen.lt.sm ? 'q-pa-sm' : 'q-pa-md'"
+            :class="$q.screen.lt.md ? 'q-pa-sm' : 'q-pa-md'"
             @click="$router.push('/templates/new')"
           >
             <q-item-section>
@@ -90,7 +90,7 @@
         >
           <q-item
             clickable
-            :class="$q.screen.lt.sm ? 'q-pa-sm' : 'q-pa-md'"
+            :class="$q.screen.lt.md ? 'q-pa-sm' : 'q-pa-md'"
             @click="$router.push('/settings')"
           >
             <q-item-section>

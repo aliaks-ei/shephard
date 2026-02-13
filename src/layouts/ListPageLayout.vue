@@ -1,10 +1,14 @@
 <template>
-  <div class="row justify-center q-pa-xs q-pa-md-md">
+  <div class="row justify-center page-content-spacing">
     <div class="col-12 col-md-10 col-lg-8 col-xl-6">
       <!-- Header Section -->
       <div
         class="row items-center"
-        :class="$q.screen.lt.md ? 'q-col-gutter-sm q-mb-md' : 'q-col-gutter-md q-mb-lg'"
+        :class="
+          $q.screen.lt.md
+            ? 'q-col-gutter-sm section-spacing-compact'
+            : 'q-col-gutter-md section-spacing-compact'
+        "
       >
         <div class="col col-grow">
           <h1

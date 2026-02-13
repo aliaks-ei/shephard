@@ -25,12 +25,9 @@ function createWrapper() {
       stubs: {
         EmailOtpForm: EmailOtpFormMock,
         GoogleAuthButton: GoogleAuthButtonMock,
-        QCard: {
-          template: '<div class="q-card"><slot /></div>',
-        },
-        QCardSection: {
-          template: '<div class="q-card-section" :class="$attrs.class"><slot /></div>',
-          inheritAttrs: false,
+        AuthLoginCard: {
+          name: 'AuthLoginCard',
+          template: '<div class="auth-login-card"><slot /></div>',
         },
         QSeparator: {
           template: '<div class="q-separator"></div>',
@@ -45,14 +42,9 @@ it('should mount component properly', () => {
   expect(wrapper.exists()).toBe(true)
 })
 
-it('should render the title', () => {
+it('should render AuthLoginCard', () => {
   const wrapper = createWrapper()
-  expect(wrapper.find('h1').text()).toBe('Welcome to Shephard')
-})
-
-it('should render subtitle', () => {
-  const wrapper = createWrapper()
-  expect(wrapper.text()).toContain('Your smart expense management companion')
+  expect(wrapper.find('.auth-login-card').exists()).toBe(true)
 })
 
 it('should render EmailOtpForm component', () => {
@@ -65,11 +57,8 @@ it('should render GoogleAuthButton component', () => {
   expect(wrapper.findComponent({ name: 'GoogleAuthButton' }).exists()).toBe(true)
 })
 
-it('should have proper layout structure', () => {
+it('should render separator between auth methods', () => {
   const wrapper = createWrapper()
-
-  const root = wrapper.find('.row.justify-center.items-center.q-pa-md')
-  expect(root.exists()).toBe(true)
-  expect(wrapper.find('.q-card').exists()).toBe(true)
   expect(wrapper.find('.q-separator').exists()).toBe(true)
+  expect(wrapper.text()).toContain('or continue with')
 })

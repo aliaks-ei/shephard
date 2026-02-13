@@ -66,7 +66,9 @@ body {
     serif;
   min-height: 100vh;
   min-height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
-  letter-spacing: -0.011em;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  letter-spacing: var(--tracking-tight);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -76,6 +78,8 @@ body {
   width: 90vw;
   min-width: 300px;
   border-radius: var(--radius-lg);
+  background: hsl(var(--card));
+  color: hsl(var(--card-foreground));
   box-shadow: var(--shadow-lg);
   border: var(--border-width) solid var(--border-color);
 
@@ -85,10 +89,16 @@ body {
   }
 }
 
+.q-drawer,
+.q-drawer__content {
+  background: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+}
+
 // Global Notification Styles - Full width on mobile with bottom offset for navigation
 .q-notification {
   width: 100%;
-  margin-bottom: calc(58px + env(safe-area-inset-bottom, 0px));
+  margin-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
 
   @media (min-width: $breakpoint-sm-min) {
     width: auto;
@@ -101,13 +111,38 @@ body {
   padding-bottom: max(8px, calc(8px + env(safe-area-inset-bottom, 0px)));
 }
 
+// Shared page and section spacing utilities
+.page-content-spacing {
+  padding: var(--page-content-padding-mobile);
+
+  @media (min-width: $breakpoint-md-min) {
+    padding: var(--page-content-padding-desktop);
+  }
+}
+
+.section-spacing {
+  margin-bottom: var(--section-spacing-mobile);
+
+  @media (min-width: $breakpoint-md-min) {
+    margin-bottom: var(--section-spacing-desktop);
+  }
+}
+
+.section-spacing-compact {
+  margin-bottom: var(--section-spacing-compact-mobile);
+
+  @media (min-width: $breakpoint-md-min) {
+    margin-bottom: var(--section-spacing-desktop);
+  }
+}
+
 // --------------------------------------------
-// Buttons (q-btn)
+// Buttons (q-btn) - shadcn-vue conventions
 // --------------------------------------------
 .q-btn {
-  border-radius: var(--radius);
+  border-radius: var(--radius-md); // 6px
   font-weight: 500;
-  letter-spacing: -0.011em;
+  letter-spacing: var(--tracking-tight);
   text-transform: none;
   transition:
     background-color 0.15s ease,
@@ -115,25 +150,25 @@ body {
     color 0.15s ease,
     box-shadow 0.15s ease;
 
+  // Default variant - no shadow on buttons (shadcn pattern)
   &:not(.q-btn--flat):not(.q-btn--outline) {
-    box-shadow: var(--shadow-sm);
-
-    &:hover {
-      box-shadow: var(--shadow-md);
-    }
+    box-shadow: none;
   }
 
+  // Outline variant
   &.q-btn--outline {
     border-width: var(--border-width);
+    box-shadow: var(--shadow-xs);
 
     &:hover {
       background: var(--muted);
     }
   }
 
+  // Focus ring - 3px with 50% opacity
   &:focus-visible {
-    outline: var(--ring-width) solid var(--ring-color-primary);
-    outline-offset: var(--ring-offset);
+    outline: none;
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.5);
   }
 
   &.q-btn--round {
@@ -142,10 +177,13 @@ body {
 }
 
 // --------------------------------------------
-// Cards (q-card)
+// Cards (q-card) - shadcn-vue conventions
 // --------------------------------------------
 .q-card {
-  border-radius: var(--radius);
+  border-radius: var(--radius-xl); // 12px (shadcn uses rounded-xl)
+  background: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border: 1px solid hsl(var(--border));
   transition:
     box-shadow 0.15s ease,
     border-color 0.15s ease;
@@ -160,19 +198,27 @@ body {
 
   &.q-card--flat {
     box-shadow: none;
+    border: 1px solid hsl(var(--border));
+  }
+
+  // Cards with no-shadow should also have no border
+  &.no-shadow,
+  &.shadow-0 {
+    box-shadow: none;
+    border: none;
   }
 
   .q-card__section {
     &:first-child {
-      border-radius: var(--radius) var(--radius) 0 0;
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
     }
 
     &:last-child {
-      border-radius: 0 0 var(--radius) var(--radius);
+      border-radius: 0 0 var(--radius-xl) var(--radius-xl);
     }
 
     &:only-child {
-      border-radius: var(--radius);
+      border-radius: var(--radius-xl);
     }
   }
 
@@ -182,13 +228,15 @@ body {
 }
 
 // --------------------------------------------
-// Form Fields (q-field, q-input, q-select)
+// Form Fields (q-field, q-input, q-select) - shadcn-vue conventions
 // --------------------------------------------
 .q-field {
   &--outlined {
     .q-field__control {
-      border-radius: var(--radius);
+      border-radius: var(--radius-md); // 6px
+      background: hsl(var(--popover));
       border: var(--border-width) solid var(--border-color);
+      box-shadow: var(--shadow-xs);
       transition:
         border-color 0.15s ease,
         box-shadow 0.15s ease;
@@ -201,9 +249,10 @@ body {
         border: none;
       }
 
+      // Focus state - 3px ring with 50% opacity
       &:focus-within {
         border-color: var(--ring-color-primary);
-        box-shadow: 0 0 0 calc(var(--ring-width) - 1px) rgba(0, 145, 154, 0.15);
+        box-shadow: 0 0 0 3px hsl(var(--ring) / 0.5);
       }
     }
 
@@ -212,7 +261,7 @@ body {
 
       &::before {
         border: 1px dashed var(--border-color-readonly);
-        border-radius: var(--radius);
+        border-radius: var(--radius-md);
       }
     }
 
@@ -221,15 +270,16 @@ body {
     }
 
     &.q-field--focused.q-field--error .q-field__control {
-      box-shadow: 0 0 0 calc(var(--ring-width) - 1px) rgba(247, 55, 79, 0.15);
+      box-shadow: 0 0 0 3px hsl(var(--destructive) / 0.2);
     }
   }
 
   &--filled {
     .q-field__control {
-      border-radius: var(--radius);
+      border-radius: var(--radius-md); // 6px
       background: var(--muted);
       border: var(--border-width) solid transparent;
+      box-shadow: var(--shadow-xs);
       transition:
         border-color 0.15s ease,
         box-shadow 0.15s ease;
@@ -238,9 +288,10 @@ body {
         background: transparent;
       }
 
+      // Focus state - 3px ring with 50% opacity
       &:focus-within {
         border-color: var(--ring-color-primary);
-        box-shadow: 0 0 0 calc(var(--ring-width) - 1px) rgba(0, 145, 154, 0.15);
+        box-shadow: 0 0 0 3px hsl(var(--ring) / 0.5);
       }
     }
 
@@ -249,7 +300,7 @@ body {
 
       &::before {
         border: 1px dashed var(--border-color-readonly);
-        border-radius: var(--radius);
+        border-radius: var(--radius-md);
         background: transparent;
       }
     }
@@ -260,18 +311,37 @@ body {
   }
 
   .q-field__native {
-    letter-spacing: -0.011em;
+    letter-spacing: var(--tracking-tight);
+  }
+
+  .q-field__native,
+  .q-field__input,
+  .q-field__marginal,
+  .q-select__dropdown-icon {
+    color: hsl(var(--foreground));
   }
 }
 
+// --------------------------------------------
+// Dropdowns/Menus (q-menu) - shadcn-vue conventions
+// --------------------------------------------
 .q-menu {
-  border-radius: var(--radius);
-  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--radius-md); // 6px
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
   box-shadow: var(--shadow-md);
+  padding: 4px;
 
   .q-item {
-    border-radius: var(--radius-sm);
-    margin: 2px 4px;
+    border-radius: var(--radius-sm); // 4px
+    margin: 0;
+    color: inherit;
+
+    .q-item__section,
+    .q-item__label {
+      color: inherit;
+    }
 
     &:hover {
       background: var(--muted);
@@ -283,8 +353,81 @@ body {
   }
 }
 
+.body--dark {
+  .q-dialog__inner > .q-card {
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+
+  .q-card:not(.q-card--flat),
+  .q-card.shadow-1 {
+    box-shadow: var(--shadow-xs) !important;
+  }
+
+  .q-field--outlined .q-field__control,
+  .q-field--filled .q-field__control {
+    background: rgba(255, 255, 255, 0.045);
+  }
+
+  .q-select .q-field__control {
+    background: hsl(var(--popover));
+  }
+
+  .q-menu {
+    background: hsl(var(--popover));
+    border-color: hsl(var(--border));
+    color: hsl(var(--foreground));
+  }
+
+  .q-select__dialog {
+    background: hsl(var(--popover));
+    color: hsl(var(--popover-foreground));
+    border: 1px solid hsl(var(--border));
+  }
+
+  .q-select__dialog .q-item,
+  .q-select__dialog .q-item__section,
+  .q-select__dialog .q-item__label,
+  .q-select__dialog .q-field__native {
+    color: inherit;
+  }
+
+  .q-uploader {
+    background: hsl(var(--popover));
+    color: hsl(var(--popover-foreground));
+    border-color: hsl(var(--border));
+  }
+
+  .q-uploader__list,
+  .q-uploader__dnd {
+    background: hsl(var(--popover));
+    color: hsl(var(--popover-foreground));
+  }
+
+  .q-field,
+  .q-field__native,
+  .q-field__input,
+  .q-field__marginal,
+  .q-select__dropdown-icon {
+    color: hsl(var(--foreground));
+  }
+
+  .q-field__label {
+    color: hsl(var(--muted-foreground));
+  }
+
+  .q-checkbox__inner {
+    color: rgba(255, 255, 255, 0.55);
+  }
+
+  .q-checkbox__inner--truthy,
+  .q-checkbox__inner--indet {
+    color: hsl(var(--primary));
+  }
+}
+
 // --------------------------------------------
-// Dialogs (q-dialog)
+// Dialogs (q-dialog) - shadcn-vue conventions
 // --------------------------------------------
 .q-dialog {
   &__backdrop {
@@ -294,13 +437,15 @@ body {
 }
 
 // --------------------------------------------
-// Chips (q-chip)
+// Chips/Badges (q-chip) - shadcn-vue conventions
 // --------------------------------------------
 .q-chip {
-  padding: 0.5rem;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-full); // Full round (9999px)
+  font-size: 12px; // text-xs
   font-weight: 500;
-  letter-spacing: -0.011em;
+  padding: 2px 8px; // px-2 py-0.5
+  height: auto;
+  letter-spacing: var(--tracking-tight);
   transition:
     background-color 0.15s ease,
     border-color 0.15s ease;
@@ -310,7 +455,8 @@ body {
   }
 
   &--outline {
-    border: var(--border-width) solid currentColor;
+    border: 1px solid currentColor;
+    background: transparent;
   }
 
   &--clickable:hover {
@@ -324,7 +470,7 @@ body {
 .q-badge {
   border-radius: var(--radius-sm);
   font-weight: 500;
-  letter-spacing: -0.011em;
+  letter-spacing: var(--tracking-tight);
 
   &--outline {
     border: var(--border-width) solid currentColor;
@@ -348,10 +494,18 @@ body {
 }
 
 // --------------------------------------------
-// Separators (q-separator)
+// Separators (q-separator) - shadcn-vue conventions
 // --------------------------------------------
 .q-separator {
-  background: var(--separator-color);
+  background: hsl(var(--border));
+
+  &--horizontal {
+    height: 1px;
+  }
+
+  &--vertical {
+    width: 1px;
+  }
 
   &--spaced {
     margin: 1rem 0;
@@ -366,10 +520,10 @@ body {
 }
 
 // --------------------------------------------
-// List Items (q-item)
+// List Items (q-item, q-expansion-item)
 // --------------------------------------------
 .q-item {
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md); // Consistent with buttons/inputs
   transition: background-color 0.15s ease;
 
   &--clickable:hover {
@@ -381,11 +535,21 @@ body {
   }
 }
 
+.q-expansion-item {
+  border-radius: var(--radius-md); // Consistent with buttons/inputs
+
+  .q-expansion-item__container {
+    border-radius: var(--radius-md);
+  }
+}
+
 // --------------------------------------------
-// Linear Progress (q-linear-progress)
+// Linear Progress (q-linear-progress) - shadcn-vue conventions
 // --------------------------------------------
 .q-linear-progress {
+  height: 8px; // h-2
   border-radius: var(--radius-full);
+  background: hsl(var(--primary) / 0.2);
   overflow: hidden;
 
   &__track {
@@ -393,6 +557,7 @@ body {
   }
 
   &__model {
+    background: hsl(var(--primary));
     border-radius: var(--radius-full);
   }
 }
@@ -421,6 +586,23 @@ body {
   font-weight: 500;
 }
 
+// --------------------------------------------
+// Tabs (q-tabs) - shadcn-vue conventions
+// --------------------------------------------
+.q-tabs {
+  .q-tab {
+    border-radius: var(--radius-md);
+
+    &--active {
+      box-shadow: var(--shadow-sm);
+    }
+  }
+}
+
+.q-tabs__content {
+  border-radius: var(--radius-lg);
+}
+
 // ============================================
 // Typography Adjustments (shadcn-inspired)
 // ============================================
@@ -442,23 +624,23 @@ h6,
 }
 
 .text-subtitle1 {
-  letter-spacing: -0.011em;
+  letter-spacing: var(--tracking-tight);
   font-weight: 500;
 }
 
 .text-subtitle2 {
-  letter-spacing: -0.011em;
+  letter-spacing: var(--tracking-tight);
   font-weight: 500;
 }
 
 .text-body1,
 .text-body2 {
-  letter-spacing: -0.011em;
+  letter-spacing: var(--tracking-tight);
 }
 
 .text-caption {
   letter-spacing: 0;
-  color: var(--muted-foreground);
+  color: hsl(var(--muted-foreground));
 }
 
 .text-overline {
@@ -505,11 +687,22 @@ h6,
 // ============================================
 
 .text-muted {
-  color: var(--muted-foreground);
+  color: hsl(var(--muted-foreground));
 }
 
 .bg-muted {
-  background-color: var(--muted);
+  background-color: hsl(var(--muted));
+}
+
+.themed-muted-surface {
+  background-color: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
+
+.themed-muted-banner {
+  background-color: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+  border-color: hsl(var(--border));
 }
 
 .border-subtle {
@@ -524,10 +717,14 @@ h6,
   box-shadow: var(--shadow-md);
 }
 
+.min-w-0 {
+  min-width: 0;
+}
+
 .focus-ring {
   &:focus-visible {
-    outline: var(--ring-width) solid var(--ring-color-primary);
-    outline-offset: var(--ring-offset);
+    outline: none;
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.5);
   }
 }
 
@@ -541,7 +738,7 @@ h6,
   font-weight: 500;
   color: var(--text-color);
   margin-bottom: 0.375rem;
-  letter-spacing: -0.011em;
+  letter-spacing: var(--tracking-tight);
   cursor: pointer;
 }
 

@@ -39,7 +39,7 @@
 
     <!-- Desktop Grid -->
     <div
-      v-else-if="items.length > 0 && $q.screen.gt.xs"
+      v-else-if="items.length > 0 && !$q.screen.lt.md"
       class="row"
       :class="gridGutterClass"
     >
@@ -55,35 +55,41 @@
       </div>
     </div>
 
-    <!-- Mobile Carousel -->
-    <q-carousel
-      v-else-if="items.length > 0 && $q.screen.lt.sm"
-      v-model="carouselSlide"
-      transition-prev="slide-right"
-      transition-next="slide-left"
-      swipeable
-      animated
-      control-color="primary"
-      control-type="flat"
-      navigation-icon="eva-radio-button-off-outline"
-      navigation-active-icon="eva-radio-button-on-outline"
-      navigation
-      padding
-      height="auto"
-      class="transparent"
-    >
-      <q-carousel-slide
-        v-for="(item, index) in items"
-        :key="item.id"
-        :name="index"
-        class="q-pa-none"
+    <!-- Mobile: list mode if list-item slot provided, else stack cards -->
+    <template v-else-if="items.length > 0 && $q.screen.lt.md">
+      <q-card
+        v-if="$slots['list-item']"
+        :bordered="$q.dark.isActive"
       >
-        <slot
-          name="card"
-          :item="item"
-        />
-      </q-carousel-slide>
-    </q-carousel>
+        <q-list>
+          <template
+            v-for="(item, index) in items"
+            :key="item.id"
+          >
+            <slot
+              name="list-item"
+              :item="item"
+            />
+            <q-separator v-if="index < items.length - 1" />
+          </template>
+        </q-list>
+      </q-card>
+      <div
+        v-else
+        class="row q-col-gutter-sm"
+      >
+        <div
+          v-for="item in items"
+          :key="item.id"
+          class="col-12"
+        >
+          <slot
+            name="card"
+            :item="item"
+          />
+        </div>
+      </div>
+    </template>
 
     <!-- Empty State -->
     <div v-else>
@@ -93,7 +99,7 @@
 </template>
 
 <script setup lang="ts" generic="T extends { id: string }">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { useQuasar } from 'quasar'
 import DashboardSectionSkeleton from './DashboardSectionSkeleton.vue'
 
@@ -118,7 +124,6 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const $q = useQuasar()
-const carouselSlide = ref(0)
 
 const showViewAll = computed(() => {
   return props.viewAllRoute && props.count > props.maxDisplayed
