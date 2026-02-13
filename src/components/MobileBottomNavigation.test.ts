@@ -13,6 +13,15 @@ vi.mock('vue-router', () => ({
   useRoute: () => mockRoute,
 }))
 
+vi.mock('src/composables/useRouteActive', () => ({
+  useRouteActive: () => ({
+    isActive: (path: string) => {
+      if (path === '/') return mockRoute.fullPath === '/'
+      return mockRoute.fullPath.startsWith(path)
+    },
+  }),
+}))
+
 function createWrapper() {
   return mount(MobileBottomNavigation, {
     global: {
@@ -88,7 +97,7 @@ it('does not highlight home button when on subroute', () => {
   const wrapper = createWrapper()
 
   const homeButton = wrapper.findAll('.q-btn').find((btn) => btn.text().includes('Home'))
-  expect(homeButton?.attributes('data-color')).toBe('grey-7')
+  expect(homeButton?.attributes('data-color')).toBeUndefined()
 })
 
 it('emits open-expense-dialog when add expense button is clicked', async () => {

@@ -39,6 +39,15 @@ vi.mock('src/stores/preferences', () => ({
   usePreferencesStore: () => mockPreferencesStore,
 }))
 
+vi.mock('src/composables/useRouteActive', () => ({
+  useRouteActive: () => ({
+    isActive: (path: string) => {
+      if (path === '/') return mockRoute.fullPath === '/'
+      return mockRoute.fullPath.startsWith(path)
+    },
+  }),
+}))
+
 function createWrapper() {
   return mount(NavigationDrawer, {
     props: {
@@ -52,8 +61,8 @@ function createWrapper() {
       stubs: {
         QList: { template: '<div class="q-list"><slot /></div>' },
         QItem: {
-          template: '<div class="q-item" :to="to" :class="{ active: active }"><slot /></div>',
-          props: ['to', 'active', 'clickable', 'exact'],
+          template: '<div class="q-item" :data-to="to" :class="{ active: active }"><slot /></div>',
+          props: ['to', 'active', 'clickable', 'exact', 'vClosePopup'],
         },
         QItemSection: {
           template: '<div class="q-item-section"><slot /></div>',
@@ -79,9 +88,13 @@ function createWrapper() {
   })
 }
 
+const NAV_ROUTES = ['/', '/plans', '/templates']
+
 function getNavItems(wrapper: ReturnType<typeof createWrapper>) {
-  const navList = wrapper.findAll('.q-list')[0]!
-  return navList.findAll('.q-item')
+  return wrapper.findAll('.q-item').filter((item) => {
+    const to = item.attributes('data-to')
+    return to !== undefined && NAV_ROUTES.includes(to)
+  })
 }
 
 beforeEach(() => {
@@ -153,9 +166,9 @@ it('sets correct to attributes', () => {
   const wrapper = createWrapper()
   const items = getNavItems(wrapper)
 
-  expect(items[0]?.attributes('to')).toBe('/')
-  expect(items[1]?.attributes('to')).toBe('/plans')
-  expect(items[2]?.attributes('to')).toBe('/templates')
+  expect(items[0]?.attributes('data-to')).toBe('/')
+  expect(items[1]?.attributes('data-to')).toBe('/plans')
+  expect(items[2]?.attributes('data-to')).toBe('/templates')
 })
 
 it('renders user area with display name', () => {

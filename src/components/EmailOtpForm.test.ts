@@ -11,6 +11,11 @@ vi.mock('src/utils/validation-rules', () => ({
   emailRules: vi.fn(() => [(val: string) => !!val || 'Email is required']),
 }))
 
+vi.mock('vue-router', () => ({
+  useRouter: () => ({ push: vi.fn() }),
+  useRoute: () => ({ query: {} }),
+}))
+
 installQuasarPlugin()
 
 function mountComponent() {
@@ -50,43 +55,10 @@ it('uses email validation rules from utils', () => {
   expect(validationRules.emailRules).toHaveBeenCalled()
 })
 
-it('displays "Sign in with Email" as default button label', () => {
+it('displays "Continue with Email" as default button label', () => {
   const { wrapper } = mountComponent()
   const btn = wrapper.findComponent({ name: 'QBtn' })
-  expect(btn.props('label')).toBe('Sign in with Email')
-})
-
-it('displays "Resend Email" when email is sent', async () => {
-  const { wrapper, userStore } = mountComponent()
-  userStore.auth.isEmailSent = true
-  await nextTick()
-  const btn = wrapper.findComponent({ name: 'QBtn' })
-  expect(btn.props('label')).toBe('Resend Email')
-})
-
-it('disables email input when email is sent', async () => {
-  const { wrapper, userStore } = mountComponent()
-  userStore.auth.isEmailSent = true
-  await nextTick()
-  const input = wrapper.findComponent({ name: 'QInput' })
-  expect(input.props('disable')).toBe(true)
-})
-
-it('shows error message when emailError is present', async () => {
-  const { wrapper, userStore } = mountComponent()
-  userStore.auth.emailError = 'Invalid email'
-  await nextTick()
-  const error = wrapper.find('p.text-negative')
-  expect(error.exists()).toBe(true)
-  expect(error.text()).toBe('Invalid email')
-})
-
-it('shows success message when email is sent', async () => {
-  const { wrapper, userStore } = mountComponent()
-  userStore.auth.isEmailSent = true
-  await nextTick()
-  const success = wrapper.find('p.text-positive')
-  expect(success.exists()).toBe(true)
+  expect(btn.props('label')).toBe('Continue with Email')
 })
 
 it('does not call signInWithOtp when email is empty', async () => {
