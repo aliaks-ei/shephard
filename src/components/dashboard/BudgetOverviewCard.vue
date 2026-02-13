@@ -112,6 +112,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { usePlansStore } from 'src/stores/plans'
 import { useExpensesStore } from 'src/stores/expenses'
+import { useCategoriesStore } from 'src/stores/categories'
 import { usePreferencesStore } from 'src/stores/preferences'
 import { usePlanOverview } from 'src/composables/usePlanOverview'
 import { getStatusColor, getStatusText, getDaysRemaining } from 'src/utils/plans'
@@ -129,6 +130,7 @@ const props = defineProps<{
 
 const plansStore = usePlansStore()
 const expensesStore = useExpensesStore()
+const categoriesStore = useCategoriesStore()
 const preferencesStore = usePreferencesStore()
 
 const planWithItems = ref<PlanWithItems | null>(null)
@@ -166,7 +168,10 @@ function formatAmount(amount: number | null | undefined): string {
 
 onMounted(async () => {
   isOverviewLoading.value = true
-  const loaded = await plansStore.loadPlanWithItems(props.plan.id)
+  const [loaded] = await Promise.all([
+    plansStore.loadPlanWithItems(props.plan.id),
+    categoriesStore.loadCategories(),
+  ])
   planWithItems.value = loaded
   await Promise.all([
     expensesStore.loadExpensesForPlan(props.plan.id),

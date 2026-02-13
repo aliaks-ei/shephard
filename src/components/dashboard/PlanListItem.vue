@@ -7,10 +7,10 @@
       side
       class="q-pr-sm"
     >
-      <q-badge
-        rounded
-        color="green"
-        class="plan-status-dot"
+      <q-icon
+        name="eva-calendar-outline"
+        color="primary"
+        size="16px"
       />
     </q-item-section>
 
@@ -75,12 +75,3 @@ function formatAmount(amount: number | null | undefined): string {
   return formatCurrency(amount, currency)
 }
 </script>
-
-<style lang="scss" scoped>
-.plan-status-dot {
-  width: 10px;
-  height: 10px;
-  min-height: 10px;
-  padding: 0;
-}
-</style>

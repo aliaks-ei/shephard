@@ -30,6 +30,8 @@ defineProps<Props>()
 const bannerClasses = computed(() => [
   'row',
   'items-center',
+  'full-width',
+  'rounded-borders',
   'q-pa-sm',
   'q-px-md',
   'q-mb-md',
@@ -37,10 +39,3 @@ const bannerClasses = computed(() => [
   'text-red-6',
 ])
 </script>
-
-<style lang="scss" scoped>
-div[role='alert'] {
-  width: 100%;
-  border-radius: $generic-border-radius;
-}
-</style>

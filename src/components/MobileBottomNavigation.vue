@@ -1,6 +1,6 @@
 <template>
   <div
-    class="full-width shadow-up-1 q-pt-sm q-px-sm mobile-bottom-nav-content"
+    class="full-width shadow-up-1 q-pt-sm q-px-sm safe-area-bottom"
     :class="[$q.dark.isActive ? 'bg-dark text-white' : 'bg-white text-dark']"
   >
     <div class="row q-gutter-xs items-end">
@@ -89,9 +89,3 @@ const emit = defineEmits<{ 'open-expense-dialog': [] }>()
 
 const { isActive } = useRouteActive()
 </script>
-
-<style scoped>
-.mobile-bottom-nav-content {
-  padding-bottom: max(8px, calc(8px + env(safe-area-inset-bottom, 0px)));
-}
-</style>

@@ -10,6 +10,7 @@
       <q-icon
         name="eva-bookmark-outline"
         color="primary"
+        size="16px"
       />
     </q-item-section>
 
