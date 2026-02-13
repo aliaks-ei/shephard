@@ -7,9 +7,9 @@ import type { ComponentProps } from 'vue-component-type-helpers'
 import ShareTemplateDialog from './ShareTemplateDialog.vue'
 
 vi.mock('@vueuse/core', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@vueuse/core')>()
+  const actual = await importOriginal()
   return {
-    ...actual,
+    ...(actual as Record<string, unknown>),
     useDebounceFn: vi.fn((fn) => fn),
   }
 })
