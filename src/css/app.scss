@@ -234,6 +234,7 @@ body {
   &--outlined {
     .q-field__control {
       border-radius: var(--radius-md); // 6px
+      background: hsl(var(--popover));
       border: var(--border-width) solid var(--border-color);
       box-shadow: var(--shadow-xs);
       transition:
@@ -317,7 +318,7 @@ body {
   .q-field__input,
   .q-field__marginal,
   .q-select__dropdown-icon {
-    color: inherit;
+    color: hsl(var(--foreground));
   }
 }
 

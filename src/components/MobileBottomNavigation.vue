@@ -8,7 +8,7 @@
           label="Home"
           to="/"
           :color="isActive('/') ? 'primary' : undefined"
-          :style="isActive('/') ? activeStyle : undefined"
+          :style="isActive('/') ? activeStyle : inactiveStyle"
           size="sm"
           flat
           stack
@@ -25,7 +25,7 @@
           label="Plans"
           to="/plans"
           :color="isActive('/plans') ? 'primary' : undefined"
-          :style="isActive('/plans') ? activeStyle : undefined"
+          :style="isActive('/plans') ? activeStyle : inactiveStyle"
           size="sm"
           flat
           stack
@@ -53,7 +53,7 @@
           label="Templates"
           to="/templates"
           :color="isActive('/templates') ? 'primary' : undefined"
-          :style="isActive('/templates') ? activeStyle : undefined"
+          :style="isActive('/templates') ? activeStyle : inactiveStyle"
           size="sm"
           flat
           stack
@@ -70,7 +70,7 @@
           label="Settings"
           to="/settings"
           :color="isActive('/settings') ? 'primary' : undefined"
-          :style="isActive('/settings') ? activeStyle : undefined"
+          :style="isActive('/settings') ? activeStyle : inactiveStyle"
           size="sm"
           flat
           stack
@@ -94,6 +94,10 @@ const { isActive } = useRouteActive()
 const activeStyle: StyleValue = {
   background: 'hsl(var(--primary) / 0.1)',
   borderRadius: 'var(--radius-full)',
+}
+
+const inactiveStyle: StyleValue = {
+  color: 'hsl(var(--foreground))',
 }
 </script>
 

@@ -1,45 +1,47 @@
 <template>
   <div class="row justify-center page-content-spacing">
     <div class="col-12 col-md-10 col-lg-8 col-xl-6">
-      <div class="q-mb-md">
-        <div class="row items-center">
-          <div class="col-auto q-mr-md">
-            <UserAvatar
-              :avatar-url="userStore.userProfile?.avatarUrl"
-              :name-initial="userStore.userProfile?.nameInitial"
-              :size="$q.screen.lt.md ? '80px' : '100px'"
-            />
+      <!-- Profile Hero -->
+      <div class="row items-center q-mb-lg q-pa-sm">
+        <div class="col-auto q-mr-md">
+          <UserAvatar
+            :avatar-url="userStore.userProfile?.avatarUrl"
+            :name-initial="userStore.userProfile?.nameInitial"
+            :size="$q.screen.lt.md ? '72px' : '80px'"
+          />
+        </div>
+        <div class="col">
+          <div class="text-h5 q-mb-xs">
+            {{ userStore.userProfile?.displayName }}
           </div>
-          <div class="col">
-            <div :class="$q.screen.lt.md ? 'text-h5' : 'text-h4'">
-              {{ userStore.userProfile?.displayName }}
-            </div>
-            <div class="text-subtitle1 text-grey-6">{{ userStore.userProfile?.email }}</div>
-          </div>
+          <div class="text-caption">{{ userStore.userProfile?.email }}</div>
         </div>
       </div>
 
+      <!-- Preferences -->
       <q-card
-        flat
-        bordered
-        class="q-my-lg"
+        :bordered="$q.dark.isActive"
+        class="shadow-1 q-mb-lg"
       >
         <q-card-section>
-          <h5 class="text-h6 q-mt-none q-mb-md">Preferences</h5>
-          <q-separator class="q-mb-md separator" />
+          <div class="text-subtitle1 text-weight-medium q-mb-md">Preferences</div>
 
           <q-list>
             <q-item class="q-pa-sm">
               <q-item-section avatar>
-                <q-icon
-                  name="eva-credit-card-outline"
-                  color="primary"
-                  size="md"
-                />
+                <q-avatar
+                  size="36px"
+                  class="settings-icon-avatar"
+                  text-color="primary"
+                >
+                  <q-icon
+                    name="eva-credit-card-outline"
+                    size="18px"
+                  />
+                </q-avatar>
               </q-item-section>
               <q-item-section>
-                <q-item-label>Currency</q-item-label>
-                <q-item-label caption> Select your preferred currency </q-item-label>
+                <q-item-label class="text-body2">Currency</q-item-label>
               </q-item-section>
               <q-item-section side>
                 <q-select
@@ -56,15 +58,19 @@
 
             <q-item class="q-pa-sm">
               <q-item-section avatar>
-                <q-icon
-                  :name="themeIcon"
-                  color="primary"
-                  size="md"
-                />
+                <q-avatar
+                  size="36px"
+                  class="settings-icon-avatar"
+                  text-color="primary"
+                >
+                  <q-icon
+                    :name="themeIcon"
+                    size="18px"
+                  />
+                </q-avatar>
               </q-item-section>
               <q-item-section>
-                <q-item-label>Theme</q-item-label>
-                <q-item-label caption> Choose your preferred theme </q-item-label>
+                <q-item-label class="text-body2">Theme</q-item-label>
               </q-item-section>
               <q-item-section side>
                 <q-select
@@ -83,54 +89,15 @@
         </q-card-section>
       </q-card>
 
-      <q-card
-        flat
-        bordered
-        class="q-mb-lg"
-      >
-        <q-card-section>
-          <h5 class="text-h6 q-mt-none q-mb-md">Account Information</h5>
-          <q-separator class="q-mb-md separator" />
-
-          <div class="row q-col-gutter-sm">
-            <InfoItem
-              icon="eva-email-outline"
-              label="Email"
-              :value="userStore.userProfile?.email"
-            />
-
-            <InfoItem
-              v-if="userStore.userProfile?.displayName"
-              icon="eva-person-outline"
-              label="Full Name"
-              :value="userStore.userProfile.displayName"
-            />
-
-            <InfoItem
-              v-if="userStore.userProfile?.authProvider"
-              icon="eva-log-in-outline"
-              label="Sign-in Provider"
-              :value="userStore.userProfile.authProvider"
-            />
-
-            <InfoItem
-              v-if="userStore.userProfile?.createdAt"
-              icon="eva-calendar-outline"
-              label="Joined On"
-              :value="userStore.userProfile.formattedCreatedAt"
-            />
-          </div>
-        </q-card-section>
-      </q-card>
-
+      <!-- Sign Out -->
       <div class="text-center">
         <q-btn
+          flat
+          no-caps
           color="negative"
-          text-color="white"
           icon="eva-log-out-outline"
           label="Sign Out"
           padding="sm lg"
-          no-caps
           :loading="isSigningOut"
           @click="handleSignOut"
         />
@@ -141,16 +108,13 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
 
 import UserAvatar from 'src/components/UserAvatar.vue'
-import InfoItem from 'src/components/InfoItem.vue'
 import { useUserStore } from 'src/stores/user'
 
 const userStore = useUserStore()
 const router = useRouter()
-const $q = useQuasar()
 
 const isSigningOut = ref(false)
 
@@ -195,3 +159,14 @@ async function handleSignOut() {
   isSigningOut.value = false
 }
 </script>
+
+<style lang="scss" scoped>
+.settings-icon-avatar {
+  background: hsl(var(--muted));
+}
+
+:global(.body--dark) .settings-icon-avatar {
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid hsl(var(--border));
+}
+</style>
