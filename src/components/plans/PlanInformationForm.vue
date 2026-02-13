@@ -1,6 +1,6 @@
 <template>
   <q-card
-    class="bg-white q-pa-md"
+    class="q-pa-md"
     flat
   >
     <SectionHeader

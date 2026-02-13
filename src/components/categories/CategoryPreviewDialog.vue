@@ -129,8 +129,7 @@
           <q-card
             v-else
             flat
-            class="text-center q-py-lg"
-            :class="$q.dark.isActive ? 'bg-black-2 text-white' : 'bg-grey-1'"
+            class="text-center q-py-lg themed-muted-surface"
           >
             <q-icon
               name="eva-grid-outline"

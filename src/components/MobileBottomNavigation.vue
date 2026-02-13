@@ -1,5 +1,5 @@
 <template>
-  <div class="floating-nav q-mx-sm q-pa-xs text-grey-7">
+  <div class="floating-nav q-mx-sm q-pa-xs">
     <div class="row q-gutter-xs items-center">
       <!-- Home -->
       <div class="col">
@@ -7,7 +7,7 @@
           icon="eva-home-outline"
           label="Home"
           to="/"
-          :color="isActive('/') ? 'primary' : 'grey-7'"
+          :color="isActive('/') ? 'primary' : undefined"
           :style="isActive('/') ? activeStyle : undefined"
           size="sm"
           flat
@@ -24,7 +24,7 @@
           icon="eva-calendar-outline"
           label="Plans"
           to="/plans"
-          :color="isActive('/plans') ? 'primary' : 'grey-7'"
+          :color="isActive('/plans') ? 'primary' : undefined"
           :style="isActive('/plans') ? activeStyle : undefined"
           size="sm"
           flat
@@ -52,7 +52,7 @@
           icon="eva-file-text-outline"
           label="Templates"
           to="/templates"
-          :color="isActive('/templates') ? 'primary' : 'grey-7'"
+          :color="isActive('/templates') ? 'primary' : undefined"
           :style="isActive('/templates') ? activeStyle : undefined"
           size="sm"
           flat
@@ -69,7 +69,7 @@
           icon="eva-settings-2-outline"
           label="Settings"
           to="/settings"
-          :color="isActive('/settings') ? 'primary' : 'grey-7'"
+          :color="isActive('/settings') ? 'primary' : undefined"
           :style="isActive('/settings') ? activeStyle : undefined"
           size="sm"
           flat

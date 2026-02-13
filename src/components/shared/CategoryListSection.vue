@@ -2,7 +2,7 @@
   <q-card
     flat
     :bordered="bordered"
-    :class="[padding ? 'q-pa-md' : '', transparent ? 'bg-transparent' : 'bg-white']"
+    :class="[padding ? 'q-pa-md' : '', transparent ? 'bg-transparent' : '']"
   >
     <!-- Header -->
     <div class="row items-center justify-between q-mb-md">
@@ -62,7 +62,7 @@
         <q-banner
           dense
           rounded
-          :class="$q.dark.isActive ? 'bg-grey-9 text-grey-3' : 'bg-grey-1 text-grey-7'"
+          class="themed-muted-banner"
         >
           <template #avatar>
             <q-icon

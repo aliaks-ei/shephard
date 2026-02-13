@@ -78,10 +78,7 @@
     >
       <div class="row justify-center">
         <div class="col-12 col-md-10 col-lg-8 col-xl-6">
-          <q-toolbar
-            class="q-mb-lg q-px-none shadow-1 q-pa-md sticky-toolbar"
-            :class="$q.dark.isActive ? 'bg-dark text-white' : 'bg-white'"
-          >
+          <q-toolbar class="q-mb-lg q-px-none shadow-1 q-pa-md sticky-toolbar detail-toolbar">
             <q-btn
               flat
               round
@@ -231,5 +228,10 @@ const hasActions = computed(() => {
   position: sticky;
   top: 52px;
   z-index: 100;
+}
+
+.detail-toolbar {
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
 }
 </style>

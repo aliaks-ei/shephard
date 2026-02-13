@@ -5,10 +5,7 @@
       class="bg-transparent"
       flat
     >
-      <q-card-section
-        :class="$q.screen.lt.md ? 'q-px-sm' : 'q-px-md'"
-        class="bg-white"
-      >
+      <q-card-section :class="$q.screen.lt.md ? 'q-px-sm' : 'q-px-md'">
         <!-- Responsive Title and Progress Layout -->
         <div class="row items-center q-col-gutter-md">
           <!-- Title -->

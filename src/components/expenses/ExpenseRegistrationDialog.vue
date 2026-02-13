@@ -75,7 +75,7 @@
           :swipeable="$q.screen.lt.md"
           :transition-prev="$q.screen.lt.md ? 'slide-right' : 'fade'"
           :transition-next="$q.screen.lt.md ? 'slide-left' : 'fade'"
-          class="col overflow-auto"
+          class="col overflow-auto bg-transparent"
           style="flex: 1; min-height: 0"
         >
           <!-- Custom Entry Mode -->
