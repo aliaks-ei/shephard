@@ -15,21 +15,23 @@
             class="q-pr-sm"
           >
             <q-skeleton
-              type="QAvatar"
-              size="10px"
+              type="rect"
+              width="16px"
+              height="16px"
             />
           </q-item-section>
           <q-item-section>
             <q-item-label>
               <q-skeleton
                 type="text"
-                width="50%"
+                width="55%"
               />
             </q-item-label>
             <q-item-label>
               <q-skeleton
                 type="text"
-                width="35%"
+                width="40%"
+                height="12px"
               />
             </q-item-label>
           </q-item-section>
@@ -61,18 +63,53 @@
         class="shadow-1"
       >
         <q-card-section>
+          <!-- Title + chip row -->
+          <div class="row items-center justify-between q-mb-md">
+            <q-skeleton
+              type="text"
+              width="40%"
+            />
+            <q-skeleton
+              type="QChip"
+              width="70px"
+              height="24px"
+            />
+          </div>
+
+          <!-- 3 metric columns -->
+          <div class="row q-col-gutter-sm q-mb-sm">
+            <div
+              v-for="n in 3"
+              :key="n"
+              class="col"
+            >
+              <q-skeleton
+                type="text"
+                width="50%"
+                height="12px"
+                class="q-mb-xs"
+              />
+              <q-skeleton
+                type="text"
+                width="70%"
+                height="16px"
+              />
+            </div>
+          </div>
+
+          <!-- Progress bar -->
           <q-skeleton
-            type="text"
-            width="60%"
+            type="rect"
+            height="8px"
+            class="rounded-borders"
           />
+
+          <!-- Caption -->
           <q-skeleton
             type="text"
-            width="40%"
-            class="q-mt-xl"
-          />
-          <q-skeleton
-            type="text"
-            width="30%"
+            width="50%"
+            height="12px"
+            class="q-mt-xs"
           />
         </q-card-section>
       </q-card>

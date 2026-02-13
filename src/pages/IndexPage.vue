@@ -19,6 +19,51 @@
           @click="goToPlan"
         />
 
+        <!-- Budget Overview Skeleton (shown while loading) -->
+        <q-card
+          v-else-if="isLoading"
+          :bordered="$q.dark.isActive"
+          class="shadow-1 section-spacing"
+        >
+          <q-card-section>
+            <div class="row items-center justify-between q-mb-md">
+              <q-skeleton
+                type="text"
+                width="40%"
+              />
+              <q-skeleton
+                type="QChip"
+                width="80px"
+              />
+            </div>
+            <div class="row q-col-gutter-sm q-mb-sm">
+              <div
+                v-for="n in 3"
+                :key="n"
+                class="col"
+              >
+                <q-skeleton
+                  type="text"
+                  width="60%"
+                />
+                <q-skeleton
+                  type="text"
+                  width="80%"
+                />
+              </div>
+            </div>
+            <q-skeleton
+              type="rect"
+              height="8px"
+            />
+            <q-skeleton
+              type="text"
+              width="50%"
+              class="q-mt-xs"
+            />
+          </q-card-section>
+        </q-card>
+
         <!-- Active Plans Section -->
         <DashboardSection
           title="Active Plans"

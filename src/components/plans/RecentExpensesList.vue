@@ -28,13 +28,46 @@
       </div>
 
       <div v-if="isLoading">
-        <q-skeleton
-          v-for="i in 3"
-          :key="i"
-          type="rect"
-          height="60px"
-          class="q-mb-sm"
-        />
+        <q-list separator>
+          <q-item
+            v-for="i in $q.screen.lt.md ? 2 : 3"
+            :key="i"
+            class="q-px-none"
+          >
+            <q-item-section
+              style="min-width: auto"
+              avatar
+            >
+              <q-skeleton
+                type="QAvatar"
+                :size="$q.screen.lt.md ? '32px' : '40px'"
+              />
+            </q-item-section>
+            <q-item-section>
+              <q-skeleton
+                type="text"
+                width="55%"
+                height="14px"
+                class="q-mb-xs"
+              />
+              <q-skeleton
+                type="text"
+                width="40%"
+                height="12px"
+              />
+            </q-item-section>
+            <q-item-section
+              side
+              class="items-end"
+            >
+              <q-skeleton
+                type="text"
+                width="60px"
+                height="14px"
+              />
+            </q-item-section>
+          </q-item>
+        </q-list>
       </div>
 
       <q-list

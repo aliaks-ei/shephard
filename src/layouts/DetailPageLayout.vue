@@ -29,33 +29,40 @@
       />
 
       <div v-if="isLoading">
+        <!-- Tabs placeholder -->
+        <div class="row q-mb-md">
+          <q-skeleton
+            v-for="n in 3"
+            :key="n"
+            type="text"
+            width="80px"
+            height="36px"
+            class="q-mr-md"
+          />
+        </div>
         <q-skeleton
-          type="text"
-          width="40%"
+          type="rect"
+          height="2px"
           class="q-mb-md"
         />
+
+        <!-- Summary card placeholder -->
         <q-skeleton
-          type="QInput"
-          class="q-mb-lg"
+          type="rect"
+          height="120px"
+          class="q-mb-md rounded-borders"
         />
+
+        <!-- Content cards placeholder -->
         <q-skeleton
-          type="text"
-          width="30%"
-          class="q-mb-md"
+          type="rect"
+          height="80px"
+          class="q-mb-sm rounded-borders"
         />
         <q-skeleton
           type="rect"
-          height="50px"
-          class="q-mb-lg"
-        />
-        <q-skeleton
-          type="text"
-          width="35%"
-          class="q-mb-md"
-        />
-        <q-skeleton
-          type="rect"
-          height="200px"
+          height="80px"
+          class="rounded-borders"
         />
       </div>
 
@@ -119,33 +126,40 @@
           />
 
           <div v-if="isLoading">
+            <!-- Tabs placeholder -->
+            <div class="row q-mb-md">
+              <q-skeleton
+                v-for="n in 3"
+                :key="n"
+                type="text"
+                width="100px"
+                height="40px"
+                class="q-mr-lg"
+              />
+            </div>
             <q-skeleton
-              type="text"
-              width="40%"
-              class="q-mb-md"
-            />
-            <q-skeleton
-              type="QInput"
+              type="rect"
+              height="2px"
               class="q-mb-lg"
             />
+
+            <!-- Summary card placeholder -->
             <q-skeleton
-              type="text"
-              width="30%"
-              class="q-mb-md"
+              type="rect"
+              height="140px"
+              class="q-mb-md rounded-borders"
+            />
+
+            <!-- Content cards placeholder -->
+            <q-skeleton
+              type="rect"
+              height="90px"
+              class="q-mb-sm rounded-borders"
             />
             <q-skeleton
               type="rect"
-              height="50px"
-              class="q-mb-lg"
-            />
-            <q-skeleton
-              type="text"
-              width="35%"
-              class="q-mb-md"
-            />
-            <q-skeleton
-              type="rect"
-              height="200px"
+              height="90px"
+              class="rounded-borders"
             />
           </div>
 

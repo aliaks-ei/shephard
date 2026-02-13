@@ -67,11 +67,12 @@ describe('DashboardSectionSkeleton', () => {
     expect(cards.length).toBe(5)
   })
 
-  it('renders 3 skeleton text elements per card', () => {
+  it('renders skeleton elements per card matching BudgetOverviewCard layout', () => {
     const wrapper = createWrapper()
     const cards = wrapper.findAllComponents({ name: 'QCard' })
     const firstCardSkeletons = cards[0]?.findAllComponents({ name: 'QSkeleton' })
-    expect(firstCardSkeletons?.length).toBe(3)
+    // title + chip + 3x(caption + value) + progress bar + caption = 10
+    expect(firstCardSkeletons?.length).toBe(10)
   })
 
   it('does not render grid gutter row on mobile list layout', () => {

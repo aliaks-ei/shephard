@@ -94,7 +94,7 @@
             <q-card-section class="q-pt-sm">
               <!-- Skeleton for items -->
               <div
-                v-for="j in 3"
+                v-for="j in $q.screen.lt.md ? 2 : 3"
                 :key="j"
                 class="row items-center q-gutter-md q-py-sm"
               >
