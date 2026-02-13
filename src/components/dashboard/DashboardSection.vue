@@ -39,7 +39,7 @@
 
     <!-- Desktop Grid -->
     <div
-      v-else-if="items.length > 0 && $q.screen.gt.xs"
+      v-else-if="items.length > 0 && !$q.screen.lt.md"
       class="row"
       :class="gridGutterClass"
     >
@@ -56,7 +56,7 @@
     </div>
 
     <!-- Mobile: list mode if list-item slot provided, else stack cards -->
-    <template v-else-if="items.length > 0 && $q.screen.lt.sm">
+    <template v-else-if="items.length > 0 && $q.screen.lt.md">
       <q-card
         v-if="$slots['list-item']"
         :bordered="$q.dark.isActive"

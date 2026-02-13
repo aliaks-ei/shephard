@@ -1,7 +1,7 @@
 <template>
   <!-- Mobile: list skeleton -->
   <q-card
-    v-if="$q.screen.lt.sm"
+    v-if="$q.screen.lt.md"
     :bordered="$q.dark.isActive"
   >
     <q-list>

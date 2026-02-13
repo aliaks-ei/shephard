@@ -1,6 +1,7 @@
 <template>
   <q-card
-    class="bg-transparent q-mb-lg"
+    class="bg-transparent"
+    :class="$q.screen.lt.md ? 'q-mb-md' : 'q-mb-lg'"
     flat
   >
     <q-card-section class="q-pa-none">

@@ -1,7 +1,10 @@
 <template>
   <div :class="{ 'mobile-content-spacing': isMobile && hasActions }">
     <!-- Mobile: Full width toolbar -->
-    <div v-if="isMobile">
+    <div
+      v-if="isMobile"
+      class="page-content-spacing"
+    >
       <q-toolbar class="q-mb-sm q-px-none">
         <q-btn
           flat
@@ -64,7 +67,7 @@
     <!-- Desktop: Centered layout -->
     <div
       v-else
-      class="q-pa-sm q-pa-md-md"
+      class="page-content-spacing"
     >
       <div class="row justify-center">
         <div class="col-12 col-md-10 col-lg-8 col-xl-6">

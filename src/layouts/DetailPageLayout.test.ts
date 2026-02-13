@@ -37,7 +37,7 @@ it('should mount component properly', () => {
 it('should render main container with correct layout classes', () => {
   const wrapper = renderDetailPageLayout()
 
-  const container = wrapper.find('.q-pa-md')
+  const container = wrapper.find('.page-content-spacing')
   const row = wrapper.find('.row.justify-center')
   const col = wrapper.find('.col-12.col-md-10.col-lg-8.col-xl-6')
 

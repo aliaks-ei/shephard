@@ -101,6 +101,31 @@ body {
   padding-bottom: max(8px, calc(8px + env(safe-area-inset-bottom, 0px)));
 }
 
+// Shared page and section spacing utilities
+.page-content-spacing {
+  padding: var(--page-content-padding-mobile);
+
+  @media (min-width: $breakpoint-md-min) {
+    padding: var(--page-content-padding-desktop);
+  }
+}
+
+.section-spacing {
+  margin-bottom: var(--section-spacing-mobile);
+
+  @media (min-width: $breakpoint-md-min) {
+    margin-bottom: var(--section-spacing-desktop);
+  }
+}
+
+.section-spacing-compact {
+  margin-bottom: var(--section-spacing-compact-mobile);
+
+  @media (min-width: $breakpoint-md-min) {
+    margin-bottom: var(--section-spacing-desktop);
+  }
+}
+
 // --------------------------------------------
 // Buttons (q-btn) - shadcn-vue conventions
 // --------------------------------------------

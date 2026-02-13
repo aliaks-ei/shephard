@@ -84,6 +84,13 @@
   --ring-offset: 0px;
   --ring-color: hsl(var(--ring));
   --ring-color-primary: hsl(var(--ring));
+
+  // Layout spacing tokens
+  --page-content-padding-mobile: 4px;
+  --page-content-padding-desktop: 16px;
+  --section-spacing-mobile: 16px;
+  --section-spacing-desktop: 24px;
+  --section-spacing-compact-mobile: 8px;
 }
 
 // Dark mode variables

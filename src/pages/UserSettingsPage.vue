@@ -1,5 +1,5 @@
 <template>
-  <div class="row justify-center q-pa-xs q-pa-md-md">
+  <div class="row justify-center page-content-spacing">
     <div class="col-12 col-md-10 col-lg-8 col-xl-6">
       <div class="q-mb-md">
         <div class="row items-center">

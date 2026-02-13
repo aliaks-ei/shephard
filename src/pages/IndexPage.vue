@@ -1,5 +1,5 @@
 <template>
-  <section class="q-pa-xs q-pa-md-md">
+  <section class="page-content-spacing">
     <div class="row justify-center">
       <div class="col-12 col-md-10 col-lg-8 col-xl-6">
         <!-- Dashboard Header -->
@@ -7,7 +7,7 @@
 
         <!-- Quick Actions Section (hidden on mobile) -->
         <QuickActionsGrid
-          v-if="$q.screen.gt.xs"
+          v-if="$q.screen.gt.sm"
           @add-expense="openExpenseDialog"
         />
 
@@ -15,7 +15,7 @@
         <BudgetOverviewCard
           v-if="primaryPlan && !isLoading"
           :plan="primaryPlan"
-          :class="$q.screen.lt.sm ? 'q-mb-md' : 'q-mb-lg'"
+          class="section-spacing"
           @click="goToPlan"
         />
 
@@ -28,7 +28,7 @@
           :loading="isLoading"
           view-all-route="/plans"
           :max-displayed="maxDisplayedItems"
-          :container-class="$q.screen.lt.sm ? 'q-mb-md' : 'q-mb-lg'"
+          container-class="section-spacing"
         >
           <template #card="{ item }">
             <PlanCard
@@ -56,7 +56,7 @@
           :loading="isLoading"
           view-all-route="/templates"
           :max-displayed="maxDisplayedItems"
-          :container-class="$q.screen.lt.sm ? 'q-mb-md' : 'q-mb-lg'"
+          container-class="section-spacing"
         >
           <template #card="{ item }">
             <TemplateCard

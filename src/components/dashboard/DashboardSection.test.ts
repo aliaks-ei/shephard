@@ -136,7 +136,7 @@ describe('DashboardSection', () => {
 
   describe('mobile list view', () => {
     it('shows QList when list-item slot is provided on mobile', () => {
-      mockScreen.lt.sm = true
+      mockScreen.lt.md = true
       mockScreen.gt.xs = false
       const wrapper = createWrapper(
         {},
@@ -149,7 +149,7 @@ describe('DashboardSection', () => {
     })
 
     it('renders list items with separators between them', () => {
-      mockScreen.lt.sm = true
+      mockScreen.lt.md = true
       mockScreen.gt.xs = false
       const wrapper = createWrapper(
         {},
@@ -164,7 +164,7 @@ describe('DashboardSection', () => {
     })
 
     it('wraps list in QCard', () => {
-      mockScreen.lt.sm = true
+      mockScreen.lt.md = true
       mockScreen.gt.xs = false
       const wrapper = createWrapper(
         {},
@@ -177,7 +177,7 @@ describe('DashboardSection', () => {
     })
 
     it('falls back to stacked cards when no list-item slot on mobile', () => {
-      mockScreen.lt.sm = true
+      mockScreen.lt.md = true
       mockScreen.gt.xs = false
       const wrapper = createWrapper()
       const cards = wrapper.findAll('.test-card')
@@ -187,7 +187,7 @@ describe('DashboardSection', () => {
     })
 
     it('does not show grid on mobile', () => {
-      mockScreen.lt.sm = true
+      mockScreen.lt.md = true
       mockScreen.gt.xs = false
       const wrapper = createWrapper()
       const row = wrapper.find('.row.q-col-gutter-md')
