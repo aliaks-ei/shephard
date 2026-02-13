@@ -45,7 +45,7 @@ beforeEach(() => {
 
 it('renders the navigation content', () => {
   const wrapper = createWrapper()
-  expect(wrapper.find('.mobile-bottom-nav-content').exists()).toBe(true)
+  expect(wrapper.find('.floating-nav').exists()).toBe(true)
 })
 
 it('renders all navigation buttons', () => {
@@ -88,7 +88,7 @@ it('does not highlight home button when on subroute', () => {
   const wrapper = createWrapper()
 
   const homeButton = wrapper.findAll('.q-btn').find((btn) => btn.text().includes('Home'))
-  expect(homeButton?.attributes('data-color')).toBeUndefined()
+  expect(homeButton?.attributes('data-color')).toBe('grey-7')
 })
 
 it('emits open-expense-dialog when add expense button is clicked', async () => {

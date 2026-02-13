@@ -1,16 +1,14 @@
 <template>
-  <div
-    class="full-width shadow-up-1 q-pt-sm q-px-sm safe-area-bottom"
-    :class="[$q.dark.isActive ? 'bg-dark text-white' : 'bg-white text-dark']"
-  >
-    <div class="row q-gutter-xs items-end">
+  <div class="floating-nav q-mx-sm q-pa-xs text-grey-7">
+    <div class="row q-gutter-xs items-center">
       <!-- Home -->
       <div class="col">
         <q-btn
           icon="eva-home-outline"
           label="Home"
           to="/"
-          :color="isActive('/') ? 'primary' : undefined"
+          :color="isActive('/') ? 'primary' : 'grey-7'"
+          :style="isActive('/') ? activeStyle : undefined"
           size="sm"
           flat
           stack
@@ -26,7 +24,8 @@
           icon="eva-calendar-outline"
           label="Plans"
           to="/plans"
-          :color="isActive('/plans') ? 'primary' : undefined"
+          :color="isActive('/plans') ? 'primary' : 'grey-7'"
+          :style="isActive('/plans') ? activeStyle : undefined"
           size="sm"
           flat
           stack
@@ -37,7 +36,7 @@
       </div>
 
       <!-- Add Expense FAB -->
-      <div class="col text-center">
+      <div class="col column items-center justify-center">
         <q-btn
           icon="eva-plus-outline"
           round
@@ -53,7 +52,8 @@
           icon="eva-file-text-outline"
           label="Templates"
           to="/templates"
-          :color="isActive('/templates') ? 'primary' : undefined"
+          :color="isActive('/templates') ? 'primary' : 'grey-7'"
+          :style="isActive('/templates') ? activeStyle : undefined"
           size="sm"
           flat
           stack
@@ -69,7 +69,8 @@
           icon="eva-settings-2-outline"
           label="Settings"
           to="/settings"
-          :color="isActive('/settings') ? 'primary' : undefined"
+          :color="isActive('/settings') ? 'primary' : 'grey-7'"
+          :style="isActive('/settings') ? activeStyle : undefined"
           size="sm"
           flat
           stack
@@ -83,9 +84,25 @@
 </template>
 
 <script setup lang="ts">
+import type { StyleValue } from 'vue'
 import { useRouteActive } from 'src/composables/useRouteActive'
 
 const emit = defineEmits<{ 'open-expense-dialog': [] }>()
 
 const { isActive } = useRouteActive()
+
+const activeStyle: StyleValue = {
+  background: 'hsl(var(--primary) / 0.1)',
+  borderRadius: 'var(--radius-full)',
+}
 </script>
+
+<style lang="scss" scoped>
+.floating-nav {
+  border-radius: var(--radius-full);
+  background: hsl(var(--card));
+  box-shadow: var(--shadow-md);
+  border: 1px solid hsl(var(--border));
+  margin-bottom: max(12px, calc(12px + env(safe-area-inset-bottom, 0px)));
+}
+</style>

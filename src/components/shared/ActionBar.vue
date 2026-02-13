@@ -26,29 +26,34 @@
     expand
     :offset="[0, 0]"
   >
-    <div
-      class="full-width q-pa-sm shadow-up-1 safe-area-bottom"
-      :class="$q.dark.isActive ? 'bg-dark text-white' : 'bg-white'"
-    >
-      <!-- All Actions in Single Row -->
-      <div class="row q-gutter-xs justify-center">
-        <div
-          v-for="action in visibleActions"
-          :key="action.key"
-          class="col flex justify-center"
-        >
-          <q-btn
-            :icon="action.icon"
-            :color="action.color"
-            :loading="action.loading"
-            :label="action.label"
-            :disabled="action.loading"
-            class="text-caption text-weight-medium"
-            flat
-            stack
-            no-caps
-            @click="handleActionClick(action)"
-          ></q-btn>
+    <div class="full-width q-px-sm">
+      <div
+        class="q-pa-xs"
+        :style="floatingBarStyle"
+      >
+        <!-- All Actions in Single Row -->
+        <div class="row q-gutter-xs items-center">
+          <div
+            v-for="action in visibleActions"
+            :key="action.key"
+            class="col"
+          >
+            <q-btn
+              :icon="action.icon"
+              :color="action.color"
+              :loading="action.loading"
+              :label="action.label"
+              :disabled="action.loading"
+              :style="{ borderRadius: 'var(--radius-full)' }"
+              size="sm"
+              flat
+              stack
+              dense
+              no-caps
+              class="full-width"
+              @click="handleActionClick(action)"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -56,6 +61,7 @@
 </template>
 
 <script setup lang="ts">
+import type { StyleValue } from 'vue'
 import { computed } from 'vue'
 import { useQuasar } from 'quasar'
 
@@ -82,6 +88,14 @@ const props = defineProps<{
 const $q = useQuasar()
 
 const isMobile = computed(() => $q.screen.lt.md)
+
+const floatingBarStyle: StyleValue = {
+  borderRadius: 'var(--radius-full)',
+  background: 'hsl(var(--card))',
+  boxShadow: 'var(--shadow-md)',
+  border: '1px solid hsl(var(--border))',
+  marginBottom: 'max(12px, calc(12px + env(safe-area-inset-bottom, 0px)))',
+}
 
 const visibleActions = computed(() => {
   return props.actions.filter((action) => action.visible !== false)
