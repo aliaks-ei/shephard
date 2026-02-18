@@ -11,7 +11,8 @@
     "lint:changed": "git diff --name-only -z --diff-filter=ACM main | grep -zZ -E '\\.(ts|tsx|vue|js|jsx|mjs|cjs|json|html|css)$' | xargs -0 eslint -c ./eslint.config.js --fix || true",
     "format": "prettier --write \"**/*.{js,ts,vue,scss,html,md,json}\"",
     "format:changed": "git diff --name-only -z --diff-filter=ACM main | grep -zZ -E '\\.(ts|tsx|vue|js|jsx|mjs|cjs|json|html|css)$' | xargs -0 prettier --write || true",
-    "dev": "quasar dev -m pwa",
+    "dev": "VITE_MSW_ENABLED=false quasar dev -m pwa",
+    "dev:mock": "VITE_MSW_ENABLED=true quasar dev",
     "build": "quasar build -m pwa",
     "build:analyze": "quasar build -m pwa --mode analyze",
     "build:production": "NODE_ENV=production quasar build -m pwa",
@@ -53,6 +54,7 @@
     "globals": "^15.12.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.1.0",
+    "msw": "^2.12.10",
     "prettier": "^3.3.3",
     "supabase": "^2.51.0",
     "typescript": "~5.5.3",
@@ -72,5 +74,10 @@
     "node": "^28 || ^26 || ^24 || ^22 || ^20 || ^18",
     "npm": ">= 6.13.4",
     "yarn": ">= 1.21.1"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
   }
 }
