@@ -1,11 +1,9 @@
-import { nextTick, ref } from 'vue'
+import { nextTick, ref, computed } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 
 import { useTemplates } from './useTemplates'
-import { useTemplatesStore } from 'src/stores/templates'
 import type { TemplateWithPermission } from 'src/api'
-import { setupTestingPinia } from 'test/helpers/pinia-mocks'
 import { createMockTemplates } from 'test/fixtures'
 
 installQuasarPlugin()
@@ -44,14 +42,6 @@ vi.mock('src/utils/list-filters', () => ({
   }),
 }))
 
-vi.mock('src/api', async () => {
-  const actual = await vi.importActual('src/api')
-  return {
-    ...actual,
-    deleteTemplate: vi.fn().mockResolvedValue(undefined),
-  }
-})
-
 vi.mock('src/composables/useError', () => ({
   useError: () => ({
     handleError: vi.fn(),
@@ -59,24 +49,42 @@ vi.mock('src/composables/useError', () => ({
 }))
 
 const mockTemplates = createMockTemplates(3)
+const mockTemplatesRef = ref<TemplateWithPermission[]>([
+  ...mockTemplates,
+] as TemplateWithPermission[])
+const mockOwnedTemplatesRef = ref<TemplateWithPermission[]>([])
+const mockSharedTemplatesRef = ref<TemplateWithPermission[]>([])
+const mockIsPending = ref(false)
+const mockDeleteMutateAsync = vi.fn().mockResolvedValue(undefined)
+
+vi.mock('src/queries/templates', () => ({
+  useTemplatesQuery: vi.fn(() => ({
+    templates: mockTemplatesRef,
+    ownedTemplates: mockOwnedTemplatesRef,
+    sharedTemplates: mockSharedTemplatesRef,
+    isPending: mockIsPending,
+    templatesCount: computed(() => mockTemplatesRef.value.length),
+    data: ref(null),
+  })),
+  useDeleteTemplateMutation: vi.fn(() => ({
+    mutateAsync: mockDeleteMutateAsync,
+    isPending: ref(false),
+  })),
+}))
+
+vi.mock('src/stores/user', () => ({
+  useUserStore: vi.fn(() => ({
+    userProfile: { id: 'user-1' },
+  })),
+}))
 
 describe('useTemplates', () => {
-  let templatesStore: ReturnType<typeof useTemplatesStore>
-
   beforeEach(() => {
     vi.clearAllMocks()
-    setupTestingPinia({ stubActions: false })
-
-    templatesStore = useTemplatesStore()
-
-    // @ts-expect-error - Testing Pinia
-    templatesStore.templates = ref([...mockTemplates])
-    // @ts-expect-error - Testing Pinia
-    templatesStore.isLoading = ref(false)
-    // @ts-expect-error - Testing Pinia
-    templatesStore.ownedTemplates = ref(mockTemplates.filter((t) => t.owner_id === 'user-1'))
-    // @ts-expect-error - Testing Pinia
-    templatesStore.sharedTemplates = ref(mockTemplates.filter((t) => t.owner_id !== 'user-1'))
+    mockTemplatesRef.value = [...mockTemplates] as TemplateWithPermission[]
+    mockOwnedTemplatesRef.value = mockTemplates.filter((t) => t.owner_id === 'user-1')
+    mockSharedTemplatesRef.value = mockTemplates.filter((t) => t.owner_id !== 'user-1')
+    mockIsPending.value = false
   })
 
   it('should initialize with default state', () => {
@@ -88,10 +96,8 @@ describe('useTemplates', () => {
 
   describe('computed properties', () => {
     it('should compute areItemsLoading correctly when loading with no templates', () => {
-      // @ts-expect-error - Testing Pinia
-      templatesStore.isLoading = ref(true)
-      // @ts-expect-error - Testing Pinia
-      templatesStore.templates = ref([])
+      mockIsPending.value = true
+      mockTemplatesRef.value = []
 
       const composable = useTemplates()
 
@@ -99,10 +105,8 @@ describe('useTemplates', () => {
     })
 
     it('should compute areItemsLoading correctly when loading with existing templates', () => {
-      // @ts-expect-error - Testing Pinia
-      templatesStore.isLoading = ref(true)
-      // @ts-expect-error - Testing Pinia
-      templatesStore.templates = ref(mockTemplates)
+      mockIsPending.value = true
+      mockTemplatesRef.value = [...mockTemplates] as TemplateWithPermission[]
 
       const composable = useTemplates()
 
@@ -110,10 +114,8 @@ describe('useTemplates', () => {
     })
 
     it('should compute areItemsLoading correctly when not loading', () => {
-      // @ts-expect-error - Testing Pinia
-      templatesStore.isLoading = ref(false)
-      // @ts-expect-error - Testing Pinia
-      templatesStore.templates = ref([])
+      mockIsPending.value = false
+      mockTemplatesRef.value = []
 
       const composable = useTemplates()
 
@@ -145,10 +147,9 @@ describe('useTemplates', () => {
     })
 
     it('should compute hasTemplates correctly when no templates exist', () => {
-      // @ts-expect-error - Testing Pinia
-      templatesStore.ownedTemplates = ref([])
-      // @ts-expect-error - Testing Pinia
-      templatesStore.sharedTemplates = ref([])
+      mockOwnedTemplatesRef.value = []
+      mockSharedTemplatesRef.value = []
+      mockTemplatesRef.value = []
 
       const composable = useTemplates()
 
@@ -201,37 +202,33 @@ describe('useTemplates', () => {
   })
 
   describe('deleteTemplate', () => {
-    it('should delete template and show success notification', () => {
+    it('should delete template via mutation', () => {
       const composable = useTemplates()
       const template = mockTemplates[0] as TemplateWithPermission
-      const removeTemplateSpy = vi.spyOn(templatesStore, 'removeTemplate')
 
       composable.deleteItem(template)
 
-      expect(removeTemplateSpy).toHaveBeenCalledWith(template.id)
+      expect(mockDeleteMutateAsync).toHaveBeenCalledWith(template.id)
     })
   })
 
   describe('reactive updates', () => {
-    it('should react to store state changes', async () => {
+    it('should react to loading state changes', async () => {
       const composable = useTemplates()
 
       expect(composable.areItemsLoading.value).toBe(false)
 
-      // @ts-expect-error - Testing Pinia
-      templatesStore.isLoading = ref(true)
-      // @ts-expect-error - Testing Pinia
-      templatesStore.templates = ref([])
+      mockIsPending.value = true
+      mockTemplatesRef.value = []
       await nextTick()
 
       expect(composable.areItemsLoading.value).toBe(true)
     })
 
     it('should react to templates changes', async () => {
-      // @ts-expect-error - Testing Pinia
-      templatesStore.ownedTemplates = ref([])
-      // @ts-expect-error - Testing Pinia
-      templatesStore.sharedTemplates = ref([])
+      mockOwnedTemplatesRef.value = []
+      mockSharedTemplatesRef.value = []
+      mockTemplatesRef.value = []
 
       const composable = useTemplates()
 
@@ -239,8 +236,8 @@ describe('useTemplates', () => {
 
       const newTemplate = createMockTemplates(1)[0]
 
-      // @ts-expect-error - Testing Pinia
-      templatesStore.ownedTemplates = ref([newTemplate])
+      mockOwnedTemplatesRef.value = [newTemplate as TemplateWithPermission]
+      mockTemplatesRef.value = [newTemplate as TemplateWithPermission]
       await nextTick()
 
       expect(composable.hasItems.value).toBe(true)

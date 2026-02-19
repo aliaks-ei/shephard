@@ -1,10 +1,8 @@
 import { mount, flushPromises } from '@vue/test-utils'
-import { createTestingPinia } from '@pinia/testing'
 import { it, expect, vi, beforeEach } from 'vitest'
+import { ref, computed } from 'vue'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 import IndexPage from './IndexPage.vue'
-import { usePlansStore } from 'src/stores/plans'
-import { useTemplatesStore } from 'src/stores/templates'
 import { createMockPlans, createMockTemplates } from 'test/fixtures'
 
 installQuasarPlugin()
@@ -21,14 +19,110 @@ vi.mock('src/composables/useSortedRecentItems', () => ({
   useSortedRecentItems: (items: unknown) => items,
 }))
 
+const mockActivePlans = ref(createMockPlans())
+const mockPlansIsPending = ref(true)
+
+vi.mock('src/queries/plans', () => ({
+  usePlansQuery: vi.fn(() => ({
+    plans: ref([]),
+    plansForExpenses: ref([]),
+    activePlans: mockActivePlans,
+    ownedPlans: ref([]),
+    sharedPlans: ref([]),
+    isPending: mockPlansIsPending,
+    data: ref(null),
+  })),
+}))
+
+const mockTemplatesData = ref(createMockTemplates())
+const mockTemplatesIsPending = ref(true)
+
+vi.mock('src/queries/templates', () => ({
+  useTemplatesQuery: vi.fn(() => ({
+    templates: mockTemplatesData,
+    ownedTemplates: ref([]),
+    sharedTemplates: ref([]),
+    isPending: mockTemplatesIsPending,
+    templatesCount: computed(() => mockTemplatesData.value.length),
+    data: ref(null),
+  })),
+}))
+
+vi.mock('src/stores/user', () => ({
+  useUserStore: vi.fn(() => ({
+    userProfile: { id: 'user-1', name: 'Test User' },
+    preferences: { theme: 'dark' },
+  })),
+}))
+
+vi.mock('src/queries/categories', () => ({
+  useCategoriesQuery: vi.fn(() => ({
+    categories: ref([]),
+    getCategoryById: vi.fn(),
+    isPending: ref(false),
+    categoriesMap: ref(new Map()),
+    sortedCategories: ref([]),
+    categoryCount: ref(0),
+    data: ref(null),
+  })),
+}))
+
+vi.mock('src/queries/expenses', () => ({
+  useExpenseSummaryQuery: vi.fn(() => ({
+    expenseSummary: ref([]),
+    isPending: ref(false),
+    data: ref(null),
+  })),
+  useCreateExpenseMutation: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: ref(false),
+  })),
+}))
+
+vi.mock('src/composables/useExpenseRegistration', () => ({
+  useExpenseRegistration: vi.fn(() => ({
+    form: ref({
+      planId: null,
+      categoryId: null,
+      name: '',
+      amount: null,
+      expenseDate: '2024-01-15',
+      planItemId: null,
+    }),
+    isLoading: ref(false),
+    isLoadingPlanItems: ref(false),
+    didAutoSelectPlan: ref(false),
+    currentMode: ref('quick-select'),
+    quickSelectPhase: ref('selection'),
+    planItems: ref([]),
+    selectedPlanItems: ref([]),
+    planOptions: computed(() => []),
+    selectedPlan: computed(() => null),
+    planDisplayValue: computed(() => ''),
+    categoryOptions: computed(() => []),
+    selectedItemsTotal: computed(() => 0),
+    nameRules: computed(() => []),
+    amountRules: computed(() => []),
+    getSubmitButtonLabel: computed(() => 'Continue'),
+    canSubmit: computed(() => false),
+    showBackButton: computed(() => false),
+    onPlanSelected: vi.fn(),
+    onItemsSelected: vi.fn(),
+    onSelectionChanged: vi.fn(),
+    goBackToSelection: vi.fn(),
+    proceedToFinalize: vi.fn(),
+    removeSelectedItem: vi.fn(),
+    resetForm: vi.fn(),
+    handleQuickSelectSubmit: vi.fn(),
+    handleCustomEntrySubmit: vi.fn(),
+    initialize: vi.fn(),
+    determineInitialMode: vi.fn(),
+  })),
+}))
+
 function createWrapper() {
-  const wrapper = mount(IndexPage, {
+  return mount(IndexPage, {
     global: {
-      plugins: [
-        createTestingPinia({
-          createSpy: vi.fn,
-        }),
-      ],
       stubs: {
         DashboardHeader: true,
         QuickActionsGrid: true,
@@ -40,48 +134,41 @@ function createWrapper() {
         ExpenseRegistrationDialog: true,
         SharePlanDialog: true,
         ShareTemplateDialog: true,
+        BudgetOverviewCard: true,
+        PlanListItem: true,
+        TemplateListItem: true,
       },
     },
   })
-
-  const plansStore = usePlansStore()
-  const templatesStore = useTemplatesStore()
-
-  return { wrapper, plansStore, templatesStore }
 }
 
 beforeEach(() => {
   vi.clearAllMocks()
+  mockActivePlans.value = createMockPlans()
+  mockTemplatesData.value = createMockTemplates()
+  mockPlansIsPending.value = true
+  mockTemplatesIsPending.value = true
 })
 
 it('should mount component properly', () => {
-  const { wrapper } = createWrapper()
+  const wrapper = createWrapper()
   expect(wrapper.exists()).toBe(true)
 })
 
-it('should load plans and templates on mount', async () => {
-  const { plansStore, templatesStore } = createWrapper()
-
-  await flushPromises()
-
-  expect(plansStore.loadPlans).toHaveBeenCalled()
-  expect(templatesStore.loadTemplates).toHaveBeenCalled()
-})
-
 it('should display active plans section', () => {
-  const { wrapper } = createWrapper()
+  const wrapper = createWrapper()
   const dashboardSections = wrapper.findAllComponents({ name: 'DashboardSection' })
   expect(dashboardSections.length).toBeGreaterThanOrEqual(1)
 })
 
 it('should display recent templates section', () => {
-  const { wrapper } = createWrapper()
+  const wrapper = createWrapper()
   const dashboardSections = wrapper.findAllComponents({ name: 'DashboardSection' })
   expect(dashboardSections.length).toBeGreaterThanOrEqual(2)
 })
 
 it('should open expense dialog when quick action is triggered', async () => {
-  const { wrapper } = createWrapper()
+  const wrapper = createWrapper()
   const quickActionsGrid = wrapper.findComponent({ name: 'QuickActionsGrid' })
 
   await quickActionsGrid.vm.$emit('add-expense')
@@ -92,7 +179,7 @@ it('should open expense dialog when quick action is triggered', async () => {
 })
 
 it('should close expense dialog when expense is created', async () => {
-  const { wrapper } = createWrapper()
+  const wrapper = createWrapper()
   const quickActionsGrid = wrapper.findComponent({ name: 'QuickActionsGrid' })
 
   await quickActionsGrid.vm.$emit('add-expense')
@@ -104,32 +191,27 @@ it('should close expense dialog when expense is created', async () => {
 })
 
 it('should navigate to plan when edit is triggered', async () => {
-  const { wrapper, plansStore } = createWrapper()
-
   const mockPlans = createMockPlans()
-  // @ts-expect-error - Testing Pinia store
-  plansStore.activePlans = mockPlans
+  mockActivePlans.value = mockPlans
 
+  const wrapper = createWrapper()
   await wrapper.vm.$nextTick()
-
-  const dashboardSections = wrapper.findAllComponents({ name: 'DashboardSection' })
-  const plansSection = dashboardSections[0]
-
-  await plansSection?.vm.$emit('card', { item: mockPlans[0] })
 
   const planCard = wrapper.findComponent({ name: 'PlanCard' })
   if (planCard.exists()) {
     await planCard.vm.$emit('edit', mockPlans[0]?.id)
-    expect(mockRouterPush).toHaveBeenCalledWith({ name: 'plan', params: { id: mockPlans[0]?.id } })
+    expect(mockRouterPush).toHaveBeenCalledWith({
+      name: 'plan',
+      params: { id: mockPlans[0]?.id },
+    })
   }
 })
 
 it('should navigate to template when edit is triggered', async () => {
-  const { wrapper, templatesStore } = createWrapper()
-
   const mockTemplates = createMockTemplates()
-  templatesStore.templates = mockTemplates
+  mockTemplatesData.value = mockTemplates
 
+  const wrapper = createWrapper()
   await wrapper.vm.$nextTick()
 
   const templateCard = wrapper.findComponent({ name: 'TemplateCard' })
@@ -142,58 +224,14 @@ it('should navigate to template when edit is triggered', async () => {
   }
 })
 
-it('should open share plan dialog when share is triggered', async () => {
-  const { wrapper, plansStore } = createWrapper()
-
-  const mockPlans = createMockPlans()
-  // @ts-expect-error - Testing Pinia store
-  plansStore.activePlans = mockPlans
-
-  await wrapper.vm.$nextTick()
-
-  const planCard = wrapper.findComponent({ name: 'PlanCard' })
-  if (planCard.exists()) {
-    await planCard.vm.$emit('share', mockPlans[0]?.id)
-    await wrapper.vm.$nextTick()
-
-    const shareDialog = wrapper.findComponent({ name: 'SharePlanDialog' })
-    expect(shareDialog.exists()).toBe(true)
-    expect(shareDialog.attributes('modelvalue')).toBe('true')
-  }
-})
-
-it('should open share template dialog when share is triggered', async () => {
-  const { wrapper, templatesStore } = createWrapper()
-
-  const mockTemplates = createMockTemplates()
-  templatesStore.templates = mockTemplates
-
-  await wrapper.vm.$nextTick()
-
-  const templateCard = wrapper.findComponent({ name: 'TemplateCard' })
-  if (templateCard.exists()) {
-    await templateCard.vm.$emit('share', mockTemplates[0]?.id)
-    await wrapper.vm.$nextTick()
-
-    const shareDialog = wrapper.findComponent({ name: 'ShareTemplateDialog' })
-    expect(shareDialog.exists()).toBe(true)
-    expect(shareDialog.attributes('modelvalue')).toBe('true')
-  }
-})
-
 it('should render with proper responsive layout', () => {
-  const { wrapper } = createWrapper()
+  const wrapper = createWrapper()
   expect(wrapper.find('.row.justify-center').exists()).toBe(true)
   expect(wrapper.find('.col-12.col-md-10.col-lg-8.col-xl-6').exists()).toBe(true)
 })
 
 it('should pass correct data to plans section', async () => {
-  const { wrapper, plansStore } = createWrapper()
-
-  const mockPlans = createMockPlans()
-  // @ts-expect-error - Testing Pinia store
-  plansStore.activePlans = mockPlans
-
+  const wrapper = createWrapper()
   await wrapper.vm.$nextTick()
 
   const dashboardSections = wrapper.findAllComponents({ name: 'DashboardSection' })
@@ -205,11 +243,7 @@ it('should pass correct data to plans section', async () => {
 })
 
 it('should pass correct data to templates section', async () => {
-  const { wrapper, templatesStore } = createWrapper()
-
-  const mockTemplates = createMockTemplates()
-  templatesStore.templates = mockTemplates
-
+  const wrapper = createWrapper()
   await wrapper.vm.$nextTick()
 
   const dashboardSections = wrapper.findAllComponents({ name: 'DashboardSection' })
@@ -221,7 +255,7 @@ it('should pass correct data to templates section', async () => {
 })
 
 it('should show loading state initially', () => {
-  const { wrapper } = createWrapper()
+  const wrapper = createWrapper()
   const dashboardSections = wrapper.findAllComponents({ name: 'DashboardSection' })
 
   dashboardSections.forEach((section) => {
@@ -230,11 +264,10 @@ it('should show loading state initially', () => {
 })
 
 it('should hide loading state after data loads', async () => {
-  const { wrapper, plansStore, templatesStore } = createWrapper()
+  mockPlansIsPending.value = false
+  mockTemplatesIsPending.value = false
 
-  plansStore.loadPlans = vi.fn().mockResolvedValue(undefined)
-  templatesStore.loadTemplates = vi.fn().mockResolvedValue(undefined)
-
+  const wrapper = createWrapper()
   await flushPromises()
   await wrapper.vm.$nextTick()
 

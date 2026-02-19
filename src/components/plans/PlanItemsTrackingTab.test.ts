@@ -4,6 +4,7 @@ import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-v
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { ComponentProps } from 'vue-component-type-helpers'
 
+import { ref } from 'vue'
 import PlanItemsTrackingTab from './PlanItemsTrackingTab.vue'
 import type { PlanWithItems } from 'src/api'
 
@@ -13,8 +14,43 @@ vi.mock('src/utils/currency', () => ({
   formatCurrency: vi.fn((amount: number, currency: string) => `${currency} ${amount.toFixed(2)}`),
 }))
 
-vi.mock('src/api/plans', () => ({
-  updatePlanItemCompletion: vi.fn().mockResolvedValue(undefined),
+vi.mock('src/queries/plans', () => ({
+  useUpdatePlanItemCompletionMutation: vi.fn(() => ({
+    mutateAsync: vi.fn().mockResolvedValue(undefined),
+    isPending: ref(false),
+  })),
+}))
+
+vi.mock('src/queries/categories', () => ({
+  useCategoriesQuery: vi.fn(() => ({
+    categories: ref([]),
+    getCategoryById: vi.fn(),
+    isPending: ref(false),
+    categoriesMap: ref(new Map()),
+    sortedCategories: ref([]),
+    categoryCount: ref(0),
+    data: ref(null),
+  })),
+}))
+
+vi.mock('src/queries/expenses', () => ({
+  useExpensesByPlanQuery: vi.fn(() => ({
+    expenses: ref([]),
+    totalExpensesAmount: ref(0),
+    sortedExpenses: ref([]),
+    expensesByCategory: ref({}),
+    getExpensesForPlanItem: vi.fn(() => []),
+    isPending: ref(false),
+    data: ref(null),
+  })),
+  useCreateExpenseMutation: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: ref(false),
+  })),
+  useDeleteExpenseMutation: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: ref(false),
+  })),
 }))
 
 type PlanItemsTrackingTabProps = ComponentProps<typeof PlanItemsTrackingTab>

@@ -1,23 +1,44 @@
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { useUserStore } from 'src/stores/user'
-import { useTemplatesStore } from 'src/stores/templates'
+import {
+  useTemplateDetailQuery,
+  useCreateTemplateMutation,
+  useUpdateTemplateMutation,
+  useCreateTemplateItemsMutation,
+  useDeleteTemplateItemsMutation,
+} from 'src/queries/templates'
+import { toActionResult } from 'src/queries/mutation-utils'
 import type { CurrencyCode, TemplateWithItems } from 'src/api'
 import type { ActionResult } from 'src/types'
 
 export function useTemplate() {
   const route = useRoute()
   const userStore = useUserStore()
-  const templatesStore = useTemplatesStore()
-
-  const currentTemplate = ref<(TemplateWithItems & { permission_level?: string }) | null>(null)
-  const isTemplateLoading = ref(false)
 
   const isNewTemplate = computed(() => route.name === 'new-template')
   const routeTemplateId = computed(() =>
     typeof route.params.id === 'string' ? route.params.id : null,
   )
+  const userId = computed(() => userStore.userProfile?.id)
+
+  const templateDetailQuery = useTemplateDetailQuery(routeTemplateId, userId)
+  const createTemplateMutation = useCreateTemplateMutation()
+  const updateTemplateMutation = useUpdateTemplateMutation()
+  const createItemsMutation = useCreateTemplateItemsMutation()
+  const deleteItemsMutation = useDeleteTemplateItemsMutation()
+
+  const currentTemplate = computed(
+    () =>
+      (templateDetailQuery.data.value as
+        | (TemplateWithItems & { permission_level?: string })
+        | undefined) ?? null,
+  )
+  const isTemplateLoading = computed(
+    () => templateDetailQuery.isPending.value && !isNewTemplate.value,
+  )
+
   const isOwner = computed(() => {
     if (!currentTemplate.value || !userStore.userProfile) return false
     return currentTemplate.value.owner_id === userStore.userProfile.id
@@ -49,12 +70,17 @@ export function useTemplate() {
       is_fixed_payment: boolean
     }[],
   ): Promise<ActionResult> {
-    const templateResult = await templatesStore.addTemplate({
-      name,
-      duration,
-      total,
-      currency,
-    })
+    if (!userId.value) return { success: false }
+
+    const templateResult = await toActionResult(() =>
+      createTemplateMutation.mutateAsync({
+        name,
+        duration,
+        total,
+        currency,
+        owner_id: userId.value!,
+      }),
+    )
 
     if (!templateResult.success || !templateResult.data) return { success: false }
 
@@ -63,9 +89,9 @@ export function useTemplate() {
       template_id: templateResult.data!.id,
     }))
 
-    const itemsResult = await templatesStore.addItemsToTemplate(items)
-
-    return itemsResult
+    return toActionResult(() =>
+      createItemsMutation.mutateAsync({ templateId: templateResult.data!.id, items }),
+    )
   }
 
   async function updateExistingTemplateWithItems(
@@ -82,24 +108,26 @@ export function useTemplate() {
   ): Promise<ActionResult> {
     if (!routeTemplateId.value || !currentTemplate.value) return { success: false }
 
-    const templateResult = await templatesStore.editTemplate(routeTemplateId.value, {
-      name,
-      duration,
-      currency,
-      total,
-    })
+    const templateResult = await toActionResult(() =>
+      updateTemplateMutation.mutateAsync({
+        id: routeTemplateId.value!,
+        updates: { name, duration, currency, total },
+      }),
+    )
 
     if (!templateResult.success || !templateResult.data) return { success: false }
 
     const existingItemIds = currentTemplate.value.template_items.map((item) => item.id)
-    const removeResult = await templatesStore.removeItemsFromTemplate(existingItemIds)
+    const removeResult = await toActionResult(() =>
+      deleteItemsMutation.mutateAsync({
+        templateId: templateResult.data!.id,
+        ids: existingItemIds,
+      }),
+    )
 
     if (!removeResult.success) return { success: false }
 
     const items = templateItems.map((item) => {
-      // Strip id from items since all items are being created fresh after delete
-      // This prevents Supabase from sending null for items without id when
-      // mixed with items that have id, which causes not-null constraint violations
       const { id: _id, ...itemWithoutId } = item as typeof item & { id?: string }
       return {
         ...itemWithoutId,
@@ -108,8 +136,9 @@ export function useTemplate() {
     })
 
     if (items.length > 0) {
-      const addResult = await templatesStore.addItemsToTemplate(items)
-      return addResult
+      return toActionResult(() =>
+        createItemsMutation.mutateAsync({ templateId: templateResult.data!.id, items }),
+      )
     }
 
     return { success: true }
@@ -118,9 +147,8 @@ export function useTemplate() {
   async function loadTemplate(): Promise<TemplateWithItems | null> {
     if (isNewTemplate.value || !routeTemplateId.value) return null
 
-    currentTemplate.value = await templatesStore.loadTemplateWithItems(routeTemplateId.value)
-
-    return currentTemplate.value
+    const result = await templateDetailQuery.refetch()
+    return result.data ?? null
   }
 
   return {

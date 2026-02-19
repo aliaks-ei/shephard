@@ -42,13 +42,13 @@
       v-if="shareTemplateId"
       v-model="isShareDialogOpen"
       :template-id="shareTemplateId"
-      @shared="onTemplateShared"
+      @shared="isShareDialogOpen = false"
     />
   </ListPageLayout>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref } from 'vue'
 
 import ListPageLayout from 'src/layouts/ListPageLayout.vue'
 import SearchAndSort from 'src/components/shared/SearchAndSort.vue'
@@ -56,10 +56,7 @@ import ListPageSkeleton from 'src/components/shared/ListPageSkeleton.vue'
 import EmptyState from 'src/components/shared/EmptyState.vue'
 import TemplatesGroup from 'src/components/templates/TemplatesGroup.vue'
 import ShareTemplateDialog from 'src/components/templates/ShareTemplateDialog.vue'
-import { useTemplatesStore } from 'src/stores/templates'
 import { useTemplates } from 'src/composables/useTemplates'
-
-const templatesStore = useTemplatesStore()
 
 const {
   searchQuery,
@@ -82,16 +79,4 @@ function openShareDialog(templateId: string): void {
   shareTemplateId.value = templateId
   isShareDialogOpen.value = true
 }
-
-function onTemplateShared(): void {
-  templatesStore.loadTemplates()
-}
-
-onMounted(async () => {
-  await templatesStore.loadTemplates()
-})
-
-onUnmounted(() => {
-  templatesStore.reset()
-})
 </script>

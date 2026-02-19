@@ -1,6 +1,6 @@
 import { ref, computed, type Ref } from 'vue'
 
-import { useCategoriesStore } from 'src/stores/categories'
+import { useCategoriesQuery } from 'src/queries/categories'
 import type { BaseItemUI, BaseCategoryUI } from 'src/types'
 
 export type CategoryGroup<T extends BaseItemUI = BaseItemUI> = BaseCategoryUI & {
@@ -26,7 +26,7 @@ export type ItemForSave = {
 }
 
 export function useItemsManager<T extends BaseItemUI>(config: ItemsConfig<T>) {
-  const categoriesStore = useCategoriesStore()
+  const { getCategoryById } = useCategoriesQuery()
 
   const items: Ref<T[]> = ref([])
 
@@ -126,7 +126,7 @@ export function useItemsManager<T extends BaseItemUI>(config: ItemsConfig<T>) {
     }>
 
     const loadedItems = entityItems.reduce((acc, item) => {
-      const category = categoriesStore.getCategoryById(item.category_id)
+      const category = getCategoryById(item.category_id)
 
       if (category) {
         acc.push({
@@ -155,7 +155,7 @@ export function useItemsManager<T extends BaseItemUI>(config: ItemsConfig<T>) {
     }[],
   ): void {
     const loadedItems = templateItems.reduce((acc, item) => {
-      const category = categoriesStore.getCategoryById(item.category_id)
+      const category = getCategoryById(item.category_id)
 
       if (category) {
         acc.push({

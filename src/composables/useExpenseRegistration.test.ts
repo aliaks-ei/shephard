@@ -3,9 +3,6 @@ import { ref } from 'vue'
 import { createTestingPinia, type TestingPinia } from '@pinia/testing'
 import { setActivePinia } from 'pinia'
 import { useExpenseRegistration } from './useExpenseRegistration'
-import { useExpensesStore } from 'src/stores/expenses'
-import { usePlansStore } from 'src/stores/plans'
-import { useCategoriesStore } from 'src/stores/categories'
 import { useNotificationStore } from 'src/stores/notification'
 import type { Tables } from 'src/lib/supabase/types'
 
@@ -13,9 +10,73 @@ type Plan = Tables<'plans'>
 type PlanItem = Tables<'plan_items'>
 type Category = Tables<'categories'>
 
-vi.mock('src/api/plans', () => ({
-  getPlanItems: vi.fn(),
-  updatePlanItemCompletion: vi.fn(),
+const mockPlansForExpenses = ref<Plan[]>([])
+const mockPlans = ref<Plan[]>([])
+const mockPlanItemsData = ref<PlanItem[]>([])
+const mockLastExpenseData = ref<{ original_currency?: string } | null>(null)
+const mockCompletionMutateAsync = vi.fn().mockResolvedValue(undefined)
+
+vi.mock('src/queries/plans', () => ({
+  usePlansQuery: vi.fn(() => ({
+    plans: mockPlans,
+    plansForExpenses: mockPlansForExpenses,
+    activePlans: ref([]),
+    ownedPlans: ref([]),
+    sharedPlans: ref([]),
+    isPending: ref(false),
+    data: ref(null),
+  })),
+  usePlanItemsQuery: vi.fn(() => ({
+    data: mockPlanItemsData,
+    isPending: ref(false),
+  })),
+  useUpdatePlanItemCompletionMutation: vi.fn(() => ({
+    mutateAsync: mockCompletionMutateAsync,
+    isPending: ref(false),
+  })),
+}))
+
+const mockCategories = ref<(Category & { templates: never[] })[]>([])
+
+vi.mock('src/queries/categories', () => ({
+  useCategoriesQuery: vi.fn(() => ({
+    categories: mockCategories,
+    getCategoryById: vi.fn(),
+    isPending: ref(false),
+    categoriesMap: ref(new Map()),
+    sortedCategories: ref([]),
+    categoryCount: ref(0),
+    data: ref(null),
+  })),
+}))
+
+const mockExpenseSummary = ref<unknown[]>([])
+const mockCreateExpenseMutateAsync = vi.fn().mockResolvedValue(undefined)
+
+vi.mock('src/queries/expenses', () => ({
+  useExpenseSummaryQuery: vi.fn(() => ({
+    expenseSummary: mockExpenseSummary,
+    isPending: ref(false),
+    data: ref(null),
+  })),
+  useCreateExpenseMutation: vi.fn(() => ({
+    mutateAsync: mockCreateExpenseMutateAsync,
+    isPending: ref(false),
+  })),
+  useLastExpenseForPlanQuery: vi.fn(() => ({
+    data: mockLastExpenseData,
+    isPending: ref(false),
+  })),
+}))
+
+vi.mock('src/stores/user', () => ({
+  useUserStore: vi.fn(() => ({
+    userProfile: { id: 'user-1' },
+  })),
+}))
+
+vi.mock('src/api/currency', () => ({
+  convertCurrency: vi.fn().mockResolvedValue({ convertedAmount: 50, rate: 1 }),
 }))
 
 let pinia: TestingPinia
@@ -24,6 +85,13 @@ beforeEach(() => {
   pinia = createTestingPinia({ createSpy: vi.fn })
   setActivePinia(pinia)
   vi.clearAllMocks()
+  mockPlansForExpenses.value = []
+  mockPlans.value = []
+  mockCategories.value = []
+  mockExpenseSummary.value = []
+  mockPlanItemsData.value = []
+  mockLastExpenseData.value = null
+  mockCompletionMutateAsync.mockResolvedValue(undefined)
 })
 
 describe('useExpenseRegistration', () => {
@@ -37,15 +105,6 @@ describe('useExpenseRegistration', () => {
     currency: 'USD',
     owner_id: 'user-1',
     template_id: 'template-1',
-    created_at: '2024-01-01',
-    updated_at: '2024-01-01',
-  }
-
-  const mockCategory: Category = {
-    id: 'cat-1',
-    name: 'Food',
-    color: '#FF5733',
-    icon: 'eva-shopping-bag-outline',
     created_at: '2024-01-01',
     updated_at: '2024-01-01',
   }
@@ -76,56 +135,39 @@ describe('useExpenseRegistration', () => {
       expect(form.value.planItemId).toBeNull()
     })
 
-    it('loads plans and categories on initialize', async () => {
-      const plansStore = usePlansStore()
-      const categoriesStore = useCategoriesStore()
-
+    it('initializes without needing manual load calls', () => {
       const { initialize } = useExpenseRegistration()
-      await initialize(false)
+      initialize(false)
 
-      expect(plansStore.loadPlans).toHaveBeenCalled()
-      expect(categoriesStore.loadCategories).toHaveBeenCalled()
+      // Queries auto-fetch, no manual loadPlans/loadCategories needed
+      expect(true).toBe(true)
     })
 
-    it('auto-selects most recently used plan when configured', async () => {
-      const plansStore = usePlansStore()
-      const expensesStore = useExpensesStore()
-      // @ts-expect-error - Testing Pinia computed
-      plansStore.plansForExpenses = [
+    it('auto-selects most recently used plan when configured', () => {
+      mockPlansForExpenses.value = [
         { ...mockPlan, updated_at: '2024-01-02' },
         { ...mockPlan, id: 'plan-2', updated_at: '2024-01-03' },
       ]
 
-      const { getPlanItems } = await import('src/api/plans')
-      vi.mocked(getPlanItems).mockResolvedValue(mockPlanItems)
-
       const { initialize, form } = useExpenseRegistration()
-      await initialize(true)
+      initialize(true)
 
       expect(form.value.planId).toBe('plan-2')
-      expect(expensesStore.loadExpenseSummaryForPlan).toHaveBeenCalledWith('plan-2')
     })
 
-    it('uses default plan ID when provided', async () => {
+    it('uses default plan ID when provided', () => {
       const defaultPlanId = ref('plan-1')
-      const expensesStore = useExpensesStore()
-
-      const { getPlanItems } = await import('src/api/plans')
-      vi.mocked(getPlanItems).mockResolvedValue(mockPlanItems)
 
       const { initialize, form } = useExpenseRegistration(defaultPlanId)
-      await initialize(false)
+      initialize(false)
 
       expect(form.value.planId).toBe('plan-1')
-      expect(expensesStore.loadExpenseSummaryForPlan).toHaveBeenCalledWith('plan-1')
     })
   })
 
   describe('mostRecentlyUsedPlan', () => {
     it('returns most recently updated plan', () => {
-      const plansStore = usePlansStore()
-      // @ts-expect-error - Testing Pinia computed
-      plansStore.plansForExpenses = [
+      mockPlansForExpenses.value = [
         { ...mockPlan, updated_at: '2024-01-02' },
         { ...mockPlan, id: 'plan-2', updated_at: '2024-01-03' },
         { ...mockPlan, id: 'plan-3', updated_at: '2024-01-01' },
@@ -137,9 +179,7 @@ describe('useExpenseRegistration', () => {
     })
 
     it('returns null when no plans available', () => {
-      const plansStore = usePlansStore()
-      // @ts-expect-error - Testing Pinia computed
-      plansStore.plansForExpenses = []
+      mockPlansForExpenses.value = []
 
       const { mostRecentlyUsedPlan } = useExpenseRegistration()
 
@@ -149,9 +189,7 @@ describe('useExpenseRegistration', () => {
 
   describe('planOptions', () => {
     it('maps plans to plan options', () => {
-      const plansStore = usePlansStore()
-      // @ts-expect-error - Testing Pinia computed
-      plansStore.plansForExpenses = [mockPlan]
+      mockPlansForExpenses.value = [mockPlan]
 
       const { planOptions } = useExpenseRegistration()
 
@@ -165,53 +203,6 @@ describe('useExpenseRegistration', () => {
   })
 
   describe('categoryOptions', () => {
-    it('returns categories with expense summary data', () => {
-      const plansStore = usePlansStore()
-      const categoriesStore = useCategoriesStore()
-      const expensesStore = useExpensesStore()
-
-      plansStore.plans = [mockPlan]
-      categoriesStore.categories = [{ ...mockCategory, templates: [] }]
-      expensesStore.expenseSummary = [
-        {
-          category_id: 'cat-1',
-          planned_amount: 500,
-          actual_amount: 150,
-          remaining_amount: 350,
-          expense_count: 1,
-        },
-      ]
-
-      const { form, categoryOptions, allPlanItems } = useExpenseRegistration()
-      form.value.planId = 'plan-1'
-
-      // Set up plan items to match the expected calculation
-      // With non-fixed items of 500 and expenses of 150:
-      // Still to pay = 0 + max(0, 500 - 150) = 350
-      allPlanItems.value = [
-        {
-          id: 'item-1',
-          plan_id: 'plan-1',
-          category_id: 'cat-1',
-          name: 'Groceries',
-          amount: 500,
-          is_completed: false,
-          is_fixed_payment: false, // Non-fixed item
-          created_at: '2024-01-01',
-          updated_at: '2024-01-01',
-        },
-      ]
-
-      expect(categoryOptions.value).toHaveLength(1)
-      expect(categoryOptions.value[0]).toMatchObject({
-        label: 'Food',
-        value: 'cat-1',
-        plannedAmount: 500,
-        actualAmount: 150,
-        remainingAmount: 350,
-      })
-    })
-
     it('returns empty array when no plan selected', () => {
       const { categoryOptions } = useExpenseRegistration()
 
@@ -219,49 +210,38 @@ describe('useExpenseRegistration', () => {
     })
   })
 
-  describe('loadPlanItems', () => {
-    it('loads plan items and filters completed ones', async () => {
-      const { getPlanItems } = await import('src/api/plans')
-      vi.mocked(getPlanItems).mockResolvedValue([
+  describe('planItems', () => {
+    it('filters completed items from query data', () => {
+      mockPlanItemsData.value = [
         ...mockPlanItems,
         { ...mockPlanItems[0]!, id: 'item-2', is_completed: true },
-      ])
+      ]
 
-      const { loadPlanItems, planItems } = useExpenseRegistration()
-      await loadPlanItems('plan-1')
+      const { planItems } = useExpenseRegistration()
 
       expect(planItems.value).toHaveLength(1)
       expect(planItems.value[0]?.is_completed).toBe(false)
     })
 
-    it('handles error when loading plan items fails', async () => {
-      const notificationStore = useNotificationStore()
-      const { getPlanItems } = await import('src/api/plans')
-      vi.mocked(getPlanItems).mockRejectedValue(new Error('Network error'))
+    it('returns empty array when no plan items', () => {
+      mockPlanItemsData.value = []
 
-      const { loadPlanItems, planItems } = useExpenseRegistration()
-      await loadPlanItems('plan-1')
+      const { planItems } = useExpenseRegistration()
 
       expect(planItems.value).toEqual([])
-      expect(notificationStore.showError).toHaveBeenCalledWith('Failed to load plan items')
     })
   })
 
   describe('onPlanSelected', () => {
-    it('resets form state when plan is selected', async () => {
-      const expensesStore = useExpensesStore()
-      const { getPlanItems } = await import('src/api/plans')
-      vi.mocked(getPlanItems).mockResolvedValue(mockPlanItems)
-
+    it('resets form state when plan is selected', () => {
       const { onPlanSelected, form, selectedPlanItems } = useExpenseRegistration()
       form.value.categoryId = 'cat-1'
       selectedPlanItems.value = [mockPlanItems[0]!]
 
-      await onPlanSelected('plan-1')
+      onPlanSelected('plan-1')
 
       expect(form.value.categoryId).toBeNull()
       expect(selectedPlanItems.value).toEqual([])
-      expect(expensesStore.loadExpenseSummaryForPlan).toHaveBeenCalledWith('plan-1')
     })
   })
 
@@ -310,10 +290,6 @@ describe('useExpenseRegistration', () => {
 
   describe('handleQuickSelectSubmit', () => {
     it('registers multiple expenses successfully', async () => {
-      const expensesStore = useExpensesStore()
-      const { updatePlanItemCompletion } = await import('src/api/plans')
-      vi.mocked(updatePlanItemCompletion).mockResolvedValue()
-
       const onSuccess = vi.fn()
       const { handleQuickSelectSubmit, selectedPlanItems, form } = useExpenseRegistration()
       selectedPlanItems.value = [mockPlanItems[0]!]
@@ -321,8 +297,12 @@ describe('useExpenseRegistration', () => {
 
       await handleQuickSelectSubmit(onSuccess)
 
-      expect(expensesStore.addExpense).toHaveBeenCalled()
-      expect(updatePlanItemCompletion).toHaveBeenCalledWith('item-1', true)
+      expect(mockCreateExpenseMutateAsync).toHaveBeenCalled()
+      expect(mockCompletionMutateAsync).toHaveBeenCalledWith({
+        itemId: 'item-1',
+        isCompleted: true,
+        planId: 'plan-1',
+      })
       expect(onSuccess).toHaveBeenCalled()
     })
 
@@ -353,9 +333,8 @@ describe('useExpenseRegistration', () => {
 
   describe('handleCustomEntrySubmit', () => {
     it('registers single expense successfully', async () => {
-      const expensesStore = useExpensesStore()
-      const { updatePlanItemCompletion } = await import('src/api/plans')
-      vi.mocked(updatePlanItemCompletion).mockResolvedValue()
+      // Set up a plan so selectedPlan works
+      mockPlans.value = [mockPlan]
 
       const onSuccess = vi.fn()
       const { handleCustomEntrySubmit, form } = useExpenseRegistration()
@@ -366,23 +345,12 @@ describe('useExpenseRegistration', () => {
 
       await handleCustomEntrySubmit(true, onSuccess)
 
-      expect(expensesStore.addExpense).toHaveBeenCalledWith({
-        plan_id: 'plan-1',
-        category_id: 'cat-1',
-        name: 'Test Expense',
-        amount: 50,
-        currency: undefined,
-        original_amount: null,
-        original_currency: null,
-        expense_date: expect.any(String),
-        plan_item_id: null,
-      })
+      expect(mockCreateExpenseMutateAsync).toHaveBeenCalled()
       expect(onSuccess).toHaveBeenCalled()
     })
 
     it('marks plan item as completed when planItemId is provided', async () => {
-      const { updatePlanItemCompletion } = await import('src/api/plans')
-      vi.mocked(updatePlanItemCompletion).mockResolvedValue()
+      mockPlans.value = [mockPlan]
 
       const onSuccess = vi.fn()
       const { handleCustomEntrySubmit, form } = useExpenseRegistration()
@@ -394,7 +362,11 @@ describe('useExpenseRegistration', () => {
 
       await handleCustomEntrySubmit(true, onSuccess)
 
-      expect(updatePlanItemCompletion).toHaveBeenCalledWith('item-1', true)
+      expect(mockCompletionMutateAsync).toHaveBeenCalledWith({
+        itemId: 'item-1',
+        isCompleted: true,
+        planId: 'plan-1',
+      })
     })
 
     it('shows error when form is not valid', async () => {

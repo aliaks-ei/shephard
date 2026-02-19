@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createTestingPinia, type TestingPinia } from '@pinia/testing'
 import { setActivePinia } from 'pinia'
 import { useItemsManager } from './useItemsManager'
-import { useCategoriesStore } from 'src/stores/categories'
 import type { BaseItemUI } from 'src/types'
 
 type TestItem = BaseItemUI
@@ -14,33 +13,24 @@ const createItemForSave = (item: TestItem) => ({
   is_fixed_payment: item.isFixedPayment,
 })
 
+const { mockGetCategoryById } = vi.hoisted(() => ({
+  mockGetCategoryById: vi.fn(),
+}))
+
+vi.mock('src/queries/categories', () => ({
+  useCategoriesQuery: () => ({
+    categories: { value: [] },
+    getCategoryById: mockGetCategoryById,
+  }),
+}))
+
 let pinia: TestingPinia
 
 beforeEach(() => {
   pinia = createTestingPinia({ createSpy: vi.fn })
   setActivePinia(pinia)
-  const categoriesStore = useCategoriesStore()
-  categoriesStore.categories = [
-    {
-      id: 'c1',
-      name: 'Food',
-      color: '#f00',
-      created_at: '',
-      updated_at: '',
-      icon: 'eva-pricetags-outline',
-      templates: [],
-    },
-    {
-      id: 'c2',
-      name: 'Rent',
-      color: '#0f0',
-      created_at: '',
-      updated_at: '',
-      icon: 'eva-pricetags-outline',
-      templates: [],
-    },
-  ]
-  categoriesStore.getCategoryById = vi.fn().mockImplementation((categoryId: string) =>
+
+  mockGetCategoryById.mockImplementation((categoryId: string) =>
     categoryId === 'c1'
       ? {
           id: 'c1',

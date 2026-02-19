@@ -1,10 +1,15 @@
-import { useTemplatesStore } from 'src/stores/templates'
+import { computed } from 'vue'
+import { useTemplatesQuery, useDeleteTemplateMutation } from 'src/queries/templates'
+import { useUserStore } from 'src/stores/user'
 import { useListPage } from './useListPage'
 import { filterAndSortTemplates } from 'src/utils/list-filters'
 import type { TemplateWithPermission } from 'src/api'
 
 export function useTemplates() {
-  const templatesStore = useTemplatesStore()
+  const userStore = useUserStore()
+  const userId = computed(() => userStore.userProfile?.id)
+  const { templates, ownedTemplates, sharedTemplates, isPending } = useTemplatesQuery(userId)
+  const deleteTemplateMutation = useDeleteTemplateMutation()
 
   const sortOptions = [
     { label: 'Name', value: 'name' },
@@ -23,12 +28,17 @@ export function useTemplates() {
       defaultSort: 'name',
       filterAndSortFn: filterAndSortTemplates,
       deleteFn: async (id: string) => {
-        return await templatesStore.removeTemplate(id)
+        try {
+          await deleteTemplateMutation.mutateAsync(id)
+          return { success: true }
+        } catch {
+          return { success: false }
+        }
       },
     },
-    () => templatesStore.templates,
-    () => templatesStore.ownedTemplates,
-    () => templatesStore.sharedTemplates,
-    () => templatesStore.isLoading && templatesStore.templates.length === 0,
+    () => templates.value,
+    () => ownedTemplates.value,
+    () => sharedTemplates.value,
+    () => isPending.value && templates.value.length === 0,
   )
 }

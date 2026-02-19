@@ -1,65 +1,49 @@
-import { ref, computed, unref, type Ref } from 'vue'
-import { usePlansStore } from 'src/stores/plans'
-import { useExpensesStore } from 'src/stores/expenses'
-import { useCategoriesStore } from 'src/stores/categories'
+import { computed, unref, type Ref } from 'vue'
+import { useExpensesByPlanQuery, useExpenseSummaryQuery } from 'src/queries/expenses'
+import { useCategoriesQuery } from 'src/queries/categories'
 import { calculateStillToPay } from 'src/utils/budget-calculations'
 import type { ExpenseWithCategory, PlanWithItems } from 'src/api'
 import type { CategoryBudget } from 'src/types'
 
 export function usePlanOverview(
   planId: Ref<string> | string,
-  planArg?: Ref<PlanWithItems | null> | PlanWithItems | null,
+  planArg: Ref<PlanWithItems | null> | PlanWithItems | null,
 ) {
-  const plansStore = usePlansStore()
-  const expensesStore = useExpensesStore()
-  const categoriesStore = useCategoriesStore()
-
-  const isLoading = ref(false)
+  const resolvedPlanId = computed(() => unref(planId))
+  const { totalExpensesAmount, sortedExpenses, expensesByCategory } =
+    useExpensesByPlanQuery(resolvedPlanId)
+  const { expenseSummary } = useExpenseSummaryQuery(resolvedPlanId)
+  const { categories } = useCategoriesQuery()
 
   const currentPlanWithItems = computed<PlanWithItems | null>(() => {
-    const plan = unref(planArg)
-    const currentPlanId = unref(planId)
-    if (plan && plan.id === currentPlanId) return plan
-    const fromStore = plansStore.plans.find((p) => p.id === currentPlanId)
-    return (fromStore as unknown as PlanWithItems) || null
+    return unref(planArg) ?? null
   })
 
   const totalBudget = computed(() => {
     const plan = currentPlanWithItems.value
     if (!plan) return 0
 
-    // Budget = sum of ALL items (both fixed and non-fixed)
-    const hasItems = Array.isArray(
-      (plan as unknown as { plan_items?: { amount: number }[] }).plan_items,
-    )
-    if (hasItems) {
-      const withItems = plan as unknown as { plan_items?: { amount: number }[] }
-      return (withItems.plan_items || []).reduce(
-        (sum: number, item: { amount: number }) => sum + (item?.amount || 0),
-        0,
-      )
+    if (plan.plan_items?.length) {
+      return plan.plan_items.reduce((sum, item) => sum + (item?.amount || 0), 0)
     }
 
     return plan.total || 0
   })
 
   const totalSpent = computed(() => {
-    // Spent = sum of all expenses (unchanged)
-    return expensesStore.totalExpensesAmount
+    return totalExpensesAmount.value
   })
 
   const categoryBudgets = computed((): CategoryBudget[] => {
-    const summary = expensesStore.expenseSummary
-    const categories = categoriesStore.categories
+    const summary = expenseSummary.value
+    const cats = categories.value
     const plan = currentPlanWithItems.value
 
-    // Track planned budget amounts per category
     const totalAmountsByCategory = new Map<string, number>()
 
     if (plan?.plan_items) {
       plan.plan_items.forEach((item) => {
         const categoryId = item.category_id
-        // Planned budget includes ALL items (fixed + non-fixed)
         const existingTotal = totalAmountsByCategory.get(categoryId) || 0
         totalAmountsByCategory.set(categoryId, existingTotal + item.amount)
       })
@@ -67,12 +51,11 @@ export function usePlanOverview(
 
     return summary
       .map((item) => {
-        const category = categories.find((c) => c.id === item.category_id)
+        const category = cats.find((c) => c.id === item.category_id)
         if (!category) return null
 
         const plannedAmount = totalAmountsByCategory.get(item.category_id) || item.planned_amount
 
-        // Calculate "still to pay" using the shared utility function
         const calculatedRemaining = calculateStillToPay(
           item.category_id,
           plan?.plan_items || [],
@@ -103,11 +86,7 @@ export function usePlanOverview(
   })
 
   const recentExpenses = computed((): ExpenseWithCategory[] => {
-    return expensesStore.sortedExpenses.slice(0, 10)
-  })
-
-  const expensesByCategory = computed(() => {
-    return expensesStore.expensesByCategory
+    return sortedExpenses.value.slice(0, 10)
   })
 
   const planHealth = computed(() => {
@@ -141,7 +120,6 @@ export function usePlanOverview(
   })
 
   return {
-    isLoading,
     totalBudget,
     totalSpent,
     remainingBudget,

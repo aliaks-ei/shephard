@@ -1,8 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { createTestingPinia, type TestingPinia } from '@pinia/testing'
-import { setActivePinia } from 'pinia'
+import { ref } from 'vue'
 import { useExpenseActions } from './useExpenseActions'
-import { useExpensesStore } from 'src/stores/expenses'
 import type { ExpenseWithCategory } from 'src/api'
 
 vi.mock('quasar', () => ({
@@ -14,11 +12,22 @@ vi.mock('quasar', () => ({
   },
 }))
 
-let pinia: TestingPinia
+const mockMutateAsync = vi.fn().mockResolvedValue(undefined)
+
+vi.mock('src/queries/expenses', () => ({
+  useDeleteExpenseMutation: vi.fn(() => ({
+    mutateAsync: mockMutateAsync,
+    isPending: ref(false),
+  })),
+}))
+
+vi.mock('src/stores/user', () => ({
+  useUserStore: vi.fn(() => ({
+    userProfile: { id: 'user-1' },
+  })),
+}))
 
 beforeEach(() => {
-  pinia = createTestingPinia({ createSpy: vi.fn })
-  setActivePinia(pinia)
   vi.clearAllMocks()
 })
 
@@ -80,9 +89,6 @@ describe('useExpenseActions', () => {
 
     it('deletes expense when confirmed', async () => {
       const { Dialog } = await import('quasar')
-      const expensesStore = useExpensesStore()
-
-      expensesStore.removeExpense = vi.fn().mockResolvedValue(undefined)
 
       let onOkCallback: (() => void) | undefined
       const mockCreate = vi.mocked(Dialog.create)
@@ -107,16 +113,17 @@ describe('useExpenseActions', () => {
         onOkCallback()
         await new Promise((resolve) => setTimeout(resolve, 0))
 
-        expect(expensesStore.removeExpense).toHaveBeenCalledWith('expense-1')
+        expect(mockMutateAsync).toHaveBeenCalledWith({
+          expenseId: 'expense-1',
+          planId: 'plan-1',
+          planItemId: null,
+        })
       }
     })
 
     it('calls onSuccess callback after deletion', async () => {
       const { Dialog } = await import('quasar')
-      const expensesStore = useExpensesStore()
       const onSuccess = vi.fn()
-
-      expensesStore.removeExpense = vi.fn().mockResolvedValue(undefined)
 
       let onOkCallback: (() => void) | undefined
       const mockCreate = vi.mocked(Dialog.create)
@@ -147,9 +154,6 @@ describe('useExpenseActions', () => {
 
     it('does not call onSuccess if not provided', async () => {
       const { Dialog } = await import('quasar')
-      const expensesStore = useExpensesStore()
-
-      expensesStore.removeExpense = vi.fn().mockResolvedValue(undefined)
 
       let onOkCallback: (() => void) | undefined
       const mockCreate = vi.mocked(Dialog.create)

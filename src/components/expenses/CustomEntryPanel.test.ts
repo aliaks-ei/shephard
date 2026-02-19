@@ -1,23 +1,26 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+import { ref } from 'vue'
 import { mount } from '@vue/test-utils'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
-import { createPinia, setActivePinia } from 'pinia'
 import CustomEntryPanel from './CustomEntryPanel.vue'
-import { useCategoriesStore } from 'src/stores/categories'
 import { createMockCategories } from 'test/fixtures/categories'
 import type { PlanOption } from './PlanSelectorField.vue'
 
 installQuasarPlugin()
 
+vi.mock('src/queries/categories', () => ({
+  useCategoriesQuery: vi.fn(() => ({
+    categories: ref(createMockCategories()),
+    getCategoryById: vi.fn((id: string) => createMockCategories().find((c) => c.id === id)),
+    isPending: ref(false),
+    categoriesMap: ref(new Map()),
+    sortedCategories: ref([]),
+    categoryCount: ref(0),
+    data: ref(null),
+  })),
+}))
+
 describe('CustomEntryPanel', () => {
-  beforeEach(() => {
-    const pinia = createPinia()
-    setActivePinia(pinia)
-
-    const categoriesStore = useCategoriesStore()
-    categoriesStore.categories = createMockCategories()
-  })
-
   const mockPlanOptions: PlanOption[] = [
     {
       label: 'Weekly Grocery',

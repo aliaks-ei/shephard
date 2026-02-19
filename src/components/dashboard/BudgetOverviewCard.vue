@@ -109,16 +109,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { usePlansStore } from 'src/stores/plans'
-import { useExpensesStore } from 'src/stores/expenses'
-import { useCategoriesStore } from 'src/stores/categories'
+import { computed } from 'vue'
+import { usePlanDetailQuery } from 'src/queries/plans'
+import { useUserStore } from 'src/stores/user'
 import { usePreferencesStore } from 'src/stores/preferences'
 import { usePlanOverview } from 'src/composables/usePlanOverview'
 import { getStatusColor, getStatusText, getDaysRemaining } from 'src/utils/plans'
 import { getBudgetProgressColor, getBudgetRemainingColorClass } from 'src/utils/budget'
 import { formatCurrency, formatCurrencyPrivate, type CurrencyCode } from 'src/utils/currency'
-import type { PlanWithPermission, PlanWithItems } from 'src/api'
+import type { PlanWithPermission } from 'src/api'
 
 const emit = defineEmits<{
   click: [planId: string]
@@ -128,13 +127,14 @@ const props = defineProps<{
   plan: PlanWithPermission
 }>()
 
-const plansStore = usePlansStore()
-const expensesStore = useExpensesStore()
-const categoriesStore = useCategoriesStore()
+const userStore = useUserStore()
+const userId = computed(() => userStore.userProfile?.id)
 const preferencesStore = usePreferencesStore()
 
-const planWithItems = ref<PlanWithItems | null>(null)
-const isOverviewLoading = ref(true)
+const planId = computed(() => props.plan.id)
+const planDetailQuery = usePlanDetailQuery(planId, userId)
+const planWithItems = computed(() => planDetailQuery.data.value ?? null)
+const isOverviewLoading = computed(() => planDetailQuery.isPending.value)
 
 const { totalBudget, totalSpent, remainingBudget } = usePlanOverview(
   computed(() => props.plan.id),
@@ -165,18 +165,4 @@ function formatAmount(amount: number | null | undefined): string {
 
   return formatCurrency(amount, currency)
 }
-
-onMounted(async () => {
-  isOverviewLoading.value = true
-  const [loaded] = await Promise.all([
-    plansStore.loadPlanWithItems(props.plan.id),
-    categoriesStore.loadCategories(),
-  ])
-  planWithItems.value = loaded
-  await Promise.all([
-    expensesStore.loadExpensesForPlan(props.plan.id),
-    expensesStore.loadExpenseSummaryForPlan(props.plan.id),
-  ])
-  isOverviewLoading.value = false
-})
 </script>

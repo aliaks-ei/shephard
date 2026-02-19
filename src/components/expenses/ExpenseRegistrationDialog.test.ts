@@ -1,13 +1,52 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+import { ref } from 'vue'
 import { mount } from '@vue/test-utils'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
-import { createPinia, setActivePinia } from 'pinia'
 import ExpenseRegistrationDialog from './ExpenseRegistrationDialog.vue'
-import { useCategoriesStore } from 'src/stores/categories'
-import { usePlansStore } from 'src/stores/plans'
-import { createMockCategories } from 'test/fixtures/categories'
 
 installQuasarPlugin()
+
+vi.mock('src/queries/categories', () => ({
+  useCategoriesQuery: vi.fn(() => ({
+    categories: ref([]),
+    getCategoryById: vi.fn(),
+    isPending: ref(false),
+    categoriesMap: ref(new Map()),
+    sortedCategories: ref([]),
+    categoryCount: ref(0),
+    data: ref(null),
+  })),
+}))
+
+vi.mock('src/queries/plans', () => ({
+  usePlansQuery: vi.fn(() => ({
+    plans: ref([]),
+    plansForExpenses: ref([]),
+    activePlans: ref([]),
+    ownedPlans: ref([]),
+    sharedPlans: ref([]),
+    isPending: ref(false),
+    data: ref(null),
+  })),
+}))
+
+vi.mock('src/queries/expenses', () => ({
+  useExpenseSummaryQuery: vi.fn(() => ({
+    expenseSummary: ref([]),
+    isPending: ref(false),
+    data: ref(null),
+  })),
+  useCreateExpenseMutation: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: ref(false),
+  })),
+}))
+
+vi.mock('src/stores/user', () => ({
+  useUserStore: vi.fn(() => ({
+    userProfile: { id: 'user-1' },
+  })),
+}))
 
 vi.mock('src/composables/useExpenseRegistration', () => ({
   useExpenseRegistration: vi.fn(() => ({
@@ -53,17 +92,6 @@ vi.mock('src/composables/useExpenseRegistration', () => ({
 }))
 
 describe('ExpenseRegistrationDialog', () => {
-  beforeEach(() => {
-    const pinia = createPinia()
-    setActivePinia(pinia)
-
-    const categoriesStore = useCategoriesStore()
-    categoriesStore.categories = createMockCategories()
-
-    const plansStore = usePlansStore()
-    plansStore.isLoading = false
-  })
-
   const defaultProps = {
     modelValue: true,
   }

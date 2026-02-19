@@ -1,8 +1,16 @@
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { useUserStore } from 'src/stores/user'
-import { usePlansStore } from 'src/stores/plans'
+import {
+  usePlanDetailQuery,
+  useCreatePlanMutation,
+  useUpdatePlanMutation,
+  useSavePlanItemsMutation,
+  useUpdatePlanItemsMutation,
+  useDeletePlanItemsMutation,
+} from 'src/queries/plans'
+import { toActionResult } from 'src/queries/mutation-utils'
 import { canEditPlan } from 'src/utils/plans'
 import type { CurrencyCode, PlanWithItems } from 'src/api'
 import type { ActionResult } from 'src/types'
@@ -10,13 +18,25 @@ import type { ActionResult } from 'src/types'
 export function usePlan() {
   const route = useRoute()
   const userStore = useUserStore()
-  const plansStore = usePlansStore()
-
-  const currentPlan = ref<(PlanWithItems & { permission_level?: string }) | null>(null)
-  const isPlanLoading = ref(false)
 
   const isNewPlan = computed(() => route.name === 'new-plan')
   const routePlanId = computed(() => (typeof route.params.id === 'string' ? route.params.id : null))
+  const userId = computed(() => userStore.userProfile?.id)
+
+  const planDetailQuery = usePlanDetailQuery(routePlanId, userId)
+  const createPlanMutation = useCreatePlanMutation()
+  const updatePlanMutation = useUpdatePlanMutation()
+  const savePlanItemsMutation = useSavePlanItemsMutation()
+  const updatePlanItemsMutation = useUpdatePlanItemsMutation()
+  const deletePlanItemsMutation = useDeletePlanItemsMutation()
+
+  const currentPlan = computed(
+    () =>
+      (planDetailQuery.data.value as (PlanWithItems & { permission_level?: string }) | undefined) ??
+      null,
+  )
+  const isPlanLoading = computed(() => !isNewPlan.value && planDetailQuery.isPending.value)
+
   const isOwner = computed(() => {
     if (!currentPlan.value || !userStore.userProfile) return false
     return currentPlan.value.owner_id === userStore.userProfile.id
@@ -57,13 +77,21 @@ export function usePlan() {
       is_fixed_payment: boolean
     }>,
   ): Promise<ActionResult<PlanWithItems>> {
-    const planResult = await plansStore.addPlan({
-      template_id: templateId,
-      name,
-      start_date: startDate,
-      end_date: endDate,
-      total,
-    })
+    if (!userId.value) return { success: false }
+
+    const userCurrency = userStore.preferences.currency as CurrencyCode
+    const planResult = await toActionResult(() =>
+      createPlanMutation.mutateAsync({
+        template_id: templateId,
+        name,
+        start_date: startDate,
+        end_date: endDate,
+        total,
+        owner_id: userId.value!,
+        currency: userCurrency,
+        status: 'active',
+      }),
+    )
 
     if (!planResult.success || !planResult.data) return { success: false }
 
@@ -75,15 +103,13 @@ export function usePlan() {
       plan_id: planResult.data!.id,
     }))
 
-    const itemsResult = await plansStore.savePlanItems(planResult.data.id, items)
+    const itemsResult = await toActionResult(() =>
+      savePlanItemsMutation.mutateAsync({ planId: planResult.data!.id, items }),
+    )
 
     if (!itemsResult.success) return { success: false }
 
-    currentPlan.value = await plansStore.loadPlanWithItems(planResult.data.id)
-
-    if (!currentPlan.value) return { success: false }
-
-    return { success: true, data: currentPlan.value }
+    return { success: true, data: planResult.data as PlanWithItems }
   }
 
   async function updateExistingPlanWithItems(
@@ -101,12 +127,17 @@ export function usePlan() {
   ): Promise<ActionResult<PlanWithItems>> {
     if (!routePlanId.value || !currentPlan.value) return { success: false }
 
-    const planResult = await plansStore.editPlan(routePlanId.value, {
-      name,
-      start_date: startDate,
-      end_date: endDate,
-      total,
-    })
+    const planResult = await toActionResult(() =>
+      updatePlanMutation.mutateAsync({
+        id: routePlanId.value!,
+        updates: {
+          name,
+          start_date: startDate,
+          end_date: endDate,
+          total,
+        },
+      }),
+    )
 
     if (!planResult.success || !planResult.data) return { success: false }
 
@@ -122,15 +153,18 @@ export function usePlan() {
 
     if (itemsToUpdate.length > 0) {
       operations.push(
-        plansStore.updatePlanItems(
-          planResult.data.id,
-          itemsToUpdate as Array<{
-            id: string
-            name: string
-            category_id: string
-            amount: number
-            is_fixed_payment: boolean
-          }>,
+        toActionResult(() =>
+          updatePlanItemsMutation.mutateAsync({
+            planId: planResult.data!.id,
+            items: itemsToUpdate.map((item) => ({
+              id: item.id!,
+              plan_id: planResult.data!.id,
+              name: item.name,
+              category_id: item.category_id,
+              amount: item.amount,
+              is_fixed_payment: item.is_fixed_payment,
+            })),
+          }),
         ),
       )
     }
@@ -143,11 +177,22 @@ export function usePlan() {
         is_fixed_payment: item.is_fixed_payment,
         plan_id: planResult.data!.id,
       }))
-      operations.push(plansStore.savePlanItems(planResult.data.id, newItems))
+      operations.push(
+        toActionResult(() =>
+          savePlanItemsMutation.mutateAsync({ planId: planResult.data!.id, items: newItems }),
+        ),
+      )
     }
 
     if (itemsToDelete.length > 0) {
-      operations.push(plansStore.removePlanItems(itemsToDelete))
+      operations.push(
+        toActionResult(() =>
+          deletePlanItemsMutation.mutateAsync({
+            planId: planResult.data!.id,
+            itemIds: itemsToDelete,
+          }),
+        ),
+      )
     }
 
     const results = await Promise.all(operations)
@@ -156,31 +201,28 @@ export function usePlan() {
       return { success: false }
     }
 
-    await loadPlan()
+    const refreshed = await loadPlan()
+    if (!refreshed) return { success: false }
 
-    if (!currentPlan.value) return { success: false }
-
-    return { success: true, data: currentPlan.value }
+    return { success: true, data: refreshed }
   }
 
   async function loadPlan(): Promise<PlanWithItems | null> {
     if (isNewPlan.value || !routePlanId.value) return null
 
-    currentPlan.value = await plansStore.loadPlanWithItems(routePlanId.value)
-
-    return currentPlan.value
+    const result = await planDetailQuery.refetch()
+    return result.data ?? null
   }
 
   async function cancelCurrentPlan(): Promise<ActionResult> {
     if (!routePlanId.value) return { success: false }
 
-    const result = await plansStore.cancelPlan(routePlanId.value)
-
-    if (result.success && currentPlan.value) {
-      currentPlan.value.status = 'cancelled'
-    }
-
-    return result
+    return toActionResult(() =>
+      updatePlanMutation.mutateAsync({
+        id: routePlanId.value!,
+        updates: { status: 'cancelled' },
+      }),
+    )
   }
 
   return {

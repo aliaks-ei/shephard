@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { ref, nextTick } from 'vue'
+import { ref } from 'vue'
 import { useTemplate } from './useTemplate'
 import { useUserStore } from 'src/stores/user'
-import { useTemplatesStore } from 'src/stores/templates'
 import type { TemplateWithItems } from 'src/api'
 import { setupTestingPinia } from 'test/helpers/pinia-mocks'
 
@@ -40,12 +39,45 @@ vi.mock('vue-router', () => ({
   useRoute: () => mockRoute.value,
 }))
 
+const {
+  mockCreateTemplateMutation,
+  mockUpdateTemplateMutation,
+  mockCreateItemsMutation,
+  mockDeleteItemsMutation,
+  mockTemplateDetailQuery,
+} = vi.hoisted(() => ({
+  mockCreateTemplateMutation: { mutateAsync: vi.fn() },
+  mockUpdateTemplateMutation: { mutateAsync: vi.fn() },
+  mockCreateItemsMutation: { mutateAsync: vi.fn() },
+  mockDeleteItemsMutation: { mutateAsync: vi.fn() },
+  mockTemplateDetailQuery: {
+    data: { value: null as unknown },
+    refetch: vi.fn(),
+    isPending: { value: false },
+  },
+}))
+
+vi.mock('src/queries/templates', () => ({
+  useTemplateDetailQuery: () => mockTemplateDetailQuery,
+  useCreateTemplateMutation: () => mockCreateTemplateMutation,
+  useUpdateTemplateMutation: () => mockUpdateTemplateMutation,
+  useCreateTemplateItemsMutation: () => mockCreateItemsMutation,
+  useDeleteTemplateItemsMutation: () => mockDeleteItemsMutation,
+}))
+
 beforeEach(() => {
   setupTestingPinia()
   mockRoute.value = {
     name: 'template',
     params: { id: 'template-123' },
   }
+
+  mockCreateTemplateMutation.mutateAsync.mockReset()
+  mockUpdateTemplateMutation.mutateAsync.mockReset()
+  mockCreateItemsMutation.mutateAsync.mockReset()
+  mockDeleteItemsMutation.mutateAsync.mockReset()
+  mockTemplateDetailQuery.refetch.mockReset()
+  mockTemplateDetailQuery.data.value = null
 })
 
 describe('computed properties', () => {
@@ -95,9 +127,7 @@ describe('ownership and permissions', () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
-    const { currentTemplate, isOwner } = useTemplate()
-
-    currentTemplate.value = {
+    mockTemplateDetailQuery.data.value = {
       id: 'template-1',
       owner_id: 'user-123',
       name: 'Test Template',
@@ -109,6 +139,8 @@ describe('ownership and permissions', () => {
       template_items: [],
     }
 
+    const { isOwner } = useTemplate()
+
     expect(isOwner.value).toBe(true)
   })
 
@@ -116,9 +148,7 @@ describe('ownership and permissions', () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
-    const { currentTemplate, isOwner } = useTemplate()
-
-    currentTemplate.value = {
+    mockTemplateDetailQuery.data.value = {
       id: 'template-1',
       owner_id: 'user-456',
       name: 'Test Template',
@@ -129,6 +159,8 @@ describe('ownership and permissions', () => {
       updated_at: '2024-01-01',
       template_items: [],
     }
+
+    const { isOwner } = useTemplate()
 
     expect(isOwner.value).toBe(false)
   })
@@ -137,9 +169,7 @@ describe('ownership and permissions', () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = null
 
-    const { currentTemplate, isOwner } = useTemplate()
-
-    currentTemplate.value = {
+    mockTemplateDetailQuery.data.value = {
       id: 'template-1',
       owner_id: 'user-456',
       name: 'Test Template',
@@ -151,6 +181,8 @@ describe('ownership and permissions', () => {
       template_items: [],
     }
 
+    const { isOwner } = useTemplate()
+
     expect(isOwner.value).toBe(false)
   })
 
@@ -158,9 +190,9 @@ describe('ownership and permissions', () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
-    const { currentTemplate, isOwner } = useTemplate()
+    mockTemplateDetailQuery.data.value = null
 
-    currentTemplate.value = null
+    const { isOwner } = useTemplate()
 
     expect(isOwner.value).toBe(false)
   })
@@ -171,9 +203,7 @@ describe('read-only mode detection', () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
-    const { currentTemplate, isEditMode } = useTemplate()
-
-    currentTemplate.value = {
+    mockTemplateDetailQuery.data.value = {
       id: 'template-1',
       owner_id: 'user-123',
       name: 'Test Template',
@@ -185,6 +215,8 @@ describe('read-only mode detection', () => {
       template_items: [],
     }
 
+    const { isEditMode } = useTemplate()
+
     expect(isEditMode.value).toBe(true)
   })
 
@@ -192,9 +224,7 @@ describe('read-only mode detection', () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
-    const { currentTemplate, isEditMode } = useTemplate()
-
-    currentTemplate.value = {
+    mockTemplateDetailQuery.data.value = {
       id: 'template-1',
       owner_id: 'user-456',
       name: 'Test Template',
@@ -207,6 +237,8 @@ describe('read-only mode detection', () => {
       permission_level: 'view',
     }
 
+    const { isEditMode } = useTemplate()
+
     expect(isEditMode.value).toBe(false)
   })
 
@@ -214,9 +246,7 @@ describe('read-only mode detection', () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
-    const { currentTemplate, isEditMode } = useTemplate()
-
-    currentTemplate.value = {
+    mockTemplateDetailQuery.data.value = {
       id: 'template-1',
       owner_id: 'user-456',
       name: 'Test Template',
@@ -228,6 +258,8 @@ describe('read-only mode detection', () => {
       template_items: [],
       permission_level: 'edit',
     }
+
+    const { isEditMode } = useTemplate()
 
     expect(isEditMode.value).toBe(true)
   })
@@ -246,9 +278,7 @@ describe('edit mode detection', () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
-    const { currentTemplate, isEditMode } = useTemplate()
-
-    currentTemplate.value = {
+    mockTemplateDetailQuery.data.value = {
       id: 'template-1',
       owner_id: 'user-123',
       name: 'Test Template',
@@ -260,6 +290,8 @@ describe('edit mode detection', () => {
       template_items: [],
     }
 
+    const { isEditMode } = useTemplate()
+
     expect(isEditMode.value).toBe(true)
   })
 
@@ -267,9 +299,7 @@ describe('edit mode detection', () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
-    const { currentTemplate, isEditMode } = useTemplate()
-
-    currentTemplate.value = {
+    mockTemplateDetailQuery.data.value = {
       id: 'template-1',
       owner_id: 'user-456',
       name: 'Test Template',
@@ -282,6 +312,8 @@ describe('edit mode detection', () => {
       permission_level: 'edit',
     }
 
+    const { isEditMode } = useTemplate()
+
     expect(isEditMode.value).toBe(true)
   })
 
@@ -289,9 +321,7 @@ describe('edit mode detection', () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
-    const { currentTemplate, isEditMode } = useTemplate()
-
-    currentTemplate.value = {
+    mockTemplateDetailQuery.data.value = {
       id: 'template-1',
       owner_id: 'user-456',
       name: 'Test Template',
@@ -303,6 +333,8 @@ describe('edit mode detection', () => {
       template_items: [],
       permission_level: 'view',
     }
+
+    const { isEditMode } = useTemplate()
 
     expect(isEditMode.value).toBe(false)
   })
@@ -321,9 +353,7 @@ describe('template currency', () => {
   })
 
   it('uses template currency for existing templates', () => {
-    const { currentTemplate, templateCurrency } = useTemplate()
-
-    currentTemplate.value = {
+    mockTemplateDetailQuery.data.value = {
       id: 'template-1',
       owner_id: 'user-123',
       name: 'Test Template',
@@ -335,21 +365,25 @@ describe('template currency', () => {
       template_items: [],
     }
 
+    const { templateCurrency } = useTemplate()
+
     expect(templateCurrency.value).toBe('GBP')
   })
 })
 
 describe('createNewTemplateWithItems', () => {
   it('creates template and items successfully', async () => {
-    const templatesStore = useTemplatesStore()
+    const userStore = useUserStore()
+    vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
+
     const mockTemplate = { id: 'new-template-id', name: 'Test Template' }
     const mockItems = [
       { name: 'Item 1', category_id: 'cat-1', amount: 100, is_fixed_payment: true },
       { name: 'Item 2', category_id: 'cat-2', amount: 200, is_fixed_payment: true },
     ]
 
-    templatesStore.addTemplate = vi.fn().mockResolvedValue({ success: true, data: mockTemplate })
-    templatesStore.addItemsToTemplate = vi.fn().mockResolvedValue({ success: true, data: [] })
+    mockCreateTemplateMutation.mutateAsync.mockResolvedValue(mockTemplate)
+    mockCreateItemsMutation.mutateAsync.mockResolvedValue([])
 
     const { createNewTemplateWithItems } = useTemplate()
 
@@ -362,56 +396,66 @@ describe('createNewTemplateWithItems', () => {
     )
 
     expect(result.success).toBe(true)
-    expect(templatesStore.addTemplate).toHaveBeenCalledWith({
+    expect(mockCreateTemplateMutation.mutateAsync).toHaveBeenCalledWith({
       name: 'Test Template',
       duration: 'monthly',
       currency: 'EUR',
       total: 300,
+      owner_id: 'user-123',
     })
-    expect(templatesStore.addItemsToTemplate).toHaveBeenCalledWith([
-      {
-        name: 'Item 1',
-        category_id: 'cat-1',
-        amount: 100,
-        is_fixed_payment: true,
-        template_id: 'new-template-id',
-      },
-      {
-        name: 'Item 2',
-        category_id: 'cat-2',
-        amount: 200,
-        is_fixed_payment: true,
-        template_id: 'new-template-id',
-      },
-    ])
+    expect(mockCreateItemsMutation.mutateAsync).toHaveBeenCalledWith({
+      templateId: 'new-template-id',
+      items: [
+        {
+          name: 'Item 1',
+          category_id: 'cat-1',
+          amount: 100,
+          is_fixed_payment: true,
+          template_id: 'new-template-id',
+        },
+        {
+          name: 'Item 2',
+          category_id: 'cat-2',
+          amount: 200,
+          is_fixed_payment: true,
+          template_id: 'new-template-id',
+        },
+      ],
+    })
   })
 
   it('returns false when template creation fails', async () => {
-    const templatesStore = useTemplatesStore()
+    const userStore = useUserStore()
+    vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
-    templatesStore.addTemplate = vi.fn().mockResolvedValue({ success: false })
+    mockCreateTemplateMutation.mutateAsync.mockRejectedValue(new Error('fail'))
 
     const { createNewTemplateWithItems } = useTemplate()
 
     const result = await createNewTemplateWithItems('Test Template', 'monthly', 'EUR', 300, [])
 
     expect(result.success).toBe(false)
-    expect(templatesStore.addItemsToTemplate).not.toHaveBeenCalled()
+    expect(mockCreateItemsMutation.mutateAsync).not.toHaveBeenCalled()
   })
 
   it('handles template creation with no items', async () => {
-    const templatesStore = useTemplatesStore()
+    const userStore = useUserStore()
+    vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
+
     const mockTemplate = { id: 'new-template-id', name: 'Test Template' }
 
-    templatesStore.addTemplate = vi.fn().mockResolvedValue({ success: true, data: mockTemplate })
-    templatesStore.addItemsToTemplate = vi.fn().mockResolvedValue({ success: true, data: [] })
+    mockCreateTemplateMutation.mutateAsync.mockResolvedValue(mockTemplate)
+    mockCreateItemsMutation.mutateAsync.mockResolvedValue([])
 
     const { createNewTemplateWithItems } = useTemplate()
 
     const result = await createNewTemplateWithItems('Test Template', 'monthly', 'EUR', 0, [])
 
     expect(result.success).toBe(true)
-    expect(templatesStore.addItemsToTemplate).toHaveBeenCalledWith([])
+    expect(mockCreateItemsMutation.mutateAsync).toHaveBeenCalledWith({
+      templateId: 'new-template-id',
+      items: [],
+    })
   })
 })
 
@@ -419,10 +463,6 @@ describe('updateExistingTemplateWithItems', () => {
   it('updates template and replaces items successfully', async () => {
     mockRoute.value = { name: 'template', params: { id: 'template-123' } }
 
-    const templatesStore = useTemplatesStore()
-    const { currentTemplate, updateExistingTemplateWithItems } = useTemplate()
-
-    const mockTemplate = { id: 'template-123', name: 'Updated Template' }
     const existingItems = [
       { id: 'item-1', name: 'Old Item 1' },
       { id: 'item-2', name: 'Old Item 2' },
@@ -432,7 +472,7 @@ describe('updateExistingTemplateWithItems', () => {
       { name: 'New Item 2', category_id: 'cat-2', amount: 250, is_fixed_payment: true },
     ]
 
-    currentTemplate.value = {
+    mockTemplateDetailQuery.data.value = {
       id: 'template-123',
       owner_id: 'user-123',
       name: 'Test Template',
@@ -444,9 +484,12 @@ describe('updateExistingTemplateWithItems', () => {
       template_items: existingItems,
     } as TemplateWithItems
 
-    templatesStore.editTemplate = vi.fn().mockResolvedValue({ success: true, data: mockTemplate })
-    templatesStore.removeItemsFromTemplate = vi.fn().mockResolvedValue({ success: true })
-    templatesStore.addItemsToTemplate = vi.fn().mockResolvedValue({ success: true, data: [] })
+    const mockTemplate = { id: 'template-123', name: 'Updated Template' }
+    mockUpdateTemplateMutation.mutateAsync.mockResolvedValue(mockTemplate)
+    mockDeleteItemsMutation.mutateAsync.mockResolvedValue(undefined)
+    mockCreateItemsMutation.mutateAsync.mockResolvedValue([])
+
+    const { updateExistingTemplateWithItems } = useTemplate()
 
     const result = await updateExistingTemplateWithItems(
       'Updated Template',
@@ -457,29 +500,38 @@ describe('updateExistingTemplateWithItems', () => {
     )
 
     expect(result.success).toBe(true)
-    expect(templatesStore.editTemplate).toHaveBeenCalledWith('template-123', {
-      name: 'Updated Template',
-      duration: 'weekly',
-      currency: 'EUR',
-      total: 400,
+    expect(mockUpdateTemplateMutation.mutateAsync).toHaveBeenCalledWith({
+      id: 'template-123',
+      updates: {
+        name: 'Updated Template',
+        duration: 'weekly',
+        currency: 'EUR',
+        total: 400,
+      },
     })
-    expect(templatesStore.removeItemsFromTemplate).toHaveBeenCalledWith(['item-1', 'item-2'])
-    expect(templatesStore.addItemsToTemplate).toHaveBeenCalledWith([
-      {
-        name: 'New Item 1',
-        category_id: 'cat-1',
-        amount: 150,
-        is_fixed_payment: true,
-        template_id: 'template-123',
-      },
-      {
-        name: 'New Item 2',
-        category_id: 'cat-2',
-        amount: 250,
-        is_fixed_payment: true,
-        template_id: 'template-123',
-      },
-    ])
+    expect(mockDeleteItemsMutation.mutateAsync).toHaveBeenCalledWith({
+      templateId: 'template-123',
+      ids: ['item-1', 'item-2'],
+    })
+    expect(mockCreateItemsMutation.mutateAsync).toHaveBeenCalledWith({
+      templateId: 'template-123',
+      items: [
+        {
+          name: 'New Item 1',
+          category_id: 'cat-1',
+          amount: 150,
+          is_fixed_payment: true,
+          template_id: 'template-123',
+        },
+        {
+          name: 'New Item 2',
+          category_id: 'cat-2',
+          amount: 250,
+          is_fixed_payment: true,
+          template_id: 'template-123',
+        },
+      ],
+    })
   })
 
   it('returns false when no route template ID', async () => {
@@ -495,9 +547,9 @@ describe('updateExistingTemplateWithItems', () => {
   it('returns false when no current template', async () => {
     mockRoute.value = { name: 'template', params: { id: 'template-123' } }
 
-    const { currentTemplate, updateExistingTemplateWithItems } = useTemplate()
+    mockTemplateDetailQuery.data.value = null
 
-    currentTemplate.value = null
+    const { updateExistingTemplateWithItems } = useTemplate()
 
     const result = await updateExistingTemplateWithItems('Test', 'monthly', 'EUR', 100, [])
 
@@ -507,10 +559,7 @@ describe('updateExistingTemplateWithItems', () => {
   it('returns false when template update fails', async () => {
     mockRoute.value = { name: 'template', params: { id: 'template-123' } }
 
-    const templatesStore = useTemplatesStore()
-    const { currentTemplate, updateExistingTemplateWithItems } = useTemplate()
-
-    currentTemplate.value = {
+    mockTemplateDetailQuery.data.value = {
       id: 'template-123',
       owner_id: 'user-123',
       name: 'Test Template',
@@ -522,7 +571,9 @@ describe('updateExistingTemplateWithItems', () => {
       template_items: [],
     }
 
-    templatesStore.editTemplate = vi.fn().mockResolvedValue({ success: false })
+    const { updateExistingTemplateWithItems } = useTemplate()
+
+    mockUpdateTemplateMutation.mutateAsync.mockRejectedValue(new Error('fail'))
 
     const result = await updateExistingTemplateWithItems('Test', 'monthly', 'EUR', 100, [])
 
@@ -532,13 +583,9 @@ describe('updateExistingTemplateWithItems', () => {
   it('handles update with no new items', async () => {
     mockRoute.value = { name: 'template', params: { id: 'template-123' } }
 
-    const templatesStore = useTemplatesStore()
-    const { currentTemplate, updateExistingTemplateWithItems } = useTemplate()
-
-    const mockTemplate = { id: 'template-123', name: 'Updated Template' }
     const existingItems = [{ id: 'item-1', name: 'Old Item' }]
 
-    currentTemplate.value = {
+    mockTemplateDetailQuery.data.value = {
       id: 'template-123',
       owner_id: 'user-123',
       name: 'Test Template',
@@ -550,15 +597,20 @@ describe('updateExistingTemplateWithItems', () => {
       template_items: existingItems,
     } as TemplateWithItems
 
-    templatesStore.editTemplate = vi.fn().mockResolvedValue({ success: true, data: mockTemplate })
-    templatesStore.removeItemsFromTemplate = vi.fn().mockResolvedValue({ success: true })
-    templatesStore.addItemsToTemplate = vi.fn().mockResolvedValue({ success: true, data: [] })
+    const mockTemplate = { id: 'template-123', name: 'Updated Template' }
+    mockUpdateTemplateMutation.mutateAsync.mockResolvedValue(mockTemplate)
+    mockDeleteItemsMutation.mutateAsync.mockResolvedValue(undefined)
+
+    const { updateExistingTemplateWithItems } = useTemplate()
 
     const result = await updateExistingTemplateWithItems('Updated Template', 'weekly', 'EUR', 0, [])
 
     expect(result.success).toBe(true)
-    expect(templatesStore.removeItemsFromTemplate).toHaveBeenCalledWith(['item-1'])
-    expect(templatesStore.addItemsToTemplate).not.toHaveBeenCalled()
+    expect(mockDeleteItemsMutation.mutateAsync).toHaveBeenCalledWith({
+      templateId: 'template-123',
+      ids: ['item-1'],
+    })
+    expect(mockCreateItemsMutation.mutateAsync).not.toHaveBeenCalled()
   })
 })
 
@@ -586,9 +638,6 @@ describe('loadTemplate', () => {
   it('loads template successfully', async () => {
     mockRoute.value = { name: 'template', params: { id: 'template-123' } }
 
-    const templatesStore = useTemplatesStore()
-    const { currentTemplate, loadTemplate } = useTemplate()
-
     const mockTemplate = {
       id: 'template-123',
       owner_id: 'user-123',
@@ -601,22 +650,29 @@ describe('loadTemplate', () => {
       template_items: [],
     }
 
-    templatesStore.loadTemplateWithItems = vi.fn().mockResolvedValue(mockTemplate)
+    mockTemplateDetailQuery.refetch.mockImplementation(() => {
+      mockTemplateDetailQuery.data.value = mockTemplate
+      return Promise.resolve({ data: mockTemplate })
+    })
+
+    const { currentTemplate, loadTemplate } = useTemplate()
 
     const result = await loadTemplate()
 
     expect(result).toEqual(mockTemplate)
     expect(currentTemplate.value).toEqual(mockTemplate)
-    expect(templatesStore.loadTemplateWithItems).toHaveBeenCalledWith('template-123')
+    expect(mockTemplateDetailQuery.refetch).toHaveBeenCalled()
   })
 
   it('handles load failure', async () => {
     mockRoute.value = { name: 'template', params: { id: 'template-123' } }
 
-    const templatesStore = useTemplatesStore()
-    const { currentTemplate, loadTemplate } = useTemplate()
+    mockTemplateDetailQuery.refetch.mockImplementation(() => {
+      mockTemplateDetailQuery.data.value = null
+      return Promise.resolve({ data: null })
+    })
 
-    templatesStore.loadTemplateWithItems = vi.fn().mockResolvedValue(null)
+    const { currentTemplate, loadTemplate } = useTemplate()
 
     const result = await loadTemplate()
 
@@ -626,16 +682,11 @@ describe('loadTemplate', () => {
 })
 
 describe('reactivity', () => {
-  it('reacts to current template changes', async () => {
+  it('derives owner and currency from current template', () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
-    const { currentTemplate, isOwner, templateCurrency } = useTemplate()
-
-    expect(isOwner.value).toBe(false)
-    expect(templateCurrency.value).toBe('EUR')
-
-    currentTemplate.value = {
+    mockTemplateDetailQuery.data.value = {
       id: 'template-1',
       owner_id: 'user-123',
       name: 'Test Template',
@@ -647,19 +698,28 @@ describe('reactivity', () => {
       template_items: [],
     }
 
-    await nextTick()
+    const { isOwner, templateCurrency } = useTemplate()
 
     expect(isOwner.value).toBe(true)
     expect(templateCurrency.value).toBe('GBP')
   })
 
-  it('reacts to permission level changes', async () => {
+  it('derives owner as false when no template data', () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
-    const { currentTemplate, isEditMode } = useTemplate()
+    mockTemplateDetailQuery.data.value = null
 
-    currentTemplate.value = {
+    const { isOwner } = useTemplate()
+
+    expect(isOwner.value).toBe(false)
+  })
+
+  it('derives edit mode from permission level view', () => {
+    const userStore = useUserStore()
+    vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
+
+    mockTemplateDetailQuery.data.value = {
       id: 'template-1',
       owner_id: 'user-456',
       name: 'Test Template',
@@ -672,25 +732,38 @@ describe('reactivity', () => {
       permission_level: 'view',
     }
 
-    await nextTick()
+    const { isEditMode } = useTemplate()
 
     expect(isEditMode.value).toBe(false)
+  })
 
-    currentTemplate.value.permission_level = 'edit'
-    await nextTick()
+  it('derives edit mode from permission level edit', () => {
+    const userStore = useUserStore()
+    vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
+
+    mockTemplateDetailQuery.data.value = {
+      id: 'template-1',
+      owner_id: 'user-456',
+      name: 'Test Template',
+      duration: 'monthly',
+      total: 1000,
+      currency: 'USD',
+      created_at: '2024-01-01',
+      updated_at: '2024-01-01',
+      template_items: [],
+      permission_level: 'edit',
+    }
+
+    const { isEditMode } = useTemplate()
 
     expect(isEditMode.value).toBe(true)
   })
 
-  it('reacts to template loading state', async () => {
+  it('derives owner from template data', () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
-    const { currentTemplate, isOwner } = useTemplate()
-
-    expect(isOwner.value).toBe(false)
-
-    currentTemplate.value = {
+    mockTemplateDetailQuery.data.value = {
       id: 'template-1',
       owner_id: 'user-123',
       name: 'Test Template',
@@ -702,14 +775,9 @@ describe('reactivity', () => {
       template_items: [],
     }
 
-    await nextTick()
+    const { isOwner } = useTemplate()
 
     expect(isOwner.value).toBe(true)
-
-    currentTemplate.value = null
-    await nextTick()
-
-    expect(isOwner.value).toBe(false)
   })
 })
 
@@ -718,8 +786,7 @@ describe('integration scenarios', () => {
     mockRoute.value = { name: 'new-template', params: {} }
 
     const userStore = useUserStore()
-    const templatesStore = useTemplatesStore()
-
+    vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
     vi.mocked(userStore).preferences.preferences = createMockPreferences('EUR')
 
     const mockTemplate = { id: 'new-template-id', name: 'My Budget' }
@@ -728,8 +795,8 @@ describe('integration scenarios', () => {
       { name: 'Rent', category_id: 'housing-cat', amount: 1200, is_fixed_payment: true },
     ]
 
-    templatesStore.addTemplate = vi.fn().mockResolvedValue({ success: true, data: mockTemplate })
-    templatesStore.addItemsToTemplate = vi.fn().mockResolvedValue({ success: true, data: [] })
+    mockCreateTemplateMutation.mutateAsync.mockResolvedValue(mockTemplate)
+    mockCreateItemsMutation.mutateAsync.mockResolvedValue([])
 
     const { isNewTemplate, templateCurrency, createNewTemplateWithItems } = useTemplate()
 
@@ -745,36 +812,38 @@ describe('integration scenarios', () => {
     )
 
     expect(result.success).toBe(true)
-    expect(templatesStore.addTemplate).toHaveBeenCalledWith({
+    expect(mockCreateTemplateMutation.mutateAsync).toHaveBeenCalledWith({
       name: 'My Budget',
       duration: 'monthly',
       currency: 'EUR',
       total: 1600,
+      owner_id: 'user-123',
     })
-    expect(templatesStore.addItemsToTemplate).toHaveBeenCalledWith([
-      {
-        name: 'Groceries',
-        category_id: 'food-cat',
-        amount: 400,
-        is_fixed_payment: true,
-        template_id: 'new-template-id',
-      },
-      {
-        name: 'Rent',
-        category_id: 'housing-cat',
-        amount: 1200,
-        is_fixed_payment: true,
-        template_id: 'new-template-id',
-      },
-    ])
+    expect(mockCreateItemsMutation.mutateAsync).toHaveBeenCalledWith({
+      templateId: 'new-template-id',
+      items: [
+        {
+          name: 'Groceries',
+          category_id: 'food-cat',
+          amount: 400,
+          is_fixed_payment: true,
+          template_id: 'new-template-id',
+        },
+        {
+          name: 'Rent',
+          category_id: 'housing-cat',
+          amount: 1200,
+          is_fixed_payment: true,
+          template_id: 'new-template-id',
+        },
+      ],
+    })
   })
 
   it('handles complete existing template edit workflow', async () => {
     mockRoute.value = { name: 'template', params: { id: 'template-456' } }
 
     const userStore = useUserStore()
-    const templatesStore = useTemplatesStore()
-
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
     const existingTemplate = {
@@ -797,12 +866,13 @@ describe('integration scenarios', () => {
       { name: 'Updated Groceries', category_id: 'food-cat', amount: 500, is_fixed_payment: true },
     ]
 
-    templatesStore.loadTemplateWithItems = vi.fn().mockResolvedValue(existingTemplate)
-    templatesStore.editTemplate = vi
-      .fn()
-      .mockResolvedValue({ success: true, data: updatedTemplate })
-    templatesStore.removeItemsFromTemplate = vi.fn().mockResolvedValue({ success: true })
-    templatesStore.addItemsToTemplate = vi.fn().mockResolvedValue({ success: true, data: [] })
+    mockTemplateDetailQuery.refetch.mockImplementation(() => {
+      mockTemplateDetailQuery.data.value = existingTemplate
+      return Promise.resolve({ data: existingTemplate })
+    })
+    mockUpdateTemplateMutation.mutateAsync.mockResolvedValue(updatedTemplate)
+    mockDeleteItemsMutation.mutateAsync.mockResolvedValue(undefined)
+    mockCreateItemsMutation.mutateAsync.mockResolvedValue([])
 
     const {
       isNewTemplate,
@@ -830,30 +900,37 @@ describe('integration scenarios', () => {
     )
 
     expect(updateResult.success).toBe(true)
-    expect(templatesStore.editTemplate).toHaveBeenCalledWith('template-456', {
-      name: 'New Budget',
-      duration: 'weekly',
-      currency: 'EUR',
-      total: 500,
-    })
-    expect(templatesStore.removeItemsFromTemplate).toHaveBeenCalledWith(['item-1', 'item-2'])
-    expect(templatesStore.addItemsToTemplate).toHaveBeenCalledWith([
-      {
-        name: 'Updated Groceries',
-        category_id: 'food-cat',
-        amount: 500,
-        is_fixed_payment: true,
-        template_id: 'template-456',
+    expect(mockUpdateTemplateMutation.mutateAsync).toHaveBeenCalledWith({
+      id: 'template-456',
+      updates: {
+        name: 'New Budget',
+        duration: 'weekly',
+        currency: 'EUR',
+        total: 500,
       },
-    ])
+    })
+    expect(mockDeleteItemsMutation.mutateAsync).toHaveBeenCalledWith({
+      templateId: 'template-456',
+      ids: ['item-1', 'item-2'],
+    })
+    expect(mockCreateItemsMutation.mutateAsync).toHaveBeenCalledWith({
+      templateId: 'template-456',
+      items: [
+        {
+          name: 'Updated Groceries',
+          category_id: 'food-cat',
+          amount: 500,
+          is_fixed_payment: true,
+          template_id: 'template-456',
+        },
+      ],
+    })
   })
 
   it('handles shared template with view permission', async () => {
     mockRoute.value = { name: 'template', params: { id: 'shared-template' } }
 
     const userStore = useUserStore()
-    const templatesStore = useTemplatesStore()
-
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
     const sharedTemplate = {
@@ -869,7 +946,10 @@ describe('integration scenarios', () => {
       permission_level: 'view',
     } as TemplateWithItems & { permission_level: string }
 
-    templatesStore.loadTemplateWithItems = vi.fn().mockResolvedValue(sharedTemplate)
+    mockTemplateDetailQuery.refetch.mockImplementation(() => {
+      mockTemplateDetailQuery.data.value = sharedTemplate
+      return Promise.resolve({ data: sharedTemplate })
+    })
 
     const { isOwner, isEditMode, templateCurrency, loadTemplate } = useTemplate()
 

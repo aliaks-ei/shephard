@@ -1,13 +1,43 @@
 import { mount } from '@vue/test-utils'
-import { createTestingPinia } from '@pinia/testing'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
+import { ref } from 'vue'
 import type { ComponentProps } from 'vue-component-type-helpers'
 
 import SharePlanDialog from './SharePlanDialog.vue'
-import { usePlansStore } from 'src/stores/plans'
 
 installQuasarPlugin()
+
+const mockMutateAsync = vi.fn().mockResolvedValue({ success: true })
+
+vi.mock('src/queries/sharing', () => ({
+  useSharedUsersQuery: vi.fn(() => ({
+    data: ref([]),
+    isPending: ref(false),
+  })),
+  useShareEntityMutation: vi.fn(() => ({
+    mutateAsync: mockMutateAsync,
+    isPending: ref(false),
+  })),
+  useUnshareEntityMutation: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: ref(false),
+  })),
+  useUpdatePermissionMutation: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: ref(false),
+  })),
+  useSearchUsersQuery: vi.fn(() => ({
+    data: ref([]),
+    isPending: ref(false),
+  })),
+}))
+
+vi.mock('src/stores/user', () => ({
+  useUserStore: vi.fn(() => ({
+    userProfile: { id: 'user-1' },
+  })),
+}))
 
 type SharePlanDialogProps = ComponentProps<typeof SharePlanDialog>
 
@@ -15,26 +45,6 @@ const renderSharePlanDialog = (props: SharePlanDialogProps) => {
   return mount(SharePlanDialog, {
     props,
     global: {
-      plugins: [
-        createTestingPinia({
-          createSpy: vi.fn,
-          stubActions: true,
-          initialState: {
-            plans: {
-              sharedUsers: [],
-              userSearchResults: [],
-              isSharing: false,
-              isSearchingUsers: false,
-              loadSharedUsers: vi.fn(),
-              sharePlanWithUser: vi.fn(),
-              updateUserPermission: vi.fn(),
-              unsharePlanWithUser: vi.fn(),
-              searchUsers: vi.fn(),
-              clearUserSearch: vi.fn(),
-            },
-          },
-        }),
-      ],
       stubs: {
         ShareDialog: {
           template:
@@ -85,17 +95,11 @@ describe('SharePlanDialog', () => {
   })
 
   it('should emit shared when share is successful', async () => {
-    const pinia = createTestingPinia({
-      createSpy: vi.fn,
-      stubActions: false,
-    })
-    const plansStore = usePlansStore(pinia)
-    plansStore.sharePlanWithUser = vi.fn().mockResolvedValue({ success: true })
+    mockMutateAsync.mockResolvedValue({ success: true })
 
     const wrapper = mount(SharePlanDialog, {
       props: { planId: 'p1', modelValue: true },
       global: {
-        plugins: [pinia],
         stubs: {
           ShareDialog: {
             template: '<div><button class="share-btn" @click="handleShare"></button></div>',

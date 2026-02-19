@@ -174,7 +174,7 @@
               :key="item.id"
               clickable
               dense
-              @click="toggleItemCompletion(item)"
+              @click="handleToggleItemCompletion(item)"
               :class="item.is_completed ? 'text-strike' : ''"
             >
               <q-item-section
@@ -184,7 +184,7 @@
               >
                 <q-checkbox
                   :model-value="item.is_completed"
-                  @update:model-value="(value) => toggleItemCompletion(item, value)"
+                  @update:model-value="(value) => handleToggleItemCompletion(item, value)"
                   :disable="!canEdit"
                   color="primary"
                 />
@@ -372,11 +372,10 @@ import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import { formatDate } from 'src/utils/date'
 import { getBudgetProgressColor, getBudgetRemainingColorClass } from 'src/utils/budget'
-import { useExpensesStore } from 'src/stores/expenses'
-import { useNotificationStore } from 'src/stores/notification'
-import { updatePlanItemCompletion, type PlanItem } from 'src/api/plans'
+import { useItemCompletion } from 'src/composables/useItemCompletion'
 import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 import { useExpenseActions } from 'src/composables/useExpenseActions'
+import type { PlanItem } from 'src/api/plans'
 import type { ExpenseWithCategory } from 'src/api'
 
 interface CategoryData {
@@ -401,13 +400,13 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void
-  (e: 'add-expense'): void
-  (e: 'refresh'): void
+  'update:modelValue': [value: boolean]
+  'add-expense': []
+  refresh: []
 }>()
 
-const expensesStore = useExpensesStore()
-const notificationStore = useNotificationStore()
+const planIdRef = computed(() => props.planId ?? null)
+const { toggleItemCompletion: toggleCompletion } = useItemCompletion(planIdRef)
 const { confirmDeleteExpense } = useExpenseActions()
 
 const fixedPlanItems = computed(() => {
@@ -465,59 +464,9 @@ function onExpenseCreated() {
   emit('refresh')
 }
 
-async function toggleItemCompletion(item: PlanItem, value?: boolean) {
-  if (!props.canEdit || !props.planId) return
-
-  const newCompletionState = value !== undefined ? value : !item.is_completed
-
-  try {
-    if (newCompletionState) {
-      // Checking the item - create expense
-      const today = new Date()
-      const year = today.getFullYear()
-      const month = String(today.getMonth() + 1).padStart(2, '0')
-      const day = String(today.getDate()).padStart(2, '0')
-      const expenseDate = `${year}-${month}-${day}`
-
-      item.is_completed = newCompletionState
-
-      await expensesStore.addExpense({
-        plan_id: props.planId,
-        category_id: item.category_id,
-        name: item.name,
-        amount: item.amount,
-        expense_date: expenseDate,
-        plan_item_id: item.id,
-      })
-    } else {
-      // Unchecking the item - delete associated expense(s)
-      const expensesToDelete = expensesStore.expenses.filter(
-        (expense) => expense.plan_item_id === item.id,
-      )
-
-      if (expensesToDelete.length === 0) {
-        notificationStore.showError('No expenses found to remove for this item')
-        return
-      }
-
-      item.is_completed = newCompletionState
-
-      // Delete all expenses linked to this plan item
-      for (const expense of expensesToDelete) {
-        await expensesStore.removeExpense(expense.id)
-      }
-    }
-
-    // Update the database completion state
-    await updatePlanItemCompletion(item.id, newCompletionState)
-
-    // Refresh to get updated values
-    emit('refresh')
-  } catch {
-    item.is_completed = !newCompletionState
-    const action = newCompletionState ? 'completed' : 'incomplete'
-    notificationStore.showError(`Failed to mark item as ${action}. Please try again.`)
-  }
+function handleToggleItemCompletion(item: PlanItem, value?: boolean) {
+  if (!props.canEdit) return
+  toggleCompletion(item, value, () => emit('refresh'))
 }
 
 watch(

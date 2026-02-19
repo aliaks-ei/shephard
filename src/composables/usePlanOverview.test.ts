@@ -1,21 +1,66 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
-import { createTestingPinia, type TestingPinia } from '@pinia/testing'
-import { setActivePinia } from 'pinia'
 import { usePlanOverview } from './usePlanOverview'
-import { usePlansStore } from 'src/stores/plans'
-import { useExpensesStore } from 'src/stores/expenses'
-import { useCategoriesStore } from 'src/stores/categories'
-import type { PlanWithItems, ExpenseWithCategory } from 'src/api'
+import type { PlanWithItems, ExpenseWithCategory, PlanExpenseSummary } from 'src/api'
 import type { Tables } from 'src/lib/supabase/types'
 
 type Category = Tables<'categories'>
 
-let pinia: TestingPinia
+const {
+  mockPlans,
+  mockExpenses,
+  mockTotalExpensesAmount,
+  mockSortedExpenses,
+  mockExpensesByCategory,
+  mockExpenseSummary,
+  mockCategories,
+} = vi.hoisted(() => ({
+  mockPlans: { value: [] as PlanWithItems[] },
+  mockExpenses: { value: [] as ExpenseWithCategory[] },
+  mockTotalExpensesAmount: { value: 0 },
+  mockSortedExpenses: { value: [] as ExpenseWithCategory[] },
+  mockExpensesByCategory: { value: {} as Record<string, ExpenseWithCategory[]> },
+  mockExpenseSummary: { value: [] as PlanExpenseSummary[] },
+  mockCategories: { value: [] as Category[] },
+}))
+
+vi.mock('src/queries/plans', () => ({
+  usePlansQuery: () => ({ plans: mockPlans }),
+}))
+
+vi.mock('src/queries/expenses', () => ({
+  useExpensesByPlanQuery: () => ({
+    expenses: mockExpenses,
+    totalExpensesAmount: mockTotalExpensesAmount,
+    sortedExpenses: mockSortedExpenses,
+    expensesByCategory: mockExpensesByCategory,
+  }),
+  useExpenseSummaryQuery: () => ({
+    expenseSummary: mockExpenseSummary,
+  }),
+}))
+
+vi.mock('src/queries/categories', () => ({
+  useCategoriesQuery: () => ({
+    categories: mockCategories,
+  }),
+}))
+
+vi.mock('src/stores/user', () => ({
+  useUserStore: () => ({
+    userProfile: { id: 'user-1' },
+    preferences: { currency: 'USD' },
+  }),
+}))
 
 beforeEach(() => {
-  pinia = createTestingPinia({ createSpy: vi.fn })
-  setActivePinia(pinia)
+  mockPlans.value = []
+  mockExpenses.value = []
+  mockTotalExpensesAmount.value = 0
+  mockSortedExpenses.value = []
+  mockExpensesByCategory.value = {}
+  mockExpenseSummary.value = []
+  mockCategories.value = []
 })
 
 describe('usePlanOverview', () => {
@@ -57,7 +102,7 @@ describe('usePlanOverview', () => {
     ],
   }
 
-  const mockCategories: Category[] = [
+  const testCategories: Category[] = [
     {
       id: 'cat-1',
       name: 'Food',
@@ -76,7 +121,7 @@ describe('usePlanOverview', () => {
     },
   ]
 
-  const mockExpenses: ExpenseWithCategory[] = [
+  const testExpenses: ExpenseWithCategory[] = [
     {
       id: 'expense-1',
       plan_id: 'plan-1',
@@ -91,7 +136,7 @@ describe('usePlanOverview', () => {
       currency: null,
       original_amount: null,
       original_currency: null,
-      categories: mockCategories[0]!,
+      categories: testCategories[0]!,
     },
   ]
 
@@ -103,20 +148,18 @@ describe('usePlanOverview', () => {
       expect(totalBudget.value).toBe(800)
     })
 
-    it('returns plan from store when argument is not provided', () => {
-      const plansStore = usePlansStore()
-      plansStore.plans = [mockPlanWithItems] as unknown as typeof plansStore.plans
+    it('returns null when planArg is null', () => {
+      mockPlans.value = [mockPlanWithItems]
 
-      const { totalBudget } = usePlanOverview('plan-1')
+      const { totalBudget } = usePlanOverview('plan-1', ref(null))
 
-      expect(totalBudget.value).toBeGreaterThan(0)
+      expect(totalBudget.value).toBe(0)
     })
 
     it('returns null when plan is not found', () => {
-      const plansStore = usePlansStore()
-      plansStore.plans = []
+      mockPlans.value = []
 
-      const { totalBudget } = usePlanOverview('non-existent')
+      const { totalBudget } = usePlanOverview('non-existent', ref(null))
 
       expect(totalBudget.value).toBe(0)
     })
@@ -130,7 +173,7 @@ describe('usePlanOverview', () => {
       expect(totalBudget.value).toBe(800)
     })
 
-    it('returns 0 when plan has empty items array', () => {
+    it('falls back to plan.total when plan has empty items array', () => {
       const planWithoutItems = {
         ...mockPlanWithItems,
         plan_items: [],
@@ -138,11 +181,11 @@ describe('usePlanOverview', () => {
       const planArg = ref(planWithoutItems)
       const { totalBudget } = usePlanOverview('plan-1', planArg)
 
-      expect(totalBudget.value).toBe(0)
+      expect(totalBudget.value).toBe(1000)
     })
 
     it('returns 0 when plan is null', () => {
-      const { totalBudget } = usePlanOverview('non-existent')
+      const { totalBudget } = usePlanOverview('non-existent', ref(null))
 
       expect(totalBudget.value).toBe(0)
     })
@@ -150,9 +193,7 @@ describe('usePlanOverview', () => {
 
   describe('totalSpent', () => {
     it('returns total expenses amount from store', () => {
-      const expensesStore = useExpensesStore()
-      // @ts-expect-error - Testing Pinia computed
-      expensesStore.totalExpensesAmount = 350
+      mockTotalExpensesAmount.value = 350
 
       const { totalSpent } = usePlanOverview('plan-1', ref(mockPlanWithItems))
 
@@ -162,13 +203,9 @@ describe('usePlanOverview', () => {
 
   describe('remainingBudget', () => {
     it('calculates remaining budget correctly with only fixed items', () => {
-      const expensesStore = useExpensesStore()
-      const categoriesStore = useCategoriesStore()
+      mockTotalExpensesAmount.value = 350
 
-      // @ts-expect-error - Testing Pinia computed
-      expensesStore.totalExpensesAmount = 350
-
-      expensesStore.expenseSummary = [
+      mockExpenseSummary.value = [
         {
           category_id: 'cat-1',
           planned_amount: 500,
@@ -184,7 +221,7 @@ describe('usePlanOverview', () => {
           expense_count: 1,
         },
       ]
-      categoriesStore.categories = mockCategories.map((c) => ({ ...c, templates: [] }))
+      mockCategories.value = testCategories
 
       const { remainingBudget } = usePlanOverview('plan-1', ref(mockPlanWithItems))
 
@@ -192,11 +229,7 @@ describe('usePlanOverview', () => {
     })
 
     it('calculates remaining budget correctly with fixed and non-fixed items', () => {
-      const expensesStore = useExpensesStore()
-      const categoriesStore = useCategoriesStore()
-
-      // @ts-expect-error - Testing Pinia computed
-      expensesStore.totalExpensesAmount = 120
+      mockTotalExpensesAmount.value = 120
 
       const planWithMixedItems: PlanWithItems = {
         ...mockPlanWithItems,
@@ -238,7 +271,7 @@ describe('usePlanOverview', () => {
       }
 
       // Set up expense summary for each category
-      expensesStore.expenseSummary = [
+      mockExpenseSummary.value = [
         {
           category_id: 'cat-1',
           planned_amount: 300,
@@ -254,7 +287,7 @@ describe('usePlanOverview', () => {
           expense_count: 1,
         },
       ]
-      categoriesStore.categories = mockCategories.map((c) => ({ ...c, templates: [] }))
+      mockCategories.value = testCategories
 
       const { remainingBudget } = usePlanOverview('plan-1', ref(planWithMixedItems))
 
@@ -262,11 +295,7 @@ describe('usePlanOverview', () => {
     })
 
     it('calculates remaining budget correctly when expenses exceed non-fixed items', () => {
-      const expensesStore = useExpensesStore()
-      const categoriesStore = useCategoriesStore()
-
-      // @ts-expect-error - Testing Pinia computed
-      expensesStore.totalExpensesAmount = 300
+      mockTotalExpensesAmount.value = 300
 
       const planWithMixedItems: PlanWithItems = {
         ...mockPlanWithItems,
@@ -297,7 +326,7 @@ describe('usePlanOverview', () => {
       }
 
       // Set up expense summary for each category
-      expensesStore.expenseSummary = [
+      mockExpenseSummary.value = [
         {
           category_id: 'cat-1',
           planned_amount: 100,
@@ -313,7 +342,7 @@ describe('usePlanOverview', () => {
           expense_count: 1,
         },
       ]
-      categoriesStore.categories = mockCategories.map((c) => ({ ...c, templates: [] }))
+      mockCategories.value = testCategories
 
       const { remainingBudget } = usePlanOverview('plan-1', ref(planWithMixedItems))
 
@@ -321,11 +350,7 @@ describe('usePlanOverview', () => {
     })
 
     it('excludes completed fixed items from calculation', () => {
-      const expensesStore = useExpensesStore()
-      const categoriesStore = useCategoriesStore()
-
-      // @ts-expect-error - Testing Pinia computed
-      expensesStore.totalExpensesAmount = 0
+      mockTotalExpensesAmount.value = 0
 
       const planWithCompletedItems: PlanWithItems = {
         ...mockPlanWithItems,
@@ -356,7 +381,7 @@ describe('usePlanOverview', () => {
       }
 
       // Set up expense summary for each category
-      expensesStore.expenseSummary = [
+      mockExpenseSummary.value = [
         {
           category_id: 'cat-1',
           planned_amount: 100,
@@ -372,7 +397,7 @@ describe('usePlanOverview', () => {
           expense_count: 0,
         },
       ]
-      categoriesStore.categories = mockCategories.map((c) => ({ ...c, templates: [] }))
+      mockCategories.value = testCategories
 
       const { remainingBudget } = usePlanOverview('plan-1', ref(planWithCompletedItems))
 
@@ -382,10 +407,7 @@ describe('usePlanOverview', () => {
 
   describe('categoryBudgets', () => {
     it('creates category budgets from expense summary', () => {
-      const expensesStore = useExpensesStore()
-      const categoriesStore = useCategoriesStore()
-
-      expensesStore.expenseSummary = [
+      mockExpenseSummary.value = [
         {
           category_id: 'cat-1',
           planned_amount: 500,
@@ -401,7 +423,7 @@ describe('usePlanOverview', () => {
           expense_count: 1,
         },
       ]
-      categoriesStore.categories = mockCategories.map((c) => ({ ...c, templates: [] }))
+      mockCategories.value = testCategories
 
       const { categoryBudgets } = usePlanOverview('plan-1', ref(mockPlanWithItems))
 
@@ -417,10 +439,7 @@ describe('usePlanOverview', () => {
     })
 
     it('uses plan items amounts when available', () => {
-      const expensesStore = useExpensesStore()
-      const categoriesStore = useCategoriesStore()
-
-      expensesStore.expenseSummary = [
+      mockExpenseSummary.value = [
         {
           category_id: 'cat-1',
           planned_amount: 0,
@@ -429,7 +448,7 @@ describe('usePlanOverview', () => {
           expense_count: 1,
         },
       ]
-      categoriesStore.categories = mockCategories.map((c) => ({ ...c, templates: [] }))
+      mockCategories.value = testCategories
 
       const { categoryBudgets } = usePlanOverview('plan-1', ref(mockPlanWithItems))
 
@@ -438,10 +457,7 @@ describe('usePlanOverview', () => {
     })
 
     it('filters out categories without category data', () => {
-      const expensesStore = useExpensesStore()
-      const categoriesStore = useCategoriesStore()
-
-      expensesStore.expenseSummary = [
+      mockExpenseSummary.value = [
         {
           category_id: 'cat-999',
           planned_amount: 100,
@@ -450,7 +466,7 @@ describe('usePlanOverview', () => {
           expense_count: 1,
         },
       ]
-      categoriesStore.categories = mockCategories.map((c) => ({ ...c, templates: [] }))
+      mockCategories.value = testCategories
 
       const { categoryBudgets } = usePlanOverview('plan-1', ref(mockPlanWithItems))
 
@@ -458,10 +474,7 @@ describe('usePlanOverview', () => {
     })
 
     it('sorts by percentage used descending', () => {
-      const expensesStore = useExpensesStore()
-      const categoriesStore = useCategoriesStore()
-
-      expensesStore.expenseSummary = [
+      mockExpenseSummary.value = [
         {
           category_id: 'cat-1',
           planned_amount: 500,
@@ -477,7 +490,7 @@ describe('usePlanOverview', () => {
           expense_count: 1,
         },
       ]
-      categoriesStore.categories = mockCategories.map((c) => ({ ...c, templates: [] }))
+      mockCategories.value = testCategories
 
       const { categoryBudgets } = usePlanOverview('plan-1', ref(mockPlanWithItems))
 
@@ -488,9 +501,7 @@ describe('usePlanOverview', () => {
 
   describe('recentExpenses', () => {
     it('returns up to 10 most recent expenses', () => {
-      const expensesStore = useExpensesStore()
-      // @ts-expect-error - Testing Pinia computed
-      expensesStore.sortedExpenses = mockExpenses
+      mockSortedExpenses.value = testExpenses
 
       const { recentExpenses } = usePlanOverview('plan-1', ref(mockPlanWithItems))
 
@@ -499,13 +510,11 @@ describe('usePlanOverview', () => {
     })
 
     it('limits to 10 expenses', () => {
-      const expensesStore = useExpensesStore()
       const manyExpenses = Array.from({ length: 15 }, (_, i) => ({
-        ...mockExpenses[0]!,
+        ...testExpenses[0]!,
         id: `expense-${i}`,
       }))
-      // @ts-expect-error - Testing Pinia computed
-      expensesStore.sortedExpenses = manyExpenses
+      mockSortedExpenses.value = manyExpenses
 
       const { recentExpenses } = usePlanOverview('plan-1', ref(mockPlanWithItems))
 
@@ -515,28 +524,22 @@ describe('usePlanOverview', () => {
 
   describe('expensesByCategory', () => {
     it('returns expenses grouped by category from store', () => {
-      const expensesStore = useExpensesStore()
-      const mockExpensesByCategory = {
-        'cat-1': [mockExpenses[0]!],
+      const groupedExpenses = {
+        'cat-1': [testExpenses[0]!],
       }
-      // @ts-expect-error - Testing Pinia computed
-      expensesStore.expensesByCategory = mockExpensesByCategory
+      mockExpensesByCategory.value = groupedExpenses
 
       const { expensesByCategory } = usePlanOverview('plan-1', ref(mockPlanWithItems))
 
-      expect(expensesByCategory.value).toEqual(mockExpensesByCategory)
+      expect(expensesByCategory.value).toEqual(groupedExpenses)
     })
   })
 
   describe('planHealth', () => {
     it('returns healthy status when utilization is below 80%', () => {
-      const expensesStore = useExpensesStore()
-      const categoriesStore = useCategoriesStore()
-
-      // @ts-expect-error - Testing Pinia computed
-      expensesStore.totalExpensesAmount = 400
-      expensesStore.expenseSummary = []
-      categoriesStore.categories = mockCategories.map((c) => ({ ...c, templates: [] }))
+      mockTotalExpensesAmount.value = 400
+      mockExpenseSummary.value = []
+      mockCategories.value = testCategories
 
       const { planHealth } = usePlanOverview('plan-1', ref(mockPlanWithItems))
 
@@ -545,13 +548,9 @@ describe('usePlanOverview', () => {
     })
 
     it('returns warning status when utilization is between 80% and 100%', () => {
-      const expensesStore = useExpensesStore()
-      const categoriesStore = useCategoriesStore()
-
-      // @ts-expect-error - Testing Pinia computed
-      expensesStore.totalExpensesAmount = 700
-      expensesStore.expenseSummary = []
-      categoriesStore.categories = mockCategories.map((c) => ({ ...c, templates: [] }))
+      mockTotalExpensesAmount.value = 700
+      mockExpenseSummary.value = []
+      mockCategories.value = testCategories
 
       const { planHealth } = usePlanOverview('plan-1', ref(mockPlanWithItems))
 
@@ -560,13 +559,9 @@ describe('usePlanOverview', () => {
     })
 
     it('returns critical status when utilization exceeds 100%', () => {
-      const expensesStore = useExpensesStore()
-      const categoriesStore = useCategoriesStore()
-
-      // @ts-expect-error - Testing Pinia computed
-      expensesStore.totalExpensesAmount = 900
-      expensesStore.expenseSummary = []
-      categoriesStore.categories = mockCategories.map((c) => ({ ...c, templates: [] }))
+      mockTotalExpensesAmount.value = 900
+      mockExpenseSummary.value = []
+      mockCategories.value = testCategories
 
       const { planHealth } = usePlanOverview('plan-1', ref(mockPlanWithItems))
 
@@ -575,12 +570,8 @@ describe('usePlanOverview', () => {
     })
 
     it('counts overBudget and nearLimit categories', () => {
-      const expensesStore = useExpensesStore()
-      const categoriesStore = useCategoriesStore()
-
-      // @ts-expect-error - Testing Pinia computed
-      expensesStore.totalExpensesAmount = 300
-      expensesStore.expenseSummary = [
+      mockTotalExpensesAmount.value = 300
+      mockExpenseSummary.value = [
         {
           category_id: 'cat-1',
           planned_amount: 500,
@@ -596,7 +587,7 @@ describe('usePlanOverview', () => {
           expense_count: 1,
         },
       ]
-      categoriesStore.categories = mockCategories.map((c) => ({ ...c, templates: [] }))
+      mockCategories.value = testCategories
 
       const { planHealth } = usePlanOverview('plan-1', ref(mockPlanWithItems))
 
@@ -607,23 +598,33 @@ describe('usePlanOverview', () => {
   })
 
   describe('reactivity', () => {
-    it('reacts to planId changes', () => {
-      const planIdRef = ref('plan-1')
-      const plansStore = usePlansStore()
-      plansStore.plans = [
-        mockPlanWithItems,
-        {
-          ...mockPlanWithItems,
-          id: 'plan-2',
-          total: 2000,
-        },
-      ] as unknown as typeof plansStore.plans
+    it('reacts to planArg changes', () => {
+      const planArg = ref<PlanWithItems | null>(mockPlanWithItems)
 
-      const { totalBudget } = usePlanOverview(planIdRef)
+      const { totalBudget } = usePlanOverview('plan-1', planArg)
 
-      planIdRef.value = 'plan-2'
+      expect(totalBudget.value).toBe(800)
 
-      expect(totalBudget.value).toBeGreaterThan(0)
+      const updatedPlan: PlanWithItems = {
+        ...mockPlanWithItems,
+        id: 'plan-2',
+        plan_items: [
+          {
+            id: 'item-1',
+            plan_id: 'plan-2',
+            category_id: 'cat-1',
+            name: 'Groceries',
+            amount: 1000,
+            is_completed: false,
+            is_fixed_payment: true,
+            created_at: '2024-01-01',
+            updated_at: '2024-01-01',
+          },
+        ],
+      }
+      planArg.value = updatedPlan
+
+      expect(totalBudget.value).toBe(1000)
     })
   })
 })

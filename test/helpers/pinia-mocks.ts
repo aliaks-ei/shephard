@@ -2,8 +2,7 @@ import { vi } from 'vitest'
 import { ref } from 'vue'
 import { setActivePinia } from 'pinia'
 import { createTestingPinia, type TestingPinia } from '@pinia/testing'
-import { useCategoriesStore } from 'src/stores/categories'
-import { createMockCategories, createMockUserStoreData } from '../fixtures'
+import { createMockUserStoreData } from '../fixtures'
 
 /**
  * Creates and configures a testing Pinia instance
@@ -20,28 +19,6 @@ export const setupTestingPinia = (
   })
   setActivePinia(pinia)
   return pinia
-}
-
-/**
- * Sets up a mock categories store with predefined data
- */
-export const setupMockCategoriesStore = (
-  categories = createMockCategories(),
-): ReturnType<typeof useCategoriesStore> => {
-  const store = useCategoriesStore()
-
-  // @ts-expect-error - Testing Pinia
-  store.categories = ref(categories)
-  // @ts-expect-error - Testing Pinia
-  store.isLoading = ref(false)
-
-  // Mock the getCategoryById method
-  store.getCategoryById = vi.fn((id: string) => {
-    const category = categories.find((cat) => cat.id === id)
-    return category ? { ...category, templates: [] } : undefined
-  })
-
-  return store
 }
 
 /**

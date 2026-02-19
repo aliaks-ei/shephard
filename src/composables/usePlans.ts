@@ -1,10 +1,15 @@
-import { usePlansStore } from 'src/stores/plans'
+import { computed } from 'vue'
+import { usePlansQuery, useDeletePlanMutation } from 'src/queries/plans'
+import { useUserStore } from 'src/stores/user'
 import { useListPage } from './useListPage'
 import { filterAndSortPlans } from 'src/utils/list-filters'
 import type { PlanWithPermission } from 'src/api'
 
 export function usePlans() {
-  const plansStore = usePlansStore()
+  const userStore = useUserStore()
+  const userId = computed(() => userStore.userProfile?.id)
+  const { plans, isPending } = usePlansQuery(userId)
+  const deletePlanMutation = useDeletePlanMutation()
 
   const sortOptions = [
     { label: 'Name', value: 'name' },
@@ -23,12 +28,17 @@ export function usePlans() {
       defaultSort: 'created_at',
       filterAndSortFn: filterAndSortPlans,
       deleteFn: async (id: string) => {
-        return await plansStore.removePlan(id)
+        try {
+          await deletePlanMutation.mutateAsync(id)
+          return { success: true }
+        } catch {
+          return { success: false }
+        }
       },
     },
-    () => plansStore.plans,
-    () => plansStore.plans.filter((plan) => plan.owner_id === plansStore.userId),
-    () => plansStore.plans.filter((plan) => plan.owner_id !== plansStore.userId),
-    () => plansStore.isLoading && plansStore.plans.length === 0,
+    () => plans.value,
+    () => plans.value.filter((plan) => plan.owner_id === userId.value),
+    () => plans.value.filter((plan) => plan.owner_id !== userId.value),
+    () => isPending.value && plans.value.length === 0,
   )
 }

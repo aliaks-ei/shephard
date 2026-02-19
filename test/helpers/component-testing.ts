@@ -1,8 +1,7 @@
 import { mount, type VueWrapper, type ComponentMountingOptions } from '@vue/test-utils'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 import { vi, expect } from 'vitest'
-import { setupTestingPinia, setupMockCategoriesStore } from './pinia-mocks'
-import { createMockCategories } from '../fixtures'
+import { setupTestingPinia } from './pinia-mocks'
 import type { Component } from 'vue'
 
 const { mockNotify, mockDialog } = vi.hoisted(() => ({
@@ -54,9 +53,6 @@ export const createComponentRenderer = <T extends Component>(
     // Setup Pinia for each render
     const pinia = setupTestingPinia()
 
-    // Setup common store mocks
-    setupMockCategoriesStore()
-
     // Merge options
     const mountOptions = {
       props,
@@ -87,11 +83,10 @@ export const createComponentRenderer = <T extends Component>(
  */
 export const renderWithCategories = <T extends Component>(
   component: T,
-  categories = createMockCategories(),
+  _categories?: unknown,
   options: ComponentMountingOptions<T> = {},
 ) => {
   const pinia = setupTestingPinia()
-  const categoriesStore = setupMockCategoriesStore(categories)
 
   return {
     wrapper: mount(component, {
@@ -106,7 +101,6 @@ export const renderWithCategories = <T extends Component>(
       },
       ...options,
     }),
-    categoriesStore,
     pinia,
   }
 }
