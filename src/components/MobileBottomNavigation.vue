@@ -107,6 +107,6 @@ const inactiveStyle: StyleValue = {
   background: hsl(var(--card));
   box-shadow: var(--shadow-md);
   border: 1px solid hsl(var(--border));
-  margin-bottom: max(12px, calc(12px + env(safe-area-inset-bottom, 0px)));
+  margin-bottom: 0;
 }
 </style>

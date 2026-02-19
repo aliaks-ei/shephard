@@ -45,8 +45,8 @@
 html {
   background-color: $bg-color;
   color: $text-color;
-  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
-    env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) 0
+    env(safe-area-inset-left, 0px);
 }
 
 html:has(.body--dark) {
@@ -65,12 +65,18 @@ body {
     'Times New Roman',
     serif;
   min-height: 100vh;
-  min-height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  min-height: 100dvh;
   background: hsl(var(--background));
   color: hsl(var(--foreground));
   letter-spacing: var(--tracking-tight);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+#q-app,
+.q-layout {
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 // Global Dialog Styles - Consistent 480px width on desktop

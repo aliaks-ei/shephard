@@ -26,7 +26,7 @@
     expand
     :offset="[0, 0]"
   >
-    <div class="full-width q-px-sm">
+    <div class="full-width q-px-sm mobile-action-shell">
       <div
         class="q-pa-xs"
         :style="floatingBarStyle"
@@ -94,7 +94,7 @@ const floatingBarStyle: StyleValue = {
   background: 'hsl(var(--card))',
   boxShadow: 'var(--shadow-md)',
   border: '1px solid hsl(var(--border))',
-  marginBottom: 'max(12px, calc(12px + env(safe-area-inset-bottom, 0px)))',
+  marginBottom: '0',
 }
 
 const visibleActions = computed(() => {
@@ -110,3 +110,9 @@ async function handleActionClick(action: ActionBarAction): Promise<void> {
   await action.handler()
 }
 </script>
+
+<style lang="scss" scoped>
+.mobile-action-shell {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+</style>

@@ -12,7 +12,7 @@ import type { CategoryBudget } from 'src/types'
 installQuasarPlugin()
 
 const mockConfirmDeleteExpense = vi.fn()
-const mockDeleteExpense = vi.fn(async (_expense: ExpenseWithCategory, onSuccess?: () => void) => {
+const mockDeleteExpense = vi.fn((_expense: ExpenseWithCategory, onSuccess?: () => void) => {
   onSuccess?.()
 })
 
