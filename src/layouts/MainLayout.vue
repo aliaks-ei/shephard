@@ -36,7 +36,7 @@
 
     <q-footer
       v-if="showMobileBottomNav"
-      class="bg-transparent"
+      class="bg-transparent mobile-nav-footer"
     >
       <MobileBottomNavigation @open-expense-dialog="showExpenseDialog = true" />
     </q-footer>
@@ -144,5 +144,9 @@ const showMobileBottomNav = computed(() => {
 .navigation-drawer-bg {
   background-color: hsl(var(--card));
   border-right: 1px solid hsl(var(--border));
+}
+
+.mobile-nav-footer {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 </style>

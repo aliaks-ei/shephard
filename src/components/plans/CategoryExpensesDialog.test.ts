@@ -11,6 +11,11 @@ import type { CategoryBudget } from 'src/types'
 
 installQuasarPlugin()
 
+const mockConfirmDeleteExpense = vi.fn()
+const mockDeleteExpense = vi.fn((_expense: ExpenseWithCategory, onSuccess?: () => void) => {
+  onSuccess?.()
+})
+
 vi.mock('src/utils/currency', () => ({
   formatCurrency: vi.fn((amount: number, currency: string) => `${currency} ${amount.toFixed(2)}`),
 }))
@@ -46,7 +51,8 @@ vi.mock('src/utils/budget', () => ({
 
 vi.mock('src/composables/useExpenseActions', () => ({
   useExpenseActions: vi.fn(() => ({
-    confirmDeleteExpense: vi.fn(),
+    confirmDeleteExpense: mockConfirmDeleteExpense,
+    deleteExpense: mockDeleteExpense,
   })),
 }))
 
@@ -96,10 +102,26 @@ const mockExpenses: ExpenseWithCategory[] = [
   },
 ]
 
-const renderCategoryExpensesDialog = (props: CategoryExpensesDialogProps) => {
+const renderCategoryExpensesDialog = (
+  props: CategoryExpensesDialogProps,
+  options: { isMobile?: boolean } = {},
+) => {
+  const isMobile = options.isMobile ?? false
+
   return mount(CategoryExpensesDialog, {
     props,
     global: {
+      mocks: {
+        $q: {
+          screen: {
+            lt: { md: isMobile },
+            xs: isMobile,
+          },
+          dark: {
+            isActive: false,
+          },
+        },
+      },
       plugins: [
         createTestingPinia({
           createSpy: vi.fn,
@@ -124,6 +146,11 @@ const renderCategoryExpensesDialog = (props: CategoryExpensesDialogProps) => {
         'q-linear-progress': { template: '<div class="q-linear-progress" />' },
         'q-list': { template: '<div><slot /></div>' },
         'q-item': { template: '<div class="q-item"><slot /></div>' },
+        'q-slide-item': {
+          template:
+            '<div class="q-slide-item"><button class="slide-right-trigger" @click="$emit(\'right\', { reset: () => {} })" /><slot name="right" /><slot /></div>',
+          props: ['rightColor'],
+        },
         'q-item-section': { template: '<div><slot /></div>' },
         'q-item-label': { template: '<div><slot /></div>' },
         'q-checkbox': {
@@ -235,6 +262,25 @@ describe('CategoryExpensesDialog', () => {
     })
 
     wrapper.vm.$emit('refresh')
+    expect(wrapper.emitted('refresh')).toBeTruthy()
+  })
+
+  it('should delete immediately on mobile swipe in expenses tab', async () => {
+    const wrapper = renderCategoryExpensesDialog(
+      {
+        modelValue: true,
+        category: mockCategory,
+        expenses: mockExpenses,
+        currency: 'USD',
+        canEdit: true,
+      },
+      { isMobile: true },
+    )
+
+    await wrapper.find('.slide-right-trigger').trigger('click')
+
+    expect(mockDeleteExpense).toHaveBeenCalledWith(mockExpenses[0], expect.any(Function))
+    expect(mockConfirmDeleteExpense).not.toHaveBeenCalled()
     expect(wrapper.emitted('refresh')).toBeTruthy()
   })
 })

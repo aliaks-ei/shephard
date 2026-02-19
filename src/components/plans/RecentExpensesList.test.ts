@@ -8,6 +8,11 @@ import type { ExpenseWithCategory } from 'src/api'
 
 installQuasarPlugin()
 
+const mockConfirmDeleteExpense = vi.fn()
+const mockDeleteExpense = vi.fn((_expense: ExpenseWithCategory, onSuccess?: () => void) => {
+  onSuccess?.()
+})
+
 vi.mock('src/utils/currency', () => ({
   formatCurrency: vi.fn((amount: number, currency: string) => `${currency} ${amount.toFixed(2)}`),
 }))
@@ -26,7 +31,8 @@ vi.mock('src/composables/useCategoryHelpers', () => ({
 
 vi.mock('src/composables/useExpenseActions', () => ({
   useExpenseActions: vi.fn(() => ({
-    confirmDeleteExpense: vi.fn(),
+    confirmDeleteExpense: mockConfirmDeleteExpense,
+    deleteExpense: mockDeleteExpense,
   })),
 }))
 
@@ -58,20 +64,42 @@ const mockExpenses: ExpenseWithCategory[] = [
   },
 ]
 
-const renderRecentExpensesList = (props: RecentExpensesListProps) => {
+const renderRecentExpensesList = (
+  props: RecentExpensesListProps,
+  options: { isMobile?: boolean } = {},
+) => {
+  const isMobile = options.isMobile ?? false
+
   return mount(RecentExpensesList, {
     props,
     global: {
+      mocks: {
+        $q: {
+          screen: {
+            lt: { md: isMobile },
+            xs: isMobile,
+          },
+          dark: {
+            isActive: false,
+          },
+        },
+      },
       stubs: {
         CategoryIcon: { template: '<div class="category-icon" />' },
         'q-card': { template: '<div><slot /></div>' },
         'q-card-section': { template: '<div><slot /></div>' },
         'q-btn': {
-          template: '<button @click="$emit(\'click\')"><slot /></button>',
-          props: ['label', 'color'],
+          template:
+            '<button class="q-btn-stub" :data-icon="icon || \'\'" @click="$emit(\'click\')"><slot /></button>',
+          props: ['label', 'color', 'icon'],
         },
         'q-list': { template: '<div><slot /></div>' },
         'q-item': { template: '<div class="q-item"><slot /></div>' },
+        'q-slide-item': {
+          template:
+            '<div class="q-slide-item"><button class="slide-right-trigger" @click="$emit(\'right\', { reset: () => {} })" /><slot name="right" /><slot /></div>',
+          props: ['rightColor'],
+        },
         'q-item-section': { template: '<div><slot /></div>' },
         'q-item-label': { template: '<div><slot /></div>' },
         'q-skeleton': { template: '<div class="q-skeleton" />' },
@@ -197,8 +225,41 @@ describe('RecentExpensesList', () => {
       canEdit: true,
     })
 
-    const html = wrapper.html()
-    expect(html).toContain('button')
+    const deleteButtons = wrapper.findAll('button[data-icon="eva-trash-2-outline"]')
+    expect(deleteButtons.length).toBe(1)
+  })
+
+  it('should show slide item on mobile when canEdit is true', () => {
+    const wrapper = renderRecentExpensesList(
+      {
+        expenses: mockExpenses,
+        currency: 'USD',
+        isLoading: false,
+        canEdit: true,
+      },
+      { isMobile: true },
+    )
+
+    expect(wrapper.find('.q-slide-item').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Delete')
+  })
+
+  it('should delete immediately on mobile swipe', async () => {
+    const wrapper = renderRecentExpensesList(
+      {
+        expenses: mockExpenses,
+        currency: 'USD',
+        isLoading: false,
+        canEdit: true,
+      },
+      { isMobile: true },
+    )
+
+    await wrapper.find('.slide-right-trigger').trigger('click')
+
+    expect(mockDeleteExpense).toHaveBeenCalledWith(mockExpenses[0], expect.any(Function))
+    expect(mockConfirmDeleteExpense).not.toHaveBeenCalled()
+    expect(wrapper.emitted('refresh')).toBeTruthy()
   })
 
   it('should not show delete button when canEdit is false', () => {
@@ -209,7 +270,7 @@ describe('RecentExpensesList', () => {
       canEdit: false,
     })
 
-    const buttons = wrapper.findAll('button')
-    expect(buttons.length).toBe(0)
+    const deleteButtons = wrapper.findAll('button[data-icon="eva-trash-2-outline"]')
+    expect(deleteButtons.length).toBe(0)
   })
 })

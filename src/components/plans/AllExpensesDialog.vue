@@ -54,7 +54,78 @@
             scroll-target=".scroll-area > .q-scrollarea__container"
           >
             <template #default="{ item: expense, index }">
+              <q-slide-item
+                v-if="$q.screen.lt.md && canEdit"
+                :key="expense.id"
+                class="q-px-none mobile-expense-swipe-item"
+                right-color="negative"
+                :class="index > 0 ? 'q-border-top' : ''"
+                @right="(details) => handleSwipeDelete(expense, details)"
+              >
+                <template #right>
+                  <div class="row items-center q-gutter-sm">
+                    <q-icon
+                      name="eva-trash-2-outline"
+                      size="20px"
+                    />
+                    <span class="text-weight-medium">Delete</span>
+                  </div>
+                </template>
+
+                <q-item class="q-px-none q-py-sm">
+                  <q-item-section
+                    style="min-width: auto"
+                    avatar
+                  >
+                    <CategoryIcon
+                      :color="getCategoryColor(expense.category_id)"
+                      :icon="getCategoryIcon(expense.category_id)"
+                      size="sm"
+                    />
+                  </q-item-section>
+
+                  <q-item-section>
+                    <q-item-label class="text-weight-medium">
+                      {{ expense.name }}
+                    </q-item-label>
+                    <q-item-label
+                      caption
+                      class="q-mt-xs"
+                    >
+                      {{ getCategoryName(expense.category_id) }} •
+                      {{ formatDate(expense.expense_date) }}
+                    </q-item-label>
+                  </q-item-section>
+
+                  <q-item-section
+                    side
+                    class="items-end"
+                  >
+                    <div class="row items-center q-gutter-sm">
+                      <div class="column items-end">
+                        <q-item-label class="text-weight-bold text-primary">
+                          {{ formatCurrency(expense.amount, currency) }}
+                        </q-item-label>
+                        <q-item-label
+                          v-if="expense.original_amount && expense.original_currency"
+                          caption
+                          class="text-caption text-grey-6"
+                        >
+                          {{
+                            formatCurrency(
+                              expense.original_amount,
+                              expense.original_currency as CurrencyCode,
+                            )
+                          }}
+                        </q-item-label>
+                      </div>
+                    </div>
+                  </q-item-section>
+                </q-item>
+              </q-slide-item>
+
               <q-item
+                v-else
                 :key="expense.id"
                 class="q-px-none q-py-sm"
                 :class="index > 0 ? 'q-border-top' : ''"
@@ -149,5 +220,10 @@ const emit = defineEmits<{
 }>()
 
 const { getCategoryName, getCategoryColor, getCategoryIcon } = useCategoryHelpers()
-const { confirmDeleteExpense } = useExpenseActions()
+const { confirmDeleteExpense, deleteExpense } = useExpenseActions()
+
+function handleSwipeDelete(expense: ExpenseWithCategory, details: { reset: () => void }) {
+  details.reset()
+  void deleteExpense(expense, () => emit('refresh'))
+}
 </script>
