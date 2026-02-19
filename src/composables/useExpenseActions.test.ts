@@ -180,4 +180,23 @@ describe('useExpenseActions', () => {
       }
     })
   })
+
+  describe('deleteExpense', () => {
+    it('deletes expense immediately without opening dialog', async () => {
+      const { Dialog } = await import('quasar')
+      const mockCreate = vi.mocked(Dialog.create)
+      const onSuccess = vi.fn()
+      const { deleteExpense } = useExpenseActions()
+
+      await deleteExpense(mockExpense, onSuccess)
+
+      expect(mockCreate).not.toHaveBeenCalled()
+      expect(mockMutateAsync).toHaveBeenCalledWith({
+        expenseId: 'expense-1',
+        planId: 'plan-1',
+        planItemId: null,
+      })
+      expect(onSuccess).toHaveBeenCalledOnce()
+    })
+  })
 })

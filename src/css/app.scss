@@ -136,6 +136,16 @@ body {
   }
 }
 
+// Mobile expense swipe rows: remove red edge artifact and add breathing room on the right.
+.mobile-expense-swipe-item .q-slide-item__right {
+  margin: 1px;
+}
+
+.mobile-expense-swipe-item .q-slide-item__content {
+  box-sizing: border-box;
+  padding-right: 4px;
+}
+
 // --------------------------------------------
 // Buttons (q-btn) - shadcn-vue conventions
 // --------------------------------------------

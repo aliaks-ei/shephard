@@ -5,6 +5,18 @@ import type { ExpenseWithCategory } from 'src/api'
 export function useExpenseActions() {
   const deleteExpenseMutation = useDeleteExpenseMutation()
 
+  async function deleteExpense(
+    expense: ExpenseWithCategory,
+    onSuccess?: () => void,
+  ): Promise<void> {
+    await deleteExpenseMutation.mutateAsync({
+      expenseId: expense.id,
+      planId: expense.plan_id,
+      planItemId: expense.plan_item_id,
+    })
+    onSuccess?.()
+  }
+
   function confirmDeleteExpense(expense: ExpenseWithCategory, onSuccess?: () => void) {
     Dialog.create({
       title: 'Delete Expense?',
@@ -22,17 +34,13 @@ export function useExpenseActions() {
       },
     }).onOk(() => {
       void (async () => {
-        await deleteExpenseMutation.mutateAsync({
-          expenseId: expense.id,
-          planId: expense.plan_id,
-          planItemId: expense.plan_item_id,
-        })
-        onSuccess?.()
+        await deleteExpense(expense, onSuccess)
       })()
     })
   }
 
   return {
     confirmDeleteExpense,
+    deleteExpense,
   }
 }
