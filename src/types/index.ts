@@ -10,5 +10,5 @@ export type {
 } from './ui'
 
 export type ActionResult<T = void> = T extends void
-  ? { success: boolean }
-  : { success: boolean; data?: T }
+  ? { success: boolean; error?: unknown }
+  : { success: boolean; data?: T; error?: unknown }

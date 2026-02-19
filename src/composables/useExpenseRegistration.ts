@@ -1,10 +1,17 @@
 import { ref, computed, type Ref } from 'vue'
-import { useExpensesStore } from 'src/stores/expenses'
-import { usePlansStore } from 'src/stores/plans'
-import { useCategoriesStore } from 'src/stores/categories'
+import {
+  usePlansQuery,
+  usePlanItemsQuery,
+  useUpdatePlanItemCompletionMutation,
+} from 'src/queries/plans'
+import { useCategoriesQuery } from 'src/queries/categories'
+import {
+  useExpenseSummaryQuery,
+  useCreateExpenseMutation,
+  useLastExpenseForPlanQuery,
+} from 'src/queries/expenses'
+import { useUserStore } from 'src/stores/user'
 import { useNotificationStore } from 'src/stores/notification'
-import { getPlanItems, updatePlanItemCompletion } from 'src/api/plans'
-import { getLastExpenseForPlan } from 'src/api/expenses'
 import { getPlanStatus } from 'src/utils/plans'
 import { calculateStillToPay } from 'src/utils/budget-calculations'
 import { convertCurrency } from 'src/api/currency'
@@ -27,21 +34,33 @@ export type ExpenseMode = 'quick-select' | 'custom-entry'
 export type QuickSelectPhase = 'selection' | 'finalize'
 
 export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undefined>) {
-  const expensesStore = useExpensesStore()
-  const plansStore = usePlansStore()
-  const categoriesStore = useCategoriesStore()
+  const userStore = useUserStore()
   const notificationStore = useNotificationStore()
+  const userId = computed(() => userStore.userProfile?.id)
+  const { plans, plansForExpenses } = usePlansQuery(userId)
+  const { categories } = useCategoriesQuery()
+  const createExpenseMutation = useCreateExpenseMutation()
+
+  const activeSummaryPlanId = ref<string | null>(null)
+  const { expenseSummary } = useExpenseSummaryQuery(activeSummaryPlanId)
+  const planItemsQuery = usePlanItemsQuery(activeSummaryPlanId)
+  const lastExpenseQuery = useLastExpenseForPlanQuery(activeSummaryPlanId)
+  const completionMutation = useUpdatePlanItemCompletionMutation()
 
   const isLoading = ref(false)
-  const isLoadingPlanItems = ref(false)
   const didAutoSelectPlan = ref(false)
   const currentMode = ref<ExpenseMode>('custom-entry')
   const quickSelectPhase = ref<QuickSelectPhase>('selection')
 
-  const planItems = ref<PlanItem[]>([])
-  const allPlanItems = ref<PlanItem[]>([]) // Unfiltered items for calculations
+  const allPlanItems = computed(() => planItemsQuery.data.value ?? [])
+  const isLoadingPlanItems = computed(() => planItemsQuery.isPending.value)
+  const planItems = computed(() =>
+    allPlanItems.value.filter(
+      (item) => (item.is_fixed_payment ?? true) && !(item.is_completed ?? false),
+    ),
+  )
   const selectedPlanItems = ref<PlanItem[]>([])
-  const lastExpenseCurrency = ref<string | null>(null)
+  const lastExpenseCurrency = computed(() => lastExpenseQuery.data.value?.original_currency ?? null)
 
   const form = ref<ExpenseRegistrationForm>({
     planId: null,
@@ -54,9 +73,9 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
   })
 
   const mostRecentlyUsedPlan = computed(() => {
-    if (!plansStore.plansForExpenses.length) return null
+    if (!plansForExpenses.value.length) return null
 
-    const sortedPlans = [...plansStore.plansForExpenses].sort((a, b) => {
+    const sortedPlans = [...plansForExpenses.value].sort((a, b) => {
       const dateA = a.updated_at ? new Date(a.updated_at).getTime() : 0
       const dateB = b.updated_at ? new Date(b.updated_at).getTime() : 0
       return dateB - dateA
@@ -66,7 +85,7 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
   })
 
   const planOptions = computed((): PlanOption[] => {
-    return plansStore.plansForExpenses.map((plan) => ({
+    return plansForExpenses.value.map((plan) => ({
       label: plan.name,
       value: plan.id,
       status: getPlanStatus(plan),
@@ -78,13 +97,13 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
 
   const selectedPlan = computed(() => {
     if (!form.value.planId) return null
-    return plansStore.plans.find((p) => p.id === form.value.planId) || null
+    return plans.value.find((p) => p.id === form.value.planId) || null
   })
 
   const planDisplayValue = computed(() => {
     const id = form.value.planId
     if (!id) return ''
-    const plan = plansStore.plans.find((p) => p.id === id)
+    const plan = plans.value.find((p) => p.id === id)
     return plan?.name || ''
   })
 
@@ -101,16 +120,15 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
   const categoryOptions = computed(() => {
     if (!selectedPlan.value) return []
 
-    const summary = expensesStore.expenseSummary
+    const summary = expenseSummary.value
 
-    return categoriesStore.categories
+    return categories.value
       .filter((category) => summary.some((s) => s.category_id === category.id))
       .map((category) => {
         const categoryData = summary.find((s) => s.category_id === category.id)
         const plannedAmount = categoryData?.planned_amount || 0
         const actualAmount = categoryData?.actual_amount || 0
 
-        // Calculate "still to pay" using the shared utility function
         const remainingAmount = calculateStillToPay(category.id, allPlanItems.value, actualAmount)
 
         return {
@@ -176,49 +194,16 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
     return currentMode.value === 'quick-select' && quickSelectPhase.value === 'finalize'
   })
 
-  async function loadPlanItems(planId: string) {
-    isLoadingPlanItems.value = true
-    try {
-      const items = await getPlanItems(planId)
-      // Store all items for budget calculations
-      allPlanItems.value = items
-      // Only show fixed payment items that are not completed for quick-select
-      planItems.value = items.filter(
-        (item) => (item.is_fixed_payment ?? true) && !(item.is_completed ?? false),
-      )
-    } catch {
-      notificationStore.showError('Failed to load plan items')
-      planItems.value = []
-      allPlanItems.value = []
-    } finally {
-      isLoadingPlanItems.value = false
-    }
-  }
-
-  async function loadLastExpenseCurrency(planId: string) {
-    try {
-      const lastExpense = await getLastExpenseForPlan(planId)
-      lastExpenseCurrency.value = lastExpense?.original_currency ?? null
-    } catch {
-      lastExpenseCurrency.value = null
-    }
-  }
-
-  async function onPlanSelected(
+  function onPlanSelected(
     planId: string | null,
     planItemSelectorRef?: { clearSelection: () => void },
   ) {
     form.value.categoryId = null
     selectedPlanItems.value = []
-    planItems.value = []
     quickSelectPhase.value = 'selection'
 
     if (planId) {
-      await Promise.all([
-        expensesStore.loadExpenseSummaryForPlan(planId),
-        loadLastExpenseCurrency(planId),
-        loadPlanItems(planId),
-      ])
+      activeSummaryPlanId.value = planId
       form.value.currency = defaultExpenseCurrency.value
     }
 
@@ -274,7 +259,7 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
     }
     didAutoSelectPlan.value = false
     selectedPlanItems.value = []
-    planItems.value = []
+    activeSummaryPlanId.value = null
     currentMode.value = 'custom-entry'
     quickSelectPhase.value = 'selection'
   }
@@ -292,7 +277,7 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
 
     try {
       const expensePromises = selectedPlanItems.value.map(async (item) => {
-        return expensesStore.addExpense({
+        return createExpenseMutation.mutateAsync({
           plan_id: item.plan_id,
           category_id: item.category_id,
           name: item.name,
@@ -305,7 +290,11 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
       await Promise.all(expensePromises)
 
       const completionPromises = selectedPlanItems.value.map(async (item) => {
-        return updatePlanItemCompletion(item.id, true)
+        return completionMutation.mutateAsync({
+          itemId: item.id,
+          isCompleted: true,
+          planId: item.plan_id,
+        })
       })
 
       await Promise.all(completionPromises)
@@ -348,7 +337,7 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
         originalAmountToStore = originalAmount
       }
 
-      await expensesStore.addExpense({
+      await createExpenseMutation.mutateAsync({
         plan_id: form.value.planId,
         category_id: form.value.categoryId,
         name: form.value.name.trim(),
@@ -360,8 +349,12 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
         plan_item_id: form.value.planItemId || null,
       })
 
-      if (form.value.planItemId) {
-        await updatePlanItemCompletion(form.value.planItemId, true)
+      if (form.value.planItemId && form.value.planId) {
+        await completionMutation.mutateAsync({
+          itemId: form.value.planItemId,
+          isCompleted: true,
+          planId: form.value.planId,
+        })
       }
 
       onSuccess()
@@ -371,26 +364,17 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
     }
   }
 
-  async function initialize(autoSelectRecentPlan: boolean) {
-    await Promise.all([plansStore.loadPlans(), categoriesStore.loadCategories()])
+  function initialize(autoSelectRecentPlan: boolean) {
     resetForm()
 
     if (defaultPlanId?.value) {
       form.value.planId = defaultPlanId.value
-      await Promise.all([
-        expensesStore.loadExpenseSummaryForPlan(defaultPlanId.value),
-        loadLastExpenseCurrency(defaultPlanId.value),
-        loadPlanItems(defaultPlanId.value),
-      ])
+      activeSummaryPlanId.value = defaultPlanId.value
       form.value.currency = defaultExpenseCurrency.value
     } else if (autoSelectRecentPlan && mostRecentlyUsedPlan.value) {
       form.value.planId = mostRecentlyUsedPlan.value.id
       didAutoSelectPlan.value = true
-      await Promise.all([
-        expensesStore.loadExpenseSummaryForPlan(mostRecentlyUsedPlan.value.id),
-        loadLastExpenseCurrency(mostRecentlyUsedPlan.value.id),
-        loadPlanItems(mostRecentlyUsedPlan.value.id),
-      ])
+      activeSummaryPlanId.value = mostRecentlyUsedPlan.value.id
       form.value.currency = defaultExpenseCurrency.value
     }
   }
@@ -398,7 +382,6 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
   function determineInitialMode() {
     if (form.value.planId) {
       setTimeout(() => {
-        // Default to custom-entry, keep quick-select phase ready if user switches
         currentMode.value = 'custom-entry'
         quickSelectPhase.value = 'selection'
       }, 100)
@@ -427,7 +410,6 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
     getSubmitButtonLabel,
     canSubmit,
     showBackButton,
-    loadPlanItems,
     onPlanSelected,
     onItemsSelected,
     onSelectionChanged,

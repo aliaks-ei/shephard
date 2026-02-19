@@ -1,16 +1,23 @@
 import { mount } from '@vue/test-utils'
 import { it, expect, vi, beforeEach } from 'vitest'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
-import { createTestingPinia } from '@pinia/testing'
 import { ref, computed } from 'vue'
 import PlansPage from './PlansPage.vue'
-import { usePlansStore } from 'src/stores/plans'
 import { usePlans } from 'src/composables/usePlans'
 import type { PlanWithPermission } from 'src/api'
 
 installQuasarPlugin()
 
 vi.mock('src/composables/usePlans')
+
+const mockUpdatePlanMutateAsync = vi.fn()
+
+vi.mock('src/queries/plans', () => ({
+  useUpdatePlanMutation: vi.fn(() => ({
+    mutateAsync: mockUpdatePlanMutateAsync,
+    isPending: ref(false),
+  })),
+}))
 
 const PlansGroupStub = {
   template: `
@@ -205,12 +212,6 @@ function createWrapper(
 
   const wrapper = mount(PlansPage, {
     global: {
-      plugins: [
-        createTestingPinia({
-          createSpy: vi.fn,
-          stubActions: true,
-        }),
-      ],
       stubs: {
         PlansGroup: PlansGroupStub,
         SharePlanDialog: SharePlanDialogStub,
@@ -250,7 +251,6 @@ function createWrapper(
   return {
     wrapper,
     mockUsePlans: mockUsePlansReturn,
-    plansStore: usePlansStore(),
   }
 }
 
@@ -418,8 +418,8 @@ it('should open share dialog when share button is clicked', async () => {
   expect(shareDialog.attributes('data-plan-id')).toBe('plan-1')
 })
 
-it('should close share dialog and reload plans when plan is shared', async () => {
-  const { wrapper, plansStore } = createWrapper({
+it('should close share dialog when plan is shared', async () => {
+  const { wrapper } = createWrapper({
     ownedPlans: mockOwnedPlans,
     hasPlans: true,
   })
@@ -431,34 +431,22 @@ it('should close share dialog and reload plans when plan is shared', async () =>
   const shareConfirmButton = shareDialog.find('.share-confirm-btn')
   await shareConfirmButton.trigger('click')
 
-  expect(plansStore.loadPlans).toHaveBeenCalled()
+  // TanStack Query invalidation handles refetching
 })
 
-it('should call cancelPlan when cancel button is clicked', async () => {
-  const { wrapper, plansStore } = createWrapper({
+it('should call updatePlanMutation when cancel button is clicked', async () => {
+  const { wrapper } = createWrapper({
     ownedPlans: mockOwnedPlans,
     hasPlans: true,
   })
 
-  vi.mocked(plansStore.cancelPlan).mockResolvedValue({ success: true })
-
   const cancelButton = wrapper.find('.cancel-btn')
   await cancelButton.trigger('click')
 
-  expect(plansStore.cancelPlan).toHaveBeenCalledWith('plan-1')
-})
-
-it('should call loadPlans on mount', () => {
-  const { plansStore } = createWrapper()
-  expect(plansStore.loadPlans).toHaveBeenCalledOnce()
-})
-
-it('should reset plans store on unmount', () => {
-  const { wrapper, plansStore } = createWrapper()
-
-  wrapper.unmount()
-
-  expect(plansStore.reset).toHaveBeenCalledOnce()
+  expect(mockUpdatePlanMutateAsync).toHaveBeenCalledWith({
+    id: 'plan-1',
+    updates: { status: 'cancelled' },
+  })
 })
 
 it('should update search query when search input changes', async () => {

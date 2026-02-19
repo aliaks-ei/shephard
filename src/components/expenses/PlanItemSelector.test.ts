@@ -1,23 +1,26 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+import { ref } from 'vue'
 import { mount } from '@vue/test-utils'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
-import { createPinia, setActivePinia } from 'pinia'
 import PlanItemSelector from './PlanItemSelector.vue'
-import { useCategoriesStore } from 'src/stores/categories'
 import { createMockPlanItem } from 'test/fixtures/plans'
 import { createMockCategories } from 'test/fixtures/categories'
 
 installQuasarPlugin()
 
+vi.mock('src/queries/categories', () => ({
+  useCategoriesQuery: vi.fn(() => ({
+    categories: ref(createMockCategories()),
+    getCategoryById: vi.fn((id: string) => createMockCategories().find((c) => c.id === id)),
+    isPending: ref(false),
+    categoriesMap: ref(new Map()),
+    sortedCategories: ref([]),
+    categoryCount: ref(0),
+    data: ref(null),
+  })),
+}))
+
 describe('PlanItemSelector', () => {
-  beforeEach(() => {
-    const pinia = createPinia()
-    setActivePinia(pinia)
-
-    const categoriesStore = useCategoriesStore()
-    categoriesStore.categories = createMockCategories()
-  })
-
   const defaultProps = {
     planItems: [
       createMockPlanItem({ id: 'item-1', name: 'Milk', category_id: 'cat-1', amount: 5.99 }),

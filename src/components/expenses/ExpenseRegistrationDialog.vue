@@ -98,7 +98,7 @@
               :amount-rules="amountRules"
               :default-expense-currency="defaultExpenseCurrency"
               :readonly="!!props.defaultPlanId"
-              :loading="plansStore.isLoading"
+              :loading="false"
               :show-auto-select-hint="didAutoSelectPlan"
               :default-category-id="props.defaultCategoryId ?? null"
               @plan-selected="handlePlanSelected"
@@ -122,7 +122,7 @@
               :selected-plan-items="selectedPlanItems"
               :selected-items-total="selectedItemsTotal"
               :readonly="!!props.defaultPlanId"
-              :loading="plansStore.isLoading"
+              :loading="false"
               :show-auto-select-hint="didAutoSelectPlan"
               :is-loading-plan-items="isLoadingPlanItems"
               :selected-category-id="props.defaultCategoryId ?? null"
@@ -175,7 +175,6 @@ import { ref, watch, toRef } from 'vue'
 import QuickSelectPanel from './QuickSelectPanel.vue'
 import CustomEntryPanel from './CustomEntryPanel.vue'
 import { useExpenseRegistration } from 'src/composables/useExpenseRegistration'
-import { usePlansStore } from 'src/stores/plans'
 import type { QForm } from 'quasar'
 
 const props = defineProps<{
@@ -186,11 +185,9 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void
-  (e: 'expense-created'): void
+  'update:modelValue': [value: boolean]
+  'expense-created': []
 }>()
-
-const plansStore = usePlansStore()
 
 const formRef = ref<QForm>()
 const quickSelectPanelRef = ref()
@@ -235,9 +232,9 @@ function closeDialog() {
   resetForm()
 }
 
-async function handlePlanSelected(planId: string | null) {
+function handlePlanSelected(planId: string | null) {
   const planItemSelector = quickSelectPanelRef.value?.planItemSelectorRef
-  await onPlanSelected(planId, planItemSelector)
+  onPlanSelected(planId, planItemSelector)
 }
 
 function handleRemoveItem(itemId: string) {
@@ -275,9 +272,9 @@ async function handleSubmit() {
 
 watch(
   () => props.modelValue,
-  async (newValue) => {
+  (newValue) => {
     if (newValue) {
-      await initialize(props.autoSelectRecentPlan || false)
+      initialize(props.autoSelectRecentPlan || false)
 
       if (props.defaultCategoryId && form.value.planId) {
         const categoryExists = categoryOptions.value.some(

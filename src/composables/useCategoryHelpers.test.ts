@@ -1,20 +1,24 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { createTestingPinia, type TestingPinia } from '@pinia/testing'
-import { setActivePinia } from 'pinia'
+import { describe, expect, it, vi } from 'vitest'
+import { ref } from 'vue'
 import { useCategoryHelpers } from './useCategoryHelpers'
-import { useCategoriesStore } from 'src/stores/categories'
 
-let pinia: TestingPinia
+const mockGetCategoryById = vi.fn()
 
-beforeEach(() => {
-  pinia = createTestingPinia({ createSpy: vi.fn })
-  setActivePinia(pinia)
-})
+vi.mock('src/queries/categories', () => ({
+  useCategoriesQuery: vi.fn(() => ({
+    categories: ref([]),
+    getCategoryById: mockGetCategoryById,
+    isPending: ref(false),
+    categoriesMap: ref(new Map()),
+    sortedCategories: ref([]),
+    categoryCount: ref(0),
+    data: ref(null),
+  })),
+}))
 
 describe('useCategoryHelpers', () => {
   describe('getCategoryName', () => {
     it('returns category name when category exists', () => {
-      const categoriesStore = useCategoriesStore()
       const mockCategory = {
         id: 'cat-1',
         name: 'Food',
@@ -25,18 +29,17 @@ describe('useCategoryHelpers', () => {
         templates: [],
       }
 
-      categoriesStore.getCategoryById = vi.fn(() => mockCategory)
+      mockGetCategoryById.mockReturnValue(mockCategory)
 
       const { getCategoryName } = useCategoryHelpers()
       const result = getCategoryName('cat-1')
 
       expect(result).toBe('Food')
-      expect(categoriesStore.getCategoryById).toHaveBeenCalledWith('cat-1')
+      expect(mockGetCategoryById).toHaveBeenCalledWith('cat-1')
     })
 
     it('returns Unknown when category does not exist', () => {
-      const categoriesStore = useCategoriesStore()
-      categoriesStore.getCategoryById = vi.fn(() => undefined)
+      mockGetCategoryById.mockReturnValue(undefined)
 
       const { getCategoryName } = useCategoryHelpers()
       const result = getCategoryName('non-existent')
@@ -47,7 +50,6 @@ describe('useCategoryHelpers', () => {
 
   describe('getCategoryColor', () => {
     it('returns category color when category exists', () => {
-      const categoriesStore = useCategoriesStore()
       const mockCategory = {
         id: 'cat-1',
         name: 'Food',
@@ -58,7 +60,7 @@ describe('useCategoryHelpers', () => {
         templates: [],
       }
 
-      categoriesStore.getCategoryById = vi.fn(() => mockCategory)
+      mockGetCategoryById.mockReturnValue(mockCategory)
 
       const { getCategoryColor } = useCategoryHelpers()
       const result = getCategoryColor('cat-1')
@@ -67,8 +69,7 @@ describe('useCategoryHelpers', () => {
     })
 
     it('returns default color when category does not exist', () => {
-      const categoriesStore = useCategoriesStore()
-      categoriesStore.getCategoryById = vi.fn(() => undefined)
+      mockGetCategoryById.mockReturnValue(undefined)
 
       const { getCategoryColor } = useCategoryHelpers()
       const result = getCategoryColor('non-existent')
@@ -79,7 +80,6 @@ describe('useCategoryHelpers', () => {
 
   describe('getCategoryIcon', () => {
     it('returns category icon when category exists', () => {
-      const categoriesStore = useCategoriesStore()
       const mockCategory = {
         id: 'cat-1',
         name: 'Food',
@@ -90,7 +90,7 @@ describe('useCategoryHelpers', () => {
         templates: [],
       }
 
-      categoriesStore.getCategoryById = vi.fn(() => mockCategory)
+      mockGetCategoryById.mockReturnValue(mockCategory)
 
       const { getCategoryIcon } = useCategoryHelpers()
       const result = getCategoryIcon('cat-1')
@@ -99,8 +99,7 @@ describe('useCategoryHelpers', () => {
     })
 
     it('returns default icon when category does not exist', () => {
-      const categoriesStore = useCategoriesStore()
-      categoriesStore.getCategoryById = vi.fn(() => undefined)
+      mockGetCategoryById.mockReturnValue(undefined)
 
       const { getCategoryIcon } = useCategoryHelpers()
       const result = getCategoryIcon('non-existent')

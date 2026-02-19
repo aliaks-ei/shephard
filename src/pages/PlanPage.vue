@@ -15,11 +15,11 @@
       :selected-template="selectedTemplate"
       v-model:selectedTemplateOption="selectedTemplateOption"
       :template-options="templateOptions"
-      :templates-loading="templatesStore.isLoading"
+      :templates-loading="isTemplatesLoading"
       :template-error="templateError"
       :template-error-message="templateErrorMessage"
       :category-groups="planCategoryGroups"
-      :categories="categoriesStore.categories"
+      :categories="categories"
       :total-amount="totalAmount"
       :currency="planCurrency"
       :all-expanded="allCategoriesExpanded"
@@ -111,7 +111,7 @@
             v-model:form="form"
             :template-duration="currentPlanTemplateDuration"
             :category-groups="planCategoryGroups"
-            :categories="categoriesStore.categories"
+            :categories="categories"
             :total-amount="totalAmount"
             :currency="planCurrency"
             :all-expanded="allCategoriesExpanded"
@@ -155,7 +155,7 @@
         :confirmation-message="`Are you sure you want to delete this plan?`"
         cancel-label="Keep Plan"
         confirm-label="Delete Plan"
-        :is-deleting="plansStore.isLoading"
+        :is-deleting="deletePlanMutation.isPending.value"
         @confirm="deletePlan"
       />
 
@@ -183,10 +183,10 @@ import PlanItemsTrackingTab from 'src/components/plans/PlanItemsTrackingTab.vue'
 import SharePlanDialog from 'src/components/plans/SharePlanDialog.vue'
 import DeleteDialog from 'src/components/shared/DeleteDialog.vue'
 import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
-import { usePlansStore } from 'src/stores/plans'
-import { useCategoriesStore } from 'src/stores/categories'
-import { useTemplatesStore } from 'src/stores/templates'
-import { useExpensesStore } from 'src/stores/expenses'
+import { useCategoriesQuery } from 'src/queries/categories'
+import { useTemplatesQuery } from 'src/queries/templates'
+import { useDeletePlanMutation } from 'src/queries/plans'
+import { useUserStore } from 'src/stores/user'
 import { usePlan } from 'src/composables/usePlan'
 import { usePlanItems } from 'src/composables/usePlanItems'
 import { useDetailPageState } from 'src/composables/useDetailPageState'
@@ -195,15 +195,16 @@ import { useCategoryRefs } from 'src/composables/useCategoryRefs'
 import { usePlanActions } from 'src/composables/usePlanActions'
 import { validateItemForm } from 'src/composables/useItemFormValidation'
 import { calculateEndDate } from 'src/utils/plans'
-import type { TemplateWithItems } from 'src/api'
+import { getTemplateWithItems, type TemplateWithItems, type PlanWithItems } from 'src/api'
 import type { PlanItemUI } from 'src/types'
 
 const $q = useQuasar()
 const router = useRouter()
-const plansStore = usePlansStore()
-const categoriesStore = useCategoriesStore()
-const templatesStore = useTemplatesStore()
-const expensesStore = useExpensesStore()
+const userStore = useUserStore()
+const userId = computed(() => userStore.userProfile?.id)
+const { categories } = useCategoriesQuery()
+const { templates, isPending: isTemplatesLoading } = useTemplatesQuery(userId)
+const deletePlanMutation = useDeletePlanMutation()
 
 const {
   currentPlan,
@@ -269,7 +270,7 @@ const templateError = ref(false)
 const templateErrorMessage = ref('')
 
 const templateOptions = computed(() => {
-  return templatesStore.templates.map((template) => ({
+  return templates.value.map((template) => ({
     id: template.id,
     name: template.name,
     duration: template.duration,
@@ -281,7 +282,7 @@ const templateOptions = computed(() => {
 
 const currentPlanTemplateDuration = computed(() => {
   if (!currentPlan.value?.template_id) return ''
-  const template = templatesStore.templates.find((t) => t.id === currentPlan.value?.template_id)
+  const template = templates.value.find((t) => t.id === currentPlan.value?.template_id)
   return template?.duration || ''
 })
 
@@ -324,7 +325,7 @@ async function onTemplateSelected(templateId: string | null): Promise<void> {
     return
   }
 
-  const template = await templatesStore.loadTemplateWithItems(templateId)
+  const template = userId.value ? await getTemplateWithItems(templateId, userId.value) : null
 
   if (template) {
     selectedTemplate.value = template
@@ -434,12 +435,9 @@ async function cancelPlan(): Promise<void> {
 async function deletePlan(): Promise<void> {
   if (!currentPlan.value) return
 
-  const result = await plansStore.removePlan(currentPlan.value.id)
-
-  if (result.success) {
-    showDeleteDialog.value = false
-    goBack()
-  }
+  await deletePlanMutation.mutateAsync(currentPlan.value.id)
+  showDeleteDialog.value = false
+  goBack()
 }
 
 function onPlanShared(): void {
@@ -474,51 +472,27 @@ function openExpenseRegistrationFromItem(categoryId?: string, itemId?: string): 
   showExpenseDialog.value = true
 }
 
-async function loadPlanExpenses(planId: string): Promise<void> {
-  await Promise.all([
-    expensesStore.loadExpensesForPlan(planId),
-    expensesStore.loadExpenseSummaryForPlan(planId),
-  ])
-}
-
 async function refreshPlanData(): Promise<void> {
-  if (!isNewPlan.value && currentPlan.value) {
+  if (!isNewPlan.value) {
     const plan = await loadPlan()
     if (plan) {
-      form.value.name = plan.name
-      form.value.startDate = plan.start_date
-      form.value.endDate = plan.end_date
-      loadPlanItems(plan)
-
-      await loadPlanExpenses(currentPlan.value.id)
+      syncFormFromPlan(plan)
     }
   }
+}
+
+function syncFormFromPlan(plan: PlanWithItems): void {
+  form.value.name = plan.name
+  form.value.startDate = plan.start_date
+  form.value.endDate = plan.end_date
+  loadPlanItems(plan)
 }
 
 onMounted(async () => {
   if (!isNewPlan.value) {
-    isPlanLoading.value = true
-  }
-
-  try {
-    await categoriesStore.loadCategories()
-
-    if (isNewPlan.value) {
-      await templatesStore.loadTemplates()
-    } else {
-      const plan = await loadPlan()
-      if (plan) {
-        form.value.name = plan.name
-        form.value.startDate = plan.start_date
-        form.value.endDate = plan.end_date
-        loadPlanItems(plan)
-
-        await loadPlanExpenses(plan.id)
-      }
-    }
-  } finally {
-    if (!isNewPlan.value) {
-      isPlanLoading.value = false
+    const plan = await loadPlan()
+    if (plan) {
+      syncFormFromPlan(plan)
     }
   }
 })

@@ -132,10 +132,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { usePlansStore } from 'src/stores/plans'
-import { useTemplatesStore } from 'src/stores/templates'
+import { usePlansQuery } from 'src/queries/plans'
+import { useTemplatesQuery } from 'src/queries/templates'
+import { useUserStore } from 'src/stores/user'
 import { useSortedRecentItems } from 'src/composables/useSortedRecentItems'
 import DashboardHeader from 'src/components/dashboard/DashboardHeader.vue'
 import QuickActionsGrid from 'src/components/dashboard/QuickActionsGrid.vue'
@@ -150,35 +151,31 @@ import TemplateCard from 'src/components/templates/TemplateCard.vue'
 import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 
 const router = useRouter()
-const plansStore = usePlansStore()
-const templatesStore = useTemplatesStore()
+const userStore = useUserStore()
+const userId = computed(() => userStore.userProfile?.id)
+
+const { activePlans, isPending: isPlansLoading } = usePlansQuery(userId)
+const { templates, isPending: isTemplatesLoading, templatesCount } = useTemplatesQuery(userId)
 
 const showExpenseDialog = ref(false)
-const isLoading = ref(true)
 const maxDisplayedItems = 3
 
-const templatesCount = computed(() => templatesStore.templates.length)
+const isLoading = computed(() => isPlansLoading.value || isTemplatesLoading.value)
 
-const activePlansCount = computed(() => plansStore.activePlans.length)
+const activePlansCount = computed(() => activePlans.value.length)
 
 const primaryPlan = computed(() => {
-  if (plansStore.activePlans.length === 0) return null
-  return [...plansStore.activePlans].sort(
+  if (activePlans.value.length === 0) return null
+  return [...activePlans.value].sort(
     (a, b) =>
       new Date(b.updated_at || b.created_at).getTime() -
       new Date(a.updated_at || a.created_at).getTime(),
   )[0]
 })
 
-const recentActivePlans = useSortedRecentItems(
-  computed(() => plansStore.activePlans),
-  maxDisplayedItems,
-)
+const recentActivePlans = useSortedRecentItems(activePlans, maxDisplayedItems)
 
-const recentTemplates = useSortedRecentItems(
-  computed(() => templatesStore.templates),
-  maxDisplayedItems,
-)
+const recentTemplates = useSortedRecentItems(templates, maxDisplayedItems)
 
 function openExpenseDialog() {
   showExpenseDialog.value = true
@@ -195,10 +192,4 @@ function goToPlan(planId: string) {
 function goToTemplate(templateId: string) {
   router.push({ name: 'template', params: { id: templateId } })
 }
-
-onMounted(async () => {
-  isLoading.value = true
-  await Promise.all([plansStore.loadPlans(), templatesStore.loadTemplates()])
-  isLoading.value = false
-})
 </script>

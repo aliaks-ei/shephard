@@ -43,13 +43,13 @@
       v-if="sharePlanId"
       v-model="isShareDialogOpen"
       :plan-id="sharePlanId"
-      @shared="onPlanShared"
+      @shared="isShareDialogOpen = false"
     />
   </ListPageLayout>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref } from 'vue'
 
 import ListPageLayout from 'src/layouts/ListPageLayout.vue'
 import SearchAndSort from 'src/components/shared/SearchAndSort.vue'
@@ -57,11 +57,9 @@ import ListPageSkeleton from 'src/components/shared/ListPageSkeleton.vue'
 import EmptyState from 'src/components/shared/EmptyState.vue'
 import PlansGroup from 'src/components/plans/PlansGroup.vue'
 import SharePlanDialog from 'src/components/plans/SharePlanDialog.vue'
-import { usePlansStore } from 'src/stores/plans'
 import { usePlans } from 'src/composables/usePlans'
+import { useUpdatePlanMutation } from 'src/queries/plans'
 import type { PlanWithPermission } from 'src/api'
-
-const plansStore = usePlansStore()
 
 const {
   searchQuery,
@@ -77,6 +75,8 @@ const {
   clearSearch,
 } = usePlans()
 
+const updatePlanMutation = useUpdatePlanMutation()
+
 const isShareDialogOpen = ref(false)
 const sharePlanId = ref<string | null>(null)
 
@@ -85,23 +85,14 @@ function handleDeletePlan(plan: PlanWithPermission): void {
 }
 
 async function cancelPlan(plan: PlanWithPermission): Promise<void> {
-  await plansStore.cancelPlan(plan.id)
+  await updatePlanMutation.mutateAsync({
+    id: plan.id,
+    updates: { status: 'cancelled' },
+  })
 }
 
 function openShareDialog(planId: string): void {
   sharePlanId.value = planId
   isShareDialogOpen.value = true
 }
-
-function onPlanShared(): void {
-  plansStore.loadPlans()
-}
-
-onMounted(async () => {
-  await plansStore.loadPlans()
-})
-
-onUnmounted(() => {
-  plansStore.reset()
-})
 </script>

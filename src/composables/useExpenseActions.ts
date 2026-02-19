@@ -1,9 +1,9 @@
 import { Dialog } from 'quasar'
-import { useExpensesStore } from 'src/stores/expenses'
+import { useDeleteExpenseMutation } from 'src/queries/expenses'
 import type { ExpenseWithCategory } from 'src/api'
 
 export function useExpenseActions() {
-  const expensesStore = useExpensesStore()
+  const deleteExpenseMutation = useDeleteExpenseMutation()
 
   function confirmDeleteExpense(expense: ExpenseWithCategory, onSuccess?: () => void) {
     Dialog.create({
@@ -22,7 +22,11 @@ export function useExpenseActions() {
       },
     }).onOk(() => {
       void (async () => {
-        await expensesStore.removeExpense(expense.id)
+        await deleteExpenseMutation.mutateAsync({
+          expenseId: expense.id,
+          planId: expense.plan_id,
+          planItemId: expense.plan_item_id,
+        })
         onSuccess?.()
       })()
     })

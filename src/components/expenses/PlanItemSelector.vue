@@ -187,7 +187,7 @@
 import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
-import { useCategoriesStore } from 'src/stores/categories'
+import { useCategoriesQuery } from 'src/queries/categories'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import type { PlanItem } from 'src/api/plans'
 
@@ -213,7 +213,7 @@ const emit = defineEmits<{
 }>()
 
 const $q = useQuasar()
-const categoriesStore = useCategoriesStore()
+const { getCategoryById } = useCategoriesQuery()
 
 const selectedItemIds = ref<Set<string>>(new Set())
 
@@ -222,7 +222,7 @@ const categoryGroups = computed((): CategoryGroup[] => {
 
   for (const item of props.planItems) {
     if (!groups.has(item.category_id)) {
-      const category = categoriesStore.getCategoryById(item.category_id)
+      const category = getCategoryById(item.category_id)
       if (!category) continue
 
       groups.set(item.category_id, {

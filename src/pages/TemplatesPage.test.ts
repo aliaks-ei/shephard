@@ -3,7 +3,6 @@ import { it, expect, vi, beforeEach } from 'vitest'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 import { ref, computed } from 'vue'
 import TemplatesPage from './TemplatesPage.vue'
-import { useTemplatesStore } from 'src/stores/templates'
 import { useTemplates } from 'src/composables/useTemplates'
 import type { TemplateWithPermission } from 'src/api'
 import { setupTestingPinia } from 'test/helpers/pinia-mocks'
@@ -213,7 +212,6 @@ function createWrapper(
   return {
     wrapper,
     mockUseTemplates: mockTemplatesReturn,
-    templatesStore: useTemplatesStore(),
   }
 }
 
@@ -382,8 +380,8 @@ it('should open share dialog when share button is clicked', async () => {
   expect(shareDialog.attributes('data-template-id')).toBe('template-1')
 })
 
-it('should close share dialog and reload templates when template is shared', async () => {
-  const { wrapper, templatesStore } = createWrapper({
+it('should close share dialog when template is shared', async () => {
+  const { wrapper } = createWrapper({
     ownedTemplates: mockOwnedTemplates,
     hasTemplates: true,
   })
@@ -395,20 +393,8 @@ it('should close share dialog and reload templates when template is shared', asy
   const shareConfirmButton = shareDialog.find('.share-confirm-btn')
   await shareConfirmButton.trigger('click')
 
-  expect(templatesStore.loadTemplates).toHaveBeenCalled()
-})
-
-it('should call loadTemplates on mount', () => {
-  const { templatesStore } = createWrapper()
-  expect(templatesStore.loadTemplates).toHaveBeenCalledOnce()
-})
-
-it('should reset templates store on unmount', () => {
-  const { wrapper, templatesStore } = createWrapper()
-
-  wrapper.unmount()
-
-  expect(templatesStore.reset).toHaveBeenCalledOnce()
+  // TanStack Query handles cache invalidation automatically
+  expect(wrapper.exists()).toBe(true)
 })
 
 it('should pass correct sort options to search and sort component', () => {

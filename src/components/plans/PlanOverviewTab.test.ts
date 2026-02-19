@@ -20,6 +20,18 @@ vi.mock('src/composables/usePlanOverview', () => ({
   })),
 }))
 
+vi.mock('src/queries/expenses', () => ({
+  useExpensesByPlanQuery: vi.fn(() => ({
+    expenses: ref([]),
+    totalExpensesAmount: ref(0),
+    sortedExpenses: ref([]),
+    expensesByCategory: ref({}),
+    getExpensesForPlanItem: vi.fn(() => []),
+    isPending: ref(false),
+    data: ref(null),
+  })),
+}))
+
 type PlanOverviewTabProps = ComponentProps<typeof PlanOverviewTab>
 
 const mockPlan: PlanWithItems = {

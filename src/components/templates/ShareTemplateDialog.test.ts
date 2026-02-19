@@ -4,7 +4,31 @@ import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-v
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { ComponentProps } from 'vue-component-type-helpers'
 
+import { ref } from 'vue'
 import ShareTemplateDialog from './ShareTemplateDialog.vue'
+
+vi.mock('src/queries/sharing', () => ({
+  useSharedUsersQuery: vi.fn(() => ({
+    data: ref([]),
+    isPending: ref(false),
+  })),
+  useShareEntityMutation: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: ref(false),
+  })),
+  useUnshareEntityMutation: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: ref(false),
+  })),
+  useUpdatePermissionMutation: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: ref(false),
+  })),
+  useSearchUsersQuery: vi.fn(() => ({
+    data: ref([]),
+    isPending: ref(false),
+  })),
+}))
 
 vi.mock('@vueuse/core', async (importOriginal) => {
   const actual = await importOriginal()

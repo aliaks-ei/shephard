@@ -83,7 +83,7 @@
     <!-- All Expenses Modal -->
     <AllExpensesDialog
       v-model="showAllExpensesModal"
-      :expenses="expensesStore.sortedExpenses"
+      :expenses="sortedExpenses"
       :currency="planCurrency"
       :can-edit="isEditMode"
       :plan-id="planId"
@@ -100,7 +100,7 @@ import RecentExpensesList from './RecentExpensesList.vue'
 import CategoryExpensesDialog from './CategoryExpensesDialog.vue'
 import AllExpensesDialog from './AllExpensesDialog.vue'
 import { usePlanOverview } from 'src/composables/usePlanOverview'
-import { useExpensesStore } from 'src/stores/expenses'
+import { useExpensesByPlanQuery } from 'src/queries/expenses'
 import type { PlanWithItems } from 'src/api'
 import type { CurrencyCode } from 'src/utils/currency'
 import type { CategoryBudget } from 'src/types'
@@ -112,12 +112,13 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'refresh'): void
-  (e: 'open-expense-dialog', categoryId?: string): void
-  (e: 'view-items'): void
+  refresh: []
+  'open-expense-dialog': [categoryId?: string]
+  'view-items': []
 }>()
 
-const expensesStore = useExpensesStore()
+const planIdRef = computed(() => props.plan?.id ?? null)
+const { sortedExpenses } = useExpensesByPlanQuery(planIdRef)
 
 const showCategoryModal = ref(false)
 const showAllExpensesModal = ref(false)
@@ -137,9 +138,7 @@ const { categoryBudgets, recentExpenses, totalBudget, totalSpent, remainingBudge
 
 const categoryExpenses = computed(() => {
   if (!selectedCategory.value) return []
-  return expensesStore.sortedExpenses.filter(
-    (e) => e.category_id === selectedCategory.value?.categoryId,
-  )
+  return sortedExpenses.value.filter((e) => e.category_id === selectedCategory.value?.categoryId)
 })
 
 const categoryPlanItems = computed(() => {

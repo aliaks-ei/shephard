@@ -1,28 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { createTestingPinia, type TestingPinia } from '@pinia/testing'
-import { setActivePinia } from 'pinia'
 import { usePlanItems } from './usePlanItems'
 import type { PlanWithItems } from 'src/api'
-import { useCategoriesStore } from 'src/stores/categories'
 
-let pinia: TestingPinia
+const { mockGetCategoryById } = vi.hoisted(() => ({
+  mockGetCategoryById: vi.fn(),
+}))
+
+vi.mock('src/queries/categories', () => ({
+  useCategoriesQuery: () => ({
+    categories: { value: [] },
+    getCategoryById: mockGetCategoryById,
+  }),
+}))
 
 beforeEach(() => {
-  pinia = createTestingPinia({ createSpy: vi.fn })
-  setActivePinia(pinia)
-  const categoriesStore = useCategoriesStore()
-  categoriesStore.categories = [
-    {
-      id: 'food',
-      name: 'Food',
-      color: '#f00',
-      created_at: '',
-      updated_at: '',
-      icon: 'eva-pricetags-outline',
-      templates: [],
-    },
-  ]
-  categoriesStore.getCategoryById = vi.fn().mockImplementation((categoryId: string) =>
+  mockGetCategoryById.mockImplementation((categoryId: string) =>
     categoryId === 'food'
       ? {
           id: 'food',
@@ -31,6 +23,7 @@ beforeEach(() => {
           created_at: '',
           updated_at: '',
           icon: 'eva-pricetags-outline',
+          templates: [],
         }
       : undefined,
   )

@@ -1,18 +1,29 @@
 import { nextTick } from 'vue'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useTemplateItems } from './useTemplateItems'
 import type { TemplateWithItems } from 'src/api'
 import type { TemplateItemUI } from 'src/types'
-import { setupTestingPinia, setupMockCategoriesStore } from 'test/helpers/pinia-mocks'
+import { setupTestingPinia } from 'test/helpers/pinia-mocks'
 import { createMockCategories, createMockTemplateWithItems } from 'test/fixtures'
+
+const { mockGetCategoryById } = vi.hoisted(() => ({
+  mockGetCategoryById: vi.fn(),
+}))
+
+vi.mock('src/queries/categories', () => ({
+  useCategoriesQuery: () => ({
+    categories: { value: [] },
+    getCategoryById: mockGetCategoryById,
+  }),
+}))
 
 describe('useTemplateItems', () => {
   const mockCategories = createMockCategories(3)
 
   beforeEach(() => {
     setupTestingPinia()
-    setupMockCategoriesStore(mockCategories)
+    mockGetCategoryById.mockImplementation((id: string) => mockCategories.find((c) => c.id === id))
   })
 
   it('should initialize with empty state', () => {

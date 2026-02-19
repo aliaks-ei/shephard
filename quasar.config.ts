@@ -11,7 +11,7 @@ export default defineConfig((ctx) => {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
-    boot: [...(ctx.dev ? ['mocks'] : []), 'auth', 'notifications'],
+    boot: [...(ctx.dev ? ['mocks'] : []), 'vue-query', 'auth', 'notifications'],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#css
     css: ['app.scss'],
@@ -77,6 +77,7 @@ export default defineConfig((ctx) => {
                 'vendor-quasar': ['quasar'],
                 'vendor-supabase': ['@supabase/supabase-js'],
                 'vendor-utils': ['@vueuse/core'],
+                'vendor-query': ['@tanstack/vue-query'],
               },
               // Optimize chunk file names
               chunkFileNames: ctx.prod ? 'js/[name]-[hash].js' : '[name].js',
@@ -113,6 +114,7 @@ export default defineConfig((ctx) => {
             'quasar',
             '@supabase/supabase-js',
             '@vueuse/core',
+            '@tanstack/vue-query',
           ],
           exclude: [
             // Exclude test utilities from production builds

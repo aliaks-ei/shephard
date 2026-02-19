@@ -27,23 +27,32 @@ npm run build               # Production PWA build
 
 ## Architecture
 
-### Three-Layer Pattern
+### Data Flow
 
 1. **API Layer** (`src/api/`): Pure data fetchers that throw errors and return data directly. No error handling here.
-2. **Store Layer** (`src/stores/`): Pinia stores using setup-style pattern. Handle errors with `useError` composable, manage state, coordinate business logic.
-3. **Component Layer**: UI rendering only. Delegate all data operations to stores. No error handling in components.
+2. **Query Layer** (`src/queries/`): TanStack Query (vue-query) hooks for server state. Handles caching, refetching, and mutations. Mutations use `toActionResult` wrapper and `createMutationErrorHandler` for error handling. Query key factories live in `src/queries/query-keys.ts`.
+3. **Store Layer** (`src/stores/`): Pinia stores for client-side state only (auth, user, notification, preferences). Not used for server data — that goes through the query layer.
+4. **Component Layer**: UI rendering only. Uses query hooks or composables for data. No error handling in components.
 
 ### Error Handling
 
 - API functions throw errors (never return `{data, error}` objects)
-- Stores catch errors using `useError().handleError()` with predefined keys from `src/config/error-messages.ts`
+- Mutations handle errors via `createMutationErrorHandler` from `src/queries/mutation-utils.ts` with error keys from `src/config/error-messages.ts`
+- Client-side stores catch errors using `useError().handleError()` for non-query operations
 - Components do not implement error handling logic
-- After `handleError()` in catch blocks, don't use return statements
+
+### Query Layer (`src/queries/`)
+
+- Use `MaybeRefOrGetter<T>` with `toValue()` for reactive query hook parameters
+- Use targeted invalidation (invalidate specific queries) over broad invalidation (`queryKeys.*.all`)
+- Wrap mutations with `toActionResult` to return `{ success, error? }` instead of throwing
+- Query key factories in `query-keys.ts` follow the pattern: `queryKeys.entity.list(userId)`, `queryKeys.entity.detail(id, userId)`
 
 ### Composables (`src/composables/`)
 
 - Called only in `<script setup>` or from other composables
-- Let errors propagate to calling stores rather than handling internally
+- Use query hooks directly for server data — don't go through stores
+- Extract shared logic into composables (e.g., `useItemCompletion` for duplicated toggle logic)
 - Prefer VueUse utilities (`@vueuse/core`) over custom implementations
 
 ## Code Standards
@@ -85,6 +94,8 @@ npm run build               # Production PWA build
 - Co-locate test files with source (`.test.ts` extension)
 - Use `installQuasarPlugin()` for component tests
 - Use `createTestingPinia({ createSpy: vi.fn })` for store testing
+- Mock query hooks (`src/queries/*`) with `vi.mock()` returning objects with `data`, `isPending`, `mutateAsync` refs/fns
+- For components using query hooks, mock the query module rather than providing a real `QueryClient`
 - For Vue components, do not use a root `describe` block
 - Check `__mocks__` folder before using `vi.mock()`
 

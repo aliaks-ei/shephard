@@ -13,7 +13,7 @@
       ref="editViewRef"
       v-model:form="form"
       :category-groups="categoryGroups"
-      :categories="categoriesStore.categories"
+      :categories="categories"
       :total-amount="totalAmount"
       :currency="templateCurrency"
       :all-expanded="allCategoriesExpanded"
@@ -35,7 +35,7 @@
       v-else
       :form="form"
       :category-groups="categoryGroups"
-      :categories="categoriesStore.categories"
+      :categories="categories"
       :total-amount="totalAmount"
       :currency="templateCurrency"
       :all-expanded="allCategoriesExpanded"
@@ -47,7 +47,7 @@
       <CategorySelectionDialog
         v-model="showCategoryDialog"
         :used-category-ids="getUsedCategoryIds()"
-        :categories="categoriesStore.categories"
+        :categories="categories"
         @category-selected="onCategorySelected"
       />
 
@@ -66,7 +66,7 @@
         :confirmation-message="`Are you sure you want to delete this template?`"
         cancel-label="Keep Template"
         confirm-label="Delete Template"
-        :is-deleting="templatesStore.isLoading"
+        :is-deleting="deleteTemplateMutation.isPending.value"
         @confirm="deleteTemplate"
       />
     </template>
@@ -84,8 +84,8 @@ import TemplateReadOnlyView from 'src/components/templates/TemplateReadOnlyView.
 import CategorySelectionDialog from 'src/components/categories/CategorySelectionDialog.vue'
 import ShareTemplateDialog from 'src/components/templates/ShareTemplateDialog.vue'
 import DeleteDialog from 'src/components/shared/DeleteDialog.vue'
-import { useTemplatesStore } from 'src/stores/templates'
-import { useCategoriesStore } from 'src/stores/categories'
+import { useCategoriesQuery } from 'src/queries/categories'
+import { useDeleteTemplateMutation } from 'src/queries/templates'
 import { useTemplateItems } from 'src/composables/useTemplateItems'
 import { useTemplate } from 'src/composables/useTemplate'
 import { useDetailPageState } from 'src/composables/useDetailPageState'
@@ -95,8 +95,8 @@ import { validateItemForm } from 'src/composables/useItemFormValidation'
 import type { Category, CurrencyCode } from 'src/api'
 
 const router = useRouter()
-const templatesStore = useTemplatesStore()
-const categoriesStore = useCategoriesStore()
+const { categories } = useCategoriesQuery()
+const deleteTemplateMutation = useDeleteTemplateMutation()
 
 const {
   isTemplateLoading,
@@ -182,7 +182,7 @@ const actionBarActions = computed<ActionBarAction[]>(() => [
     label: isNewTemplate.value ? 'Create' : 'Save',
     color: isNewTemplate.value ? 'primary' : 'positive',
     priority: 'primary',
-    loading: templatesStore.isLoading,
+    loading: deleteTemplateMutation.isPending.value,
     handler: saveTemplate,
   },
   {
@@ -306,27 +306,16 @@ async function loadCurrentTemplate(): Promise<void> {
 async function deleteTemplate(): Promise<void> {
   if (!routeTemplateId.value) return
 
-  const result = await templatesStore.removeTemplate(routeTemplateId.value)
-
-  if (result.success) {
-    showDeleteDialog.value = false
-    goBack()
-  }
+  await deleteTemplateMutation.mutateAsync(routeTemplateId.value)
+  showDeleteDialog.value = false
+  goBack()
 }
 
 function onTemplateShared(): void {
-  templatesStore.loadTemplates()
   closeDialog('share')
 }
 
 onMounted(async () => {
-  isTemplateLoading.value = true
-
-  try {
-    await categoriesStore.loadCategories()
-    await loadCurrentTemplate()
-  } finally {
-    isTemplateLoading.value = false
-  }
+  await loadCurrentTemplate()
 })
 </script>

@@ -1,6 +1,6 @@
 {
   "name": "shephard",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Smart expenses wallet",
   "productName": "Shephard",
   "author": "Aliaksei Mazheika <aleksmozheiko94@gmail.com>",
@@ -29,6 +29,8 @@
   "dependencies": {
     "@quasar/extras": "^1.16.4",
     "@supabase/supabase-js": "^2.49.1",
+    "@tanstack/vue-query": "^5.92.9",
+    "@tanstack/vue-query-devtools": "^6.1.5",
     "@vueuse/core": "^13.2.0",
     "heic2any": "^0.0.4",
     "pinia": "^3.0.1",

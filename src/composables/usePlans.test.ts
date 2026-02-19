@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { ref } from 'vue'
 import { usePlans } from './usePlans'
-import { setupTestingPinia } from 'test/helpers/pinia-mocks'
 
 // Router mock for navigation
 let pushMock: ReturnType<typeof vi.fn>
@@ -16,35 +16,46 @@ vi.mock('quasar', () => ({
   Quasar: {},
 }))
 
-vi.mock('src/stores/plans', () => {
-  const store = {
-    plans: [
-      {
-        id: 'plan-1',
-        name: 'Grocery Budget',
-        owner_id: 'user-1',
-        total: 100,
-        start_date: '2024-01-01',
-        created_at: '2024-01-01T00:00:00Z',
-      },
-      {
-        id: 'plan-2',
-        name: 'Business Travel',
-        owner_id: 'user-2',
-        total: 200,
-        start_date: '2024-01-02',
-        created_at: '2024-01-02T00:00:00Z',
-      },
-    ],
-    userId: 'user-1',
-    isLoading: false,
-    removePlan: vi.fn(),
-  }
-  return { usePlansStore: () => store }
-})
+const mockPlans = ref([
+  {
+    id: 'plan-1',
+    name: 'Grocery Budget',
+    owner_id: 'user-1',
+    total: 100,
+    start_date: '2024-01-01',
+    created_at: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 'plan-2',
+    name: 'Business Travel',
+    owner_id: 'user-2',
+    total: 200,
+    start_date: '2024-01-02',
+    created_at: '2024-01-02T00:00:00Z',
+  },
+])
+
+vi.mock('src/queries/plans', () => ({
+  usePlansQuery: vi.fn(() => ({
+    plans: mockPlans,
+    isPending: ref(false),
+    data: ref(null),
+  })),
+  useDeletePlanMutation: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: ref(false),
+  })),
+}))
+
+vi.mock('src/stores/user', () => ({
+  useUserStore: vi.fn(() => ({
+    userProfile: { id: 'user-1' },
+    preferences: { currency: 'USD', theme: 'light' },
+  })),
+}))
 
 beforeEach(() => {
-  setupTestingPinia()
+  vi.clearAllMocks()
 })
 
 describe('list page wiring for plans', () => {

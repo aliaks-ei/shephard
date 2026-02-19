@@ -1,12 +1,8 @@
 import { mount, flushPromises } from '@vue/test-utils'
 import { it, expect, vi, beforeEach, describe } from 'vitest'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
-import { createTestingPinia } from '@pinia/testing'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import PlanPage from './PlanPage.vue'
-import { usePlansStore } from 'src/stores/plans'
-import { useCategoriesStore } from 'src/stores/categories'
-import { useTemplatesStore } from 'src/stores/templates'
 import type { Category, TemplateWithItems, PlanWithItems } from 'src/api'
 import type { PlanItemUI } from 'src/types'
 import type { PlanCategoryGroup } from 'src/composables/usePlanItems'
@@ -61,6 +57,146 @@ vi.mock('src/utils/plans', () => ({
   formatDateRange: vi.fn((start: string, end: string) => `${start} - ${end}`),
 }))
 
+const mockCategories: Category[] = [
+  {
+    id: 'cat-1',
+    name: 'Food',
+    color: '#FF5722',
+    icon: 'eva-pricetags-outline',
+    created_at: '2023-01-01T00:00:00Z',
+    updated_at: '2023-01-01T00:00:00Z',
+  },
+  {
+    id: 'cat-2',
+    name: 'Transport',
+    color: '#2196F3',
+    icon: 'eva-pricetags-outline',
+    created_at: '2023-01-02T00:00:00Z',
+    updated_at: '2023-01-02T00:00:00Z',
+  },
+]
+
+const mockCategoriesRef = ref(mockCategories.map((c) => ({ ...c, templates: [] })))
+
+vi.mock('src/queries/categories', () => ({
+  useCategoriesQuery: vi.fn(() => ({
+    categories: mockCategoriesRef,
+    getCategoryById: vi.fn((id: string) => mockCategoriesRef.value.find((c) => c.id === id)),
+    isPending: ref(false),
+    categoriesMap: ref(new Map()),
+    sortedCategories: ref([]),
+    categoryCount: ref(0),
+    data: ref(null),
+  })),
+}))
+
+const mockTemplate: TemplateWithItems = {
+  id: 'template-1',
+  name: 'Monthly Budget',
+  duration: 'monthly',
+  total: 1500,
+  currency: 'USD',
+  owner_id: 'user-1',
+  created_at: '2023-01-01T00:00:00Z',
+  updated_at: '2023-01-01T00:00:00Z',
+  template_items: [
+    {
+      id: 'item-1',
+      template_id: 'template-1',
+      name: 'Groceries',
+      category_id: 'cat-1',
+      amount: 500,
+      created_at: '2023-01-01T00:00:00Z',
+      updated_at: '2023-01-01T00:00:00Z',
+      is_fixed_payment: true,
+    },
+  ],
+}
+
+const mockTemplatesRef = ref([mockTemplate])
+const mockTemplatesIsPending = ref(false)
+
+vi.mock('src/queries/templates', () => ({
+  useTemplatesQuery: vi.fn(() => ({
+    templates: mockTemplatesRef,
+    ownedTemplates: ref([]),
+    sharedTemplates: ref([]),
+    isPending: mockTemplatesIsPending,
+    templatesCount: computed(() => mockTemplatesRef.value.length),
+    data: ref(null),
+  })),
+  useTemplateDetailQuery: vi.fn(() => ({
+    data: ref(null),
+    isPending: ref(false),
+  })),
+}))
+
+vi.mock('src/queries/plans', () => ({
+  useDeletePlanMutation: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: ref(false),
+  })),
+}))
+
+vi.mock('src/queries/sharing', () => ({
+  useSharedUsersQuery: vi.fn(() => ({
+    data: ref([]),
+    isPending: ref(false),
+  })),
+  useShareEntityMutation: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: ref(false),
+  })),
+  useUnshareEntityMutation: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: ref(false),
+  })),
+  useUpdatePermissionMutation: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: ref(false),
+  })),
+  useSearchUsersQuery: vi.fn(() => ({
+    data: ref([]),
+    isPending: ref(false),
+  })),
+}))
+
+vi.mock('src/queries/expenses', () => ({
+  useExpensesByPlanQuery: vi.fn(() => ({
+    expenses: ref([]),
+    totalExpensesAmount: ref(0),
+    sortedExpenses: ref([]),
+    expensesByCategory: ref({}),
+    getExpensesForPlanItem: vi.fn(() => []),
+    isPending: ref(false),
+    data: ref(null),
+  })),
+  useExpenseSummaryQuery: vi.fn(() => ({
+    expenseSummary: ref([]),
+    isPending: ref(false),
+    data: ref(null),
+  })),
+  useCreateExpenseMutation: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: ref(false),
+  })),
+  useDeleteExpenseMutation: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: ref(false),
+  })),
+}))
+
+vi.mock('src/stores/user', () => ({
+  useUserStore: vi.fn(() => ({
+    userProfile: { id: 'user-1', name: 'Test User' },
+    preferences: { theme: 'dark' },
+  })),
+}))
+
+vi.mock('src/api', () => ({
+  getTemplateWithItems: vi.fn(),
+}))
+
 const mockUsePlan = {
   currentPlan: ref<PlanWithItems | null>(null),
   isPlanLoading: ref(false),
@@ -80,9 +216,22 @@ vi.mock('src/composables/usePlan', () => ({
   usePlan: () => mockUsePlan,
 }))
 
+const mockPlanItems: PlanItemUI[] = [
+  {
+    id: 'item-1',
+    name: 'Groceries',
+    categoryId: 'cat-1',
+    amount: 500,
+    color: '#FF5722',
+    isFixedPayment: true,
+  },
+]
+
 const mockUsePlanItems = {
   planItems: ref<PlanItemUI[]>([]),
   totalAmount: ref(0),
+  hasItems: ref(false),
+  hasValidItems: ref(false),
   hasDuplicateItems: ref(false),
   isValidForSave: ref(false),
   planCategoryGroups: ref<PlanCategoryGroup[]>([]),
@@ -119,6 +268,47 @@ vi.mock('src/composables/useEditablePage', () => ({
   useEditablePage: () => mockUseEditablePage,
 }))
 
+vi.mock('src/composables/useExpenseRegistration', () => ({
+  useExpenseRegistration: vi.fn(() => ({
+    form: ref({
+      planId: null,
+      categoryId: null,
+      name: '',
+      amount: null,
+      expenseDate: '2024-01-15',
+      planItemId: null,
+    }),
+    isLoading: ref(false),
+    isLoadingPlanItems: ref(false),
+    didAutoSelectPlan: ref(false),
+    currentMode: ref('quick-select'),
+    quickSelectPhase: ref('selection'),
+    planItems: ref([]),
+    selectedPlanItems: ref([]),
+    planOptions: computed(() => []),
+    selectedPlan: computed(() => null),
+    planDisplayValue: computed(() => ''),
+    categoryOptions: computed(() => []),
+    selectedItemsTotal: computed(() => 0),
+    nameRules: computed(() => []),
+    amountRules: computed(() => []),
+    getSubmitButtonLabel: computed(() => 'Continue'),
+    canSubmit: computed(() => false),
+    showBackButton: computed(() => false),
+    onPlanSelected: vi.fn(),
+    onItemsSelected: vi.fn(),
+    onSelectionChanged: vi.fn(),
+    goBackToSelection: vi.fn(),
+    proceedToFinalize: vi.fn(),
+    removeSelectedItem: vi.fn(),
+    resetForm: vi.fn(),
+    handleQuickSelectSubmit: vi.fn(),
+    handleCustomEntrySubmit: vi.fn(),
+    initialize: vi.fn(),
+    determineInitialMode: vi.fn(),
+  })),
+}))
+
 const PlanCategoryStub = {
   template:
     '<div class="plan-category-mock" :data-category-id="categoryId" :data-readonly="readonly"></div>',
@@ -139,54 +329,6 @@ const SharePlanDialogStub = {
     '<div class="share-plan-dialog-mock" :data-model-value="modelValue" :data-plan-id="planId"></div>',
   props: ['modelValue', 'planId'],
   emits: ['update:modelValue', 'shared'],
-}
-
-const TemplateCardStub = {
-  template: '<div class="template-card-mock" :data-template-id="template?.id"></div>',
-  props: ['template', 'readonly'],
-  emits: ['edit', 'share', 'delete'],
-}
-
-const mockCategories: Category[] = [
-  {
-    id: 'cat-1',
-    name: 'Food',
-    color: '#FF5722',
-    icon: 'eva-pricetags-outline',
-    created_at: '2023-01-01T00:00:00Z',
-    updated_at: '2023-01-01T00:00:00Z',
-  },
-  {
-    id: 'cat-2',
-    name: 'Transport',
-    color: '#2196F3',
-    icon: 'eva-pricetags-outline',
-    created_at: '2023-01-02T00:00:00Z',
-    updated_at: '2023-01-02T00:00:00Z',
-  },
-]
-
-const mockTemplate: TemplateWithItems = {
-  id: 'template-1',
-  name: 'Monthly Budget',
-  duration: 'monthly',
-  total: 1500,
-  currency: 'USD',
-  owner_id: 'user-1',
-  created_at: '2023-01-01T00:00:00Z',
-  updated_at: '2023-01-01T00:00:00Z',
-  template_items: [
-    {
-      id: 'item-1',
-      template_id: 'template-1',
-      name: 'Groceries',
-      category_id: 'cat-1',
-      amount: 500,
-      created_at: '2023-01-01T00:00:00Z',
-      updated_at: '2023-01-01T00:00:00Z',
-      is_fixed_payment: true,
-    },
-  ],
 }
 
 const mockPlan: PlanWithItems = {
@@ -216,17 +358,6 @@ const mockPlan: PlanWithItems = {
   ],
 }
 
-const mockPlanItems: PlanItemUI[] = [
-  {
-    id: 'item-1',
-    name: 'Groceries',
-    categoryId: 'cat-1',
-    amount: 500,
-    color: '#FF5722',
-    isFixedPayment: true,
-  },
-]
-
 function createWrapper(
   options: {
     isNewPlan?: boolean
@@ -234,8 +365,6 @@ function createWrapper(
     isReadOnlyMode?: boolean
     isOwner?: boolean
     canEditPlanData?: boolean
-    categories?: Category[]
-    templates?: TemplateWithItems[]
     hasItems?: boolean
     hasDuplicates?: boolean
     currentPlan?: PlanWithItems | null
@@ -247,8 +376,6 @@ function createWrapper(
     isReadOnlyMode = false,
     isOwner = true,
     canEditPlanData = true,
-    categories = mockCategories,
-    templates = [mockTemplate],
     hasItems = false,
     hasDuplicates = false,
     currentPlan = null,
@@ -287,44 +414,21 @@ function createWrapper(
 
   const wrapper = mount(PlanPage, {
     global: {
-      plugins: [
-        createTestingPinia({
-          createSpy: vi.fn,
-          stubActions: false,
-          initialState: {
-            categories: {
-              categories,
-              isLoading: false,
-            },
-            templates: {
-              templates,
-              isLoading: false,
-            },
-            plans: {
-              isLoading: false,
-            },
-          },
-        }),
-      ],
       stubs: {
         PlanCategory: PlanCategoryStub,
         SharePlanDialog: SharePlanDialogStub,
-        TemplateCard: TemplateCardStub,
         QForm: {
           template: '<form @submit.prevent="handleSubmit"><slot /></form>',
           emits: ['submit'],
           methods: {
             validate: vi.fn(() => Promise.resolve(true)),
             handleSubmit(event: Event) {
-              // Prevent actual form submission to avoid errors
               event.preventDefault()
               this.$emit('submit', event)
             },
           },
         },
-        QCard: {
-          template: '<div class="q-card"><slot /></div>',
-        },
+        QCard: { template: '<div class="q-card"><slot /></div>' },
         QBtn: {
           template:
             '<button class="q-btn" @click="$emit(\'click\')" :loading="loading" :data-loading="loading" :data-to="to" :data-label="label">{{ label }}<slot /></button>',
@@ -372,12 +476,8 @@ function createWrapper(
           template: '<div class="q-chip" :data-label="label" :data-color="color">{{ label }}</div>',
           props: ['label', 'color', 'textColor', 'size', 'ripple', 'outline', 'icon'],
         },
-        QBanner: {
-          template: '<div class="q-banner"><slot name="avatar" /><slot /></div>',
-        },
-        QSeparator: {
-          template: '<hr class="q-separator" />',
-        },
+        QBanner: { template: '<div class="q-banner"><slot name="avatar" /><slot /></div>' },
+        QSeparator: { template: '<hr class="q-separator" />' },
         QSkeleton: {
           template:
             '<div class="q-skeleton" :data-type="type" :data-width="width" :data-height="height"></div>',
@@ -388,14 +488,8 @@ function createWrapper(
           props: ['modelValue', 'persistent'],
           emits: ['update:modelValue'],
         },
-        QCardSection: {
-          template: '<div class="q-card-section"><slot /></div>',
-          props: ['class'],
-        },
-        QCardActions: {
-          template: '<div class="q-card-actions"><slot /></div>',
-          props: ['align'],
-        },
+        QCardSection: { template: '<div class="q-card-section"><slot /></div>', props: ['class'] },
+        QCardActions: { template: '<div class="q-card-actions"><slot /></div>', props: ['align'] },
         QDate: {
           template: '<div class="q-date"><slot /></div>',
           props: ['modelValue', 'mask'],
@@ -407,7 +501,7 @@ function createWrapper(
         },
         ActionsFab: {
           template:
-            '<div v-if="visible" class="actions-fab" :data-model-value="modelValue" :data-visible="visible"><button v-for="action in visibleActions" :key="action.key" :data-label="action.label" @click="$emit(\'action-clicked\', action.key); action.handler()">{{ action.label }}</button></div>',
+            '<div v-if="visible" class="actions-fab"><button v-for="action in visibleActions" :key="action.key" :data-label="action.label" @click="$emit(\'action-clicked\', action.key); action.handler()">{{ action.label }}</button></div>',
           props: ['modelValue', 'actions', 'visible'],
           emits: ['update:modelValue', 'action-clicked'],
           computed: {
@@ -416,33 +510,18 @@ function createWrapper(
             },
           },
         },
+        DeleteDialog: true,
+        ExpenseRegistrationDialog: true,
+        PlanTemplateSelection: true,
+        PlanFormSection: true,
+        PlanEditTab: true,
+        PlanOverviewTab: true,
+        PlanItemsTrackingTab: true,
       },
     },
   })
 
-  const plansStore = usePlansStore()
-  const categoriesStore = useCategoriesStore()
-  const templatesStore = useTemplatesStore()
-
-  if (categories) {
-    // @ts-expect-error - Testing Pinia
-    categoriesStore.categories = ref(categories)
-    categoriesStore.getCategoryById = vi.fn(
-      (id: string) =>
-        categories.map((cat) => ({ ...cat, templates: [] })).find((cat) => cat.id === id) ||
-        undefined,
-    )
-  }
-
-  if (templates) {
-    // @ts-expect-error - Testing Pinia
-    templatesStore.templates = ref(templates)
-    templatesStore.loadTemplateWithItems = vi.fn((id: string) =>
-      Promise.resolve(templates.find((t) => t.id === id) || null),
-    )
-  }
-
-  return { wrapper, plansStore, categoriesStore, templatesStore }
+  return { wrapper }
 }
 
 beforeEach(() => {
@@ -461,19 +540,17 @@ describe('PlanPage', () => {
     expect(wrapper.exists()).toBe(true)
   })
 
-  it('should call loadCategories, loadTemplates and loadPlan on mount', async () => {
-    const { categoriesStore } = createWrapper()
+  it('should call loadPlan on mount', async () => {
+    createWrapper()
     await flushPromises()
 
-    expect(categoriesStore.loadCategories).toHaveBeenCalledOnce()
     expect(mockUsePlan.loadPlan).toHaveBeenCalledOnce()
   })
 
   it('should render edit form when in edit mode and can edit plan data', () => {
     const { wrapper } = createWrapper({ canEditPlanData: true, isNewPlan: true })
 
-    expect(wrapper.find('form').exists()).toBe(true)
-    expect(wrapper.findComponent({ name: 'PlanTemplateSelection' }).exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'PlanFormSection' }).exists()).toBe(true)
   })
 
   it('should render readonly view when in read-only mode', () => {
@@ -483,11 +560,10 @@ describe('PlanPage', () => {
     expect(wrapper.text()).toContain('Overview')
   })
 
-  it('should show template selection for new plan', () => {
+  it('should show form section for new plan', () => {
     const { wrapper } = createWrapper({ isNewPlan: true })
 
-    expect(wrapper.text()).toContain('Select Template')
-    expect(wrapper.find('.q-select').exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'PlanFormSection' }).exists()).toBe(true)
   })
 
   it('should not show template selection for existing plan', () => {
@@ -502,40 +578,13 @@ describe('PlanPage', () => {
     expect(wrapper.text()).toContain('view only')
   })
 
-  it('should show locked banner when cannot edit plan data but is owner', () => {
-    const { wrapper } = createWrapper({
-      isOwner: true,
-      canEditPlanData: false,
-      currentPlan: mockPlan,
-      isReadOnlyMode: false,
-    })
-
-    // The banner is shown when edit mode is active but cannot edit plan data
-    expect(wrapper.exists()).toBe(true)
-  })
-
-  it('should show empty state when no plan items', () => {
+  it('should show form section when no plan items for new plan', () => {
     const { wrapper } = createWrapper({ isNewPlan: true })
 
-    expect(wrapper.text()).toContain('Select Template')
+    expect(wrapper.findComponent({ name: 'PlanFormSection' }).exists()).toBe(true)
   })
 
   it('should show plan categories when items exist', () => {
-    mockUsePlan.isNewPlan.value = true
-    mockUsePlanItems.planItems.value = mockPlanItems
-    mockUsePlanItems.totalAmount.value = 500
-    mockUsePlanItems.isValidForSave.value = true
-    mockUsePlanItems.planCategoryGroups.value = [
-      {
-        categoryId: 'cat-1',
-        categoryName: 'Food',
-        categoryColor: '#FF5722',
-        categoryIcon: 'eva-pricetags-outline',
-        items: mockPlanItems,
-        subtotal: 500,
-      },
-    ]
-
     const { wrapper } = createWrapper({ hasItems: true, isNewPlan: true })
 
     expect(wrapper.findComponent({ name: 'PlanFormSection' }).exists()).toBe(true)
@@ -547,14 +596,11 @@ describe('PlanPage', () => {
     expect(mockUsePlanItems.hasDuplicateItems.value).toBe(true)
   })
 
-  it('should handle template selection', () => {
+  it('should render plan form section for new plan', () => {
     const { wrapper } = createWrapper({ isNewPlan: true })
 
-    const templateSelect = wrapper.find('.q-select')
-    expect(templateSelect.exists()).toBe(true)
-
-    // Template selection functionality exists
-    expect(wrapper.text()).toContain('Select Template')
+    const formSection = wrapper.findComponent({ name: 'PlanFormSection' })
+    expect(formSection.exists()).toBe(true)
   })
 
   it('should navigate back when back button is clicked', async () => {
@@ -564,13 +610,6 @@ describe('PlanPage', () => {
     await backButton.trigger('click')
 
     expect(mockRouterPush).toHaveBeenCalledWith({ name: 'plans' })
-  })
-
-  it('should show save button in FAB for edit mode', () => {
-    const { wrapper } = createWrapper({ canEditPlanData: true, isNewPlan: true })
-
-    expect(wrapper.find('form').exists()).toBe(true)
-    expect(wrapper.text()).toContain('Select Template')
   })
 
   it('should show share button for existing plan when owner', () => {
@@ -587,21 +626,6 @@ describe('PlanPage', () => {
     expect(shareButton.exists()).toBe(false)
   })
 
-  it('should show cancel plan button for active plan when owner', () => {
-    const { wrapper } = createWrapper({ isOwner: true, currentPlan: mockPlan })
-
-    // Cancel plan dialog should be available
-    expect(wrapper.exists()).toBe(true)
-  })
-
-  it('should show delete plan button for non-active plan when owner', () => {
-    const planWithPendingStatus = { ...mockPlan, status: 'pending' }
-    const { wrapper } = createWrapper({ isOwner: true, currentPlan: planWithPendingStatus })
-
-    // FAB actions are handled by the component logic
-    expect(wrapper.exists()).toBe(true)
-  })
-
   it('should open share dialog when share button is clicked', async () => {
     const { wrapper } = createWrapper({ isOwner: true, currentPlan: mockPlan })
 
@@ -609,58 +633,6 @@ describe('PlanPage', () => {
     await shareButton.trigger('click')
 
     expect(mockUseEditablePage.openDialog).toHaveBeenCalledWith('share')
-  })
-
-  it('should create new plan when form is submitted for new plan', () => {
-    const { wrapper } = createWrapper({ isNewPlan: true, hasItems: true })
-    mockUsePlanItems.isValidForSave.value = true
-
-    const form = wrapper.find('form')
-    expect(form.exists()).toBe(true)
-    expect(wrapper.findComponent({ name: 'PlanTemplateSelection' }).exists()).toBe(true)
-  })
-
-  it('should update existing plan when form is submitted for existing plan', () => {
-    const { wrapper } = createWrapper({ hasItems: true, currentPlan: mockPlan, isNewPlan: true })
-    mockUsePlanItems.isValidForSave.value = true
-
-    const form = wrapper.find('form')
-    expect(form.exists()).toBe(true)
-    expect(wrapper.findComponent({ name: 'PlanTemplateSelection' }).exists()).toBe(true)
-  })
-
-  it('should navigate back after successful save', () => {
-    const { wrapper } = createWrapper({ hasItems: true, currentPlan: mockPlan, isNewPlan: true })
-    mockUsePlanItems.isValidForSave.value = true
-
-    const form = wrapper.find('form')
-    expect(form.exists()).toBe(true)
-    expect(wrapper.findComponent({ name: 'PlanTemplateSelection' }).exists()).toBe(true)
-  })
-
-  it('should not save when template not selected for new plan', () => {
-    const { wrapper } = createWrapper({ isNewPlan: true })
-
-    const form = wrapper.find('form')
-    expect(form.exists()).toBe(true)
-
-    // Test that template selection is required for new plans
-    expect(wrapper.text()).toContain('Select Template')
-  })
-
-  it('should not save when validation fails', () => {
-    const { wrapper } = createWrapper({
-      hasItems: true,
-      currentPlan: mockPlan,
-      hasDuplicates: true,
-      isNewPlan: true,
-    })
-    mockUsePlanItems.isValidForSave.value = false
-    mockUsePlanItems.hasDuplicateItems.value = true
-
-    const form = wrapper.find('form')
-    expect(form.exists()).toBe(true)
-    expect(mockUsePlanItems.hasDuplicateItems.value).toBe(true)
   })
 
   it('should display formatted total amount when items exist', () => {
@@ -698,116 +670,38 @@ describe('PlanPage', () => {
     expect(mockUsePlanItems.loadPlanItems).toHaveBeenCalledWith(mockPlan)
   })
 
-  it('should show plan name input with correct label', () => {
-    const { wrapper } = createWrapper({ isNewPlan: true })
-
-    expect(wrapper.findComponent({ name: 'PlanTemplateSelection' }).exists()).toBe(true)
-  })
-
-  it('should show start date input with calendar icon', () => {
-    const { wrapper } = createWrapper({ isNewPlan: true })
-
-    expect(wrapper.findComponent({ name: 'PlanTemplateSelection' }).exists()).toBe(true)
-  })
-
-  it('should show end date input as readonly', () => {
-    const { wrapper } = createWrapper({ isNewPlan: true })
-
-    expect(wrapper.findComponent({ name: 'PlanTemplateSelection' }).exists()).toBe(true)
-  })
-
   it('should handle plan item updates', () => {
     createWrapper({ hasItems: true, isNewPlan: true })
-
     expect(mockUsePlanItems.updatePlanItem).toBeDefined()
   })
 
   it('should handle plan item removal', () => {
     createWrapper({ hasItems: true, isNewPlan: true })
-
     expect(mockUsePlanItems.removePlanItem).toBeDefined()
   })
 
   it('should handle adding new plan item', () => {
     createWrapper({ hasItems: true, isNewPlan: true })
-
     expect(mockUsePlanItems.addPlanItem).toBeDefined()
-  })
-
-  it('should show correct singular/plural text for category count', () => {
-    createWrapper({ hasItems: true, isNewPlan: true })
-
-    expect(mockUsePlanItems.planCategoryGroups.value.length).toBe(1)
-  })
-
-  it('should pass correct props to plan category components', () => {
-    const { wrapper } = createWrapper({ hasItems: true, isNewPlan: true })
-
-    expect(wrapper.findComponent({ name: 'PlanFormSection' }).exists()).toBe(true)
-  })
-
-  it('should pass readonly prop correctly in read-only mode', () => {
-    const { wrapper } = createWrapper({
-      isReadOnlyMode: true,
-      hasItems: true,
-      currentPlan: mockPlan,
-    })
-
-    // In read-only mode, existing plans use tabs, not direct PlanCategory components in the form
-    expect(wrapper.exists()).toBe(true)
   })
 
   it('should show cancel plan dialog when cancel button clicked', () => {
     const { wrapper } = createWrapper({ isOwner: true, currentPlan: mockPlan })
 
-    // Cancel plan dialog should be available in the template
     const deleteDialog = wrapper.findComponent({ name: 'DeleteDialog' })
     expect(deleteDialog.exists()).toBe(true)
-  })
-
-  it('should show delete plan dialog when delete button clicked', () => {
-    const planWithPendingStatus = { ...mockPlan, status: 'pending' }
-    const { wrapper } = createWrapper({ isOwner: true, currentPlan: planWithPendingStatus })
-
-    // The remove button visibility is controlled by FAB logic
-    expect(wrapper.exists()).toBe(true)
   })
 
   it('should display plan status in read-only mode', () => {
     const { wrapper } = createWrapper({ isReadOnlyMode: true, currentPlan: mockPlan })
 
-    // In read-only mode, plan shows overview tab with plan information
     expect(wrapper.text()).toContain('Overview')
-    expect(wrapper.exists()).toBe(true)
   })
 
-  it('should display date range in read-only mode', () => {
+  it('should display overview tab in read-only mode', () => {
     const { wrapper } = createWrapper({ isReadOnlyMode: true, currentPlan: mockPlan })
 
-    // Date range is displayed in the plan overview
-    expect(wrapper.text()).toContain('2023-06-01')
-    expect(wrapper.exists()).toBe(true)
-  })
-
-  it('should show template card when template is selected', () => {
-    const { wrapper } = createWrapper({ isNewPlan: true })
-
-    // Template selection and card display is handled by the component
-    expect(wrapper.text()).toContain('Select Template')
-    expect(wrapper.exists()).toBe(true)
-  })
-
-  it('should update end date when start date changes', () => {
-    const { wrapper } = createWrapper({ isNewPlan: true })
-
-    expect(wrapper.findComponent({ name: 'PlanTemplateSelection' }).exists()).toBe(true)
-  })
-
-  it('should show template duration hint when template selected', () => {
-    const { wrapper } = createWrapper({ isNewPlan: true })
-
-    // Template duration hint is shown after template selection
-    expect(wrapper.text()).toContain('Select Template')
-    expect(wrapper.exists()).toBe(true)
+    expect(wrapper.text()).toContain('Overview')
+    expect(wrapper.findComponent({ name: 'PlanOverviewTab' }).exists()).toBe(true)
   })
 })

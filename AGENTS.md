@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-- `src/` contains the app code: `api/` (data fetchers), `stores/` (Pinia state), `components/`, `pages/`, `layouts/`, `composables/`, `utils/`, and `router/`.
+- `src/` contains the app code: `api/` (data fetchers), `queries/` (TanStack Query hooks for server state), `stores/` (Pinia client-side state), `components/`, `pages/`, `layouts/`, `composables/`, `utils/`, and `router/`.
 - Tests are co-located with source files using the `.test.ts` suffix (for example, `src/pages/PlansPage.test.ts`).
 - `public/` holds static assets; `src/assets/` for bundled assets.
 - `src-pwa/` contains PWA configuration (manifest and service worker); `src-capacitor/` for mobile wrapper.
@@ -27,13 +27,14 @@
 
 ## Architecture & Error Handling
 
-- Three-layer pattern: `src/api/` (throws errors), `src/stores/` (handles errors and business logic), UI components (render only).
-- Stores handle errors via `useError().handleError()` with keys from `src/config/error-messages.ts`; components do not implement error handling.
+- Four-layer pattern: `src/api/` (throws errors), `src/queries/` (TanStack Query hooks for server state, caching, and mutations), `src/stores/` (client-side state only: auth, user, notification, preferences), UI components (render only).
+- Mutations handle errors via `createMutationErrorHandler` in `src/queries/mutation-utils.ts`; client-side stores use `useError().handleError()` with keys from `src/config/error-messages.ts`; components do not implement error handling.
 
 ## Testing Guidelines
 
 - Frameworks: Vitest + `@vue/test-utils`; tests live next to sources as `.test.ts`.
 - Use `installQuasarPlugin()` for component tests and `createTestingPinia({ createSpy: vi.fn })` for store tests.
+- Mock query hooks (`src/queries/*`) with `vi.mock()` returning objects with `data`, `isPending`, `mutateAsync` refs/fns.
 - For Vue components, avoid a root `describe` block and check `__mocks__` before `vi.mock()`.
 
 ## Commit & Pull Request Guidelines

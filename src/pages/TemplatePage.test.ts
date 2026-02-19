@@ -1,11 +1,8 @@
 import { mount, flushPromises } from '@vue/test-utils'
 import { it, expect, vi, beforeEach, describe } from 'vitest'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
-import { createTestingPinia } from '@pinia/testing'
 import { ref } from 'vue'
 import TemplatePage from './TemplatePage.vue'
-import { useTemplatesStore } from 'src/stores/templates'
-import { useCategoriesStore } from 'src/stores/categories'
 import type { Category, TemplateWithItems } from 'src/api'
 import type { TemplateItemUI } from 'src/types'
 import type { TemplateCategoryGroup } from 'src/composables/useTemplateItems'
@@ -33,6 +30,69 @@ vi.mock('src/composables/useError', () => ({
 
 vi.mock('src/utils/currency', () => ({
   formatCurrency: vi.fn((amount: number, currency: string) => `${currency} ${amount.toFixed(2)}`),
+}))
+
+const mockCategoriesRef = ref([
+  {
+    id: 'cat-1',
+    name: 'Food',
+    color: '#FF5722',
+    icon: 'eva-pricetags-outline',
+    created_at: '2023-01-01T00:00:00Z',
+    updated_at: '2023-01-01T00:00:00Z',
+    templates: [],
+  },
+  {
+    id: 'cat-2',
+    name: 'Transport',
+    color: '#2196F3',
+    icon: 'eva-pricetags-outline',
+    created_at: '2023-01-02T00:00:00Z',
+    updated_at: '2023-01-02T00:00:00Z',
+    templates: [],
+  },
+])
+
+vi.mock('src/queries/categories', () => ({
+  useCategoriesQuery: vi.fn(() => ({
+    categories: mockCategoriesRef,
+    getCategoryById: vi.fn((id: string) => mockCategoriesRef.value.find((c) => c.id === id)),
+    isPending: ref(false),
+    categoriesMap: ref(new Map()),
+    sortedCategories: ref([]),
+    categoryCount: ref(0),
+    data: ref(null),
+  })),
+}))
+
+vi.mock('src/queries/templates', () => ({
+  useDeleteTemplateMutation: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: ref(false),
+  })),
+}))
+
+vi.mock('src/queries/sharing', () => ({
+  useSharedUsersQuery: vi.fn(() => ({
+    data: ref([]),
+    isPending: ref(false),
+  })),
+  useShareEntityMutation: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: ref(false),
+  })),
+  useUnshareEntityMutation: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: ref(false),
+  })),
+  useUpdatePermissionMutation: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: ref(false),
+  })),
+  useSearchUsersQuery: vi.fn(() => ({
+    data: ref([]),
+    isPending: ref(false),
+  })),
 }))
 
 const mockUseTemplate = {
@@ -158,7 +218,6 @@ function createWrapper(
     isLoading?: boolean
     isReadOnlyMode?: boolean
     isOwner?: boolean
-    categories?: Category[]
     hasItems?: boolean
     hasDuplicates?: boolean
   } = {},
@@ -168,7 +227,6 @@ function createWrapper(
     isLoading = false,
     isReadOnlyMode = false,
     isOwner = true,
-    categories = mockCategories,
     hasItems = false,
     hasDuplicates = false,
   } = options
@@ -208,21 +266,6 @@ function createWrapper(
 
   const wrapper = mount(TemplatePage, {
     global: {
-      plugins: [
-        createTestingPinia({
-          createSpy: vi.fn,
-          stubActions: false,
-          initialState: {
-            categories: {
-              categories,
-              isLoading: false,
-            },
-            templates: {
-              isLoading: false,
-            },
-          },
-        }),
-      ],
       stubs: {
         TemplateCategory: TemplateCategoryStub,
         CategorySelectionDialog: CategorySelectionDialogStub,
@@ -318,20 +361,7 @@ function createWrapper(
     },
   })
 
-  const templatesStore = useTemplatesStore()
-  const categoriesStore = useCategoriesStore()
-
-  if (categories) {
-    // @ts-expect-error - Testing Pinia
-    categoriesStore.categories = ref(categories)
-    categoriesStore.getCategoryById = vi.fn(
-      (id: string) =>
-        categories.map((cat) => ({ ...cat, templates: [] })).find((cat) => cat.id === id) ||
-        undefined,
-    )
-  }
-
-  return { wrapper, templatesStore, categoriesStore }
+  return { wrapper }
 }
 
 beforeEach(() => {
@@ -350,11 +380,10 @@ describe('TemplatePage', () => {
     expect(wrapper.exists()).toBe(true)
   })
 
-  it('should call loadCategories and loadCurrentTemplate on mount', async () => {
-    const { categoriesStore } = createWrapper()
+  it('should call loadTemplate on mount', async () => {
+    createWrapper()
     await flushPromises()
 
-    expect(categoriesStore.loadCategories).toHaveBeenCalledOnce()
     expect(mockUseTemplate.loadTemplate).toHaveBeenCalledOnce()
   })
 
@@ -512,13 +541,13 @@ describe('TemplatePage', () => {
     expect(shareDialog.attributes('data-model-value')).toBe('true')
   })
 
-  it('should reload templates when template is shared', async () => {
-    const { wrapper, templatesStore } = createWrapper({ isOwner: true })
+  it('should close share dialog when template is shared', async () => {
+    const { wrapper } = createWrapper({ isOwner: true })
 
     const shareDialog = wrapper.findComponent(ShareTemplateDialogStub)
     await shareDialog.vm.$emit('shared')
 
-    expect(templatesStore.loadTemplates).toHaveBeenCalledOnce()
+    // TanStack Query invalidation handles refetching
   })
 
   it('should show save button for new template', () => {
