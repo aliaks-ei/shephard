@@ -103,7 +103,7 @@ body {
 // Global Notification Styles - Full width on mobile with bottom offset for navigation
 .q-notification {
   width: 100%;
-  margin-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  margin-bottom: calc(72px + max(12px, env(safe-area-inset-bottom, 0px)));
 
   @media (min-width: $breakpoint-sm-min) {
     width: auto;
