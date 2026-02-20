@@ -55,6 +55,7 @@ describe('SharedUsersSelect', () => {
       searchResults: mockSearchResults,
       sharedUsers: [],
       currentUserId: 'current-user',
+      ownerUserId: undefined,
     })
     expect(wrapper.exists()).toBe(true)
   })
@@ -65,6 +66,7 @@ describe('SharedUsersSelect', () => {
       searchResults: mockSearchResults,
       sharedUsers: mockSharedUsers,
       currentUserId: 'current-user',
+      ownerUserId: undefined,
       loading: true,
     })
 
@@ -81,6 +83,7 @@ describe('SharedUsersSelect', () => {
       searchResults: mockSearchResults,
       sharedUsers: [],
       currentUserId: 'current-user',
+      ownerUserId: undefined,
     })
 
     expect(wrapper.props('loading')).toBe(false)
@@ -92,6 +95,7 @@ describe('SharedUsersSelect', () => {
       searchResults: mockSearchResults,
       sharedUsers: [],
       currentUserId: 'current-user',
+      ownerUserId: undefined,
     })
 
     // Test the event emission directly since Quasar components are complex to interact with in tests
@@ -106,6 +110,7 @@ describe('SharedUsersSelect', () => {
       searchResults: mockSearchResults,
       sharedUsers: [],
       currentUserId: 'current-user',
+      ownerUserId: undefined,
     })
 
     // Test the event emission directly since Quasar components are complex to interact with in tests
@@ -120,6 +125,7 @@ describe('SharedUsersSelect', () => {
       searchResults: [],
       sharedUsers: [],
       currentUserId: 'current-user',
+      ownerUserId: undefined,
     })
 
     expect(wrapper.props('searchResults')).toEqual([])
@@ -131,6 +137,7 @@ describe('SharedUsersSelect', () => {
       searchResults: mockSearchResults,
       sharedUsers: [],
       currentUserId: 'current-user',
+      ownerUserId: undefined,
     })
 
     expect(wrapper.props('sharedUsers')).toEqual([])
@@ -142,6 +149,7 @@ describe('SharedUsersSelect', () => {
       searchResults: mockSearchResults,
       sharedUsers: [],
       currentUserId: undefined,
+      ownerUserId: undefined,
     })
 
     expect(wrapper.props('currentUserId')).toBeUndefined()
@@ -153,6 +161,7 @@ describe('SharedUsersSelect', () => {
       searchResults: mockSearchResults,
       sharedUsers: [],
       currentUserId: 'current-user',
+      ownerUserId: undefined,
       loading: true,
     })
 
@@ -163,6 +172,7 @@ describe('SharedUsersSelect', () => {
       searchResults: mockSearchResults,
       sharedUsers: [],
       currentUserId: 'current-user',
+      ownerUserId: undefined,
       loading: false,
     })
 
@@ -176,6 +186,7 @@ describe('SharedUsersSelect', () => {
       searchResults: mockSearchResults,
       sharedUsers: [],
       currentUserId: 'current-user',
+      ownerUserId: undefined,
     })
 
     expect(wrapper.props('modelValue')).toEqual(selectedUsers)

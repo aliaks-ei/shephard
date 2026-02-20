@@ -42,13 +42,14 @@
       v-if="shareTemplateId"
       v-model="isShareDialogOpen"
       :template-id="shareTemplateId"
+      :owner-user-id="shareTemplateOwnerId"
       @shared="isShareDialogOpen = false"
     />
   </ListPageLayout>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 import ListPageLayout from 'src/layouts/ListPageLayout.vue'
 import SearchAndSort from 'src/components/shared/SearchAndSort.vue'
@@ -74,6 +75,10 @@ const {
 
 const isShareDialogOpen = ref(false)
 const shareTemplateId = ref<string | null>(null)
+const shareTemplateOwnerId = computed(() => {
+  if (!shareTemplateId.value) return undefined
+  return allFilteredAndSortedItems.value.find((t) => t.id === shareTemplateId.value)?.owner_id
+})
 
 function openShareDialog(templateId: string): void {
   shareTemplateId.value = templateId

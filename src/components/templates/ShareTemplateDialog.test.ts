@@ -68,6 +68,7 @@ describe('ShareTemplateDialog', () => {
   it('should mount component properly', () => {
     const wrapper = renderShareTemplateDialog({
       templateId: 'template-1',
+      ownerUserId: undefined,
       modelValue: true,
     })
     expect(wrapper.exists()).toBe(true)
@@ -76,6 +77,7 @@ describe('ShareTemplateDialog', () => {
   it('should have correct props', () => {
     const wrapper = renderShareTemplateDialog({
       templateId: 'template-1',
+      ownerUserId: undefined,
       modelValue: true,
     })
 
@@ -86,6 +88,7 @@ describe('ShareTemplateDialog', () => {
   it('should emit update:modelValue event when dialog is closed', async () => {
     const wrapper = renderShareTemplateDialog({
       templateId: 'template-1',
+      ownerUserId: undefined,
       modelValue: true,
     })
 
@@ -98,6 +101,7 @@ describe('ShareTemplateDialog', () => {
   it('should emit shared event after successful sharing', () => {
     const wrapper = renderShareTemplateDialog({
       templateId: 'template-1',
+      ownerUserId: undefined,
       modelValue: true,
     })
 
@@ -110,6 +114,7 @@ describe('ShareTemplateDialog', () => {
   it('should handle dialog open state', () => {
     const openWrapper = renderShareTemplateDialog({
       templateId: 'template-1',
+      ownerUserId: undefined,
       modelValue: true,
     })
 
@@ -117,6 +122,7 @@ describe('ShareTemplateDialog', () => {
 
     const closedWrapper = renderShareTemplateDialog({
       templateId: 'template-1',
+      ownerUserId: undefined,
       modelValue: false,
     })
 
@@ -129,6 +135,7 @@ describe('ShareTemplateDialog', () => {
     templateIds.forEach((templateId) => {
       const wrapper = renderShareTemplateDialog({
         templateId,
+        ownerUserId: undefined,
         modelValue: true,
       })
 
@@ -139,6 +146,7 @@ describe('ShareTemplateDialog', () => {
   it('should handle empty template ID', () => {
     const wrapper = renderShareTemplateDialog({
       templateId: '',
+      ownerUserId: undefined,
       modelValue: true,
     })
 
@@ -148,6 +156,7 @@ describe('ShareTemplateDialog', () => {
   it('should render when dialog is closed', () => {
     const wrapper = renderShareTemplateDialog({
       templateId: 'template-1',
+      ownerUserId: undefined,
       modelValue: false,
     })
 
@@ -158,6 +167,7 @@ describe('ShareTemplateDialog', () => {
   it('should handle component lifecycle', async () => {
     const wrapper = renderShareTemplateDialog({
       templateId: 'template-1',
+      ownerUserId: undefined,
       modelValue: false,
     })
 
