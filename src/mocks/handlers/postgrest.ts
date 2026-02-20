@@ -213,7 +213,6 @@ export const postgrestHandlers = [
     rows = applyFilters(rows, eqFilters, inFilters)
     const result = applySelect(rows, select, table)
 
-    // Handle Prefer: count=exact
     const prefer = request.headers.get('Prefer') ?? ''
     if (prefer.includes('count=exact')) {
       return HttpResponse.json(result, {

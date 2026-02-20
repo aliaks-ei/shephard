@@ -18,10 +18,7 @@
       />
     </q-item-section>
 
-    <q-item-section
-      class="self-start"
-      :style="$q.screen.lt.md ? 'max-width: 80px' : 'max-width: 112px'"
-    >
+    <q-item-section class="self-start item-amount-section">
       <q-input
         :model-value="displayAmount"
         :readonly="readonly"
@@ -40,10 +37,7 @@
       />
     </q-item-section>
 
-    <q-item-section
-      class="self-start q-py-sm"
-      style="flex: 0 0 auto"
-    >
+    <q-item-section class="self-start q-py-sm col-auto">
       <q-checkbox
         :model-value="modelValue.isFixedPayment"
         :readonly="readonly"
@@ -61,8 +55,7 @@
 
     <q-item-section
       v-if="!readonly"
-      class="self-start q-py-sm"
-      style="flex: 0 0 auto"
+      class="self-start q-py-sm col-auto"
     >
       <q-btn
         flat

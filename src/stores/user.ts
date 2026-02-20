@@ -5,23 +5,7 @@ import { useDateFormat } from '@vueuse/core'
 import { useAuthStore } from './auth'
 import { usePreferencesStore } from './preferences'
 import { getUserInitial, getUserDisplayName } from 'src/utils/name'
-import type { UserPreferences } from 'src/api/user'
-
-export type UserProfile = {
-  id: string
-  email: string | undefined
-  displayName: string
-  avatarUrl: string | undefined
-  nameInitial: string
-  authProvider: string | undefined
-  createdAt: string | undefined
-  formattedCreatedAt: string
-  preferences: UserPreferences | null
-}
-
-export type UserProfileUpdates = {
-  preferences: Partial<UserPreferences>
-}
+import type { UserProfile, UserProfileUpdates } from 'src/api/user'
 
 export const useUserStore = defineStore('user', () => {
   const authStore = useAuthStore()

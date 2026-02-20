@@ -82,11 +82,12 @@ describe('getExpensesByPlan', () => {
   it('should return expenses with categories for a plan', async () => {
     const expenses = [mockExpenseWithCategory]
 
-    const mockOrder = vi.fn().mockResolvedValue({
+    const mockOrder2 = vi.fn().mockResolvedValue({
       data: expenses,
       error: null,
     })
-    const mockEq = vi.fn().mockReturnValue({ order: mockOrder })
+    const mockOrder1 = vi.fn().mockReturnValue({ order: mockOrder2 })
+    const mockEq = vi.fn().mockReturnValue({ order: mockOrder1 })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     const mockFrom = vi.fn().mockReturnValue({ select: mockSelect })
 
@@ -97,16 +98,18 @@ describe('getExpensesByPlan', () => {
     expect(mockFrom).toHaveBeenCalledWith('expenses')
     expect(mockSelect).toHaveBeenCalledWith('*, categories(*)')
     expect(mockEq).toHaveBeenCalledWith('plan_id', 'plan-1')
-    expect(mockOrder).toHaveBeenCalledWith('expense_date', { ascending: false })
+    expect(mockOrder1).toHaveBeenCalledWith('expense_date', { ascending: false })
+    expect(mockOrder2).toHaveBeenCalledWith('created_at', { ascending: false })
     expect(result).toEqual(expenses)
   })
 
   it('should return empty array when no expenses found', async () => {
-    const mockOrder = vi.fn().mockResolvedValue({
+    const mockOrder2 = vi.fn().mockResolvedValue({
       data: [],
       error: null,
     })
-    const mockEq = vi.fn().mockReturnValue({ order: mockOrder })
+    const mockOrder1 = vi.fn().mockReturnValue({ order: mockOrder2 })
+    const mockEq = vi.fn().mockReturnValue({ order: mockOrder1 })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     const mockFrom = vi.fn().mockReturnValue({ select: mockSelect })
 
@@ -119,11 +122,12 @@ describe('getExpensesByPlan', () => {
 
   it('should throw error when query fails', async () => {
     const mockError = createPostgrestError('Failed to fetch expenses')
-    const mockOrder = vi.fn().mockResolvedValue({
+    const mockOrder2 = vi.fn().mockResolvedValue({
       data: null,
       error: mockError,
     })
-    const mockEq = vi.fn().mockReturnValue({ order: mockOrder })
+    const mockOrder1 = vi.fn().mockReturnValue({ order: mockOrder2 })
+    const mockEq = vi.fn().mockReturnValue({ order: mockOrder1 })
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     const mockFrom = vi.fn().mockReturnValue({ select: mockSelect })
 

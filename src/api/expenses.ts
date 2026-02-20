@@ -28,6 +28,7 @@ export async function getExpensesByPlan(planId: string): Promise<ExpenseWithCate
     .select('*, categories(*)')
     .eq('plan_id', planId)
     .order('expense_date', { ascending: false })
+    .order('created_at', { ascending: false })
 
   if (error) throw error
   return data || []

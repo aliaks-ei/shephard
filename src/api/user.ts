@@ -22,6 +22,22 @@ export const DEFAULT_PREFERENCES: CompleteUserPreferences = {
   isPrivacyModeEnabled: false,
 } as const
 
+export type UserProfile = {
+  id: string
+  email: string | undefined
+  displayName: string
+  avatarUrl: string | undefined
+  nameInitial: string
+  authProvider: string | undefined
+  createdAt: string | undefined
+  formattedCreatedAt: string
+  preferences: UserPreferences | null
+}
+
+export type UserProfileUpdates = {
+  preferences: Partial<UserPreferences>
+}
+
 export type UserSearchResult = {
   id: string
   name: string | null

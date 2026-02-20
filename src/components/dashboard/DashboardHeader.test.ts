@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 import { ref } from 'vue'
 import DashboardHeader from './DashboardHeader.vue'
-import type { UserProfile } from 'src/stores/user'
+import type { UserProfile } from 'src/api/user'
 
 const mockScreen = {
   lt: { md: false },

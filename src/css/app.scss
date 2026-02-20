@@ -39,7 +39,6 @@
   font-display: swap;
 }
 
-// Import theme variables
 @import './theme.scss';
 
 html {
@@ -118,6 +117,14 @@ body {
 }
 
 // Shared page and section spacing utilities
+.item-amount-section {
+  max-width: 80px;
+
+  @media (min-width: $breakpoint-md-min) {
+    max-width: 112px;
+  }
+}
+
 .page-content-spacing {
   padding: var(--page-content-padding-mobile);
 
