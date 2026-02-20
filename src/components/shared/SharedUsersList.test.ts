@@ -25,6 +25,7 @@ vi.mock('quasar', async () => {
           return { onOk: vi.fn() }
         }),
       })),
+      screen: { lt: { md: false } },
     })),
   }
 })
