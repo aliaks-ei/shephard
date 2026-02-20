@@ -107,7 +107,8 @@ describe('plans utils', () => {
       startDate: string,
       endDate: string,
       status: 'active' | 'cancelled' = 'active',
-    ): Plan => ({
+      permissionLevel?: string,
+    ): Plan & { permission_level?: string } => ({
       id: 'test-plan',
       name: 'Test Plan',
       start_date: startDate,
@@ -119,9 +120,10 @@ describe('plans utils', () => {
       updated_at: '2024-01-01T00:00:00Z',
       total: null,
       template_id: '',
+      ...(permissionLevel !== undefined && { permission_level: permissionLevel }),
     })
 
-    it('should return false if user is not owner', () => {
+    it('should return false if user is not owner and has no edit permission', () => {
       const plan = createMockPlan('2024-06-10', '2024-06-20')
       expect(canEditPlan(plan, false)).toBe(false)
     })
@@ -144,6 +146,21 @@ describe('plans utils', () => {
     it('should return true for pending plans when user is owner', () => {
       const plan = createMockPlan('2024-06-20', '2024-06-30')
       expect(canEditPlan(plan, true)).toBe(true)
+    })
+
+    it('should return true for active plans when user has edit permission', () => {
+      const plan = createMockPlan('2024-06-10', '2024-06-20', 'active', 'edit')
+      expect(canEditPlan(plan, false)).toBe(true)
+    })
+
+    it('should return false for cancelled plans even with edit permission', () => {
+      const plan = createMockPlan('2024-06-10', '2024-06-20', 'cancelled', 'edit')
+      expect(canEditPlan(plan, false)).toBe(false)
+    })
+
+    it('should return false for view-only permission', () => {
+      const plan = createMockPlan('2024-06-10', '2024-06-20', 'active', 'view')
+      expect(canEditPlan(plan, false)).toBe(false)
     })
   })
 

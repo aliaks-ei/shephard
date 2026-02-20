@@ -6,36 +6,37 @@
     <q-item
       v-for="user in users"
       :key="user.user_id"
-      class="q-pa-sm"
+      class="q-py-xs q-px-sm"
     >
-      <q-item-section avatar>
-        <q-avatar
-          color="secondary"
-          text-color="white"
-          size="32px"
-        >
-          {{ getUserInitial(user.user_email) }}
-        </q-avatar>
-      </q-item-section>
       <q-item-section>
-        <q-item-label>
-          {{ getUserDisplayName(user.user_name, user.user_email) }}
-        </q-item-label>
-        <q-item-label caption>{{ user.user_email }}</q-item-label>
-        <q-item-label caption> Shared {{ formatDate(user.shared_at) }} </q-item-label>
+        <div class="row items-center no-wrap">
+          <q-avatar
+            color="secondary"
+            text-color="white"
+            size="24px"
+            class="text-caption q-mr-sm"
+          >
+            {{ getUserInitial(user.user_email) }}
+            <q-tooltip>{{ user.user_email }}</q-tooltip>
+          </q-avatar>
+          <span class="ellipsis">
+            {{ getUserDisplayName(user.user_name, user.user_email) }}
+          </span>
+        </div>
       </q-item-section>
       <q-item-section side>
-        <div class="row items-center q-gutter-sm">
-          <q-select
+        <div class="row items-center q-gutter-xs">
+          <q-btn-toggle
             :model-value="user.permission_level"
             :options="permissionOptions"
-            outlined
+            unelevated
+            toggle-color="primary"
+            size="sm"
+            no-caps
             dense
-            emit-value
-            map-options
-            style="min-width: 100px"
-            hide-bottom-space
-            @update:model-value="(value) => emit('update:user-permission', user.user_id, value)"
+            @update:model-value="
+              (value: 'view' | 'edit') => emit('update:user-permission', user.user_id, value)
+            "
           />
           <q-btn
             icon="eva-trash-2-outline"
@@ -54,24 +55,22 @@
 </template>
 
 <script setup lang="ts">
-import { date, Dialog } from 'quasar'
+import { useQuasar, Dialog } from 'quasar'
 
 import { getUserInitial, getUserDisplayName } from 'src/utils/name'
 import type { TemplateSharedUser } from 'src/api'
 
+const $q = useQuasar()
+
 const emit = defineEmits<{
-  (e: 'update:user-permission', userId: string, permission: 'view' | 'edit'): void
-  (e: 'remove:user', userId: string): void
+  'update:user-permission': [userId: string, permission: 'view' | 'edit']
+  'remove:user': [userId: string]
 }>()
 
 defineProps<{
   users: TemplateSharedUser[]
   permissionOptions: { label: string; value: string }[]
 }>()
-
-function formatDate(dateString: string): string {
-  return date.formatDate(dateString, 'MMM D, YYYY')
-}
 
 function showRemoveUserConfirmDialog(user: TemplateSharedUser) {
   Dialog.create({

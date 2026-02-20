@@ -9,163 +9,120 @@
     @update:model-value="emit('update:modelValue', $event)"
   >
     <q-card
-      class="column"
+      class="column no-wrap"
       :class="$q.screen.lt.md ? 'full-height' : ''"
     >
-      <q-card-section class="row items-center">
-        <q-icon
-          name="eva-share-outline"
-          :size="$q.screen.lt.md ? '20px' : '24px'"
-          class="q-mr-sm"
-        />
-        <h2
-          class="q-my-none"
-          :class="$q.screen.lt.md ? 'text-subtitle2' : 'text-h6'"
-        >
-          Share {{ entityName }}
-        </h2>
+      <!-- Header -->
+      <q-card-section class="row items-center q-py-sm">
+        <div class="text-h6 q-my-none">Share {{ entityName }}</div>
         <q-space />
         <q-btn
           icon="eva-close-outline"
           flat
           round
           dense
-          :size="$q.screen.lt.md ? 'sm' : 'md'"
+          size="sm"
           @click="closeDialog"
         />
       </q-card-section>
 
       <q-separator />
 
-      <q-card-section class="q-pt-md col overflow-auto">
-        <div class="q-mb-lg">
-          <div class="text-subtitle2 q-mb-sm">
-            <q-icon
-              name="eva-people-outline"
-              class="q-mr-xs"
-            />
-            People with access
-            <q-chip
-              v-if="!isLoadingShares && sharedUsers.length > 0"
-              color="primary"
-              text-color="white"
-              size="sm"
-              class="q-ml-sm"
-            >
-              {{ sharedUsers.length }}
-            </q-chip>
-          </div>
+      <!-- Content -->
+      <q-card-section
+        class="col overflow-auto"
+        :class="$q.screen.lt.md ? 'q-pa-sm' : 'q-pa-md'"
+      >
+        <!-- Search & Add -->
+        <SharedUsersSelect
+          v-model="selectedUsers"
+          :current-user-id="currentUserId"
+          :search-results="userSearchResults"
+          :shared-users="sharedUsers"
+          :loading="isSearchingUsers"
+          @update:search-query="debouncedSearch"
+        />
 
-          <div v-if="isLoadingShares">
-            <q-list
-              bordered
-              class="rounded-borders"
-            >
-              <q-item class="q-py-xs q-px-sm">
-                <q-item-section avatar>
-                  <q-skeleton
-                    type="QAvatar"
-                    size="32px"
-                  />
-                </q-item-section>
-                <q-item-section>
-                  <q-skeleton
-                    type="text"
-                    width="60%"
-                  />
-                  <q-skeleton
-                    type="text"
-                    width="80%"
-                  />
-                  <q-skeleton
-                    type="text"
-                    width="40%"
-                  />
-                </q-item-section>
-                <q-item-section side>
-                  <div class="row items-center q-gutter-sm">
-                    <q-skeleton
-                      type="QBtn"
-                      width="100px"
-                      height="32px"
-                    />
-                    <q-skeleton
-                      type="QBtn"
-                      width="32px"
-                      height="32px"
-                    />
-                  </div>
-                </q-item-section>
-              </q-item>
-            </q-list>
-          </div>
-
-          <div v-else-if="sharedUsers.length > 0">
-            <SharedUsersList
-              :users="sharedUsers"
-              :permission-options="permissionOptions"
-              @update:user-permission="handleUpdateUserPermission"
-              @remove:user="handleRemoveUserAccess"
-            />
-          </div>
-
-          <div
-            v-else
-            class="text-center q-py-md text-grey-6"
-          >
-            <q-icon
-              name="eva-people-outline"
-              size="2rem"
-              class="q-mb-sm"
-            />
-            <div>This {{ entityName.toLowerCase() }} is not shared with anyone yet</div>
-          </div>
-        </div>
-
-        <div class="q-mb-lg">
-          <div class="text-subtitle2 q-mb-sm">
-            <q-icon
-              name="eva-person-add-outline"
-              class="q-mr-xs"
-            />
-            Add people
-          </div>
-
-          <SharedUsersSelect
-            v-model="selectedUsers"
-            :current-user-id="currentUserId"
-            :search-results="userSearchResults"
-            :shared-users="sharedUsers"
-            :loading="isSearchingUsers"
-            @update:search-query="debouncedSearch"
-          />
-
-          <div class="text-caption text-grey-6 q-mt-sm">
-            Search for existing users to share this {{ entityName.toLowerCase() }} with
-          </div>
-        </div>
-
-        <div v-if="selectedUsers.length > 0">
-          <div class="text-subtitle2 q-mb-sm">
-            <q-icon
-              name="eva-shield-outline"
-              class="q-mr-xs"
-            />
-            Access level for selected users
-          </div>
-          <q-option-group
+        <!-- Permission toggle (shown when users selected) -->
+        <div
+          v-if="selectedUsers.length > 0"
+          class="q-mt-sm"
+        >
+          <q-btn-toggle
             v-model="selectedPermission"
             :options="permissionOptions"
-            color="primary"
-            class="q-mb-lg"
-            inline
+            unelevated
+            toggle-color="primary"
+            size="sm"
+            no-caps
+            dense
           />
+        </div>
+
+        <!-- People with access -->
+        <div class="q-mt-md">
+          <div class="text-caption text-grey-6 q-mb-xs">
+            People with access{{
+              !isLoadingShares && sharedUsers.length > 0 ? ` (${sharedUsers.length})` : ''
+            }}
+          </div>
+
+          <!-- Loading skeleton -->
+          <q-list
+            v-if="isLoadingShares"
+            bordered
+            class="rounded-borders"
+          >
+            <q-item
+              v-for="n in 2"
+              :key="n"
+              class="q-py-xs q-px-sm"
+            >
+              <q-item-section avatar>
+                <q-skeleton
+                  type="QAvatar"
+                  size="24px"
+                />
+              </q-item-section>
+              <q-item-section>
+                <q-skeleton
+                  type="text"
+                  width="40%"
+                />
+              </q-item-section>
+              <q-item-section side>
+                <q-skeleton
+                  type="QBtn"
+                  width="60px"
+                  height="24px"
+                />
+              </q-item-section>
+            </q-item>
+          </q-list>
+
+          <!-- Shared users list -->
+          <SharedUsersList
+            v-else-if="sharedUsers.length > 0"
+            :users="sharedUsers"
+            :permission-options="permissionOptions"
+            @update:user-permission="handleUpdateUserPermission"
+            @remove:user="handleRemoveUserAccess"
+          />
+
+          <!-- Empty state -->
+          <div
+            v-else
+            class="text-caption text-grey-6 q-py-sm"
+          >
+            Not shared with anyone yet
+          </div>
         </div>
       </q-card-section>
 
+      <!-- Actions -->
       <q-card-actions
         align="right"
-        class="q-pa-md q-mt-auto safe-area-bottom"
+        class="q-pa-sm safe-area-bottom"
       >
         <q-btn
           label="Cancel"
@@ -178,7 +135,7 @@
           color="primary"
           unelevated
           no-caps
-          :loading="isLoading || isSharing"
+          :loading="isSharing"
           :disable="selectedUsers.length === 0"
           @click="handleShare"
         />
@@ -190,18 +147,15 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
-import { useQuasar } from 'quasar'
 
 import SharedUsersList from 'src/components/shared/SharedUsersList.vue'
 import SharedUsersSelect from 'src/components/shared/SharedUsersSelect.vue'
 import { useUserStore } from 'src/stores/user'
 import type { UserSearchResult, TemplateSharedUser } from 'src/api'
 
-const $q = useQuasar()
-
 type SharedUser = TemplateSharedUser
 
-interface ShareDialogProps {
+type ShareDialogProps = {
   entityId: string
   entityName: string
   modelValue: boolean
@@ -209,31 +163,29 @@ interface ShareDialogProps {
   userSearchResults: UserSearchResult[]
   isSharing: boolean
   isSearchingUsers: boolean
+  isLoadingShares: boolean
 }
 
 const props = defineProps<ShareDialogProps>()
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void
-  (e: 'share-with-user', entityId: string, email: string, permission: 'view' | 'edit'): void
-  (e: 'update-user-permission', entityId: string, userId: string, permission: 'view' | 'edit'): void
-  (e: 'remove-user-access', entityId: string, userId: string): void
-  (e: 'load-shared-users', entityId: string): void
-  (e: 'search-users', query: string): void
-  (e: 'clear-user-search'): void
+  'update:modelValue': [value: boolean]
+  'share-with-user': [entityId: string, email: string, permission: 'view' | 'edit']
+  'update-user-permission': [entityId: string, userId: string, permission: 'view' | 'edit']
+  'remove-user-access': [entityId: string, userId: string]
+  'search-users': [query: string]
+  'clear-user-search': []
 }>()
 
 const userStore = useUserStore()
 
 const permissionOptions = [
-  { label: 'Can view', value: 'view' },
-  { label: 'Can edit', value: 'edit' },
+  { label: 'View', value: 'view' },
+  { label: 'Edit', value: 'edit' },
 ]
 
 const selectedPermission = ref<'view' | 'edit'>('view')
 const selectedUsers = ref<UserSearchResult[]>([])
-const isLoading = ref(false)
-const isLoadingShares = ref(false)
 
 const currentUserId = computed(() => userStore.userProfile?.id)
 
@@ -252,14 +204,12 @@ function closeDialog() {
 function reset() {
   selectedPermission.value = 'view'
   selectedUsers.value = []
-  isLoadingShares.value = false
   emit('clear-user-search')
 }
 
 function handleShare() {
   if (selectedUsers.value.length === 0) return
 
-  // Emit share event for each selected user
   selectedUsers.value.forEach((user) => {
     emit('share-with-user', props.entityId, user.email, selectedPermission.value)
   })
@@ -281,12 +231,7 @@ watch(
   (isOpen) => {
     if (!isOpen || !props.entityId) {
       reset()
-      return
     }
-
-    isLoadingShares.value = true
-    emit('load-shared-users', props.entityId)
-    isLoadingShares.value = false
   },
   { immediate: true },
 )

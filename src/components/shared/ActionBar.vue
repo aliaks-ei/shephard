@@ -40,7 +40,6 @@
           >
             <q-btn
               :icon="action.icon"
-              :color="action.color"
               :loading="action.loading"
               :label="action.label"
               :disabled="action.loading"

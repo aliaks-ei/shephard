@@ -1,98 +1,82 @@
 <template>
-  <div>
-    <label
-      for="shared-users-label"
-      class="form-label"
-    >
-      Add Users
-    </label>
-    <q-select
-      :model-value="modelValue"
-      for="shared-users-label"
-      :options="searchOptions"
-      input-debounce="300"
-      placeholder="Search by email address"
-      use-input
-      use-chips
-      multiple
-      outlined
-      dense
-      :loading="loading"
-      hide-bottom-space
-      @filter="filterUsers"
-      @update:model-value="emit('update:model-value', $event)"
-    >
-      <template #prepend>
-        <q-icon name="eva-search-outline" />
-      </template>
+  <q-select
+    :model-value="modelValue"
+    :options="searchOptions"
+    input-debounce="300"
+    placeholder="Search by email address"
+    use-input
+    use-chips
+    multiple
+    outlined
+    dense
+    :loading="loading"
+    hide-bottom-space
+    @filter="filterUsers"
+    @update:model-value="emit('update:model-value', $event)"
+  >
+    <template #prepend>
+      <q-icon name="eva-search-outline" />
+    </template>
 
-      <template #option="{ itemProps, opt: user }">
-        <q-item v-bind="itemProps">
-          <q-item-section avatar>
-            <q-avatar
-              color="primary"
-              text-color="white"
-              size="32px"
-            >
-              {{ getUserInitial(user.email) }}
-            </q-avatar>
-          </q-item-section>
-          <q-item-section>
-            <q-item-label>
-              {{ getUserDisplayName(user.name, user.email) }}
-            </q-item-label>
-            <q-item-label caption>
-              {{ user.email }}
-            </q-item-label>
-          </q-item-section>
-        </q-item>
-      </template>
-
-      <template #selected-item="{ tabindex, index, removeAtIndex, opt: user }">
-        <q-chip
-          removable
-          dense
-          :tabindex="tabindex"
-          color="primary"
-          text-color="white"
-          @remove="removeAtIndex(index)"
-        >
+    <template #option="{ itemProps, opt: user }">
+      <q-item v-bind="itemProps">
+        <q-item-section avatar>
           <q-avatar
             color="primary"
             text-color="white"
-            size="20px"
-            class="q-mr-xs"
+            size="24px"
+            class="text-caption"
           >
             {{ getUserInitial(user.email) }}
           </q-avatar>
-          {{ getUserDisplayName(user.name, user.email) }}
-        </q-chip>
-      </template>
+        </q-item-section>
+        <q-item-section>
+          <q-item-label>
+            {{ getUserDisplayName(user.name, user.email) }}
+          </q-item-label>
+          <q-item-label caption>
+            {{ user.email }}
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+    </template>
 
-      <template #no-option>
-        <q-item>
-          <q-item-section class="text-center">
-            <div v-if="loading">
-              <q-spinner-dots />
-              <div class="text-grey-6">Searching...</div>
-            </div>
-            <div v-else-if="searchQuery?.trim()">
-              <q-icon
-                name="eva-search-outline"
-                size="2rem"
-                class="text-grey-5 q-mb-sm"
-              />
-              <div class="text-grey-7">No users found for "{{ searchQuery }}"</div>
-              <div class="text-caption text-grey-5 q-mt-xs">Try a different email address</div>
-            </div>
-            <div v-else>
-              <div class="text-grey-6">Type an email address to search for users</div>
-            </div>
-          </q-item-section>
-        </q-item>
-      </template>
-    </q-select>
-  </div>
+    <template #selected-item="{ tabindex, index, removeAtIndex, opt: user }">
+      <q-chip
+        removable
+        dense
+        :tabindex="tabindex"
+        color="primary"
+        text-color="white"
+        @remove="removeAtIndex(index)"
+      >
+        {{ getUserDisplayName(user.name, user.email) }}
+      </q-chip>
+    </template>
+
+    <template #no-option>
+      <q-item>
+        <q-item-section class="text-center">
+          <div v-if="loading">
+            <q-spinner-dots />
+            <div class="text-grey-6">Searching...</div>
+          </div>
+          <div v-else-if="searchQuery?.trim()">
+            <q-icon
+              name="eva-search-outline"
+              size="2rem"
+              class="text-grey-5 q-mb-sm"
+            />
+            <div class="text-grey-7">No users found for "{{ searchQuery }}"</div>
+            <div class="text-caption text-grey-5 q-mt-xs">Try a different email address</div>
+          </div>
+          <div v-else>
+            <div class="text-grey-6">Type an email address to search</div>
+          </div>
+        </q-item-section>
+      </q-item>
+    </template>
+  </q-select>
 </template>
 
 <script setup lang="ts">
@@ -110,8 +94,8 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'update:model-value', value: UserSearchResult[]): void
-  (e: 'update:search-query', value: string): void
+  'update:model-value': [value: UserSearchResult[]]
+  'update:search-query': [value: string]
 }>()
 
 const searchQuery = ref('')

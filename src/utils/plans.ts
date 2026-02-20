@@ -42,8 +42,8 @@ export function getPlanStatus(plan: Plan): PlanStatus {
   }
 }
 
-export function canEditPlan(plan: Plan, isOwner: boolean): boolean {
-  if (!isOwner) {
+export function canEditPlan(plan: Plan & { permission_level?: string }, isOwner: boolean): boolean {
+  if (!isOwner && plan.permission_level !== 'edit') {
     return false
   }
 

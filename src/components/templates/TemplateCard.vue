@@ -41,7 +41,7 @@
             </q-icon>
             <!-- Menu button -->
             <q-btn
-              v-if="isOwner"
+              v-if="canEdit"
               flat
               round
               size="sm"
@@ -50,7 +50,7 @@
               @click.stop
             >
               <TemplateCardMenu
-                :is-owner="isOwner"
+                :can-edit="canEdit"
                 :permission-level="template.permission_level"
                 @share="emit('share', template.id)"
                 @delete="showDeleteDialog"
@@ -138,6 +138,7 @@ const preferencesStore = usePreferencesStore()
 const isDeleteDialogOpen = ref(false)
 
 const isOwner = computed(() => props.template.owner_id === userStore.userProfile?.id)
+const canEdit = computed(() => isOwner.value || props.template.permission_level === 'edit')
 const isViewOnly = computed(() => props.template.permission_level === 'view')
 
 function formatAmount(amount: number | null | undefined): string {

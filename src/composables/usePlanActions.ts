@@ -38,7 +38,7 @@ export function usePlanActions(context: PlanActionsContext) {
       label: 'Share',
       color: 'info',
       priority: 'secondary',
-      visible: !context.isNewPlan.value && context.isOwner.value,
+      visible: !context.isNewPlan.value && context.isEditMode.value,
       handler: context.handlers.onShare,
     },
     {
@@ -51,7 +51,7 @@ export function usePlanActions(context: PlanActionsContext) {
         !context.isNewPlan.value &&
         !!context.currentPlan.value &&
         getPlanStatus(context.currentPlan.value) === 'active' &&
-        context.isOwner.value,
+        context.isEditMode.value,
       handler: context.handlers.onCancel,
     },
     {
@@ -66,7 +66,7 @@ export function usePlanActions(context: PlanActionsContext) {
         (getPlanStatus(context.currentPlan.value) === 'pending' ||
           getPlanStatus(context.currentPlan.value) === 'completed' ||
           getPlanStatus(context.currentPlan.value) === 'cancelled') &&
-        context.isOwner.value,
+        context.isEditMode.value,
       handler: context.handlers.onDelete,
     },
   ])
@@ -96,7 +96,7 @@ export function usePlanActions(context: PlanActionsContext) {
       label: 'Share',
       color: 'info',
       priority: 'secondary',
-      visible: context.isOwner.value,
+      visible: context.isEditMode.value,
       handler: context.handlers.onShare,
     },
   ])
@@ -126,7 +126,7 @@ export function usePlanActions(context: PlanActionsContext) {
       label: 'Share',
       color: 'info',
       priority: 'secondary',
-      visible: context.isOwner.value,
+      visible: context.isEditMode.value,
       handler: context.handlers.onShare,
     },
   ])
@@ -149,7 +149,7 @@ export function usePlanActions(context: PlanActionsContext) {
       (context.isEditMode.value &&
         (context.isNewPlan.value ||
           context.canEditPlanData.value ||
-          (!context.isOwner.value && context.currentTab.value === 'edit'))) ||
+          (!context.canEditPlanData.value && context.currentTab.value === 'edit'))) ||
       (!context.isNewPlan.value &&
         (context.currentTab.value === 'overview' ||
           (context.currentTab.value === 'items' && context.isEditMode.value) ||

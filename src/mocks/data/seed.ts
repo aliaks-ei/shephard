@@ -402,6 +402,32 @@ export const plans: Tables<'plans'>[] = [
     created_at: twoMonthsAgoStart.toISOString(),
     updated_at: twoMonthsAgoEnd.toISOString(),
   },
+  {
+    id: 'plan-shared-edit',
+    name: 'Household February',
+    owner_id: MOCK_SHARED_USER_ID,
+    template_id: 'tmpl-shared-edit',
+    start_date: toDateString(startOfMonth),
+    end_date: toDateString(endOfMonth),
+    status: 'active',
+    total: 1800,
+    currency: 'EUR',
+    created_at: startOfMonth.toISOString(),
+    updated_at: today.toISOString(),
+  },
+  {
+    id: 'plan-shared-view',
+    name: 'Travel Week',
+    owner_id: MOCK_VIEWER_USER_ID,
+    template_id: 'tmpl-shared-view',
+    start_date: toDateString(thisWeekStart),
+    end_date: toDateString(thisWeekEnd),
+    status: 'active',
+    total: 500,
+    currency: 'USD',
+    created_at: thisWeekStart.toISOString(),
+    updated_at: today.toISOString(),
+  },
 ]
 
 export const planItems: Tables<'plan_items'>[] = [
@@ -541,6 +567,52 @@ export const planItems: Tables<'plan_items'>[] = [
     created_at: twoMonthsAgoStart.toISOString(),
     updated_at: null,
   },
+  // Shared edit plan items (Household February)
+  {
+    id: 'pi-13',
+    plan_id: 'plan-shared-edit',
+    name: 'Shared Groceries',
+    amount: 400,
+    category_id: 'cat-food',
+    is_fixed_payment: false,
+    is_completed: false,
+    created_at: startOfMonth.toISOString(),
+    updated_at: null,
+  },
+  {
+    id: 'pi-14',
+    plan_id: 'plan-shared-edit',
+    name: 'Internet',
+    amount: 50,
+    category_id: 'cat-bills',
+    is_fixed_payment: true,
+    is_completed: true,
+    created_at: startOfMonth.toISOString(),
+    updated_at: null,
+  },
+  // Shared view plan items (Travel Week)
+  {
+    id: 'pi-15',
+    plan_id: 'plan-shared-view',
+    name: 'Dining Out',
+    amount: 200,
+    category_id: 'cat-food',
+    is_fixed_payment: false,
+    is_completed: false,
+    created_at: thisWeekStart.toISOString(),
+    updated_at: null,
+  },
+  {
+    id: 'pi-16',
+    plan_id: 'plan-shared-view',
+    name: 'Activities',
+    amount: 300,
+    category_id: 'cat-entertainment',
+    is_fixed_payment: false,
+    is_completed: false,
+    created_at: thisWeekStart.toISOString(),
+    updated_at: null,
+  },
 ]
 
 export const planShares: Tables<'plan_shares'>[] = [
@@ -551,6 +623,22 @@ export const planShares: Tables<'plan_shares'>[] = [
     shared_by_user_id: MOCK_USER_ID,
     permission_level: 'edit',
     created_at: startOfMonth.toISOString(),
+  },
+  {
+    id: 'ps-2',
+    plan_id: 'plan-shared-edit',
+    shared_with_user_id: MOCK_USER_ID,
+    shared_by_user_id: MOCK_SHARED_USER_ID,
+    permission_level: 'edit',
+    created_at: startOfMonth.toISOString(),
+  },
+  {
+    id: 'ps-3',
+    plan_id: 'plan-shared-view',
+    shared_with_user_id: MOCK_USER_ID,
+    shared_by_user_id: MOCK_VIEWER_USER_ID,
+    permission_level: 'view',
+    created_at: thisWeekStart.toISOString(),
   },
 ]
 

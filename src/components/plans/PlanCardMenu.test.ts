@@ -34,7 +34,7 @@ describe('PlanCardMenu', () => {
 
   it('should mount component properly', () => {
     const wrapper = renderPlanCardMenu({
-      isOwner: true,
+      canEdit: true,
       planStatus: 'active',
     })
     expect(wrapper.exists()).toBe(true)
@@ -42,18 +42,18 @@ describe('PlanCardMenu', () => {
 
   it('should have correct props interface', () => {
     const wrapper = renderPlanCardMenu({
-      isOwner: false,
+      canEdit: false,
       permissionLevel: 'edit',
       planStatus: 'pending',
     })
 
-    expect(wrapper.props('isOwner')).toBe(false)
+    expect(wrapper.props('canEdit')).toBe(false)
     expect(wrapper.props('permissionLevel')).toBe('edit')
     expect(wrapper.props('planStatus')).toBe('pending')
   })
 
   it('should emit share when share item clicked', async () => {
-    const wrapper = renderPlanCardMenu({ isOwner: true, planStatus: 'active' })
+    const wrapper = renderPlanCardMenu({ canEdit: true, planStatus: 'active' })
     const items = wrapper.findAll('.q-item')
     expect(items.length).toBeGreaterThan(0)
     await items[0]?.trigger('click')
@@ -61,7 +61,7 @@ describe('PlanCardMenu', () => {
   })
 
   it('should show share and cancel for owner with active plan', async () => {
-    const wrapper = renderPlanCardMenu({ isOwner: true, planStatus: 'active' })
+    const wrapper = renderPlanCardMenu({ canEdit: true, planStatus: 'active' })
     const items = wrapper.findAll('.q-item')
     expect(items.length).toBe(2)
     await items[0]?.trigger('click')
@@ -71,7 +71,7 @@ describe('PlanCardMenu', () => {
   })
 
   it('should show share and delete for owner with pending plan', async () => {
-    const wrapper = renderPlanCardMenu({ isOwner: true, planStatus: 'pending' })
+    const wrapper = renderPlanCardMenu({ canEdit: true, planStatus: 'pending' })
     const items = wrapper.findAll('.q-item')
     expect(items.length).toBe(2)
     await items[0]?.trigger('click')
@@ -80,17 +80,17 @@ describe('PlanCardMenu', () => {
     expect(wrapper.emitted('delete')).toBeTruthy()
   })
 
-  it('should show no items for non-owner', () => {
+  it('should show no items when canEdit is false', () => {
     const wrapper = renderPlanCardMenu({
-      isOwner: false,
-      permissionLevel: 'edit',
+      canEdit: false,
+      permissionLevel: 'view',
       planStatus: 'completed',
     })
     expect(wrapper.findAll('.q-item').length).toBe(0)
   })
 
   it('should allow delete when plan is cancelled', async () => {
-    const wrapper = renderPlanCardMenu({ isOwner: true, planStatus: 'cancelled' })
+    const wrapper = renderPlanCardMenu({ canEdit: true, planStatus: 'cancelled' })
     const items = wrapper.findAll('.q-item')
     expect(items.length).toBe(2)
     await items[0]?.trigger('click')

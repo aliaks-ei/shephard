@@ -517,6 +517,13 @@ describe('TemplatePage', () => {
     expect(shareButton.exists()).toBe(true)
   })
 
+  it('should show share button for existing template with edit permission', () => {
+    const { wrapper } = createWrapper({ isOwner: false })
+
+    const shareButton = wrapper.find('[data-label="Share"]')
+    expect(shareButton.exists()).toBe(true)
+  })
+
   it('should not show share button for new template', () => {
     const { wrapper } = createWrapper({ isNewTemplate: true })
 
@@ -524,8 +531,8 @@ describe('TemplatePage', () => {
     expect(shareButton.exists()).toBe(false)
   })
 
-  it('should not show share button when not owner', () => {
-    const { wrapper } = createWrapper({ isOwner: false })
+  it('should not show share button in read-only mode', () => {
+    const { wrapper } = createWrapper({ isReadOnlyMode: true })
 
     const shareButton = wrapper.find('[data-label="Share"]')
     expect(shareButton.exists()).toBe(false)
