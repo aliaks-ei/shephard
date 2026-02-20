@@ -43,13 +43,14 @@
       v-if="sharePlanId"
       v-model="isShareDialogOpen"
       :plan-id="sharePlanId"
+      :owner-user-id="sharePlanOwnerId"
       @shared="isShareDialogOpen = false"
     />
   </ListPageLayout>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 import ListPageLayout from 'src/layouts/ListPageLayout.vue'
 import SearchAndSort from 'src/components/shared/SearchAndSort.vue'
@@ -79,6 +80,10 @@ const updatePlanMutation = useUpdatePlanMutation()
 
 const isShareDialogOpen = ref(false)
 const sharePlanId = ref<string | null>(null)
+const sharePlanOwnerId = computed(() => {
+  if (!sharePlanId.value) return undefined
+  return allFilteredAndSortedItems.value.find((p) => p.id === sharePlanId.value)?.owner_id
+})
 
 function handleDeletePlan(plan: PlanWithPermission): void {
   deleteItem(plan)

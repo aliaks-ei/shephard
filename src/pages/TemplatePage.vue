@@ -55,6 +55,7 @@
         v-if="routeTemplateId"
         v-model="isShareDialogOpen"
         :template-id="routeTemplateId"
+        :owner-user-id="currentTemplate?.owner_id"
         @shared="onTemplateShared"
       />
 
@@ -99,6 +100,7 @@ const { categories } = useCategoriesQuery()
 const deleteTemplateMutation = useDeleteTemplateMutation()
 
 const {
+  currentTemplate,
   isTemplateLoading,
   isNewTemplate,
   routeTemplateId,

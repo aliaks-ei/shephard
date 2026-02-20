@@ -76,18 +76,30 @@ describe('SharePlanDialog', () => {
   })
 
   it('should mount component properly', () => {
-    const wrapper = renderSharePlanDialog({ planId: 'p1', modelValue: true })
+    const wrapper = renderSharePlanDialog({
+      planId: 'p1',
+      ownerUserId: undefined,
+      modelValue: true,
+    })
     expect(wrapper.exists()).toBe(true)
   })
 
   it('should pass props to ShareDialog', () => {
-    const wrapper = renderSharePlanDialog({ planId: 'p1', modelValue: true })
+    const wrapper = renderSharePlanDialog({
+      planId: 'p1',
+      ownerUserId: undefined,
+      modelValue: true,
+    })
     expect(wrapper.props('planId')).toBe('p1')
     expect(wrapper.props('modelValue')).toBe(true)
   })
 
   it('should emit update:modelValue when ShareDialog requests close', async () => {
-    const wrapper = renderSharePlanDialog({ planId: 'p1', modelValue: true })
+    const wrapper = renderSharePlanDialog({
+      planId: 'p1',
+      ownerUserId: undefined,
+      modelValue: true,
+    })
     const dialog = wrapper.find('.share-dialog .close')
     await dialog.trigger('click')
     expect(wrapper.emitted('update:modelValue')).toBeTruthy()
@@ -98,7 +110,7 @@ describe('SharePlanDialog', () => {
     mockMutateAsync.mockResolvedValue({ success: true })
 
     const wrapper = mount(SharePlanDialog, {
-      props: { planId: 'p1', modelValue: true },
+      props: { planId: 'p1', ownerUserId: undefined, modelValue: true },
       global: {
         stubs: {
           ShareDialog: {

@@ -20,6 +20,7 @@ const renderComponent = (props: {
   modelValue: boolean
   sharedUsers: TemplateSharedUser[]
   userSearchResults: UserSearchResult[]
+  ownerUserId: string | undefined
   isSharing: boolean
   isSearchingUsers: boolean
   isLoadingShares: boolean
@@ -89,6 +90,7 @@ describe('ShareDialog', () => {
     modelValue: true,
     sharedUsers: [] as TemplateSharedUser[],
     userSearchResults: [] as UserSearchResult[],
+    ownerUserId: undefined,
     isSharing: false,
     isSearchingUsers: false,
     isLoadingShares: false,

@@ -90,6 +90,7 @@ const props = defineProps<{
   searchResults: UserSearchResult[]
   sharedUsers: TemplateSharedUser[]
   currentUserId: string | undefined
+  ownerUserId: string | undefined
   loading?: boolean
 }>()
 
@@ -104,9 +105,10 @@ const searchOptions = computed(() =>
   props.searchResults.filter((user) => {
     const isAlreadyShared = props.sharedUsers.some((u) => u.user_id === user.id)
     const isCurrentUser = user.id === props.currentUserId
+    const isOwner = user.id === props.ownerUserId
     const isAlreadySelected = props.modelValue.some((u) => u.id === user.id)
 
-    return !isAlreadyShared && !isCurrentUser && !isAlreadySelected
+    return !isAlreadyShared && !isCurrentUser && !isOwner && !isAlreadySelected
   }),
 )
 

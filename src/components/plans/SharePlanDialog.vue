@@ -2,6 +2,7 @@
   <ShareEntityDialog
     :model-value="modelValue"
     :entity-id="planId"
+    :owner-user-id="ownerUserId"
     entity-type="plan"
     entity-name="Plan"
     @update:model-value="emit('update:modelValue', $event)"
@@ -14,6 +15,7 @@ import ShareEntityDialog from 'src/components/shared/ShareEntityDialog.vue'
 
 defineProps<{
   planId: string
+  ownerUserId: string | undefined
   modelValue: boolean
 }>()
 

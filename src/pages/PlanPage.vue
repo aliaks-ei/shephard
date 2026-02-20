@@ -134,6 +134,7 @@
         v-if="currentPlan"
         v-model="isShareDialogOpen"
         :plan-id="currentPlan.id"
+        :owner-user-id="currentPlan.owner_id"
         @shared="onPlanShared"
       />
 

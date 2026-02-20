@@ -37,6 +37,7 @@
         <SharedUsersSelect
           v-model="selectedUsers"
           :current-user-id="currentUserId"
+          :owner-user-id="ownerUserId"
           :search-results="userSearchResults"
           :shared-users="sharedUsers"
           :loading="isSearchingUsers"
@@ -63,7 +64,9 @@
         <div class="q-mt-md">
           <div class="text-caption text-grey-6 q-mb-xs">
             People with access{{
-              !isLoadingShares && sharedUsers.length > 0 ? ` (${sharedUsers.length})` : ''
+              !isLoadingShares && visibleSharedUsers.length > 0
+                ? ` (${visibleSharedUsers.length})`
+                : ''
             }}
           </div>
 
@@ -102,8 +105,8 @@
 
           <!-- Shared users list -->
           <SharedUsersList
-            v-else-if="sharedUsers.length > 0"
-            :users="sharedUsers"
+            v-else-if="visibleSharedUsers.length > 0"
+            :users="visibleSharedUsers"
             :permission-options="permissionOptions"
             @update:user-permission="handleUpdateUserPermission"
             @remove:user="handleRemoveUserAccess"
@@ -161,6 +164,7 @@ type ShareDialogProps = {
   modelValue: boolean
   sharedUsers: SharedUser[]
   userSearchResults: UserSearchResult[]
+  ownerUserId: string | undefined
   isSharing: boolean
   isSearchingUsers: boolean
   isLoadingShares: boolean
@@ -188,6 +192,10 @@ const selectedPermission = ref<'view' | 'edit'>('view')
 const selectedUsers = ref<UserSearchResult[]>([])
 
 const currentUserId = computed(() => userStore.userProfile?.id)
+
+const visibleSharedUsers = computed(() =>
+  props.sharedUsers.filter((u) => u.user_id !== currentUserId.value),
+)
 
 const debouncedSearch = useDebounceFn((query: string) => {
   if (!query.trim()) {

@@ -136,11 +136,13 @@
       v-if="sharePlanId"
       v-model="showSharePlanDialog"
       :plan-id="sharePlanId"
+      :owner-user-id="activePlans.find((p) => p.id === sharePlanId)?.owner_id"
     />
     <ShareTemplateDialog
       v-if="shareTemplateId"
       v-model="showShareTemplateDialog"
       :template-id="shareTemplateId"
+      :owner-user-id="templates.find((t) => t.id === shareTemplateId)?.owner_id"
     />
   </section>
 </template>

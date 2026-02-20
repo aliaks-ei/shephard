@@ -5,6 +5,7 @@
     :entity-name="entityName"
     :shared-users="sharedUsers"
     :user-search-results="searchResults"
+    :owner-user-id="ownerUserId"
     :is-sharing="shareMutation.isPending.value"
     :is-searching-users="isSearching"
     :is-loading-shares="isLoadingShares"
@@ -33,6 +34,7 @@ const props = defineProps<{
   entityId: string
   entityType: 'plan' | 'template'
   entityName: string
+  ownerUserId: string | undefined
   modelValue: boolean
 }>()
 
