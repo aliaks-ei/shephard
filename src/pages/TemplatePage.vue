@@ -102,7 +102,6 @@ const {
   isTemplateLoading,
   isNewTemplate,
   routeTemplateId,
-  isOwner,
   isEditMode,
   templateCurrency,
   createNewTemplateWithItems,
@@ -191,7 +190,7 @@ const actionBarActions = computed<ActionBarAction[]>(() => [
     label: 'Share',
     color: 'info',
     priority: 'secondary',
-    visible: !isNewTemplate.value && isOwner.value,
+    visible: !isNewTemplate.value && isEditMode.value,
     handler: () => openDialog('share'),
   },
   {
@@ -200,7 +199,7 @@ const actionBarActions = computed<ActionBarAction[]>(() => [
     label: 'Delete',
     color: 'negative',
     priority: 'secondary',
-    visible: !isNewTemplate.value && isOwner.value,
+    visible: !isNewTemplate.value && isEditMode.value,
     handler: () => {
       showDeleteDialog.value = true
     },

@@ -39,7 +39,6 @@
   font-display: swap;
 }
 
-// Import theme variables
 @import './theme.scss';
 
 html {
@@ -104,7 +103,7 @@ body {
 // Global Notification Styles - Full width on mobile with bottom offset for navigation
 .q-notification {
   width: 100%;
-  margin-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  margin-bottom: calc(72px + max(12px, env(safe-area-inset-bottom, 0px)));
 
   @media (min-width: $breakpoint-sm-min) {
     width: auto;
@@ -118,6 +117,14 @@ body {
 }
 
 // Shared page and section spacing utilities
+.item-amount-section {
+  max-width: 80px;
+
+  @media (min-width: $breakpoint-md-min) {
+    max-width: 112px;
+  }
+}
+
 .page-content-spacing {
   padding: var(--page-content-padding-mobile);
 
@@ -150,6 +157,7 @@ body {
 .mobile-expense-swipe-item .q-slide-item__content {
   box-sizing: border-box;
   padding-right: 4px;
+  background: inherit;
 }
 
 // --------------------------------------------

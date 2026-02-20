@@ -33,22 +33,24 @@ describe('useSortedRecentItems', () => {
     expect(sortedItems.value[1]?.id).toBe('item-2')
   })
 
-  it('filters out items without updated_at', () => {
+  it('filters out items without updated_at or created_at', () => {
     const items = computed(() => [
       { id: 'item-1', updated_at: '2024-01-01T10:00:00Z' },
-      { id: 'item-2', updated_at: null },
+      { id: 'item-2', updated_at: null, created_at: null },
       { id: 'item-3', updated_at: '2024-01-02T10:00:00Z' },
       { id: 'item-4' },
+      { id: 'item-5', created_at: '2024-01-05T10:00:00Z' },
     ])
 
     const sortedItems = useSortedRecentItems(items, 10)
 
-    expect(sortedItems.value).toHaveLength(2)
-    expect(sortedItems.value[0]?.id).toBe('item-3')
-    expect(sortedItems.value[1]?.id).toBe('item-1')
+    expect(sortedItems.value).toHaveLength(3)
+    expect(sortedItems.value[0]?.id).toBe('item-5')
+    expect(sortedItems.value[1]?.id).toBe('item-3')
+    expect(sortedItems.value[2]?.id).toBe('item-1')
   })
 
-  it('returns empty array when no items have updated_at', () => {
+  it('returns empty array when no items have updated_at or created_at', () => {
     const items = computed(() => [{ id: 'item-1' }, { id: 'item-2', updated_at: null }])
 
     const sortedItems = useSortedRecentItems(items, 10)

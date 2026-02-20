@@ -14,8 +14,6 @@ vi.mock('src/stores/user', () => ({
   useUserStore: vi.fn(),
 }))
 
-// Use app types to match component props
-
 const renderComponent = (props: {
   entityId: string
   entityName: string
@@ -24,6 +22,7 @@ const renderComponent = (props: {
   userSearchResults: UserSearchResult[]
   isSharing: boolean
   isSearchingUsers: boolean
+  isLoadingShares: boolean
 }) =>
   mount(ShareDialog, {
     props,
@@ -48,6 +47,10 @@ const renderComponent = (props: {
           props: ['label', 'flat', 'color', 'unelevated', 'loading', 'disable'],
           emits: ['click'],
         },
+        'q-btn-toggle': {
+          template: '<div class="btn-toggle" />',
+          props: ['modelValue', 'options'],
+        },
         'q-space': { template: '<span />' },
         'q-icon': { template: '<i />', props: ['name'] },
         'q-separator': { template: '<hr />' },
@@ -57,14 +60,6 @@ const renderComponent = (props: {
         'q-skeleton': {
           template: '<div class="skeleton" />',
           props: ['type', 'width', 'height', 'size'],
-        },
-        'q-chip': {
-          template: '<span class="chip"><slot /></span>',
-          props: ['color', 'textColor', 'size'],
-        },
-        'q-option-group': {
-          template: '<div class="option-group"></div>',
-          props: ['modelValue', 'options', 'color', 'inline'],
         },
         SharedUsersList: {
           template: '<div data-testid="users-list" />',
@@ -96,6 +91,7 @@ describe('ShareDialog', () => {
     userSearchResults: [] as UserSearchResult[],
     isSharing: false,
     isSearchingUsers: false,
+    isLoadingShares: false,
   }
 
   it('mounts and shows title', () => {
@@ -110,9 +106,9 @@ describe('ShareDialog', () => {
     expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([false])
   })
 
-  it('shows loading skeleton when isLoadingShares is true initially then loads', () => {
-    const wrapper = renderComponent(baseProps)
-    expect(wrapper.findAll('.skeleton').length).toBeGreaterThanOrEqual(0)
+  it('shows loading skeleton when isLoadingShares is true', () => {
+    const wrapper = renderComponent({ ...baseProps, isLoadingShares: true })
+    expect(wrapper.findAll('.skeleton').length).toBeGreaterThan(0)
   })
 
   it('renders users list when sharedUsers provided', () => {
@@ -133,24 +129,11 @@ describe('ShareDialog', () => {
 
   it('displays empty state message when no shared users', () => {
     const wrapper = renderComponent({ ...baseProps, sharedUsers: [] })
-    expect(wrapper.text()).toContain('is not shared with anyone yet')
+    expect(wrapper.text()).toContain('Not shared with anyone yet')
   })
 
-  it('emits share-with-user for each selected user and fires shared', async () => {
-    const wrapper = renderComponent({ ...baseProps })
-
-    const shareButton = wrapper.findAll('button').at(-1)
-    if (!shareButton) throw new Error('Share button not found')
-    await shareButton.trigger('click')
-
-    expect(wrapper.emitted('shared') ?? []).toEqual([])
-  })
-
-  it('emits load-shared-users when dialog opens and clears search on close', async () => {
-    const wrapper = renderComponent({ ...baseProps, modelValue: false })
-
-    await wrapper.setProps({ modelValue: true })
-    expect(wrapper.emitted('load-shared-users')?.[0]).toEqual(['entity-1'])
+  it('emits clear-user-search when dialog closes', async () => {
+    const wrapper = renderComponent({ ...baseProps, modelValue: true })
 
     await wrapper.setProps({ modelValue: false })
     const clearEvents = wrapper.emitted('clear-user-search') ?? []

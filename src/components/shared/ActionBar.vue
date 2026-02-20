@@ -40,7 +40,6 @@
           >
             <q-btn
               :icon="action.icon"
-              :color="action.color"
               :loading="action.loading"
               :label="action.label"
               :disabled="action.loading"
@@ -113,6 +112,6 @@ async function handleActionClick(action: ActionBarAction): Promise<void> {
 
 <style lang="scss" scoped>
 .mobile-action-shell {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
 }
 </style>

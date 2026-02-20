@@ -376,10 +376,10 @@ describe('PlanCard', () => {
     expect(nonOwnerWrapper.text()).toContain('Test Plan')
   })
 
-  it('should not show PlanCardMenu for non-owner', () => {
+  it('should not show PlanCardMenu for non-owner without edit permission', () => {
     const wrapper = renderPlanCard(
       {
-        plan: { ...mockPlan, owner_id: 'different-user' },
+        plan: { ...mockPlan, owner_id: 'different-user', permission_level: 'view' },
       },
       { id: 'user-1' },
     )

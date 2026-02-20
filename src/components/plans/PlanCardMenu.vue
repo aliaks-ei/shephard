@@ -7,7 +7,7 @@
   >
     <q-list separator>
       <q-item
-        v-if="isOwner"
+        v-if="canEdit"
         clickable
         @click="emit('share')"
       >
@@ -22,7 +22,7 @@
         </q-item-section>
       </q-item>
       <q-item
-        v-if="isOwner && canCancel"
+        v-if="canEdit && canCancel"
         clickable
         class="text-warning q-px-md"
         @click="emit('cancel')"
@@ -39,7 +39,7 @@
         </q-item-section>
       </q-item>
       <q-item
-        v-if="isOwner && canDelete"
+        v-if="canEdit && canDelete"
         clickable
         class="text-negative q-px-md"
         @click="emit('delete')"
@@ -69,7 +69,7 @@ const emit = defineEmits<{
 }>()
 
 const props = defineProps<{
-  isOwner: boolean
+  canEdit: boolean
   permissionLevel?: string | undefined
   planStatus: 'pending' | 'active' | 'completed' | 'cancelled'
 }>()
@@ -82,9 +82,9 @@ const canCancel = computed(() => {
   return props.planStatus === 'active'
 })
 
-// Menu should only be visible if the user is the owner
+// Menu should be visible if the user can edit (owner or edit permission)
 const hasActions = computed(() => {
-  return props.isOwner
+  return props.canEdit
 })
 
 defineExpose({

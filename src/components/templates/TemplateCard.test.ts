@@ -53,7 +53,7 @@ const renderTemplateCard = (props: TemplateCardProps, isPrivacyModeEnabled = fal
       stubs: {
         TemplateCardMenu: {
           template: '<div data-testid="template-card-menu" />',
-          props: ['isOwner', 'permissionLevel'],
+          props: ['canEdit', 'permissionLevel'],
           emits: ['edit', 'share', 'delete'],
         },
       },

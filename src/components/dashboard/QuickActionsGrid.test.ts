@@ -93,25 +93,22 @@ describe('QuickActionsGrid', () => {
     expect(wrapper.emitted('add-expense')).toBeTruthy()
   })
 
-  it('navigates to /plans/new when New Plan is clicked', async () => {
+  it('navigates to /plans/new when New Plan is clicked', () => {
     const wrapper = createWrapper()
     const items = wrapper.findAllComponents({ name: 'QItem' })
-    await items[1]?.trigger('click')
-    expect(mockRouterPush).toHaveBeenCalledWith('/plans/new')
+    expect(items[1]?.props('to')).toBe('/plans/new')
   })
 
-  it('navigates to /templates/new when New Template is clicked', async () => {
+  it('navigates to /templates/new when New Template is clicked', () => {
     const wrapper = createWrapper()
     const items = wrapper.findAllComponents({ name: 'QItem' })
-    await items[2]?.trigger('click')
-    expect(mockRouterPush).toHaveBeenCalledWith('/templates/new')
+    expect(items[2]?.props('to')).toBe('/templates/new')
   })
 
-  it('navigates to /settings when Settings is clicked', async () => {
+  it('navigates to /settings when Settings is clicked', () => {
     const wrapper = createWrapper()
     const items = wrapper.findAllComponents({ name: 'QItem' })
-    await items[3]?.trigger('click')
-    expect(mockRouterPush).toHaveBeenCalledWith('/settings')
+    expect(items[3]?.props('to')).toBe('/settings')
   })
 
   it('renders grid with responsive gutter classes', () => {

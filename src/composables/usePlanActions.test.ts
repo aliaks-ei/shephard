@@ -80,15 +80,26 @@ describe('usePlanActions', () => {
       expect(saveAction?.color).toBe('positive')
     })
 
-    it('shows Share button when not new plan and user is owner', () => {
+    it('shows Share button when not new plan and user can edit', () => {
       const context = createContext({
         isNewPlan: ref(false),
-        isOwner: ref(true),
+        isEditMode: ref(true),
       })
       const { actionBarActions } = usePlanActions(context)
 
       const shareAction = actionBarActions.value.find((a) => a.key === 'share')
       expect(shareAction?.visible).toBe(true)
+    })
+
+    it('hides Share button when user cannot edit', () => {
+      const context = createContext({
+        isNewPlan: ref(false),
+        isEditMode: ref(false),
+      })
+      const { actionBarActions } = usePlanActions(context)
+
+      const shareAction = actionBarActions.value.find((a) => a.key === 'share')
+      expect(shareAction?.visible).toBe(false)
     })
 
     it('hides Share button for new plan', () => {
@@ -99,10 +110,10 @@ describe('usePlanActions', () => {
       expect(shareAction?.visible).toBe(false)
     })
 
-    it('shows Cancel button for active plan when owner', () => {
+    it('shows Cancel button for active plan when user can edit', () => {
       const context = createContext({
         isNewPlan: ref(false),
-        isOwner: ref(true),
+        isEditMode: ref(true),
         currentPlan: ref(createMockPlan('active')),
       })
       const { actionBarActions } = usePlanActions(context)
@@ -121,7 +132,7 @@ describe('usePlanActions', () => {
       expect(cancelAction?.visible).toBe(false)
     })
 
-    it('shows Delete button for completed plan when owner', () => {
+    it('shows Delete button for completed plan when user can edit', () => {
       const context = createContext({
         currentPlan: ref(createMockPlan('completed')),
       })
@@ -131,7 +142,7 @@ describe('usePlanActions', () => {
       expect(deleteAction?.visible).toBe(true)
     })
 
-    it('shows Delete button for pending plan when owner', () => {
+    it('shows Delete button for pending plan when user can edit', () => {
       const context = createContext({
         currentPlan: ref(createMockPlan('pending')),
       })
@@ -191,10 +202,10 @@ describe('usePlanActions', () => {
       expect(editAction?.visible).toBe(false)
     })
 
-    it('shows Share button when owner', () => {
+    it('shows Share button when user can edit', () => {
       const context = createContext({
         currentTab: ref('overview'),
-        isOwner: ref(true),
+        isEditMode: ref(true),
         isNewPlan: ref(false),
       })
       const { actionBarActions } = usePlanActions(context)

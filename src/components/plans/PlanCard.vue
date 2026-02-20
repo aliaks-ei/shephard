@@ -36,7 +36,7 @@
             </q-icon>
             <!-- Menu button -->
             <q-btn
-              v-if="isOwner"
+              v-if="canEdit"
               flat
               round
               size="sm"
@@ -45,7 +45,7 @@
               @click.stop
             >
               <PlanCardMenu
-                :is-owner="isOwner"
+                :can-edit="canEdit"
                 :permission-level="plan.permission_level"
                 :plan-status="planStatus"
                 @share="emit('share', plan.id)"
@@ -152,6 +152,7 @@ const isDeleteDialogOpen = ref(false)
 const isCancelDialogOpen = ref(false)
 
 const isOwner = computed(() => props.plan.owner_id === userStore.userProfile?.id)
+const canEdit = computed(() => isOwner.value || props.plan.permission_level === 'edit')
 const planStatus = computed(() => getPlanStatus(props.plan))
 const isViewOnly = computed(() => props.plan.permission_level === 'view')
 

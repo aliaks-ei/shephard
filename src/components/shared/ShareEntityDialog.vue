@@ -7,6 +7,7 @@
     :user-search-results="searchResults"
     :is-sharing="shareMutation.isPending.value"
     :is-searching-users="isSearching"
+    :is-loading-shares="isLoadingShares"
     @update:model-value="emit('update:modelValue', $event)"
     @share-with-user="handleShareWithUser"
     @update-user-permission="handleUpdateUserPermission"
@@ -52,8 +53,11 @@ watch(
 )
 
 const searchQuery = ref('')
-const { data: sharedUsersData } = useSharedUsersQuery(props.entityType, reactiveEntityId)
-const { data: searchData, isPending: isSearching } = useSearchUsersQuery(searchQuery)
+const { data: sharedUsersData, isFetching: isLoadingShares } = useSharedUsersQuery(
+  props.entityType,
+  reactiveEntityId,
+)
+const { data: searchData, isFetching: isSearching } = useSearchUsersQuery(searchQuery)
 const shareMutation = useShareEntityMutation(props.entityType, userId)
 const unshareMutation = useUnshareEntityMutation(props.entityType)
 const updatePermissionMutation = useUpdatePermissionMutation(props.entityType)

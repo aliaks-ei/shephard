@@ -48,7 +48,7 @@
     >
       <!-- Loading State -->
       <q-card-section
-        v-if="!props.plan"
+        v-if="!plan"
         class="q-gutter-sm q-px-none"
       >
         <!-- Skeleton for category groups -->
@@ -309,7 +309,6 @@ const { getCategoryById } = useCategoriesQuery()
 const planIdRef = computed(() => props.plan?.id ?? null)
 const { toggleItemCompletion: toggleCompletion } = useItemCompletion(planIdRef)
 
-// Plan items are now available from props.plan.plan_items (loaded at plan level)
 const planItems = computed(() => props.plan?.plan_items || [])
 
 const categoryGroups = computed((): CategoryGroup[] => {

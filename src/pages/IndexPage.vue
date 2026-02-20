@@ -79,6 +79,7 @@
             <PlanCard
               :plan="item"
               @edit="goToPlan"
+              @share="openSharePlanDialog"
             />
           </template>
           <template #list-item="{ item }">
@@ -107,6 +108,7 @@
             <TemplateCard
               :template="item"
               @edit="goToTemplate"
+              @share="openShareTemplateDialog"
             />
           </template>
           <template #list-item="{ item }">
@@ -127,6 +129,18 @@
       v-model="showExpenseDialog"
       auto-select-recent-plan
       @expense-created="onExpenseCreated"
+    />
+
+    <!-- Share Dialogs -->
+    <SharePlanDialog
+      v-if="sharePlanId"
+      v-model="showSharePlanDialog"
+      :plan-id="sharePlanId"
+    />
+    <ShareTemplateDialog
+      v-if="shareTemplateId"
+      v-model="showShareTemplateDialog"
+      :template-id="shareTemplateId"
     />
   </section>
 </template>
@@ -149,6 +163,8 @@ import EmptyTemplatesState from 'src/components/dashboard/EmptyTemplatesState.vu
 import PlanCard from 'src/components/plans/PlanCard.vue'
 import TemplateCard from 'src/components/templates/TemplateCard.vue'
 import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
+import SharePlanDialog from 'src/components/plans/SharePlanDialog.vue'
+import ShareTemplateDialog from 'src/components/templates/ShareTemplateDialog.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -158,6 +174,10 @@ const { activePlans, isPending: isPlansLoading } = usePlansQuery(userId)
 const { templates, isPending: isTemplatesLoading, templatesCount } = useTemplatesQuery(userId)
 
 const showExpenseDialog = ref(false)
+const showSharePlanDialog = ref(false)
+const sharePlanId = ref<string | null>(null)
+const showShareTemplateDialog = ref(false)
+const shareTemplateId = ref<string | null>(null)
 const maxDisplayedItems = 3
 
 const isLoading = computed(() => isPlansLoading.value || isTemplatesLoading.value)
@@ -191,5 +211,15 @@ function goToPlan(planId: string) {
 
 function goToTemplate(templateId: string) {
   router.push({ name: 'template', params: { id: templateId } })
+}
+
+function openSharePlanDialog(planId: string) {
+  sharePlanId.value = planId
+  showSharePlanDialog.value = true
+}
+
+function openShareTemplateDialog(templateId: string) {
+  shareTemplateId.value = templateId
+  showShareTemplateDialog.value = true
 }
 </script>

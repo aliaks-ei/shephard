@@ -125,11 +125,12 @@ export function useItemsManager<T extends BaseItemUI>(config: ItemsConfig<T>) {
       is_fixed_payment?: boolean
     }>
 
-    const loadedItems = entityItems.reduce((acc, item) => {
+    const loadedItems: T[] = []
+    for (const item of entityItems) {
       const category = getCategoryById(item.category_id)
 
       if (category) {
-        acc.push({
+        loadedItems.push({
           id: item.id,
           name: item.name || '',
           categoryId: item.category_id,
@@ -138,9 +139,7 @@ export function useItemsManager<T extends BaseItemUI>(config: ItemsConfig<T>) {
           isFixedPayment: item.is_fixed_payment ?? true,
         } as T)
       }
-
-      return acc
-    }, [] as T[])
+    }
 
     items.value = [...loadedItems]
   }
@@ -154,11 +153,12 @@ export function useItemsManager<T extends BaseItemUI>(config: ItemsConfig<T>) {
       is_fixed_payment?: boolean
     }[],
   ): void {
-    const loadedItems = templateItems.reduce((acc, item) => {
+    const loadedItems: T[] = []
+    for (const item of templateItems) {
       const category = getCategoryById(item.category_id)
 
       if (category) {
-        acc.push({
+        loadedItems.push({
           id: `temp_${crypto.randomUUID()}`,
           name: item.name || '',
           categoryId: item.category_id,
@@ -167,9 +167,7 @@ export function useItemsManager<T extends BaseItemUI>(config: ItemsConfig<T>) {
           isFixedPayment: item.is_fixed_payment ?? true,
         } as T)
       }
-
-      return acc
-    }, [] as T[])
+    }
 
     items.value = [...loadedItems]
   }

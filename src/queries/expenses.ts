@@ -33,20 +33,7 @@ export function useExpensesByPlanQuery(planId: MaybeRefOrGetter<string | null>) 
     expenses.value.reduce((total, expense) => total + expense.amount, 0),
   )
 
-  const sortedExpenses = computed(() => {
-    return [...expenses.value].sort((a, b) => {
-      const dateA = new Date(a.expense_date).getTime()
-      const dateB = new Date(b.expense_date).getTime()
-
-      if (dateA !== dateB) {
-        return dateB - dateA
-      }
-
-      const createdA = new Date(a.created_at).getTime()
-      const createdB = new Date(b.created_at).getTime()
-      return createdB - createdA
-    })
-  })
+  const sortedExpenses = computed(() => expenses.value)
 
   const expensesByCategory = computed(() => {
     const grouped: Record<string, ExpenseWithCategory[]> = {}

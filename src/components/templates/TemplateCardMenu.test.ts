@@ -22,24 +22,24 @@ describe('TemplateCardMenu', () => {
 
   it('should mount component properly', () => {
     const wrapper = renderTemplateCardMenu({
-      isOwner: true,
+      canEdit: true,
     })
     expect(wrapper.exists()).toBe(true)
   })
 
   it('should have correct props interface', () => {
     const wrapper = renderTemplateCardMenu({
-      isOwner: true,
+      canEdit: true,
       permissionLevel: 'edit',
     })
 
-    expect(wrapper.props('isOwner')).toBe(true)
+    expect(wrapper.props('canEdit')).toBe(true)
     expect(wrapper.props('permissionLevel')).toBe('edit')
   })
 
   it('should emit edit event when edit item is clicked', () => {
     const wrapper = renderTemplateCardMenu({
-      isOwner: true,
+      canEdit: true,
     })
 
     const items = wrapper.findAll('.q-item')
@@ -55,7 +55,7 @@ describe('TemplateCardMenu', () => {
 
   it('should emit share event when share item is clicked', () => {
     const wrapper = renderTemplateCardMenu({
-      isOwner: true,
+      canEdit: true,
     })
 
     const items = wrapper.findAll('.q-item')
@@ -71,7 +71,7 @@ describe('TemplateCardMenu', () => {
 
   it('should emit delete event when delete item is clicked', () => {
     const wrapper = renderTemplateCardMenu({
-      isOwner: true,
+      canEdit: true,
     })
 
     const items = wrapper.findAll('.q-item')
@@ -87,25 +87,25 @@ describe('TemplateCardMenu', () => {
 
   it('should handle owner prop correctly', () => {
     const ownerWrapper = renderTemplateCardMenu({
-      isOwner: true,
+      canEdit: true,
     })
-    expect(ownerWrapper.props('isOwner')).toBe(true)
+    expect(ownerWrapper.props('canEdit')).toBe(true)
 
     const nonOwnerWrapper = renderTemplateCardMenu({
-      isOwner: false,
+      canEdit: false,
     })
-    expect(nonOwnerWrapper.props('isOwner')).toBe(false)
+    expect(nonOwnerWrapper.props('canEdit')).toBe(false)
   })
 
   it('should handle permission level prop', () => {
     const editWrapper = renderTemplateCardMenu({
-      isOwner: false,
+      canEdit: false,
       permissionLevel: 'edit',
     })
     expect(editWrapper.props('permissionLevel')).toBe('edit')
 
     const viewWrapper = renderTemplateCardMenu({
-      isOwner: false,
+      canEdit: false,
       permissionLevel: 'view',
     })
     expect(viewWrapper.props('permissionLevel')).toBe('view')
@@ -113,7 +113,7 @@ describe('TemplateCardMenu', () => {
 
   it('should handle undefined permission level', () => {
     const wrapper = renderTemplateCardMenu({
-      isOwner: false,
+      canEdit: false,
       permissionLevel: undefined,
     })
     expect(wrapper.props('permissionLevel')).toBeUndefined()
@@ -121,7 +121,7 @@ describe('TemplateCardMenu', () => {
 
   it('should handle missing permission level', () => {
     const wrapper = renderTemplateCardMenu({
-      isOwner: false,
+      canEdit: false,
     })
     expect(wrapper.props('permissionLevel')).toBeUndefined()
   })

@@ -45,7 +45,7 @@
           <q-item
             clickable
             :class="$q.screen.lt.md ? 'q-pa-sm' : 'q-pa-md'"
-            @click="$router.push('/plans/new')"
+            to="/plans/new"
           >
             <q-item-section>
               <div class="row items-center q-gutter-sm">
@@ -68,7 +68,7 @@
           <q-item
             clickable
             :class="$q.screen.lt.md ? 'q-pa-sm' : 'q-pa-md'"
-            @click="$router.push('/templates/new')"
+            to="/templates/new"
           >
             <q-item-section>
               <div class="row items-center q-gutter-sm">
@@ -91,7 +91,7 @@
           <q-item
             clickable
             :class="$q.screen.lt.md ? 'q-pa-sm' : 'q-pa-md'"
-            @click="$router.push('/settings')"
+            to="/settings"
           >
             <q-item-section>
               <div class="row items-center q-gutter-sm">
@@ -112,12 +112,10 @@
 
 <script setup lang="ts">
 import { useQuasar } from 'quasar'
-import { useRouter } from 'vue-router'
 
 defineEmits<{
   'add-expense': []
 }>()
 
 const $q = useQuasar()
-const $router = useRouter()
 </script>
