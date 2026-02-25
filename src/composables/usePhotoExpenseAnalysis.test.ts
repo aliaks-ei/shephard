@@ -24,6 +24,7 @@ const mockHeic2any = vi.mocked(heic2any)
 
 beforeEach(() => {
   vi.clearAllMocks()
+  vi.unstubAllGlobals()
   vi.mocked(errorComposable.useError).mockReturnValue({
     handleError: mockHandleError,
   })
@@ -189,6 +190,89 @@ describe('usePhotoExpenseAnalysis', () => {
         'EUR',
       )
       expect(analysisResult.value).toEqual(mockResult)
+    })
+
+    it('should optimize images before sending for analysis when browser APIs are available', async () => {
+      const mockResult: PhotoAnalysisResult = {
+        expenseName: 'Optimized Receipt',
+        amount: 12.34,
+        categoryId: 'cat-1',
+        categoryName: 'Groceries',
+        confidence: 0.92,
+        reasoning: 'Readable optimized image',
+      }
+
+      mockAnalyzeExpensePhoto.mockResolvedValue(mockResult)
+
+      const createObjectURLMock = vi.fn(() => 'blob:optimized-image')
+      const revokeObjectURLMock = vi.fn()
+      vi.stubGlobal('URL', {
+        ...URL,
+        createObjectURL: createObjectURLMock,
+        revokeObjectURL: revokeObjectURLMock,
+      })
+
+      class MockImage {
+        onload: (() => void) | null = null
+        onerror: (() => void) | null = null
+        naturalWidth = 3200
+        naturalHeight = 1800
+        width = 3200
+        height = 1800
+
+        set src(_value: string) {
+          setTimeout(() => {
+            this.onload?.()
+          }, 0)
+        }
+      }
+      vi.stubGlobal('Image', MockImage)
+
+      const drawImageMock = vi.fn()
+      const getContextSpy = vi
+        .spyOn(HTMLCanvasElement.prototype, 'getContext')
+        .mockReturnValue({ drawImage: drawImageMock } as unknown as CanvasRenderingContext2D)
+      const toBlobSpy = vi
+        .spyOn(HTMLCanvasElement.prototype, 'toBlob')
+        .mockImplementation((callback: BlobCallback) => {
+          callback(new Blob(['optimized-image'], { type: 'image/jpeg' }))
+        })
+
+      const readAsDataURLMock = vi.fn(function (this: { onload: (() => void) | null }) {
+        if (this.onload) {
+          this.onload()
+        }
+      })
+
+      const mockFileReader = {
+        readAsDataURL: readAsDataURLMock,
+        onload: null as unknown as (() => void) | null,
+        onerror: null as unknown as (() => void) | null,
+        result: 'data:image/jpeg;base64,optimizedbase64data',
+      }
+      vi.spyOn(global, 'FileReader').mockImplementation(
+        () => mockFileReader as unknown as FileReader,
+      )
+
+      const { handleFileAdded } = usePhotoExpenseAnalysis()
+
+      const largePngFile = new File(['x'.repeat(300_000)], 'receipt.png', { type: 'image/png' })
+      await handleFileAdded([largePngFile])
+
+      expect(createObjectURLMock).toHaveBeenCalled()
+      expect(getContextSpy).toHaveBeenCalled()
+      expect(toBlobSpy).toHaveBeenCalled()
+      expect(readAsDataURLMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'image/jpeg',
+          name: 'receipt.jpg',
+        }),
+      )
+      expect(mockAnalyzeExpensePhoto).toHaveBeenCalledWith(
+        'data:image/jpeg;base64,optimizedbase64data',
+        undefined,
+        'EUR',
+      )
     })
   })
 

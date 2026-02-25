@@ -1,9 +1,28 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import OpenAI from 'https://esm.sh/openai@5.12.2'
 import { createClient } from 'jsr:@supabase/supabase-js@2'
+import { z } from 'https://esm.sh/zod@3.24.1'
+import {
+  createResponseWithRetry,
+  isCategory,
+  normalizeCategoryName,
+  parseModelJsonObject,
+  sortCategoriesDeterministically,
+  type Category,
+} from '../_shared/ai-utils.ts'
 
 const openai = new OpenAI({
   apiKey: Deno.env.get('OPENAI_API_KEY'),
+})
+
+const OPENAI_TIMEOUT_MS = 12000
+
+const clampUnitInterval = (value: number): number => Math.min(1, Math.max(0, value))
+
+const categorySuggestionSchema = z.object({
+  categoryName: z.string().trim().min(1),
+  confidence: z.coerce.number().finite().transform(clampUnitInterval),
+  reasoning: z.string().trim().min(1).max(200),
 })
 
 interface CategorizeRequest {
@@ -74,7 +93,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    let categories
+    let categories: Category[] | undefined
     let categoriesError
 
     if (planId) {
@@ -86,13 +105,16 @@ Deno.serve(async (req) => {
       categoriesError = itemsError
 
       if (planItems) {
-        const categoryMap = new Map()
+        const categoryMap = new Map<string, Category>()
         planItems.forEach((item) => {
-          if (item.categories && !categoryMap.has(item.categories.id)) {
-            categoryMap.set(item.categories.id, item.categories)
+          const categoryValue = Array.isArray(item.categories)
+            ? item.categories[0]
+            : item.categories
+          if (isCategory(categoryValue) && !categoryMap.has(categoryValue.id)) {
+            categoryMap.set(categoryValue.id, categoryValue)
           }
         })
-        categories = Array.from(categoryMap.values())
+        categories = sortCategoriesDeterministically(Array.from(categoryMap.values()))
       }
     } else {
       const { data, error } = await supabaseClient
@@ -100,7 +122,7 @@ Deno.serve(async (req) => {
         .select('id, name')
         .order('name')
 
-      categories = data
+      categories = sortCategoriesDeterministically((data ?? []).filter(isCategory))
       categoriesError = error
     }
 
@@ -146,52 +168,61 @@ Deno.serve(async (req) => {
       - Return only a single json object as the answer
     `
 
-    const response = await openai.responses.create({
-      model: 'gpt-5-nano',
-      instructions,
-      input: `Categorize this expense: "${expenseName}". Return a JSON object.`,
-      reasoning: { effort: 'minimal' },
-      text: {
-        format: {
-          type: 'json_object',
-        },
-        verbosity: 'low',
-      },
+    const response = await createResponseWithRetry({
+      timeoutMs: OPENAI_TIMEOUT_MS,
+      operation: () =>
+        openai.responses.create({
+          model: 'gpt-5-nano',
+          instructions,
+          input: `Categorize this expense: "${expenseName}". Return a JSON object.`,
+          reasoning: { effort: 'minimal' },
+          text: {
+            format: {
+              type: 'json_object',
+            },
+            verbosity: 'low',
+          },
+        }),
     })
 
-    const result = JSON.parse(response.output_text || '{}')
+    const fallbackSuggestion = {
+      categoryName: categories[0].name,
+      confidence: 0,
+      reasoning: 'No reliable category suggestion returned by AI',
+    }
+    const parsedModelOutput = parseModelJsonObject(response.output_text)
+    const validatedSuggestion = categorySuggestionSchema.safeParse(parsedModelOutput)
+    const suggestion = validatedSuggestion.success ? validatedSuggestion.data : fallbackSuggestion
 
     const matchedCategory = categories.find(
-      (c) => c.name.toLowerCase() === result.categoryName?.toLowerCase(),
+      (category) =>
+        normalizeCategoryName(category.name) === normalizeCategoryName(suggestion.categoryName),
     )
 
-    if (matchedCategory) {
-      result.categoryId = matchedCategory.id
-      result.categoryName = matchedCategory.name
-    } else {
-      result.categoryId = categories[0].id
-      result.categoryName = categories[0].name
-      result.confidence = 0
-      result.reasoning = 'No strong match found, suggesting default category'
-    }
+    const categoryId = matchedCategory?.id ?? categories[0].id
+    const categoryName = matchedCategory?.name ?? categories[0].name
+    const confidence = matchedCategory ? suggestion.confidence : 0
+    const reasoning = matchedCategory
+      ? suggestion.reasoning
+      : 'No strong match found, suggesting default category'
 
     return new Response(
       JSON.stringify({
         success: true,
         data: {
-          categoryId: result.categoryId,
-          categoryName: result.categoryName,
-          confidence: result.confidence,
-          reasoning: result.reasoning,
+          categoryId,
+          categoryName,
+          confidence,
+          reasoning,
         },
       }),
       { headers: corsHeaders },
     )
   } catch (error) {
+    console.error('Error in categorize-expense:', error)
     return new Response(
       JSON.stringify({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
+        error: 'Internal server error',
       }),
       {
         status: 500,

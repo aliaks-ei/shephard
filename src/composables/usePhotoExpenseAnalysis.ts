@@ -5,6 +5,118 @@ import type { PhotoAnalysisResult } from 'src/api/ai'
 import { useError } from './useError'
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+const MAX_OPTIMIZED_DIMENSION_PX = 1600
+const TARGET_OPTIMIZED_SIZE_BYTES = 1.5 * 1024 * 1024
+const MIN_SIZE_FOR_OPTIMIZATION_BYTES = 256 * 1024
+const INITIAL_JPEG_QUALITY = 0.82
+const MIN_JPEG_QUALITY = 0.6
+const JPEG_QUALITY_STEP = 0.08
+
+type ImageDimensions = {
+  width: number
+  height: number
+}
+
+const canOptimizeImage = (): boolean =>
+  typeof document !== 'undefined' &&
+  typeof Image !== 'undefined' &&
+  typeof URL !== 'undefined' &&
+  typeof URL.createObjectURL === 'function' &&
+  typeof URL.revokeObjectURL === 'function' &&
+  typeof HTMLCanvasElement !== 'undefined' &&
+  typeof HTMLCanvasElement.prototype.toBlob === 'function'
+
+const getTargetDimensions = (width: number, height: number): ImageDimensions => {
+  if (width <= MAX_OPTIMIZED_DIMENSION_PX && height <= MAX_OPTIMIZED_DIMENSION_PX) {
+    return { width, height }
+  }
+
+  const scale = Math.min(MAX_OPTIMIZED_DIMENSION_PX / width, MAX_OPTIMIZED_DIMENSION_PX / height)
+  return {
+    width: Math.max(1, Math.round(width * scale)),
+    height: Math.max(1, Math.round(height * scale)),
+  }
+}
+
+const loadImageFromFile = async (file: File): Promise<HTMLImageElement> => {
+  const objectUrl = URL.createObjectURL(file)
+
+  return await new Promise((resolve, reject) => {
+    const image = new Image()
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl)
+      resolve(image)
+    }
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl)
+      reject(new Error('Failed to load image'))
+    }
+    image.src = objectUrl
+  })
+}
+
+const canvasToJpegBlob = async (canvas: HTMLCanvasElement, quality: number): Promise<Blob> =>
+  await new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          reject(new Error('Failed to encode optimized image'))
+          return
+        }
+        resolve(blob)
+      },
+      'image/jpeg',
+      quality,
+    )
+  })
+
+const toOptimizedFileName = (fileName: string): string =>
+  fileName.includes('.') ? fileName.replace(/\.[^.]+$/, '.jpg') : `${fileName}.jpg`
+
+const optimizeImageForAnalysis = async (file: File): Promise<File> => {
+  if (
+    file.type === 'image/gif' ||
+    file.size < MIN_SIZE_FOR_OPTIMIZATION_BYTES ||
+    !canOptimizeImage()
+  ) {
+    return file
+  }
+
+  const image = await loadImageFromFile(file)
+  const sourceWidth = image.naturalWidth || image.width
+  const sourceHeight = image.naturalHeight || image.height
+  const { width, height } = getTargetDimensions(sourceWidth, sourceHeight)
+
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+
+  const context = canvas.getContext('2d')
+  if (!context) {
+    return file
+  }
+
+  context.drawImage(image, 0, 0, width, height)
+
+  let quality = INITIAL_JPEG_QUALITY
+  let optimizedBlob = await canvasToJpegBlob(canvas, quality)
+
+  while (optimizedBlob.size > TARGET_OPTIMIZED_SIZE_BYTES && quality > MIN_JPEG_QUALITY) {
+    quality = Math.max(MIN_JPEG_QUALITY, quality - JPEG_QUALITY_STEP)
+    optimizedBlob = await canvasToJpegBlob(canvas, quality)
+  }
+
+  const isDownscaled = width < sourceWidth || height < sourceHeight
+  const isSmaller = optimizedBlob.size < file.size
+
+  if (!isDownscaled && !isSmaller) {
+    return file
+  }
+
+  return new File([optimizedBlob], toOptimizedFileName(file.name), {
+    type: 'image/jpeg',
+  })
+}
 
 export function usePhotoExpenseAnalysis(
   planId?: Ref<string | null>,
@@ -88,6 +200,13 @@ export function usePhotoExpenseAnalysis(
         analysisError.value = 'Failed to convert HEIC image. Please try JPEG or PNG.'
         return
       }
+    }
+
+    try {
+      file = await optimizeImageForAnalysis(file)
+    } catch (error) {
+      // Continue with original file if optimization fails.
+      console.warn('Failed to optimize image for analysis', error)
     }
 
     photoFile.value = file
