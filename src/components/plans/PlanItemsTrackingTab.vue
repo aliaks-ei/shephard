@@ -27,7 +27,7 @@
                 <q-linear-progress
                   :value="overallProgress"
                   color="primary"
-                  size="12px"
+                  size="md"
                   class="rounded-borders"
                 />
               </div>
