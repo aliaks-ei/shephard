@@ -1,9 +1,30 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import OpenAI from 'https://esm.sh/openai@5.12.2'
 import { createClient } from 'jsr:@supabase/supabase-js@2'
+import { z } from 'https://esm.sh/zod@3.24.1'
+import {
+  createResponseWithRetry,
+  isCategory,
+  normalizeCategoryName,
+  parseModelJsonObject,
+  sortCategoriesDeterministically,
+  type Category,
+} from '../_shared/ai-utils.ts'
 
 const openai = new OpenAI({
   apiKey: Deno.env.get('OPENAI_API_KEY'),
+})
+
+const OPENAI_TIMEOUT_MS = 15000
+
+const clampUnitInterval = (value: number): number => Math.min(1, Math.max(0, value))
+
+const photoAnalysisSchema = z.object({
+  expenseName: z.string().trim().min(1).max(120),
+  amount: z.coerce.number().finite(),
+  categoryName: z.string().trim().min(1),
+  confidence: z.coerce.number().finite().transform(clampUnitInterval),
+  reasoning: z.string().trim().min(1).max(300),
 })
 
 interface AnalyzePhotoRequest {
@@ -112,7 +133,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    let categories
+    let categories: Category[] | undefined
     let categoriesError
 
     if (planId) {
@@ -124,13 +145,16 @@ Deno.serve(async (req) => {
       categoriesError = itemsError
 
       if (planItems) {
-        const categoryMap = new Map()
+        const categoryMap = new Map<string, Category>()
         planItems.forEach((item) => {
-          if (item.categories && !categoryMap.has(item.categories.id)) {
-            categoryMap.set(item.categories.id, item.categories)
+          const categoryValue = Array.isArray(item.categories)
+            ? item.categories[0]
+            : item.categories
+          if (isCategory(categoryValue) && !categoryMap.has(categoryValue.id)) {
+            categoryMap.set(categoryValue.id, categoryValue)
           }
         })
-        categories = Array.from(categoryMap.values())
+        categories = sortCategoriesDeterministically(Array.from(categoryMap.values()))
       }
     } else {
       const { data, error } = await supabaseClient
@@ -138,7 +162,7 @@ Deno.serve(async (req) => {
         .select('id, name')
         .order('name')
 
-      categories = data
+      categories = sortCategoriesDeterministically((data ?? []).filter(isCategory))
       categoriesError = error
     }
 
@@ -196,64 +220,75 @@ Deno.serve(async (req) => {
       Return only a single JSON object.
     `
 
-    const response = await openai.responses.create({
-      model: 'gpt-5-nano',
-      instructions,
-      input: [
-        {
-          role: 'user',
-          content: [
+    const response = await createResponseWithRetry({
+      timeoutMs: OPENAI_TIMEOUT_MS,
+      operation: () =>
+        openai.responses.create({
+          model: 'gpt-5-nano',
+          instructions,
+          input: [
             {
-              type: 'input_text',
-              text: 'Analyze this expense receipt and extract the details in JSON format.',
-            },
-            {
-              type: 'input_image',
-              image_url: imageBase64,
+              role: 'user',
+              content: [
+                {
+                  type: 'input_text',
+                  text: 'Analyze this expense receipt and extract the details in JSON format.',
+                },
+                {
+                  type: 'input_image',
+                  image_url: imageBase64,
+                },
+              ],
             },
           ],
-        },
-      ],
-      reasoning: { effort: 'minimal' },
-      text: {
-        format: {
-          type: 'json_object',
-        },
-        verbosity: 'low',
-      },
+          reasoning: { effort: 'minimal' },
+          text: {
+            format: {
+              type: 'json_object',
+            },
+            verbosity: 'low',
+          },
+        }),
     })
 
-    const result = JSON.parse(response.output_text || '{}')
+    const fallbackAnalysis = {
+      expenseName: 'Unknown Expense',
+      amount: 0,
+      categoryName: categories[0].name,
+      confidence: 0,
+      reasoning: 'Could not extract valid expense details from image',
+    }
+    const parsedModelOutput = parseModelJsonObject(response.output_text)
+    const validatedAnalysis = photoAnalysisSchema.safeParse(parsedModelOutput)
+    const analysis = validatedAnalysis.success ? validatedAnalysis.data : fallbackAnalysis
 
     const matchedCategory = categories.find(
-      (c) => c.name.toLowerCase() === result.categoryName?.toLowerCase(),
+      (category) =>
+        normalizeCategoryName(category.name) === normalizeCategoryName(analysis.categoryName),
     )
 
-    if (!matchedCategory) {
-      result.categoryId = categories[0].id
-      result.categoryName = categories[0].name
-      result.confidence = Math.min(result.confidence || 0, 0.3)
-      result.reasoning = 'Could not match category, using default'
-    } else {
-      result.categoryId = matchedCategory.id
-      result.categoryName = matchedCategory.name
-    }
+    const categoryId = matchedCategory?.id ?? categories[0].id
+    const categoryName = matchedCategory?.name ?? categories[0].name
+    let confidence = matchedCategory ? analysis.confidence : Math.min(analysis.confidence, 0.3)
+    let reasoning = matchedCategory ? analysis.reasoning : 'Could not match category, using default'
+    const expenseName = analysis.expenseName || 'Unknown Expense'
+    const amount = Number.isFinite(analysis.amount) && analysis.amount > 0 ? analysis.amount : 0
 
-    if (!result.expenseName || !result.amount || result.amount <= 0) {
-      result.confidence = Math.min(result.confidence || 0, 0.3)
-      result.reasoning = 'Could not extract valid expense details from image'
+    if (amount <= 0) {
+      confidence = Math.min(confidence, 0.3)
+      reasoning = 'Could not extract valid expense details from image'
     }
 
     return new Response(
       JSON.stringify({
         success: true,
         data: {
-          expenseName: result.expenseName || 'Unknown Expense',
-          amount: result.amount || 0,
-          categoryId: result.categoryId,
-          categoryName: result.categoryName,
-          confidence: result.confidence || 0,
-          reasoning: result.reasoning || 'No details provided',
+          expenseName,
+          amount,
+          categoryId,
+          categoryName,
+          confidence,
+          reasoning,
         },
       }),
       { headers: corsHeaders },
@@ -262,8 +297,7 @@ Deno.serve(async (req) => {
     console.error('Error in analyze-expense-photo:', error)
     return new Response(
       JSON.stringify({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
+        error: 'Internal server error',
       }),
       {
         status: 500,
