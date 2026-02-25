@@ -96,6 +96,8 @@
               :value="Math.min(percentageUsed / 100, 9.99)"
               :color="progressColor"
               size="4px"
+              rounded
+              :track-color="$q.dark.isActive ? 'grey-9' : 'grey-2'"
               class="q-my-xs"
             />
 

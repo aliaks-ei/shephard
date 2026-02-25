@@ -36,23 +36,55 @@
           <div>No categories in this plan yet</div>
         </div>
 
-        <div
-          v-else
-          class="row"
-          :class="$q.screen.lt.md ? 'q-col-gutter-sm' : 'q-col-gutter-md'"
-        >
-          <div
-            v-for="category in categoryBudgets"
-            :key="category.categoryId"
-            class="col-12 col-sm-6 col-md-4"
-          >
-            <CategoryBudgetCard
-              :category="category"
-              :currency="planCurrency"
-              @click="openCategoryModal(category)"
-            />
+        <template v-else>
+          <div v-if="$q.screen.lt.md">
+            <q-card :bordered="$q.dark.isActive">
+              <q-list
+                separator
+                class="plan-overview-mobile-budget-list"
+              >
+                <CategoryBudgetListItem
+                  v-for="category in mobileCategoryBudgets"
+                  :key="category.categoryId"
+                  :category="category"
+                  :currency="planCurrency"
+                  @click="openCategoryModal(category)"
+                />
+              </q-list>
+            </q-card>
+
+            <div
+              v-if="hasHiddenMobileCategories"
+              class="row justify-center q-mt-sm"
+            >
+              <q-btn
+                flat
+                dense
+                no-caps
+                color="primary"
+                :label="mobileCategoriesToggleLabel"
+                @click="toggleMobileCategoryVisibility"
+              />
+            </div>
           </div>
-        </div>
+
+          <div
+            v-else
+            class="row q-col-gutter-md"
+          >
+            <div
+              v-for="category in categoryBudgets"
+              :key="category.categoryId"
+              class="col-12 col-sm-6 col-md-4"
+            >
+              <CategoryBudgetCard
+                :category="category"
+                :currency="planCurrency"
+                @click="openCategoryModal(category)"
+              />
+            </div>
+          </div>
+        </template>
       </q-card-section>
     </q-card>
 
@@ -96,6 +128,7 @@
 import { ref, computed, watch } from 'vue'
 import PlanSummaryCard from './PlanSummaryCard.vue'
 import CategoryBudgetCard from './CategoryBudgetCard.vue'
+import CategoryBudgetListItem from './CategoryBudgetListItem.vue'
 import RecentExpensesList from './RecentExpensesList.vue'
 import CategoryExpensesDialog from './CategoryExpensesDialog.vue'
 import AllExpensesDialog from './AllExpensesDialog.vue'
@@ -122,7 +155,9 @@ const { sortedExpenses } = useExpensesByPlanQuery(planIdRef)
 
 const showCategoryModal = ref(false)
 const showAllExpensesModal = ref(false)
+const showAllMobileCategories = ref(false)
 const selectedCategory = ref<CategoryBudget | null>(null)
+const mobileInitialCategoryCount = 5
 
 const planCurrency = computed((): CurrencyCode => {
   return (props.plan?.currency as CurrencyCode) || 'USD'
@@ -135,6 +170,26 @@ const { categoryBudgets, recentExpenses, totalBudget, totalSpent, remainingBudge
     planId,
     computed(() => props.plan),
   )
+
+const mobileCategoryBudgets = computed(() => {
+  if (showAllMobileCategories.value) {
+    return categoryBudgets.value
+  }
+  return categoryBudgets.value.slice(0, mobileInitialCategoryCount)
+})
+
+const hiddenMobileCategoriesCount = computed(() => {
+  return Math.max(categoryBudgets.value.length - mobileInitialCategoryCount, 0)
+})
+
+const hasHiddenMobileCategories = computed(() => hiddenMobileCategoriesCount.value > 0)
+
+const mobileCategoriesToggleLabel = computed(() => {
+  if (showAllMobileCategories.value) {
+    return 'Show less'
+  }
+  return `View all (${hiddenMobileCategoriesCount.value})`
+})
 
 const categoryExpenses = computed(() => {
   if (!selectedCategory.value) return []
@@ -162,6 +217,10 @@ function openAllExpensesDialog() {
   showAllExpensesModal.value = true
 }
 
+function toggleMobileCategoryVisibility() {
+  showAllMobileCategories.value = !showAllMobileCategories.value
+}
+
 watch(
   categoryBudgets,
   (newBudgets) => {
@@ -176,4 +235,10 @@ watch(
   },
   { deep: true },
 )
+
+watch(hasHiddenMobileCategories, (hasHiddenCategories) => {
+  if (!hasHiddenCategories) {
+    showAllMobileCategories.value = false
+  }
+})
 </script>

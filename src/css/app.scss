@@ -517,6 +517,11 @@ body {
   }
 }
 
+// Keep only wrapper card corners rounded for the mobile plan overview list
+.plan-overview-mobile-budget-list .q-item {
+  border-radius: 0;
+}
+
 .q-expansion-item {
   border-radius: var(--radius-md); // Consistent with buttons/inputs
 
@@ -529,7 +534,6 @@ body {
 // Linear Progress (q-linear-progress) - shadcn-vue conventions
 // --------------------------------------------
 .q-linear-progress {
-  height: 8px; // h-2
   border-radius: var(--radius-full);
   background: hsl(var(--primary) / 0.2);
   overflow: hidden;
