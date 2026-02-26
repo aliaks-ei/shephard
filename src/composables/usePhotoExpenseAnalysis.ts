@@ -1,5 +1,4 @@
 import { ref, computed, type Ref } from 'vue'
-import heic2any from 'heic2any'
 import { analyzeExpensePhoto } from 'src/api/ai'
 import type { PhotoAnalysisResult } from 'src/api/ai'
 import { useError } from './useError'
@@ -15,6 +14,19 @@ const JPEG_QUALITY_STEP = 0.08
 type ImageDimensions = {
   width: number
   height: number
+}
+
+type Heic2Any = (options: { blob: Blob; toType: string; quality: number }) => Promise<Blob | Blob[]>
+
+let heic2anyLoader: Promise<{ default: Heic2Any }> | null = null
+
+const loadHeic2Any = async (): Promise<Heic2Any> => {
+  if (!heic2anyLoader) {
+    heic2anyLoader = import('heic2any') as Promise<{ default: Heic2Any }>
+  }
+
+  const module = await heic2anyLoader
+  return module.default
 }
 
 const canOptimizeImage = (): boolean =>
@@ -135,6 +147,7 @@ export function usePhotoExpenseAnalysis(
     }
 
     try {
+      const heic2any = await loadHeic2Any()
       const convertedBlob = await heic2any({
         blob: file,
         toType: 'image/jpeg',

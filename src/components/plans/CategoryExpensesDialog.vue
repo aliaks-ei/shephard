@@ -418,6 +418,7 @@
 
     <!-- Expense Registration Dialog -->
     <ExpenseRegistrationDialog
+      v-if="hasOpenedExpenseDialog"
       v-model="showExpenseDialog"
       :default-plan-id="planId || null"
       :default-category-id="category?.categoryId || null"
@@ -427,16 +428,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, defineAsyncComponent } from 'vue'
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import { formatDate } from 'src/utils/date'
 import { getBudgetProgressColor, getBudgetRemainingColorClass } from 'src/utils/budget'
 import { useItemCompletion } from 'src/composables/useItemCompletion'
-import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 import { useExpenseActions } from 'src/composables/useExpenseActions'
 import type { PlanItem } from 'src/api/plans'
 import type { ExpenseWithCategory } from 'src/api'
+
+const ExpenseRegistrationDialog = defineAsyncComponent(
+  () => import('src/components/expenses/ExpenseRegistrationDialog.vue'),
+)
 
 interface CategoryData {
   categoryId: string
@@ -494,6 +498,7 @@ const hasAnyPlanItems = computed(
   () => fixedPlanItems.value.length > 0 || nonFixedPlanItems.value.length > 0,
 )
 
+const hasOpenedExpenseDialog = ref(false)
 const showExpenseDialog = ref(false)
 const activeTab = ref('expenses')
 
@@ -516,6 +521,7 @@ const remainingColorClass = computed(() => {
 })
 
 function openExpenseDialog() {
+  hasOpenedExpenseDialog.value = true
   showExpenseDialog.value = true
 }
 

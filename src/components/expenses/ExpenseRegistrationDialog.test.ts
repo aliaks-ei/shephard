@@ -6,6 +6,9 @@ import ExpenseRegistrationDialog from './ExpenseRegistrationDialog.vue'
 
 installQuasarPlugin()
 
+const initializeMock = vi.fn()
+const determineInitialModeMock = vi.fn()
+
 vi.mock('src/queries/categories', () => ({
   useCategoriesQuery: vi.fn(() => ({
     categories: ref([]),
@@ -86,8 +89,8 @@ vi.mock('src/composables/useExpenseRegistration', () => ({
     resetForm: vi.fn(),
     handleQuickSelectSubmit: vi.fn(),
     handleCustomEntrySubmit: vi.fn(),
-    initialize: vi.fn(),
-    determineInitialMode: vi.fn(),
+    initialize: initializeMock,
+    determineInitialMode: determineInitialModeMock,
   })),
 }))
 
@@ -95,6 +98,18 @@ describe('ExpenseRegistrationDialog', () => {
   const defaultProps = {
     modelValue: true,
   }
+
+  it('should initialize on first mount when dialog is initially open', () => {
+    mount(ExpenseRegistrationDialog, {
+      props: {
+        modelValue: true,
+        autoSelectRecentPlan: true,
+      },
+    })
+
+    expect(initializeMock).toHaveBeenCalledWith(true)
+    expect(determineInitialModeMock).toHaveBeenCalled()
+  })
 
   it('should mount component properly', () => {
     const wrapper = mount(ExpenseRegistrationDialog, {

@@ -126,6 +126,7 @@
 
     <!-- Expense Registration Dialog -->
     <ExpenseRegistrationDialog
+      v-if="hasOpenedExpenseDialog"
       v-model="showExpenseDialog"
       auto-select-recent-plan
       @expense-created="onExpenseCreated"
@@ -148,7 +149,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, defineAsyncComponent } from 'vue'
 import { useRouter } from 'vue-router'
 import { usePlansQuery } from 'src/queries/plans'
 import { useTemplatesQuery } from 'src/queries/templates'
@@ -164,9 +165,12 @@ import EmptyPlansState from 'src/components/dashboard/EmptyPlansState.vue'
 import EmptyTemplatesState from 'src/components/dashboard/EmptyTemplatesState.vue'
 import PlanCard from 'src/components/plans/PlanCard.vue'
 import TemplateCard from 'src/components/templates/TemplateCard.vue'
-import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 import SharePlanDialog from 'src/components/plans/SharePlanDialog.vue'
 import ShareTemplateDialog from 'src/components/templates/ShareTemplateDialog.vue'
+
+const ExpenseRegistrationDialog = defineAsyncComponent(
+  () => import('src/components/expenses/ExpenseRegistrationDialog.vue'),
+)
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -175,6 +179,7 @@ const userId = computed(() => userStore.userProfile?.id)
 const { activePlans, isPending: isPlansLoading } = usePlansQuery(userId)
 const { templates, isPending: isTemplatesLoading, templatesCount } = useTemplatesQuery(userId)
 
+const hasOpenedExpenseDialog = ref(false)
 const showExpenseDialog = ref(false)
 const showSharePlanDialog = ref(false)
 const sharePlanId = ref<string | null>(null)
@@ -200,6 +205,7 @@ const recentActivePlans = useSortedRecentItems(activePlans, maxDisplayedItems)
 const recentTemplates = useSortedRecentItems(templates, maxDisplayedItems)
 
 function openExpenseDialog() {
+  hasOpenedExpenseDialog.value = true
   showExpenseDialog.value = true
 }
 
