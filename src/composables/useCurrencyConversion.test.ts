@@ -48,16 +48,23 @@ describe('useCurrencyConversion', () => {
     })
 
     it('handles conversion errors', async () => {
-      vi.mocked(currencyApi.convertCurrency).mockRejectedValue(new Error('API key not configured'))
+      const conversionErrorMessage = 'API key not configured'
+      const conversionErrorObject = new Error(conversionErrorMessage)
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+      vi.mocked(currencyApi.convertCurrency).mockRejectedValue(conversionErrorObject)
 
       const { performConversion, conversionError, hasConversionError, conversionResult } =
         useCurrencyConversion()
 
       await performConversion('JPY', 'EUR', 1000)
 
-      expect(conversionError.value).toBe('API key not configured')
+      expect(conversionError.value).toBe(conversionErrorMessage)
       expect(hasConversionError.value).toBe(true)
       expect(conversionResult.value).toBeNull()
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Currency conversion error:',
+        conversionErrorObject,
+      )
     })
 
     it('does not convert when currencies are the same', async () => {
