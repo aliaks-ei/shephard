@@ -1,23 +1,2 @@
-# robots.txt for Shephard - Smart Expenses Wallet
-
-# Allow all crawlers
 User-agent: *
-Allow: /
-
-# Disallow crawling of auth pages
-Disallow: /auth/
-Disallow: /auth/callback
-
-# Disallow crawling of user-specific pages
-Disallow: /expenses
-Disallow: /plan
-Disallow: /profile
-Disallow: /categories
-Disallow: /templates
-
-# Allow landing page and public pages
-Allow: /$
-Allow: /about
-Allow: /privacy
-Allow: /terms
-
+Disallow: /

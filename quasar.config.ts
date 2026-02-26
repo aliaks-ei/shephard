@@ -131,8 +131,8 @@ export default defineConfig((ctx) => {
           // Optimize asset handling
           viteConf.build.assetsInlineLimit = 4096 // Inline assets smaller than 4kb
 
-          // Hidden source maps for error tracking (not exposed to users)
-          viteConf.build.sourcemap = 'hidden'
+          // Avoid shipping source maps publicly in production output
+          viteConf.build.sourcemap = false
         }
 
         // CSS source maps in development for easier debugging
@@ -272,8 +272,14 @@ export default defineConfig((ctx) => {
         // More aggressive navigation preload
         cfg.navigationPreload = true
 
-        // Exclude Netlify configuration files from precaching
-        cfg.globIgnores = ['**/_redirects', '**/.DS_Store']
+        // Keep precache focused on runtime-critical assets
+        cfg.globIgnores = [
+          '**/_redirects',
+          '**/.DS_Store',
+          '**/*.map',
+          '**/*.gz',
+          '**/mockServiceWorker.js',
+        ]
 
         // Disable offline Google Analytics (not used)
         cfg.offlineGoogleAnalytics = false
