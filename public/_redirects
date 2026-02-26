@@ -1,3 +1,0 @@
-# Serve static files first (robots.txt, favicon.ico, etc.)
-# Then catch-all SPA routing
-/* /index.html 200
