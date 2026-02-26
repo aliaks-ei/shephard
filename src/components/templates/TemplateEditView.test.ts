@@ -113,7 +113,7 @@ describe('TemplateEditView', () => {
       setCategoryRef: mockSetCategoryRef,
     })
     const basicInfo = wrapper.findComponent({ name: 'TemplateBasicInfoSection' })
-    await basicInfo.vm.$emit('update:model-value', { name: 'Updated', duration: 'monthly' })
+    await basicInfo.vm.$emit('update:modelValue', { name: 'Updated', duration: 'monthly' })
     expect(wrapper.emitted('update:form')).toBeTruthy()
     expect(wrapper.emitted('update:form')?.[0]).toEqual([{ name: 'Updated', duration: 'monthly' }])
   })

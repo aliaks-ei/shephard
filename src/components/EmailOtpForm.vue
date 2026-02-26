@@ -151,6 +151,7 @@ import { useRouter, useRoute } from 'vue-router'
 import type { QInput } from 'quasar'
 
 import { useUserStore } from 'src/stores/user'
+import { sanitizeRedirectPath } from 'src/utils/navigation'
 import { emailRules } from 'src/utils/validation-rules'
 
 const RESEND_COOLDOWN_SECONDS = 60
@@ -246,7 +247,7 @@ async function handleOtpVerify() {
     const result = await userStore.auth.verifyOtp(email.value, otpCode.value)
 
     if (result) {
-      const redirectPath = route.query.redirectTo?.toString() || '/'
+      const redirectPath = sanitizeRedirectPath(route.query.redirectTo)
       await router.push(redirectPath)
     } else {
       otpError.value = 'Invalid or expired code. Please try again.'

@@ -15,6 +15,7 @@ const mockPlans = ref<Plan[]>([])
 const mockPlanItemsData = ref<PlanItem[]>([])
 const mockLastExpenseData = ref<{ original_currency?: string } | null>(null)
 const mockCompletionMutateAsync = vi.fn().mockResolvedValue(undefined)
+const mockBatchCompletionMutateAsync = vi.fn().mockResolvedValue(undefined)
 
 vi.mock('src/queries/plans', () => ({
   usePlansQuery: vi.fn(() => ({
@@ -32,6 +33,10 @@ vi.mock('src/queries/plans', () => ({
   })),
   useUpdatePlanItemCompletionMutation: vi.fn(() => ({
     mutateAsync: mockCompletionMutateAsync,
+    isPending: ref(false),
+  })),
+  useUpdatePlanItemsCompletionMutation: vi.fn(() => ({
+    mutateAsync: mockBatchCompletionMutateAsync,
     isPending: ref(false),
   })),
 }))
@@ -52,6 +57,7 @@ vi.mock('src/queries/categories', () => ({
 
 const mockExpenseSummary = ref<unknown[]>([])
 const mockCreateExpenseMutateAsync = vi.fn().mockResolvedValue(undefined)
+const mockCreateExpensesBatchMutateAsync = vi.fn().mockResolvedValue(undefined)
 
 vi.mock('src/queries/expenses', () => ({
   useExpenseSummaryQuery: vi.fn(() => ({
@@ -61,6 +67,10 @@ vi.mock('src/queries/expenses', () => ({
   })),
   useCreateExpenseMutation: vi.fn(() => ({
     mutateAsync: mockCreateExpenseMutateAsync,
+    isPending: ref(false),
+  })),
+  useCreateExpensesBatchMutation: vi.fn(() => ({
+    mutateAsync: mockCreateExpensesBatchMutateAsync,
     isPending: ref(false),
   })),
   useLastExpenseForPlanQuery: vi.fn(() => ({
@@ -92,6 +102,7 @@ beforeEach(() => {
   mockPlanItemsData.value = []
   mockLastExpenseData.value = null
   mockCompletionMutateAsync.mockResolvedValue(undefined)
+  mockBatchCompletionMutateAsync.mockResolvedValue(undefined)
 })
 
 describe('useExpenseRegistration', () => {
@@ -297,9 +308,18 @@ describe('useExpenseRegistration', () => {
 
       await handleQuickSelectSubmit(onSuccess)
 
-      expect(mockCreateExpenseMutateAsync).toHaveBeenCalled()
-      expect(mockCompletionMutateAsync).toHaveBeenCalledWith({
-        itemId: 'item-1',
+      expect(mockCreateExpensesBatchMutateAsync).toHaveBeenCalledWith([
+        {
+          plan_id: 'plan-1',
+          category_id: 'cat-1',
+          name: 'Groceries',
+          amount: 100,
+          expense_date: '2024-01-15',
+          plan_item_id: 'item-1',
+        },
+      ])
+      expect(mockBatchCompletionMutateAsync).toHaveBeenCalledWith({
+        itemIds: ['item-1'],
         isCompleted: true,
         planId: 'plan-1',
       })
@@ -328,6 +348,27 @@ describe('useExpenseRegistration', () => {
 
       expect(notificationStore.showError).toHaveBeenCalledWith('Please select an expense date')
       expect(onSuccess).not.toHaveBeenCalled()
+    })
+
+    it('submits multiple selected items with one batch create and one batch completion call', async () => {
+      const onSuccess = vi.fn()
+      const { handleQuickSelectSubmit, selectedPlanItems, form } = useExpenseRegistration()
+      selectedPlanItems.value = [
+        mockPlanItems[0]!,
+        { ...mockPlanItems[0]!, id: 'item-2', amount: 200, name: 'Transport' },
+      ]
+      form.value.expenseDate = '2024-01-15'
+
+      await handleQuickSelectSubmit(onSuccess)
+
+      expect(mockCreateExpensesBatchMutateAsync).toHaveBeenCalledTimes(1)
+      expect(mockBatchCompletionMutateAsync).toHaveBeenCalledTimes(1)
+      expect(mockBatchCompletionMutateAsync).toHaveBeenCalledWith({
+        itemIds: ['item-1', 'item-2'],
+        isCompleted: true,
+        planId: 'plan-1',
+      })
+      expect(onSuccess).toHaveBeenCalled()
     })
   })
 

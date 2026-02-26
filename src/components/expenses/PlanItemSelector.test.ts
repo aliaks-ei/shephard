@@ -95,7 +95,7 @@ describe('PlanItemSelector', () => {
 
     const checkboxes = wrapper.findAllComponents({ name: 'QCheckbox' })
     if (checkboxes.length > 0) {
-      await checkboxes[0]?.vm.$emit('update:model-value', true)
+      await checkboxes[0]?.vm.$emit('update:modelValue', true)
 
       expect(wrapper.emitted('item-selected') || wrapper.emitted('selection-changed')).toBeTruthy()
     }

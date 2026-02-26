@@ -55,7 +55,7 @@ describe('TemplateBasicInfoSection', () => {
       modelValue: { name: 'Test Template', duration: 'weekly', currency: 'EUR' },
     })
     const nameInput = wrapper.findComponent({ name: 'QInput' })
-    await nameInput.vm.$emit('update:model-value', 'Updated Template')
+    await nameInput.vm.$emit('update:modelValue', 'Updated Template')
     expect(wrapper.emitted('update:modelValue')).toBeTruthy()
     const emitted = wrapper.emitted('update:modelValue')?.[0]?.[0] as {
       name: string
@@ -71,7 +71,7 @@ describe('TemplateBasicInfoSection', () => {
       nameErrorMessage: 'Name already exists',
     })
     const nameInput = wrapper.findComponent({ name: 'QInput' })
-    await nameInput.vm.$emit('update:model-value', 'New Name')
+    await nameInput.vm.$emit('update:modelValue', 'New Name')
     expect(wrapper.emitted('clear-name-error')).toBeTruthy()
   })
 
@@ -80,7 +80,7 @@ describe('TemplateBasicInfoSection', () => {
       modelValue: { name: 'Test Template', duration: 'weekly', currency: 'EUR' },
     })
     const durationSelect = wrapper.findComponent({ name: 'QSelect' })
-    await durationSelect.vm.$emit('update:model-value', 'monthly')
+    await durationSelect.vm.$emit('update:modelValue', 'monthly')
     expect(wrapper.emitted('update:modelValue')).toBeTruthy()
     const emitted = wrapper.emitted('update:modelValue')?.[0]?.[0] as {
       name: string

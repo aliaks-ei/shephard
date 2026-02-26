@@ -16,6 +16,7 @@
     "build": "quasar build -m pwa",
     "build:analyze": "ANALYZE=true quasar build -m pwa",
     "build:production": "NODE_ENV=production quasar build -m pwa",
+    "check:bundle-budgets": "node scripts/check-bundle-budgets.mjs",
     "preview": "quasar build -m pwa && quasar serve dist/pwa --port 4173",
     "postinstall": "quasar prepare",
     "test:unit": "vitest",

@@ -1,0 +1,28 @@
+{
+  "regressionThresholdPercent": 15,
+  "regressionMinBytes": 4096,
+  "routeChunkBudgets": {
+    "AuthCallbackPage": 8192,
+    "AuthPage": 12288,
+    "ErrorNotFound": 8192,
+    "IndexPage": 28672,
+    "MainLayout": 36864,
+    "PlanPage": 110592,
+    "PlansPage": 12288,
+    "TemplatePage": 57344,
+    "TemplatesPage": 12288,
+    "UserSettingsPage": 12288
+  },
+  "baselineChunkBytes": {
+    "AuthCallbackPage": 1392,
+    "AuthPage": 6738,
+    "ErrorNotFound": 1409,
+    "IndexPage": 16208,
+    "MainLayout": 25645,
+    "PlanPage": 82960,
+    "PlansPage": 3898,
+    "TemplatePage": 23198,
+    "TemplatesPage": 3774,
+    "UserSettingsPage": 3347
+  }
+}

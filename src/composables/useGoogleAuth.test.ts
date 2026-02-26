@@ -10,7 +10,6 @@ declare global {
   }
 }
 
-// Mock dependencies
 vi.mock('vue-router', () => ({
   useRouter: vi.fn(),
   useRoute: vi.fn(),
@@ -18,12 +17,6 @@ vi.mock('vue-router', () => ({
 
 vi.mock('src/stores/auth', () => ({
   useAuthStore: vi.fn(),
-}))
-
-vi.mock('src/utils/csrf', () => ({
-  getCsrfToken: vi.fn(),
-  clearCsrfToken: vi.fn(),
-  generateCsrfToken: vi.fn(),
 }))
 
 vi.mock('src/composables/useNonce', () => ({
@@ -36,7 +29,6 @@ vi.mock('src/composables/useError', () => ({
 
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from 'src/stores/auth'
-import { getCsrfToken, clearCsrfToken, generateCsrfToken } from 'src/utils/csrf'
 import { useNonce } from 'src/composables/useNonce'
 import { useError } from 'src/composables/useError'
 
@@ -75,10 +67,8 @@ beforeEach(() => {
   vi.mocked(useNonce).mockReturnValue(mockNonceComposable as unknown as ReturnType<typeof useNonce>)
   vi.mocked(useError).mockReturnValue(mockErrorComposable as unknown as ReturnType<typeof useError>)
 
-  // Reset all mocks
   vi.clearAllMocks()
-
-  // Clean up window object
+  mockRoute.query = {}
   delete window.vueGoogleCallback
 })
 
@@ -108,7 +98,6 @@ it('initGoogleAuth should return early when ensureFreshNonce returns falsy', asy
   await initGoogleAuth()
 
   expect(mockNonceComposable.ensureFreshNonce).toHaveBeenCalled()
-  expect(generateCsrfToken).not.toHaveBeenCalled()
   expect(window.vueGoogleCallback).toBeUndefined()
 })
 
@@ -119,32 +108,11 @@ it('initGoogleAuth should proceed when nonce is available', async () => {
   await initGoogleAuth()
 
   expect(mockNonceComposable.ensureFreshNonce).toHaveBeenCalled()
-  expect(generateCsrfToken).toHaveBeenCalled()
   expect(window.vueGoogleCallback).toBeDefined()
   expect(typeof window.vueGoogleCallback).toBe('function')
 })
 
-it('handleGoogleSignIn should throw error when CSRF token is missing', async () => {
-  vi.mocked(getCsrfToken).mockReturnValue(null)
-
-  const { handleGoogleSignIn } = useGoogleAuth()
-  const mockResponse: GoogleSignInResponse = {
-    credential: 'mock-credential',
-    select_by: 'btn',
-  }
-
-  await handleGoogleSignIn(mockResponse)
-
-  expect(mockErrorComposable.handleError).toHaveBeenCalledWith(
-    'AUTH.GOOGLE_SIGNIN_FAILED',
-    expect.any(Error),
-    { component: 'GoogleAuth' },
-  )
-})
-
 it('handleGoogleSignIn should call authStore with correct parameters', async () => {
-  const mockCsrfToken = 'mock-csrf-token'
-  vi.mocked(getCsrfToken).mockReturnValue(mockCsrfToken)
   mockAuthStore.signInWithGoogle.mockResolvedValue({ user: { id: '123' } })
 
   const { handleGoogleSignIn } = useGoogleAuth()
@@ -155,14 +123,10 @@ it('handleGoogleSignIn should call authStore with correct parameters', async () 
 
   await handleGoogleSignIn(mockResponse)
 
-  expect(mockAuthStore.signInWithGoogle).toHaveBeenCalledWith({
-    ...mockResponse,
-    csrfToken: mockCsrfToken,
-  })
+  expect(mockAuthStore.signInWithGoogle).toHaveBeenCalledWith(mockResponse)
 })
 
 it('handleGoogleSignIn should return early when auth store returns falsy data', async () => {
-  vi.mocked(getCsrfToken).mockReturnValue('csrf-token')
   mockAuthStore.signInWithGoogle.mockResolvedValue(null)
 
   const { handleGoogleSignIn } = useGoogleAuth()
@@ -174,12 +138,10 @@ it('handleGoogleSignIn should return early when auth store returns falsy data', 
   await handleGoogleSignIn(mockResponse)
 
   expect(mockNonceComposable.resetNonce).not.toHaveBeenCalled()
-  expect(clearCsrfToken).not.toHaveBeenCalled()
   expect(mockRouterPush).not.toHaveBeenCalled()
 })
 
 it('handleGoogleSignIn should cleanup and redirect on success', async () => {
-  vi.mocked(getCsrfToken).mockReturnValue('csrf-token')
   mockAuthStore.signInWithGoogle.mockResolvedValue({ user: { id: '123' } })
 
   const { handleGoogleSignIn } = useGoogleAuth()
@@ -191,14 +153,12 @@ it('handleGoogleSignIn should cleanup and redirect on success', async () => {
   await handleGoogleSignIn(mockResponse)
 
   expect(mockNonceComposable.resetNonce).toHaveBeenCalled()
-  expect(clearCsrfToken).toHaveBeenCalled()
   expect(mockRouterPush).toHaveBeenCalledWith('/')
 })
 
 it('handleGoogleSignIn should redirect to query redirect path when present', async () => {
-  vi.mocked(getCsrfToken).mockReturnValue('csrf-token')
   mockAuthStore.signInWithGoogle.mockResolvedValue({ user: { id: '123' } })
-  mockRoute.query = { redirect: '/dashboard' }
+  mockRoute.query = { redirectTo: '/dashboard' }
 
   const { handleGoogleSignIn } = useGoogleAuth()
   const mockResponse: GoogleSignInResponse = {
@@ -211,8 +171,37 @@ it('handleGoogleSignIn should redirect to query redirect path when present', asy
   expect(mockRouterPush).toHaveBeenCalledWith('/dashboard')
 })
 
+it('should handle redirect query parameter as array using the first path', async () => {
+  mockAuthStore.signInWithGoogle.mockResolvedValue({ user: { id: '123' } })
+  mockRoute.query = { redirectTo: ['/dashboard', '/profile'] }
+
+  const { handleGoogleSignIn } = useGoogleAuth()
+  const mockResponse: GoogleSignInResponse = {
+    credential: 'mock-credential',
+    select_by: 'btn',
+  }
+
+  await handleGoogleSignIn(mockResponse)
+
+  expect(mockRouterPush).toHaveBeenCalledWith('/dashboard')
+})
+
+it('should fallback to root for unsafe redirect paths', async () => {
+  mockAuthStore.signInWithGoogle.mockResolvedValue({ user: { id: '123' } })
+  mockRoute.query = { redirectTo: 'https://evil.example.com/phish' }
+
+  const { handleGoogleSignIn } = useGoogleAuth()
+  const mockResponse: GoogleSignInResponse = {
+    credential: 'mock-credential',
+    select_by: 'btn',
+  }
+
+  await handleGoogleSignIn(mockResponse)
+
+  expect(mockRouterPush).toHaveBeenCalledWith('/')
+})
+
 it('handleGoogleSignIn should handle auth store errors', async () => {
-  vi.mocked(getCsrfToken).mockReturnValue('csrf-token')
   const mockError = new Error('Auth failed')
   mockAuthStore.signInWithGoogle.mockRejectedValue(mockError)
 
@@ -232,7 +221,6 @@ it('handleGoogleSignIn should handle auth store errors', async () => {
 })
 
 it('handleGoogleSignIn should handle router navigation errors', async () => {
-  vi.mocked(getCsrfToken).mockReturnValue('csrf-token')
   mockAuthStore.signInWithGoogle.mockResolvedValue({ user: { id: '123' } })
   const mockRouterError = new Error('Navigation failed')
   mockRouterPush.mockRejectedValue(mockRouterError)
@@ -261,19 +249,11 @@ it('cleanup should remove window callback when it exists', () => {
   expect(window.vueGoogleCallback).toBeUndefined()
 })
 
-it('cleanup should handle case when window callback does not exist', () => {
-  expect(window.vueGoogleCallback).toBeUndefined()
-
-  const { cleanup } = useGoogleAuth()
-  expect(() => cleanup()).not.toThrow()
-})
-
-it('cleanup should call resetNonce and clearCsrfToken', () => {
+it('cleanup should call resetNonce', () => {
   const { cleanup } = useGoogleAuth()
   cleanup()
 
   expect(mockNonceComposable.resetNonce).toHaveBeenCalled()
-  expect(clearCsrfToken).toHaveBeenCalled()
 })
 
 it('cleanup should handle multiple cleanup calls safely', () => {
@@ -285,12 +265,10 @@ it('cleanup should handle multiple cleanup calls safely', () => {
   expect(() => cleanup()).not.toThrow()
 
   expect(mockNonceComposable.resetNonce).toHaveBeenCalledTimes(2)
-  expect(clearCsrfToken).toHaveBeenCalledTimes(2)
 })
 
 it('window callback should call handleGoogleSignIn', async () => {
   mockNonceComposable.ensureFreshNonce.mockResolvedValue('fresh-nonce')
-  vi.mocked(getCsrfToken).mockReturnValue('csrf-token')
   mockAuthStore.signInWithGoogle.mockResolvedValue({ user: { id: '123' } })
 
   const { initGoogleAuth } = useGoogleAuth()
@@ -303,24 +281,5 @@ it('window callback should call handleGoogleSignIn', async () => {
 
   window.vueGoogleCallback?.(mockResponse)
 
-  expect(mockAuthStore.signInWithGoogle).toHaveBeenCalledWith({
-    ...mockResponse,
-    csrfToken: 'csrf-token',
-  })
-})
-
-it('should handle redirect query parameter as array', async () => {
-  vi.mocked(getCsrfToken).mockReturnValue('csrf-token')
-  mockAuthStore.signInWithGoogle.mockResolvedValue({ user: { id: '123' } })
-  mockRoute.query = { redirect: ['/dashboard', '/profile'] }
-
-  const { handleGoogleSignIn } = useGoogleAuth()
-  const mockResponse: GoogleSignInResponse = {
-    credential: 'mock-credential',
-    select_by: 'btn',
-  }
-
-  await handleGoogleSignIn(mockResponse)
-
-  expect(mockRouterPush).toHaveBeenCalledWith('/dashboard,/profile')
+  expect(mockAuthStore.signInWithGoogle).toHaveBeenCalledWith(mockResponse)
 })

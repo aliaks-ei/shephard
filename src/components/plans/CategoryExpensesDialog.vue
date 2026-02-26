@@ -256,14 +256,13 @@
           class="q-pa-none"
         >
           <!-- Expenses List -->
-          <q-list
+          <q-virtual-scroll
             v-if="expenses.length > 0"
-            separator
+            :items="expenses"
+            :virtual-scroll-item-size="$q.screen.lt.md ? 96 : 84"
+            class="category-expenses-virtual-list"
           >
-            <template
-              v-for="expense in expenses"
-              :key="expense.id"
-            >
+            <template #default="{ item: expense }">
               <q-slide-item
                 v-if="$q.screen.lt.md && canEdit"
                 class="mobile-expense-swipe-item"
@@ -373,7 +372,7 @@
                 </q-item-section>
               </q-item>
             </template>
-          </q-list>
+          </q-virtual-scroll>
 
           <!-- Empty State -->
           <div
@@ -435,6 +434,7 @@ import { formatDate } from 'src/utils/date'
 import { getBudgetProgressColor, getBudgetRemainingColorClass } from 'src/utils/budget'
 import { useItemCompletion } from 'src/composables/useItemCompletion'
 import { useExpenseActions } from 'src/composables/useExpenseActions'
+import { useTrackablePlanItems } from 'src/composables/useTrackablePlanItems'
 import type { PlanItem } from 'src/api/plans'
 import type { ExpenseWithCategory } from 'src/api'
 
@@ -472,41 +472,12 @@ const emit = defineEmits<{
 const planIdRef = computed(() => props.planId ?? null)
 const { toggleItemCompletion: toggleCompletion } = useItemCompletion(planIdRef)
 const { confirmDeleteExpense, deleteExpense } = useExpenseActions()
-
-const fixedPlanItems = computed(() => {
-  if (!props.planItems || props.planItems.length === 0) return []
-
-  // Fixed payment items that can be tracked (checkable)
-  return [...props.planItems]
-    .filter((item) => item.is_fixed_payment)
-    .sort((a, b) => {
-      const aCompleted = a.is_completed
-      const bCompleted = b.is_completed
-      if (aCompleted === bCompleted) return 0
-      return aCompleted ? 1 : -1
-    })
-})
-
-const nonFixedPlanItems = computed(() => {
-  if (!props.planItems || props.planItems.length === 0) return []
-
-  // Non-fixed items shown as read-only reference
-  return [...props.planItems].filter((item) => !item.is_fixed_payment)
-})
-
-const hasAnyPlanItems = computed(
-  () => fixedPlanItems.value.length > 0 || nonFixedPlanItems.value.length > 0,
-)
+const { fixedPlanItems, nonFixedPlanItems, hasAnyPlanItems, completedItemsCount, totalItemsCount } =
+  useTrackablePlanItems(computed(() => props.planItems ?? []))
 
 const hasOpenedExpenseDialog = ref(false)
 const showExpenseDialog = ref(false)
 const activeTab = ref('expenses')
-
-const completedItemsCount = computed(
-  () => fixedPlanItems.value.filter((item) => item.is_completed).length,
-)
-
-const totalItemsCount = computed(() => fixedPlanItems.value.length)
 
 const progressPercentage = computed(() => {
   if (!props.category || props.category.plannedAmount === 0) return 0
@@ -552,3 +523,9 @@ watch(
   { immediate: true },
 )
 </script>
+
+<style lang="scss" scoped>
+.category-expenses-virtual-list {
+  max-height: min(58vh, 480px);
+}
+</style>

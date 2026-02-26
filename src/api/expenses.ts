@@ -60,12 +60,47 @@ export async function createExpense(expense: ExpenseInsert): Promise<Expense> {
   return createdExpense
 }
 
+export async function createExpenses(expenses: ExpenseInsert[]): Promise<Expense[]> {
+  if (expenses.length === 0) {
+    return []
+  }
+
+  const { data, error } = await expenseService.supabase.from('expenses').insert(expenses).select()
+  if (error) throw error
+
+  const planIds = Array.from(
+    new Set(
+      expenses
+        .map((expense) => expense.plan_id)
+        .filter((planId): planId is string => typeof planId === 'string'),
+    ),
+  )
+
+  if (planIds.length > 0) {
+    await expenseService.supabase
+      .from('plans')
+      .update({ updated_at: new Date().toISOString() })
+      .in('id', planIds)
+  }
+
+  return data || []
+}
+
 export async function updateExpense(id: string, updates: ExpenseUpdate): Promise<Expense> {
   return expenseService.update(id, updates)
 }
 
 export async function deleteExpense(id: string): Promise<void> {
   return expenseService.delete(id)
+}
+
+export async function deleteExpenses(ids: string[]): Promise<void> {
+  if (ids.length === 0) {
+    return
+  }
+
+  const { error } = await expenseService.supabase.from('expenses').delete().in('id', ids)
+  if (error) throw error
 }
 
 export async function getPlanExpenseSummary(planId: string): Promise<PlanExpenseSummary[]> {

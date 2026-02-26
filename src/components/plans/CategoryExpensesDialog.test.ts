@@ -38,6 +38,10 @@ vi.mock('src/queries/expenses', () => ({
     mutateAsync: vi.fn(),
     isPending: ref(false),
   })),
+  useDeleteExpensesBatchMutation: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: ref(false),
+  })),
 }))
 
 vi.mock('src/utils/date', () => ({
@@ -145,6 +149,11 @@ const renderCategoryExpensesDialog = (
         'q-tab-panel': { template: '<div><slot /></div>', props: ['name'] },
         'q-linear-progress': { template: '<div class="q-linear-progress" />' },
         'q-list': { template: '<div><slot /></div>' },
+        'q-virtual-scroll': {
+          template:
+            '<div><template v-for="item in items" :key="item.id"><slot :item="item" /></template></div>',
+          props: ['items'],
+        },
         'q-item': { template: '<div class="q-item"><slot /></div>' },
         'q-slide-item': {
           template:

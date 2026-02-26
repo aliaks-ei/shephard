@@ -1,7 +1,7 @@
 import { computed, type MaybeRefOrGetter, toValue } from 'vue'
 import {
   useCreateExpenseMutation,
-  useDeleteExpenseMutation,
+  useDeleteExpensesBatchMutation,
   useExpensesByPlanQuery,
 } from 'src/queries/expenses'
 import { useUpdatePlanItemCompletionMutation } from 'src/queries/plans'
@@ -12,7 +12,7 @@ export function useItemCompletion(planId: MaybeRefOrGetter<string | null>) {
   const resolvedPlanId = computed(() => toValue(planId))
   const { getExpensesForPlanItem } = useExpensesByPlanQuery(resolvedPlanId)
   const createExpenseMutation = useCreateExpenseMutation()
-  const deleteExpenseMutation = useDeleteExpenseMutation()
+  const deleteExpensesBatchMutation = useDeleteExpensesBatchMutation()
   const completionMutation = useUpdatePlanItemCompletionMutation()
   const notificationStore = useNotificationStore()
 
@@ -50,15 +50,12 @@ export function useItemCompletion(planId: MaybeRefOrGetter<string | null>) {
         }
 
         item.is_completed = newCompletionState
-
-        for (const expense of expensesToDelete) {
-          await deleteExpenseMutation.mutateAsync({
-            expenseId: expense.id,
-            planId: currentPlanId,
-            planItemId: item.id,
-            hasRemainingExpensesForItem: false,
-          })
-        }
+        await deleteExpensesBatchMutation.mutateAsync({
+          expenseIds: expensesToDelete.map((expense) => expense.id),
+          planId: currentPlanId,
+          planItemId: item.id,
+          hasRemainingExpensesForItem: false,
+        })
       }
 
       await completionMutation.mutateAsync({

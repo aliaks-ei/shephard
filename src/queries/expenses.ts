@@ -5,8 +5,10 @@ import {
   getPlanExpenseSummary,
   getLastExpenseForPlan,
   createExpense,
+  createExpenses,
   updateExpense,
   deleteExpense,
+  deleteExpenses,
   getExpensesByDateRange,
   getExpensesByCategory,
   type ExpenseWithCategory,
@@ -19,11 +21,16 @@ import { useUserStore } from 'src/stores/user'
 import { queryKeys } from './query-keys'
 import { createSpecificErrorHandler, createMutationErrorHandler } from './query-error-handler'
 
+const EXPENSES_STALE_TIME_MS = 15_000
+const EXPENSES_CACHE_TIME_MS = 5 * 60_000
+
 export function useExpensesByPlanQuery(planId: MaybeRefOrGetter<string | null>) {
   const query = useQuery({
     queryKey: computed(() => queryKeys.expenses.byPlan(toValue(planId) ?? '')),
     queryFn: () => getExpensesByPlan(toValue(planId)!),
     enabled: computed(() => !!toValue(planId)),
+    staleTime: EXPENSES_STALE_TIME_MS,
+    gcTime: EXPENSES_CACHE_TIME_MS,
     meta: { errorKey: 'EXPENSES.LOAD_FAILED' as const },
   })
 
@@ -65,6 +72,8 @@ export function useExpenseSummaryQuery(planId: MaybeRefOrGetter<string | null>) 
     queryKey: computed(() => queryKeys.expenses.summary(toValue(planId) ?? '')),
     queryFn: () => getPlanExpenseSummary(toValue(planId)!),
     enabled: computed(() => !!toValue(planId)),
+    staleTime: EXPENSES_STALE_TIME_MS,
+    gcTime: EXPENSES_CACHE_TIME_MS,
     meta: { errorKey: 'EXPENSES.LOAD_SUMMARY_FAILED' as const },
   })
 
@@ -81,10 +90,27 @@ export function useLastExpenseForPlanQuery(planId: MaybeRefOrGetter<string | nul
     queryKey: computed(() => queryKeys.expenses.lastForPlan(toValue(planId) ?? '')),
     queryFn: () => getLastExpenseForPlan(toValue(planId)!),
     enabled: computed(() => !!toValue(planId)),
+    staleTime: EXPENSES_STALE_TIME_MS,
+    gcTime: EXPENSES_CACHE_TIME_MS,
   })
 }
 
 type ExpenseInput = Omit<ExpenseInsert, 'user_id'> & { user_id?: string }
+
+function invalidateExpenseQueries(queryClient: ReturnType<typeof useQueryClient>, planId: string) {
+  queryClient.invalidateQueries({
+    queryKey: queryKeys.expenses.byPlan(planId),
+  })
+  queryClient.invalidateQueries({
+    queryKey: queryKeys.expenses.summary(planId),
+  })
+  queryClient.invalidateQueries({
+    queryKey: queryKeys.expenses.lastForPlan(planId),
+  })
+  queryClient.invalidateQueries({
+    queryKey: queryKeys.plans.items(planId),
+  })
+}
 
 export function useCreateExpenseMutation() {
   const queryClient = useQueryClient()
@@ -98,18 +124,58 @@ export function useCreateExpenseMutation() {
     },
     onSuccess: (_data, vars) => {
       if (vars.plan_id) {
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.expenses.byPlan(vars.plan_id),
-        })
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.expenses.summary(vars.plan_id),
-        })
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.expenses.lastForPlan(vars.plan_id),
-        })
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.plans.items(vars.plan_id),
-        })
+        invalidateExpenseQueries(queryClient, vars.plan_id)
+      }
+    },
+    onError: createSpecificErrorHandler(
+      [
+        {
+          check: (e) =>
+            e.message.includes('violates foreign key constraint') &&
+            e.message.includes('expenses_plan_id_fkey'),
+          key: 'EXPENSES.PLAN_NOT_FOUND',
+        },
+        {
+          check: (e) =>
+            e.message.includes('violates foreign key constraint') &&
+            e.message.includes('expenses_plan_item_id_fkey'),
+          key: 'EXPENSES.PLAN_ITEM_NOT_FOUND',
+        },
+      ],
+      'EXPENSES.CREATE_FAILED',
+    ),
+  })
+}
+
+export function useCreateExpensesBatchMutation() {
+  const queryClient = useQueryClient()
+  const userStore = useUserStore()
+
+  return useMutation({
+    mutationFn: (expenses: ExpenseInput[]) => {
+      const defaultUserId = userStore.userProfile?.id
+      if (!defaultUserId && expenses.some((expense) => !expense.user_id)) {
+        throw new Error('User not authenticated')
+      }
+
+      return createExpenses(
+        expenses.map((expense) => ({
+          ...expense,
+          user_id: expense.user_id || defaultUserId!,
+        })),
+      )
+    },
+    onSuccess: (_data, vars) => {
+      const planIds = Array.from(
+        new Set(
+          vars
+            .map((expense) => expense.plan_id)
+            .filter((planId): planId is string => typeof planId === 'string'),
+        ),
+      )
+
+      for (const planId of planIds) {
+        invalidateExpenseQueries(queryClient, planId)
       }
     },
     onError: createSpecificErrorHandler(
@@ -170,15 +236,32 @@ export function useDeleteExpenseMutation() {
     },
     onSuccess: (_data, vars) => {
       if (vars.planId) {
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.expenses.byPlan(vars.planId),
-        })
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.expenses.summary(vars.planId),
-        })
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.plans.items(vars.planId),
-        })
+        invalidateExpenseQueries(queryClient, vars.planId)
+      }
+    },
+    onError: createMutationErrorHandler('EXPENSES.DELETE_FAILED'),
+  })
+}
+
+export function useDeleteExpensesBatchMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (vars: {
+      expenseIds: string[]
+      planId?: string
+      planItemId?: string | null
+      hasRemainingExpensesForItem?: boolean
+    }) => {
+      await deleteExpenses(vars.expenseIds)
+
+      if (vars.planItemId && !vars.hasRemainingExpensesForItem) {
+        await updatePlanItemCompletion(vars.planItemId, false)
+      }
+    },
+    onSuccess: (_data, vars) => {
+      if (vars.planId) {
+        invalidateExpenseQueries(queryClient, vars.planId)
       }
     },
     onError: createMutationErrorHandler('EXPENSES.DELETE_FAILED'),
@@ -196,6 +279,8 @@ export function useExpensesByDateRangeQuery(
     ),
     queryFn: () => getExpensesByDateRange(toValue(planId)!, toValue(startDate), toValue(endDate)),
     enabled: computed(() => !!toValue(planId) && !!toValue(startDate) && !!toValue(endDate)),
+    staleTime: EXPENSES_STALE_TIME_MS,
+    gcTime: EXPENSES_CACHE_TIME_MS,
     meta: { errorKey: 'EXPENSES.LOAD_DATE_RANGE_FAILED' as const },
   })
 }
@@ -210,6 +295,8 @@ export function useExpensesByCategoryQuery(
     ),
     queryFn: () => getExpensesByCategory(toValue(planId)!, toValue(categoryId)),
     enabled: computed(() => !!toValue(planId) && !!toValue(categoryId)),
+    staleTime: EXPENSES_STALE_TIME_MS,
+    gcTime: EXPENSES_CACHE_TIME_MS,
     meta: { errorKey: 'EXPENSES.LOAD_CATEGORY_FAILED' as const },
   })
 }

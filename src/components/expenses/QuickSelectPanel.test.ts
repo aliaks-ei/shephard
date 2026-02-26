@@ -105,7 +105,7 @@ describe('QuickSelectPanel', () => {
     })
 
     const planSelector = wrapper.findComponent({ name: 'PlanSelectorField' })
-    await planSelector.vm.$emit('update:model-value', 'plan-1')
+    await planSelector.vm.$emit('update:modelValue', 'plan-1')
 
     expect(wrapper.emitted('update:planId')).toBeTruthy()
   })
@@ -207,7 +207,7 @@ describe('QuickSelectPanel', () => {
     )
 
     expect(dateInput).toBeDefined()
-    await dateInput?.vm.$emit('update:model-value', '2024-01-20')
+    await dateInput?.vm.$emit('update:modelValue', '2024-01-20')
 
     expect(wrapper.emitted('update:expenseDate')).toBeTruthy()
   })

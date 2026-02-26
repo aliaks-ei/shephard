@@ -46,6 +46,7 @@ import { onMounted, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 
 import AuthLoginCard from 'src/components/auth/AuthLoginCard.vue'
+import { sanitizeRedirectPath } from 'src/utils/navigation'
 
 const router = useRouter()
 const route = useRoute()
@@ -59,7 +60,7 @@ onMounted(async () => {
 })
 
 async function redirectToHomePage(): Promise<void> {
-  const redirectPath = route.query.redirectTo?.toString() || '/'
+  const redirectPath = sanitizeRedirectPath(route.query.redirectTo)
   await router.push(redirectPath)
 }
 </script>

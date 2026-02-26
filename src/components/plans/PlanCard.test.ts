@@ -31,12 +31,6 @@ vi.mock('src/utils/plans', () => ({
   formatDateRange: vi.fn(() => 'Jan 1 - Jan 31, 2024'),
 }))
 
-vi.mock('src/utils/templates', () => ({
-  getPermissionText: vi.fn(() => 'Can Edit'),
-  getPermissionColor: vi.fn(() => 'primary'),
-  getPermissionIcon: vi.fn(() => 'eva-edit-outline'),
-}))
-
 type PlanCardProps = ComponentProps<typeof PlanCard>
 
 const mockPlan: PlanWithPermission = {

@@ -86,7 +86,7 @@ it('updates theme preference when select value changes', async () => {
   const selects = wrapper.findAllComponents({ name: 'QSelect' })
   const themeSelect = selects[1]
 
-  await themeSelect?.vm.$emit('update:model-value', 'dark')
+  await themeSelect?.vm.$emit('update:modelValue', 'dark')
 
   expect(userStore.updateUserPreferences).toHaveBeenCalledWith({
     preferences: { theme: 'dark' },
@@ -101,7 +101,7 @@ it('updates currency preference when a new value is selected', async () => {
   const currencySelect = wrapper.findComponent({ name: 'QSelect' })
   expect(currencySelect.exists()).toBe(true)
 
-  await currencySelect.vm.$emit('update:model-value', 'USD')
+  await currencySelect.vm.$emit('update:modelValue', 'USD')
 
   expect(userStore.updateUserPreferences).toHaveBeenCalledWith({
     preferences: { currency: 'USD' },

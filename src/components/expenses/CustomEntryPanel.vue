@@ -41,96 +41,21 @@
       />
     </label>
 
-    <!-- Amount and Currency Row -->
-    <div class="row q-col-gutter-sm q-mb-sm">
-      <!-- Expense Amount -->
-      <label
-        class="col block"
-        for="expense-amount-input"
-      >
-        <span class="form-label form-label--required">Amount</span>
-        <q-input
-          id="expense-amount-input"
-          :model-value="displayAmount"
-          placeholder="0.00"
-          type="text"
-          outlined
-          dense
-          no-error-icon
-          inputmode="decimal"
-          hide-bottom-space
-          :rules="amountRules"
-          :disable="!selectedPlan"
-          @update:model-value="handleUpdateAmount"
-        />
-      </label>
-
-      <!-- Currency Selection -->
-      <label
-        class="col-auto block"
-        for="expense-currency-input"
-      >
-        <span class="form-label">Currency</span>
-        <q-select
-          v-model="selectedCurrency"
-          id="expense-currency-input"
-          :options="currencyOptions"
-          outlined
-          dense
-          no-error-icon
-          emit-value
-          map-options
-          class="currency-select"
-          :disable="!selectedPlan"
-          hide-bottom-space
-        />
-      </label>
-    </div>
-
-    <!-- Currency Conversion Display -->
-    <div
-      v-if="shouldShowConversion"
-      class="q-mb-md q-px-sm"
-    >
-      <div
-        v-if="isConverting"
-        class="text-caption text-grey-7"
-      >
-        <q-spinner
-          size="12px"
-          class="q-mr-xs"
-        />
-        Converting...
-      </div>
-      <div
-        v-else-if="hasConversionError"
-        class="text-caption text-negative"
-      >
-        <q-icon
-          name="eva-alert-circle-outline"
-          size="14px"
-          class="q-mr-xs"
-        />
-        {{ conversionError }}
-      </div>
-      <div
-        v-else-if="conversionResult"
-        class="text-caption"
-      >
-        <q-icon
-          name="eva-swap-outline"
-          size="14px"
-          class="q-mr-xs text-primary"
-        />
-        <span class="text-grey-7">Converted amount:</span>
-        <span class="text-weight-bold q-ml-xs">
-          {{
-            formatCurrency(conversionResult.convertedAmount, selectedPlan?.currency as CurrencyCode)
-          }}
-        </span>
-        <span class="text-grey-6 q-ml-xs"> (Rate: {{ conversionResult.rate.toFixed(4) }}) </span>
-      </div>
-    </div>
+    <ExpenseAmountCurrencyFields
+      :display-amount="displayAmount"
+      :amount-rules="amountRules"
+      :selected-currency="selectedCurrency"
+      :currency-options="currencyOptions"
+      :disable="!selectedPlan"
+      :should-show-conversion="shouldShowConversion"
+      :is-converting="isConverting"
+      :has-conversion-error="hasConversionError"
+      :conversion-error="conversionError ?? ''"
+      :conversion-result="conversionResult"
+      :converted-amount-display="convertedAmountDisplay"
+      @update:amount="handleUpdateAmount"
+      @update:currency="selectedCurrency = $event"
+    />
 
     <!-- Category Selection -->
     <div class="column q-mb-sm">
@@ -269,53 +194,10 @@
       </q-banner>
     </div>
 
-    <label
-      class="q-mb-sm block"
-      for="expense-date-input"
-    >
-      <span class="form-label form-label--required">Expense Date</span>
-      <q-input
-        id="expense-date-input"
-        :model-value="expenseDate"
-        placeholder="YYYY-MM-DD"
-        outlined
-        dense
-        no-error-icon
-        inputmode="none"
-        :rules="[(val: string) => !!val || 'Date is required']"
-        hide-bottom-space
-        @update:model-value="handleUpdateExpenseDate"
-      >
-        <template #append>
-          <q-icon
-            name="eva-calendar-outline"
-            class="cursor-pointer"
-          >
-            <q-popup-proxy
-              cover
-              transition-show="scale"
-              transition-hide="scale"
-            >
-              <q-date
-                :model-value="expenseDate"
-                mask="YYYY-MM-DD"
-                @update:model-value="handleUpdateExpenseDate"
-              >
-                <div class="row items-center justify-end">
-                  <q-btn
-                    v-close-popup
-                    label="Cancel"
-                    color="primary"
-                    flat
-                    no-caps
-                  />
-                </div>
-              </q-date>
-            </q-popup-proxy>
-          </q-icon>
-        </template>
-      </q-input>
-    </label>
+    <ExpenseDateField
+      :expense-date="expenseDate"
+      @update:expense-date="handleUpdateExpenseDate"
+    />
 
     <!-- Budget Impact Display -->
     <BudgetImpactCard
@@ -331,6 +213,8 @@
 <script setup lang="ts">
 import { computed, watch, ref, toRef, watchEffect, defineAsyncComponent } from 'vue'
 import PlanSelectorField, { type PlanOption } from './PlanSelectorField.vue'
+import ExpenseAmountCurrencyFields from './ExpenseAmountCurrencyFields.vue'
+import ExpenseDateField from './ExpenseDateField.vue'
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import BudgetImpactCard from './BudgetImpactCard.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
@@ -427,11 +311,11 @@ const currencyOptions = [
 ]
 
 const shouldShowConversion = computed(() => {
-  return (
+  return Boolean(
     props.selectedPlan &&
-    props.amount &&
-    props.amount > 0 &&
-    selectedCurrency.value !== (props.selectedPlan.currency as CurrencyCode)
+      props.amount !== null &&
+      props.amount > 0 &&
+      selectedCurrency.value !== (props.selectedPlan.currency as CurrencyCode),
   )
 })
 
@@ -529,6 +413,17 @@ const displayAmount = computed(() => {
   return props.amount !== null ? props.amount : ''
 })
 
+const convertedAmountDisplay = computed(() => {
+  if (!conversionResult.value || !props.selectedPlan?.currency) {
+    return ''
+  }
+
+  return formatCurrency(
+    conversionResult.value.convertedAmount,
+    props.selectedPlan.currency as CurrencyCode,
+  )
+})
+
 const handleUpdateAmount = (value: number | string | null) => {
   const numValue = parseDecimalInput(value)
   emit('update:amount', numValue)
@@ -547,13 +442,3 @@ watch(
   },
 )
 </script>
-
-<style lang="scss" scoped>
-.currency-select {
-  min-width: 80px;
-
-  :deep(.q-field__control) {
-    height: 40px;
-  }
-}
-</style>

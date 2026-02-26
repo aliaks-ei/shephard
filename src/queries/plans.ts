@@ -15,17 +15,23 @@ import {
   type PlanWithPermission,
   type PlanItemInsert,
 } from 'src/api'
-import { updatePlanItemCompletion } from 'src/api/plans'
+import { updatePlanItemCompletion, updatePlanItemsCompletion } from 'src/api/plans'
 import { useUserStore } from 'src/stores/user'
 import { queryKeys } from './query-keys'
 import { createSpecificErrorHandler, createMutationErrorHandler } from './query-error-handler'
 import { canAddExpensesToPlan } from 'src/utils/plans'
+
+const LIST_STALE_TIME_MS = 30_000
+const DETAIL_STALE_TIME_MS = 15_000
+const QUERY_CACHE_TIME_MS = 5 * 60_000
 
 export function usePlansQuery(userId: MaybeRefOrGetter<string | undefined>) {
   const query = useQuery({
     queryKey: computed(() => queryKeys.plans.list(toValue(userId) ?? '')),
     queryFn: () => getPlans(toValue(userId)!),
     enabled: computed(() => !!toValue(userId)),
+    staleTime: LIST_STALE_TIME_MS,
+    gcTime: QUERY_CACHE_TIME_MS,
     meta: { errorKey: 'PLANS.LOAD_FAILED' as const },
   })
 
@@ -58,6 +64,8 @@ export function usePlanDetailQuery(
     queryKey: computed(() => queryKeys.plans.detail(toValue(planId) ?? '', toValue(userId) ?? '')),
     queryFn: () => getPlanWithItems(toValue(planId)!, toValue(userId)!),
     enabled: computed(() => !!toValue(planId) && !!toValue(userId)),
+    staleTime: DETAIL_STALE_TIME_MS,
+    gcTime: QUERY_CACHE_TIME_MS,
     meta: { errorKey: 'PLANS.LOAD_PLAN_FAILED' as const },
   })
 }
@@ -67,6 +75,8 @@ export function usePlanItemsQuery(planId: MaybeRefOrGetter<string | null>) {
     queryKey: computed(() => queryKeys.plans.items(toValue(planId) ?? '')),
     queryFn: () => getPlanItems(toValue(planId)!),
     enabled: computed(() => !!toValue(planId)),
+    staleTime: DETAIL_STALE_TIME_MS,
+    gcTime: QUERY_CACHE_TIME_MS,
     meta: { errorKey: 'EXPENSES.LOAD_PLAN_ITEMS_FAILED' as const },
   })
 }
@@ -186,6 +196,19 @@ export function useUpdatePlanItemCompletionMutation() {
   return useMutation({
     mutationFn: (vars: { itemId: string; isCompleted: boolean; planId: string }) =>
       updatePlanItemCompletion(vars.itemId, vars.isCompleted),
+    onSuccess: (_data, vars) => {
+      invalidatePlanQueries(queryClient, vars.planId)
+    },
+    onError: createMutationErrorHandler('PLANS.UPDATE_ITEMS_FAILED'),
+  })
+}
+
+export function useUpdatePlanItemsCompletionMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (vars: { itemIds: string[]; isCompleted: boolean; planId: string }) =>
+      updatePlanItemsCompletion(vars.itemIds, vars.isCompleted),
     onSuccess: (_data, vars) => {
       invalidatePlanQueries(queryClient, vars.planId)
     },

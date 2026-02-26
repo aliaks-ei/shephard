@@ -54,7 +54,7 @@ describe('PlanSelectorField', () => {
     })
 
     const select = wrapper.findComponent({ name: 'QSelect' })
-    await select.vm.$emit('update:model-value', 'plan-1')
+    await select.vm.$emit('update:modelValue', 'plan-1')
 
     expect(wrapper.emitted('update:modelValue')).toBeTruthy()
     expect(wrapper.emitted('update:modelValue')?.[0]).toEqual(['plan-1'])
@@ -66,7 +66,7 @@ describe('PlanSelectorField', () => {
     })
 
     const select = wrapper.findComponent({ name: 'QSelect' })
-    await select.vm.$emit('update:model-value', 'plan-1')
+    await select.vm.$emit('update:modelValue', 'plan-1')
 
     expect(wrapper.emitted('plan-selected')).toBeTruthy()
     expect(wrapper.emitted('plan-selected')?.[0]).toEqual(['plan-1'])
