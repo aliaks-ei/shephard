@@ -292,5 +292,6 @@ watch(
       determineInitialMode()
     }
   },
+  { immediate: true },
 )
 </script>
