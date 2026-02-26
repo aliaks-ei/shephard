@@ -1,9 +1,9 @@
 import { useRouter, useRoute } from 'vue-router'
 
 import { useAuthStore } from 'src/stores/auth'
-import { getCsrfToken, clearCsrfToken, generateCsrfToken } from 'src/utils/csrf'
 import { useNonce } from 'src/composables/useNonce'
 import { useError } from 'src/composables/useError'
+import { sanitizeRedirectPath } from 'src/utils/navigation'
 import type { GoogleSignInResponse } from 'src/types'
 
 export function useGoogleAuth() {
@@ -18,8 +18,6 @@ export function useGoogleAuth() {
     const nonce = await ensureFreshNonce()
     if (!nonce) return
 
-    generateCsrfToken()
-
     window.vueGoogleCallback = (response) => {
       handleGoogleSignIn(response)
     }
@@ -27,24 +25,13 @@ export function useGoogleAuth() {
 
   async function handleGoogleSignIn(response: GoogleSignInResponse) {
     try {
-      const csrfToken = getCsrfToken()
-      if (!csrfToken) {
-        throw new Error('CSRF token is missing')
-      }
-
-      const authRequest = {
-        ...response,
-        csrfToken,
-      }
-
-      const data = await authStore.signInWithGoogle(authRequest)
+      const data = await authStore.signInWithGoogle(response)
 
       if (!data) return
 
       resetNonce()
-      clearCsrfToken()
 
-      const redirectPath = route.query.redirect?.toString() || '/'
+      const redirectPath = sanitizeRedirectPath(route.query.redirectTo)
       await router.push(redirectPath)
     } catch (err) {
       handleError('AUTH.GOOGLE_SIGNIN_FAILED', err, { component: 'GoogleAuth' })
@@ -57,7 +44,6 @@ export function useGoogleAuth() {
     }
 
     resetNonce()
-    clearCsrfToken()
   }
 
   return {

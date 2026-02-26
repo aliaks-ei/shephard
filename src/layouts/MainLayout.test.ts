@@ -3,6 +3,7 @@ import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-v
 import { createTestingPinia } from '@pinia/testing'
 import { vi, it, expect, beforeEach } from 'vitest'
 import type { ComponentProps } from 'vue-component-type-helpers'
+import { ref } from 'vue'
 
 import MainLayout from './MainLayout.vue'
 
@@ -18,7 +19,7 @@ vi.mock('vue-router', () => ({
 
 vi.mock('src/composables/usePwaInstall', () => ({
   usePwaInstall: () => ({
-    isInstallable: false,
+    isInstallable: ref(false),
     promptInstall: vi.fn(),
     dismissInstall: vi.fn(),
   }),

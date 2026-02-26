@@ -10,7 +10,7 @@ import ShareTemplateDialog from './ShareTemplateDialog.vue'
 vi.mock('src/queries/sharing', () => ({
   useSharedUsersQuery: vi.fn(() => ({
     data: ref([]),
-    isPending: ref(false),
+    isFetching: ref(false),
   })),
   useShareEntityMutation: vi.fn(() => ({
     mutateAsync: vi.fn(),
@@ -26,7 +26,7 @@ vi.mock('src/queries/sharing', () => ({
   })),
   useSearchUsersQuery: vi.fn(() => ({
     data: ref([]),
-    isPending: ref(false),
+    isFetching: ref(false),
   })),
 }))
 
@@ -93,7 +93,7 @@ describe('ShareTemplateDialog', () => {
     })
 
     const dialog = wrapper.findComponent({ name: 'QDialog' })
-    await dialog.vm.$emit('update:model-value', false)
+    await dialog.vm.$emit('update:modelValue', false)
     expect(wrapper.emitted('update:modelValue')).toBeTruthy()
     expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([false])
   })

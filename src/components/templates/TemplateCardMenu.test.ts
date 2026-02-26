@@ -12,6 +12,13 @@ type TemplateCardMenuProps = ComponentProps<typeof TemplateCardMenu>
 const renderTemplateCardMenu = (props: TemplateCardMenuProps) => {
   return mount(TemplateCardMenu, {
     props,
+    global: {
+      stubs: {
+        QMenu: {
+          template: '<div><slot /></div>',
+        },
+      },
+    },
   })
 }
 
@@ -37,52 +44,26 @@ describe('TemplateCardMenu', () => {
     expect(wrapper.props('permissionLevel')).toBe('edit')
   })
 
-  it('should emit edit event when edit item is clicked', () => {
+  it('should emit share event when share item is clicked', async () => {
     const wrapper = renderTemplateCardMenu({
       canEdit: true,
     })
 
     const items = wrapper.findAll('.q-item')
-    if (items.length > 0) {
-      items[0]?.trigger('click')
-      expect(wrapper.emitted('edit')).toBeTruthy()
-    } else {
-      // Fallback: directly emit the event for testing
-      wrapper.vm.$emit('edit')
-      expect(wrapper.emitted('edit')).toBeTruthy()
-    }
+    expect(items.length).toBeGreaterThan(0)
+    await items[0]?.trigger('click')
+    expect(wrapper.emitted('share')).toBeTruthy()
   })
 
-  it('should emit share event when share item is clicked', () => {
+  it('should emit delete event when delete item is clicked', async () => {
     const wrapper = renderTemplateCardMenu({
       canEdit: true,
     })
 
     const items = wrapper.findAll('.q-item')
-    if (items.length > 1) {
-      items[1]?.trigger('click')
-      expect(wrapper.emitted('share')).toBeTruthy()
-    } else {
-      // Fallback: directly emit the event for testing
-      wrapper.vm.$emit('share')
-      expect(wrapper.emitted('share')).toBeTruthy()
-    }
-  })
-
-  it('should emit delete event when delete item is clicked', () => {
-    const wrapper = renderTemplateCardMenu({
-      canEdit: true,
-    })
-
-    const items = wrapper.findAll('.q-item')
-    if (items.length > 2) {
-      items[2]?.trigger('click')
-      expect(wrapper.emitted('delete')).toBeTruthy()
-    } else {
-      // Fallback: directly emit the event for testing
-      wrapper.vm.$emit('delete')
-      expect(wrapper.emitted('delete')).toBeTruthy()
-    }
+    expect(items.length).toBeGreaterThan(1)
+    await items[1]?.trigger('click')
+    expect(wrapper.emitted('delete')).toBeTruthy()
   })
 
   it('should handle owner prop correctly', () => {

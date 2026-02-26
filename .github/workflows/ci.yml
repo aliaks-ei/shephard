@@ -84,3 +84,6 @@ jobs:
 
       - name: Build PWA
         run: npm run build
+
+      - name: Check bundle budgets
+        run: npm run check:bundle-budgets

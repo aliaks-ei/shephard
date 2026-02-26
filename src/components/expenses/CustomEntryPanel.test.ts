@@ -140,7 +140,7 @@ describe('CustomEntryPanel', () => {
     })
 
     const planSelector = wrapper.findComponent({ name: 'PlanSelectorField' })
-    await planSelector.vm.$emit('update:model-value', 'plan-1')
+    await planSelector.vm.$emit('update:modelValue', 'plan-1')
 
     expect(wrapper.emitted('update:planId')).toBeTruthy()
   })
@@ -179,7 +179,7 @@ describe('CustomEntryPanel', () => {
     const inputs = wrapper.findAllComponents({ name: 'QInput' })
     const nameInput = inputs[0]
     expect(nameInput).toBeDefined()
-    await nameInput?.vm.$emit('update:model-value', 'Coffee')
+    await nameInput?.vm.$emit('update:modelValue', 'Coffee')
 
     expect(wrapper.emitted('update:name')).toBeTruthy()
   })
@@ -192,7 +192,7 @@ describe('CustomEntryPanel', () => {
     const inputs = wrapper.findAllComponents({ name: 'QInput' })
     const amountInput = inputs[1]
     expect(amountInput).toBeDefined()
-    await amountInput?.vm.$emit('update:model-value', '15.50')
+    await amountInput?.vm.$emit('update:modelValue', '15.50')
 
     expect(wrapper.emitted('update:amount')).toBeTruthy()
   })
@@ -205,7 +205,7 @@ describe('CustomEntryPanel', () => {
     const inputs = wrapper.findAllComponents({ name: 'QInput' })
     const dateInput = inputs[2]
     expect(dateInput).toBeDefined()
-    await dateInput?.vm.$emit('update:model-value', '2024-01-20')
+    await dateInput?.vm.$emit('update:modelValue', '2024-01-20')
 
     expect(wrapper.emitted('update:expenseDate')).toBeTruthy()
   })

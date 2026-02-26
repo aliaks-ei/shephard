@@ -109,7 +109,7 @@ describe('TemplateCategory', () => {
 
     const templateItem = wrapper.findComponent({ name: 'TemplateItem' })
     const updatedItem = { ...mockItems[0], name: 'Updated' }
-    await templateItem.vm.$emit('update:model-value', updatedItem)
+    await templateItem.vm.$emit('update:modelValue', updatedItem)
     expect(wrapper.emitted('update-item')).toBeTruthy()
     expect(wrapper.emitted('update-item')?.[0]).toEqual(['item-1', updatedItem])
   })

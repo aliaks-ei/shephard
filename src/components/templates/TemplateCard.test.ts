@@ -13,12 +13,6 @@ vi.mock('src/utils/currency', () => ({
   formatCurrencyPrivate: vi.fn((currency: string) => `${currency}****`),
 }))
 
-vi.mock('src/utils/templates', () => ({
-  getPermissionText: vi.fn(() => `Permission: ${'edit'}`),
-  getPermissionColor: vi.fn(() => 'primary'),
-  getPermissionIcon: vi.fn(() => 'eva-shield-outline'),
-}))
-
 installQuasarPlugin()
 
 type TemplateCardProps = ComponentProps<typeof TemplateCard>

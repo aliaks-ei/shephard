@@ -3,11 +3,13 @@ import {
   usePlansQuery,
   usePlanItemsQuery,
   useUpdatePlanItemCompletionMutation,
+  useUpdatePlanItemsCompletionMutation,
 } from 'src/queries/plans'
 import { useCategoriesQuery } from 'src/queries/categories'
 import {
   useExpenseSummaryQuery,
   useCreateExpenseMutation,
+  useCreateExpensesBatchMutation,
   useLastExpenseForPlanQuery,
 } from 'src/queries/expenses'
 import { useUserStore } from 'src/stores/user'
@@ -40,12 +42,14 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
   const { plans, plansForExpenses } = usePlansQuery(userId)
   const { categories } = useCategoriesQuery()
   const createExpenseMutation = useCreateExpenseMutation()
+  const createExpensesBatchMutation = useCreateExpensesBatchMutation()
 
   const activeSummaryPlanId = ref<string | null>(null)
   const { expenseSummary } = useExpenseSummaryQuery(activeSummaryPlanId)
   const planItemsQuery = usePlanItemsQuery(activeSummaryPlanId)
   const lastExpenseQuery = useLastExpenseForPlanQuery(activeSummaryPlanId)
   const completionMutation = useUpdatePlanItemCompletionMutation()
+  const batchCompletionMutation = useUpdatePlanItemsCompletionMutation()
 
   const isLoading = ref(false)
   const didAutoSelectPlan = ref(false)
@@ -276,26 +280,31 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
     }
 
     try {
-      const expensePromises = selectedPlanItems.value.map(async (item) => {
-        return createExpenseMutation.mutateAsync({
-          plan_id: item.plan_id,
-          category_id: item.category_id,
-          name: item.name,
-          amount: item.amount,
-          expense_date: form.value.expenseDate,
-          plan_item_id: item.id,
-        })
-      })
+      const expensesForCreate = selectedPlanItems.value.map((item) => ({
+        plan_id: item.plan_id,
+        category_id: item.category_id,
+        name: item.name,
+        amount: item.amount,
+        expense_date: form.value.expenseDate,
+        plan_item_id: item.id,
+      }))
 
-      await Promise.all(expensePromises)
+      await createExpensesBatchMutation.mutateAsync(expensesForCreate)
 
-      const completionPromises = selectedPlanItems.value.map(async (item) => {
-        return completionMutation.mutateAsync({
-          itemId: item.id,
+      const itemIdsByPlan = new Map<string, string[]>()
+      for (const item of selectedPlanItems.value) {
+        const ids = itemIdsByPlan.get(item.plan_id) ?? []
+        ids.push(item.id)
+        itemIdsByPlan.set(item.plan_id, ids)
+      }
+
+      const completionPromises = Array.from(itemIdsByPlan.entries()).map(([planId, itemIds]) =>
+        batchCompletionMutation.mutateAsync({
+          itemIds,
           isCompleted: true,
-          planId: item.plan_id,
-        })
-      })
+          planId,
+        }),
+      )
 
       await Promise.all(completionPromises)
 

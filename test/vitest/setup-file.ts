@@ -1,4 +1,4 @@
-import { vi } from 'vitest'
+import { afterEach, beforeEach, vi } from 'vitest'
 import './mocks/supabase'
 
 vi.stubEnv('MODE', 'test')
@@ -30,4 +30,34 @@ vi.mock('quasar', async () => {
       set: vi.fn(),
     },
   }
+})
+
+const consoleWarnCalls: string[] = []
+
+function stringifyConsoleArg(arg: unknown): string {
+  if (typeof arg === 'string') return arg
+  if (arg instanceof Error) return `${arg.name}: ${arg.message}`
+
+  try {
+    return JSON.stringify(arg)
+  } catch {
+    return String(arg)
+  }
+}
+
+vi.spyOn(console, 'warn').mockImplementation((...args: unknown[]) => {
+  consoleWarnCalls.push(args.map(stringifyConsoleArg).join(' '))
+})
+
+beforeEach(() => {
+  consoleWarnCalls.length = 0
+})
+
+afterEach(() => {
+  if (consoleWarnCalls.length === 0) return
+
+  const formattedCalls = consoleWarnCalls.map((message, index) => `${index + 1}. ${message}`)
+  consoleWarnCalls.length = 0
+
+  throw new Error(`Unexpected console.warn call(s):\n${formattedCalls.join('\n')}`)
 })

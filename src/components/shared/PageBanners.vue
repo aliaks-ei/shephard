@@ -11,7 +11,7 @@
       <template #avatar>
         <q-icon :name="banner.icon" />
       </template>
-      <div v-html="banner.message" />
+      <div>{{ banner.message }}</div>
     </q-banner>
   </template>
 </template>

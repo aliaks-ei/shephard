@@ -147,7 +147,7 @@ describe('ExpenseRegistrationDialog', () => {
     })
 
     const dialog = wrapper.findComponent({ name: 'QDialog' })
-    await dialog.vm.$emit('update:model-value', false)
+    await dialog.vm.$emit('update:modelValue', false)
 
     expect(wrapper.emitted('update:modelValue')).toBeTruthy()
     expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([false])

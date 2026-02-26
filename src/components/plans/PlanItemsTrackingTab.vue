@@ -33,7 +33,7 @@
               </div>
               <div class="col-auto">
                 <div class="text-subtitle2 text-weight-medium">
-                  {{ completedItems }} of {{ totalItems }}
+                  {{ completedItemsCount }} of {{ totalItemsCount }}
                 </div>
               </div>
             </div>
@@ -279,20 +279,14 @@ import { computed } from 'vue'
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import { useCategoriesQuery } from 'src/queries/categories'
 import { useItemCompletion } from 'src/composables/useItemCompletion'
+import {
+  groupTrackablePlanItemsByCategory,
+  useTrackablePlanItems,
+  type TrackableCategoryGroup,
+} from 'src/composables/useTrackablePlanItems'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import type { PlanItem } from 'src/api/plans'
 import type { PlanWithItems } from 'src/api'
-
-interface CategoryGroup {
-  categoryId: string
-  categoryName: string
-  categoryColor: string
-  categoryIcon: string
-  items: PlanItem[]
-  nonFixedItems: PlanItem[]
-  totalPlanned: number
-  completedCount: number
-}
 
 const props = defineProps<{
   plan: (PlanWithItems & { permission_level?: string }) | null
@@ -309,70 +303,15 @@ const { getCategoryById } = useCategoriesQuery()
 const planIdRef = computed(() => props.plan?.id ?? null)
 const { toggleItemCompletion: toggleCompletion } = useItemCompletion(planIdRef)
 
-const planItems = computed(() => props.plan?.plan_items || [])
-
-const categoryGroups = computed((): CategoryGroup[] => {
-  if (!planItems.value.length) return []
-
-  const groups = new Map<string, CategoryGroup>()
-
-  for (const item of planItems.value) {
-    if (!groups.has(item.category_id)) {
-      const category = getCategoryById(item.category_id)
-      if (!category) continue
-
-      groups.set(item.category_id, {
-        categoryId: item.category_id,
-        categoryName: category.name,
-        categoryColor: category.color,
-        categoryIcon: category.icon,
-        items: [],
-        nonFixedItems: [],
-        totalPlanned: 0,
-        completedCount: 0,
-      })
-    }
-
-    const group = groups.get(item.category_id)!
-
-    if (item.is_fixed_payment) {
-      // Fixed payment items (trackable)
-      group.items.push(item)
-      group.totalPlanned += item.amount
-
-      if (item.is_completed) {
-        group.completedCount++
-      }
-    } else {
-      // Non-fixed items (read-only reference)
-      group.nonFixedItems.push(item)
-    }
-  }
-
-  // Sort fixed items: incomplete first, then completed
-  for (const group of groups.values()) {
-    group.items.sort((a, b) => {
-      const aCompleted = a.is_completed
-      const bCompleted = b.is_completed
-      if (aCompleted === bCompleted) return 0
-      return aCompleted ? 1 : -1 // incomplete items first
-    })
-  }
-
-  // Include categories that have any items (fixed or non-fixed)
-  return Array.from(groups.values())
-    .filter((group) => group.items.length > 0 || group.nonFixedItems.length > 0)
-    .sort((a, b) => a.categoryName.localeCompare(b.categoryName))
-})
-
-const totalItems = computed(() => planItems.value.filter((item) => item.is_fixed_payment).length)
-const completedItems = computed(
-  () => planItems.value.filter((item) => item.is_fixed_payment && item.is_completed).length,
+const planItems = computed(() => props.plan?.plan_items ?? [])
+const { totalItemsCount, completedItemsCount } = useTrackablePlanItems(planItems)
+const categoryGroups = computed((): TrackableCategoryGroup[] =>
+  groupTrackablePlanItemsByCategory(planItems.value, getCategoryById),
 )
 
 const overallProgress = computed(() => {
-  if (totalItems.value === 0) return 0
-  return completedItems.value / totalItems.value
+  if (totalItemsCount.value === 0) return 0
+  return completedItemsCount.value / totalItemsCount.value
 })
 
 function handleToggleItemCompletion(item: PlanItem, value?: boolean) {

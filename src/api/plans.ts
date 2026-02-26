@@ -122,6 +122,22 @@ export async function updatePlanItemCompletion(
   if (error) throw error
 }
 
+export async function updatePlanItemsCompletion(
+  itemIds: string[],
+  isCompleted: boolean,
+): Promise<void> {
+  if (itemIds.length === 0) {
+    return
+  }
+
+  const { error } = await planService.supabase
+    .from('plan_items')
+    .update({ is_completed: isCompleted })
+    .in('id', itemIds)
+
+  if (error) throw error
+}
+
 export async function updatePlanItem(
   itemId: string,
   updates: { name?: string; category_id?: string; amount?: number },

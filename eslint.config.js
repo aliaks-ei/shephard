@@ -43,6 +43,20 @@ export default defineConfigWithVueTs(
       '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true }],
     },
   },
+  {
+    files: ['src/**/*.test.ts', 'test/**/*.test.ts'],
+    rules: {
+      'no-restricted-properties': [
+        'error',
+        {
+          object: 'console',
+          property: 'warn',
+          message:
+            'Unexpected console.warn calls in tests fail CI. Use explicit assertions or mocks instead.',
+        },
+      ],
+    },
+  },
   // https://github.com/vuejs/eslint-config-typescript
   vueTsConfigs.recommendedTypeChecked,
 
@@ -71,6 +85,7 @@ export default defineConfigWithVueTs(
       'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
 
       '@typescript-eslint/no-floating-promises': 'off',
+      'vue/no-v-html': 'error',
     },
   },
 

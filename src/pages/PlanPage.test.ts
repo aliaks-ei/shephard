@@ -184,6 +184,10 @@ vi.mock('src/queries/expenses', () => ({
     mutateAsync: vi.fn(),
     isPending: ref(false),
   })),
+  useDeleteExpensesBatchMutation: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: ref(false),
+  })),
 }))
 
 vi.mock('src/stores/user', () => ({

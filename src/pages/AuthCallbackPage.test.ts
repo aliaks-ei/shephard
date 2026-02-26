@@ -68,7 +68,14 @@ it('should handle array type redirectTo query param', async () => {
   mockRoute.query = { redirectTo: ['/plans', '/fallback'] }
   createWrapper()
   await flushPromises()
-  expect(mockRouterPush).toHaveBeenCalledWith('/plans,/fallback')
+  expect(mockRouterPush).toHaveBeenCalledWith('/plans')
+})
+
+it('should fallback to home for unsafe redirect values', async () => {
+  mockRoute.query = { redirectTo: 'https://evil.example.com' }
+  createWrapper()
+  await flushPromises()
+  expect(mockRouterPush).toHaveBeenCalledWith('/')
 })
 
 it('should show loading state initially', () => {
