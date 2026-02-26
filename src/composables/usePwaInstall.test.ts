@@ -195,10 +195,12 @@ describe('usePwaInstall', () => {
     it('returns error when prompt throws', async () => {
       const wrapper = mount(createTestComponent())
       await nextTick()
+      const promptError = new Error('Failed')
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
 
       const mockEvent = {
         preventDefault: vi.fn(),
-        prompt: vi.fn().mockRejectedValue(new Error('Failed')),
+        prompt: vi.fn().mockRejectedValue(promptError),
         userChoice: Promise.resolve({ outcome: 'accepted' as const, platform: 'web' }),
       }
 
@@ -208,6 +210,7 @@ describe('usePwaInstall', () => {
       const result = await wrapper.vm.promptInstall()
 
       expect(result).toBe('error')
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Error showing install prompt:', promptError)
     })
   })
 
