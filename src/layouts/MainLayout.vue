@@ -38,7 +38,7 @@
       v-if="showMobileBottomNav"
       class="bg-transparent mobile-nav-footer"
     >
-      <MobileBottomNavigation @open-expense-dialog="showExpenseDialog = true" />
+      <MobileBottomNavigation @open-expense-dialog="openExpenseDialog" />
     </q-footer>
 
     <q-page-container>
@@ -58,6 +58,7 @@
 
     <!-- Dialogs -->
     <ExpenseRegistrationDialog
+      v-if="hasOpenedExpenseDialog"
       v-model="showExpenseDialog"
       auto-select-recent-plan
     />
@@ -65,17 +66,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 
 import PrivacyModeToggle from 'src/components/PrivacyModeToggle.vue'
 import NavigationDrawer from 'src/components/NavigationDrawer.vue'
 import MobileBottomNavigation from 'src/components/MobileBottomNavigation.vue'
-import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 import { useUserStore } from 'src/stores/user'
 import { usePwaInstall } from 'src/composables/usePwaInstall'
 import { useNotificationStore } from 'src/stores/notification'
+
+const ExpenseRegistrationDialog = defineAsyncComponent(
+  () => import('src/components/expenses/ExpenseRegistrationDialog.vue'),
+)
 
 const userStore = useUserStore()
 const route = useRoute()
@@ -83,7 +87,13 @@ const $q = useQuasar()
 const { isInstallable, promptInstall, dismissInstall } = usePwaInstall()
 const notificationStore = useNotificationStore()
 
+const hasOpenedExpenseDialog = ref(false)
 const showExpenseDialog = ref(false)
+
+function openExpenseDialog() {
+  hasOpenedExpenseDialog.value = true
+  showExpenseDialog.value = true
+}
 
 watch(isInstallable, (installable) => {
   if (installable) {

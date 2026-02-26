@@ -8,6 +8,7 @@
     :full-width="$q.screen.xs"
     :full-height="$q.screen.xs"
     @update:model-value="emit('update:modelValue', $event)"
+    @hide="handleDialogHide"
   >
     <q-card
       class="column no-wrap"
@@ -229,6 +230,9 @@ const {
 
 function closeDialog() {
   emit('update:modelValue', false)
+}
+
+function handleDialogHide() {
   resetForm()
 }
 

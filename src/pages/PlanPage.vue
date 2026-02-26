@@ -161,7 +161,7 @@
       />
 
       <ExpenseRegistrationDialog
-        v-if="currentPlan && !isNewPlan"
+        v-if="currentPlan && !isNewPlan && hasOpenedExpenseDialog"
         v-model="showExpenseDialog"
         :default-plan-id="currentPlan.id"
         :default-category-id="selectedCategory?.categoryId || null"
@@ -172,7 +172,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick, defineAsyncComponent } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 
@@ -183,7 +183,6 @@ import PlanOverviewTab from 'src/components/plans/PlanOverviewTab.vue'
 import PlanItemsTrackingTab from 'src/components/plans/PlanItemsTrackingTab.vue'
 import SharePlanDialog from 'src/components/plans/SharePlanDialog.vue'
 import DeleteDialog from 'src/components/shared/DeleteDialog.vue'
-import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 import { useCategoriesQuery } from 'src/queries/categories'
 import { useTemplatesQuery } from 'src/queries/templates'
 import { useDeletePlanMutation } from 'src/queries/plans'
@@ -198,6 +197,10 @@ import { validateItemForm } from 'src/composables/useItemFormValidation'
 import { calculateEndDate } from 'src/utils/plans'
 import { getTemplateWithItems, type TemplateWithItems, type PlanWithItems } from 'src/api'
 import type { PlanItemUI } from 'src/types'
+
+const ExpenseRegistrationDialog = defineAsyncComponent(
+  () => import('src/components/expenses/ExpenseRegistrationDialog.vue'),
+)
 
 const $q = useQuasar()
 const router = useRouter()
@@ -259,6 +262,7 @@ const allCategoriesExpanded = ref(false)
 const showCancelDialog = ref(false)
 const showDeleteDialog = ref(false)
 const selectedCategory = ref<{ categoryId: string; itemId?: string } | null>(null)
+const hasOpenedExpenseDialog = ref(false)
 const showExpenseDialog = ref(false)
 
 const form = ref({
@@ -459,16 +463,19 @@ function clearTemplateError(): void {
 }
 
 function openExpenseRegistration(): void {
+  hasOpenedExpenseDialog.value = true
   selectedCategory.value = null
   showExpenseDialog.value = true
 }
 
 function openExpenseRegistrationFromCategory(categoryId?: string): void {
+  hasOpenedExpenseDialog.value = true
   selectedCategory.value = categoryId ? { categoryId } : null
   showExpenseDialog.value = true
 }
 
 function openExpenseRegistrationFromItem(categoryId?: string, itemId?: string): void {
+  hasOpenedExpenseDialog.value = true
   selectedCategory.value = categoryId ? { categoryId, ...(itemId && { itemId }) } : null
   showExpenseDialog.value = true
 }

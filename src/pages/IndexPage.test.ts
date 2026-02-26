@@ -186,8 +186,11 @@ it('should close expense dialog when expense is created', async () => {
 
   const expenseDialog = wrapper.findComponent({ name: 'ExpenseRegistrationDialog' })
   await expenseDialog.vm.$emit('expense-created')
+  await wrapper.vm.$nextTick()
 
-  expect(expenseDialog.attributes('modelvalue')).toBe('false')
+  expect(
+    wrapper.findComponent({ name: 'ExpenseRegistrationDialog' }).attributes('modelvalue'),
+  ).toBe('false')
 })
 
 it('should navigate to plan when edit is triggered', async () => {

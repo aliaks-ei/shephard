@@ -74,7 +74,6 @@ export default defineConfig((ctx) => {
               manualChunks: {
                 // Split vendor chunks
                 'vendor-vue': ['vue', 'vue-router', 'pinia'],
-                'vendor-quasar': ['quasar'],
                 'vendor-supabase': ['@supabase/supabase-js'],
                 'vendor-utils': ['@vueuse/core'],
                 'vendor-query': ['@tanstack/vue-query'],
@@ -279,6 +278,7 @@ export default defineConfig((ctx) => {
           '**/*.map',
           '**/*.gz',
           '**/mockServiceWorker.js',
+          '**/icons/apple-launch-*.png',
         ]
 
         // Disable offline Google Analytics (not used)

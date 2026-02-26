@@ -14,7 +14,7 @@
     "dev": "VITE_MSW_ENABLED=false quasar dev -m pwa",
     "dev:mock": "VITE_MSW_ENABLED=true quasar dev",
     "build": "quasar build -m pwa",
-    "build:analyze": "quasar build -m pwa --mode analyze",
+    "build:analyze": "ANALYZE=true quasar build -m pwa",
     "build:production": "NODE_ENV=production quasar build -m pwa",
     "preview": "quasar build -m pwa && quasar serve dist/pwa --port 4173",
     "postinstall": "quasar prepare",

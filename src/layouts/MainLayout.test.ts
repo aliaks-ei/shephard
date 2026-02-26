@@ -119,8 +119,8 @@ it('should render QDrawer with NavigationDrawer', () => {
   expect(navigationDrawer.exists()).toBe(true)
 })
 
-it('should render dialogs', () => {
+it('should not render expense dialog by default', () => {
   const wrapper = renderMainLayout()
   const expenseDialog = wrapper.findComponent({ name: 'ExpenseRegistrationDialog' })
-  expect(expenseDialog.exists()).toBe(true)
+  expect(expenseDialog.exists()).toBe(false)
 })
