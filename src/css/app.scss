@@ -304,6 +304,15 @@ body {
   }
 }
 
+// Prevent iOS input focus zoom in mobile/standalone mode.
+// Safari auto-zooms controls with computed font size below 16px.
+@media (max-width: $breakpoint-sm-max) {
+  .q-field .q-field__native,
+  .q-field .q-field__input {
+    font-size: 16px !important;
+  }
+}
+
 // --------------------------------------------
 // Dropdowns/Menus (q-menu) - shadcn-vue conventions
 // --------------------------------------------
