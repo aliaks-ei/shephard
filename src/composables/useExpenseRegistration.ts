@@ -8,6 +8,7 @@ import {
 import { useCategoriesQuery } from 'src/queries/categories'
 import {
   useExpenseSummaryQuery,
+  useExpensesByPlanQuery,
   useCreateExpenseMutation,
   useCreateExpensesBatchMutation,
   useLastExpenseForPlanQuery,
@@ -46,6 +47,7 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
 
   const activeSummaryPlanId = ref<string | null>(null)
   const { expenseSummary } = useExpenseSummaryQuery(activeSummaryPlanId)
+  const { expensesByCategory } = useExpensesByPlanQuery(activeSummaryPlanId)
   const planItemsQuery = usePlanItemsQuery(activeSummaryPlanId)
   const lastExpenseQuery = useLastExpenseForPlanQuery(activeSummaryPlanId)
   const completionMutation = useUpdatePlanItemCompletionMutation()
@@ -133,7 +135,14 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
         const plannedAmount = categoryData?.planned_amount || 0
         const actualAmount = categoryData?.actual_amount || 0
 
-        const remainingAmount = calculateStillToPay(category.id, allPlanItems.value, actualAmount)
+        const categoryExpenses = expensesByCategory.value[category.id]
+
+        const remainingAmount = calculateStillToPay(
+          category.id,
+          allPlanItems.value,
+          actualAmount,
+          categoryExpenses,
+        )
 
         return {
           label: category.name,
