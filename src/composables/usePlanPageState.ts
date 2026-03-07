@@ -13,6 +13,7 @@ import { useCategoryRefs } from 'src/composables/useCategoryRefs'
 import { usePlanActions } from 'src/composables/usePlanActions'
 import { validateItemForm } from 'src/composables/useItemFormValidation'
 import { calculateEndDate } from 'src/utils/plans'
+import { formatDateInput } from 'src/utils/date'
 import { getTemplateWithItems, type TemplateWithItems, type PlanWithItems } from 'src/api'
 import type { PlanItemUI } from 'src/types'
 
@@ -60,7 +61,11 @@ export function usePlanPageState() {
     listIcon: 'eva-calendar-outline',
   }
 
-  const { pageTitle } = useDetailPageState(pageConfig, isNewPlan.value, !isEditMode.value)
+  const { pageTitle } = useDetailPageState(
+    pageConfig,
+    isNewPlan,
+    computed(() => !isEditMode.value),
+  )
 
   const { openDialog, closeDialog, getDialogState } = useEditablePage()
 
@@ -154,7 +159,7 @@ export function usePlanPageState() {
       loadPlanItemsFromTemplate(template.template_items)
 
       if (!form.value.startDate) {
-        form.value.startDate = new Date().toISOString().split('T')[0] || ''
+        form.value.startDate = formatDateInput(new Date())
       }
 
       if (form.value.startDate && template.duration) {
@@ -164,7 +169,7 @@ export function usePlanPageState() {
             startDate,
             template.duration as 'weekly' | 'monthly' | 'yearly',
           )
-          form.value.endDate = endDate.toISOString().split('T')[0] || ''
+          form.value.endDate = formatDateInput(endDate)
         }
       }
     }

@@ -1,172 +1,105 @@
 # Shephard
 
-Smart expenses wallet - A modern, responsive web application for managing personal expenses with Supabase integration.
+Smart expenses wallet built with Vue 3, Quasar, and Supabase.
 
 ## Features
 
-### Budget Management
+- Plans and templates for recurring budgeting periods
+- Fast expense registration in two modes: quick-select (from plan items) and custom-entry
+- Budget overview by category with remaining budget tracking
+- Shared plans/templates with view or edit permissions
+- Multi-currency support (`EUR`, `USD`, `GBP`)
+- Progressive Web App support (installable, offline-ready, mobile-first)
 
-- **Plans** - Create budget plans with date ranges and track spending vs budget
-- **Templates** - Design reusable budget templates for recurring periods (weekly/monthly)
-- **Categories** - Organize expenses using predefined categories (Food, Transport, etc.)
-- **Expense Tracking** - Quick expense registration with date, amount, and category
-- **Budget Analytics** - View spending summaries by category, track remaining budget, and identify overspending
+## Tech Stack
 
-### Collaboration
+- Vue 3 (`<script setup>`) + TypeScript
+- Quasar Framework (PWA mode)
+- TanStack Query for server state
+- Pinia for client-side state only
+- Supabase (Auth + Postgres + RLS)
+- Vitest + Vue Test Utils for unit tests
 
-- **Sharing** - Share plans and templates with other users
-- **Permission Levels** - Control access with view-only or edit permissions
+## Architecture
 
-### Personalization
+The app follows a four-layer structure:
 
-- **Multi-currency Support** - Choose between EUR, USD, or GBP
-- **Theme Customization** - Light, dark, or system-based theme
-- **Dashboard** - Quick access to active plans and recent templates
+- `src/api/`: raw data access and domain API calls (throws errors)
+- `src/queries/`: TanStack Query hooks for fetching, caching, invalidation, and mutations
+- `src/stores/`: local client state (auth/user/preferences/notifications)
+- UI (`components/pages/layouts`): rendering and interaction only
 
-### Authentication & Security
+Error handling conventions:
 
-- Google OAuth integration
-- Email magic links (passwordless auth)
-- Secure data isolation with Supabase Row Level Security (RLS)
+- Query mutations use shared query error handlers
+- Stores use centralized app error helpers
+- Components do not implement direct API error handling logic
 
-### Progressive Web App (PWA)
+## Recent Changes
 
-- Offline capability
-- Mobile-friendly responsive design
-- Installable on mobile devices
-
-### Modern Tech Stack
-
-- Vue 3 with Composition API
-- TypeScript for type safety
-- Quasar Framework for UI components
-- Pinia for state management
-- Supabase for backend services
-- Vite for fast development builds
-
-### Architecture
-
-- **API Layer** - Abstracted data operations in `src/api/`
-- **State Management** - Pinia stores with the setup-style pattern
-- **Component Library** - Quasar Framework for consistent UI
-- **Type Safety** - Full TypeScript coverage with Supabase-generated types
-
-## Key Concepts
-
-- **Template** - A reusable budget blueprint with categories and amounts
-- **Plan** - An active budget instance created from a template for a specific date range
-- **Expense** - A recorded transaction linked to a plan and category
-- **Category** - Predefined expense types (e.g., Groceries, Transport, Utilities)
-- **Sharing** - Collaborative feature allowing multiple users to view or edit templates/plans
+- Mobile detail pages now use a dedicated action bar with smarter overflow behavior
+- Detail action visibility is derived from visible actions instead of hardcoded flags
+- Expense registration and plan-item completion flows now include best-effort rollback to reduce partial updates
+- Plan overview now owns expense query consumption to avoid duplicate query subscriptions
+- Shared date input helpers (`formatDateInput`, `parseDateInput`) were added for consistency
+- Expense dialogs on core screens are directly imported (no lazy dialog loading)
 
 ## Prerequisites
 
-- Node.js (v18, v20, v22, v24, v26, or v28)
-- npm (>= 6.13.4) or Yarn (>= 1.21.1)
-- Supabase account for backend services
+- Node.js: `^18 || ^20 || ^22 || ^24 || ^26 || ^28`
+- npm `>= 6.13.4` (or Yarn `>= 1.21.1`)
+- Supabase project
 
-## Environment Setup
+## Environment
 
-1. Create a `.env` file in the root directory with the following variables:
+Create `.env` in the project root:
 
 ```bash
-VITE_SUPABASE_URL=your_supabase_project_url          # Supabase project API URL
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key        # Supabase anonymous/public key
-VITE_GOOGLE_CLIENT_ID=your_google_client_id          # Google OAuth client ID
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_GOOGLE_CLIENT_ID=your_google_client_id
 ```
 
-## Installation
+## Install
 
 ```bash
-# Install dependencies
-yarn
-# or
 npm install
+# or
+yarn
 ```
 
-## Quick Start Guide
-
-After setting up the development environment:
-
-1. **Sign In** - Use Google OAuth or email magic link
-2. **Create a Template** - Design your budget categories and amounts
-3. **Create a Plan** - Generate a budget plan from your template
-4. **Track Expenses** - Register expenses and watch your budget in real-time
-5. **Share** - Collaborate with others by sharing plans or templates
-
-## Development
-
-Start the app in development mode (hot-code reloading, error reporting, etc.):
+## Development Commands
 
 ```bash
-yarn dev
-# or
-npm run dev
-```
-
-### Lint the files
-
-```bash
-yarn lint
-# or
+npm run dev          # Quasar PWA dev server
+npm run dev:mock     # Dev server with MSW enabled
 npm run lint
-```
-
-### Format the files
-
-```bash
-yarn format
-# or
 npm run format
-```
-
-### Type check
-
-```bash
-yarn type-check
-# or
 npm run type-check
+npm run test:unit    # Watch mode
+npm run test:unit:ci # Single run
 ```
 
-### Run unit tests
+## Build Commands
 
 ```bash
-# Run tests in watch mode
-yarn test:unit
-# or
-npm run test:unit
-
-# Run tests once (CI mode)
-yarn test:unit:ci
-# or
-npm run test:unit:ci
-```
-
-## Build for Production
-
-```bash
-yarn build
-# or
 npm run build
+npm run build:analyze
+npm run build:production
+npm run preview
+npm run check:bundle-budgets
 ```
 
-This will generate the production build in the `dist` directory.
+## Testing
+
+- Tests are co-located with sources as `*.test.ts`
+- Use `installQuasarPlugin()` for component tests
+- Use `createTestingPinia({ createSpy: vi.fn })` for store/composable tests involving Pinia
 
 ## PWA Configuration
 
-The application is configured as a Progressive Web App. You can customize the PWA settings in:
-
-- `src-pwa/manifest.json` - For app icons, name, and theme colors
-- `src-pwa/register-service-worker.ts` - For service worker configuration
-
-## Authentication
-
-Shephard uses Supabase for authentication with two methods:
-
-1. **Google OAuth** - One-click sign in with Google account
-2. **Magic Links** - Passwordless authentication via email
-
-All user data is protected with Supabase Row Level Security (RLS) policies, ensuring complete data isolation between users.
+- `src-pwa/manifest.json`
+- `src-pwa/register-service-worker.ts`
 
 ## License
 

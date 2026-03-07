@@ -101,7 +101,7 @@
                 self="bottom right"
                 class="shadow-4"
               >
-                <q-list style="min-width: 180px">
+                <q-list class="detail-mobile-menu-list">
                   <q-item
                     v-for="action in moreMenuActions"
                     :key="action.key"
@@ -110,7 +110,7 @@
                   >
                     <q-item-section
                       avatar
-                      style="min-width: 36px"
+                      class="detail-mobile-menu-avatar"
                     >
                       <q-icon
                         :name="action.icon"
@@ -161,14 +161,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { ActionBarAction } from './ActionBar.vue'
 import { usePreferencesStore } from 'src/stores/preferences'
-
-const ExpenseRegistrationDialog = defineAsyncComponent(
-  () => import('src/components/expenses/ExpenseRegistrationDialog.vue'),
-)
+import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 
 interface ToolbarAction extends ActionBarAction {
   fallback?: boolean
@@ -412,6 +409,14 @@ async function handleAddExpenseClick(): Promise<void> {
   margin-bottom: 0;
   padding-top: 2px;
   padding-bottom: 2px;
+}
+
+.detail-mobile-menu-list {
+  min-width: 180px;
+}
+
+.detail-mobile-menu-avatar {
+  min-width: 36px;
 }
 
 .mobile-action-btn {

@@ -11,6 +11,8 @@ import {
   useExpensesByPlanQuery,
   useCreateExpenseMutation,
   useCreateExpensesBatchMutation,
+  useDeleteExpenseMutation,
+  useDeleteExpensesBatchMutation,
   useLastExpenseForPlanQuery,
 } from 'src/queries/expenses'
 import { useUserStore } from 'src/stores/user'
@@ -19,6 +21,7 @@ import { getPlanStatus } from 'src/utils/plans'
 import { calculateStillToPay } from 'src/utils/budget-calculations'
 import { convertCurrency } from 'src/api/currency'
 import { parseDecimalInput } from 'src/utils/decimal'
+import { formatDateInput } from 'src/utils/date'
 import type { PlanItem } from 'src/api/plans'
 import type { PlanOption } from 'src/components/expenses/PlanSelectorField.vue'
 import type { CurrencyCode } from 'src/utils/currency'
@@ -44,6 +47,8 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
   const { categories } = useCategoriesQuery()
   const createExpenseMutation = useCreateExpenseMutation()
   const createExpensesBatchMutation = useCreateExpensesBatchMutation()
+  const rollbackDeleteExpenseMutation = useDeleteExpenseMutation()
+  const rollbackDeleteExpensesMutation = useDeleteExpensesBatchMutation()
 
   const activeSummaryPlanId = ref<string | null>(null)
   const { expenseSummary } = useExpenseSummaryQuery(activeSummaryPlanId)
@@ -74,7 +79,7 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
     name: '',
     amount: null,
     currency: null,
-    expenseDate: new Date().toISOString().split('T')[0]!,
+    expenseDate: formatDateInput(new Date()),
     planItemId: null,
   })
 
@@ -267,7 +272,7 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
       name: '',
       amount: null,
       currency: null,
-      expenseDate: new Date().toISOString().split('T')[0]!,
+      expenseDate: formatDateInput(new Date()),
       planItemId: null,
     }
     didAutoSelectPlan.value = false
@@ -298,7 +303,7 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
         plan_item_id: item.id,
       }))
 
-      await createExpensesBatchMutation.mutateAsync(expensesForCreate)
+      const createdExpenses = await createExpensesBatchMutation.mutateAsync(expensesForCreate)
 
       const itemIdsByPlan = new Map<string, string[]>()
       for (const item of selectedPlanItems.value) {
@@ -315,11 +320,30 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
         }),
       )
 
-      await Promise.all(completionPromises)
+      try {
+        await Promise.all(completionPromises)
+      } catch (error) {
+        const expenseIdsByPlan = new Map<string, string[]>()
+        for (const expense of createdExpenses) {
+          if (!expense.plan_id) continue
+          const ids = expenseIdsByPlan.get(expense.plan_id) ?? []
+          ids.push(expense.id)
+          expenseIdsByPlan.set(expense.plan_id, ids)
+        }
+
+        for (const [planId, expenseIds] of expenseIdsByPlan.entries()) {
+          try {
+            await rollbackDeleteExpensesMutation.mutateAsync({ expenseIds, planId })
+          } catch {
+            // Best-effort rollback to reduce partial updates.
+          }
+        }
+
+        throw error
+      }
 
       onSuccess()
-    } catch (error) {
-      console.error('Error registering expenses:', error)
+    } catch {
       showError('Failed to register expenses. Please try again.')
     }
   }
@@ -355,7 +379,7 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
         originalAmountToStore = originalAmount
       }
 
-      await createExpenseMutation.mutateAsync({
+      const createdExpense = await createExpenseMutation.mutateAsync({
         plan_id: form.value.planId,
         category_id: form.value.categoryId,
         name: form.value.name.trim(),
@@ -368,16 +392,27 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
       })
 
       if (form.value.planItemId && form.value.planId) {
-        await completionMutation.mutateAsync({
-          itemId: form.value.planItemId,
-          isCompleted: true,
-          planId: form.value.planId,
-        })
+        try {
+          await completionMutation.mutateAsync({
+            itemId: form.value.planItemId,
+            isCompleted: true,
+            planId: form.value.planId,
+          })
+        } catch (error) {
+          try {
+            await rollbackDeleteExpenseMutation.mutateAsync({
+              expenseId: createdExpense.id,
+              planId: form.value.planId,
+            })
+          } catch {
+            // Best-effort rollback to reduce partial updates.
+          }
+          throw error
+        }
       }
 
       onSuccess()
-    } catch (error) {
-      console.error('Error registering expense:', error)
+    } catch {
       showError('Failed to register expense. Please try again.')
     }
   }

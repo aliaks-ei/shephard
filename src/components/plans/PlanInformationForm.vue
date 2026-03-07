@@ -110,6 +110,7 @@
 import { computed } from 'vue'
 import SectionHeader from 'src/components/shared/SectionHeader.vue'
 import { calculateEndDate } from 'src/utils/plans'
+import { formatDateInput, parseDateInput } from 'src/utils/date'
 
 interface PlanFormData {
   name: string
@@ -137,16 +138,9 @@ const startDateRules = computed(() => [
   (val: string) => !!val || 'Start date is required',
   (val: string) => {
     if (!val) return true
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/
-    if (!dateRegex.test(val)) {
+    const parsed = parseDateInput(val)
+    if (!parsed) {
       return 'Date must be in YYYY-MM-DD format'
-    }
-    const date = new Date(val)
-    if (isNaN(date.getTime())) {
-      return 'Please enter a valid date'
-    }
-    if (date.toISOString().split('T')[0] !== val) {
-      return 'Please enter a valid date'
     }
     return true
   },
@@ -159,15 +153,14 @@ function updateField(field: keyof PlanFormData, value: string): void {
 function handleStartDateUpdate(newDate: string): void {
   const updatedForm = { ...props.modelValue, startDate: newDate }
 
-  // Auto-calculate end date if template duration is provided
   if (props.templateDuration && newDate) {
-    const startDate = new Date(newDate)
-    if (!isNaN(startDate.getTime())) {
+    const startDate = parseDateInput(newDate)
+    if (startDate) {
       const endDate = calculateEndDate(
         startDate,
         props.templateDuration as 'weekly' | 'monthly' | 'yearly',
       )
-      updatedForm.endDate = endDate?.toISOString().split('T')[0] || ''
+      updatedForm.endDate = formatDateInput(endDate)
     }
   }
 

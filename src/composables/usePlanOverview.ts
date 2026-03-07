@@ -1,4 +1,4 @@
-import { computed, unref, type Ref } from 'vue'
+import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 import { useExpensesByPlanQuery, useExpenseSummaryQuery } from 'src/queries/expenses'
 import { useCategoriesQuery } from 'src/queries/categories'
 import { calculateStillToPay } from 'src/utils/budget-calculations'
@@ -6,17 +6,17 @@ import type { ExpenseWithCategory, PlanWithItems } from 'src/api'
 import type { CategoryBudget } from 'src/types'
 
 export function usePlanOverview(
-  planId: Ref<string> | string,
-  planArg: Ref<PlanWithItems | null> | PlanWithItems | null,
+  planId: MaybeRefOrGetter<string | null>,
+  planArg: MaybeRefOrGetter<PlanWithItems | null>,
 ) {
-  const resolvedPlanId = computed(() => unref(planId))
+  const resolvedPlanId = computed(() => toValue(planId))
   const { totalExpensesAmount, sortedExpenses, expensesByCategory } =
     useExpensesByPlanQuery(resolvedPlanId)
   const { expenseSummary } = useExpenseSummaryQuery(resolvedPlanId)
   const { categories } = useCategoriesQuery()
 
   const currentPlanWithItems = computed<PlanWithItems | null>(() => {
-    return unref(planArg) ?? null
+    return toValue(planArg) ?? null
   })
 
   const totalBudget = computed(() => {
@@ -126,6 +126,7 @@ export function usePlanOverview(
     remainingBudget,
     categoryBudgets,
     recentExpenses,
+    sortedExpenses,
     expensesByCategory,
     planHealth,
   }

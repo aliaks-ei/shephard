@@ -133,7 +133,6 @@ import RecentExpensesList from './RecentExpensesList.vue'
 import CategoryExpensesDialog from './CategoryExpensesDialog.vue'
 import AllExpensesDialog from './AllExpensesDialog.vue'
 import { usePlanOverview } from 'src/composables/usePlanOverview'
-import { useExpensesByPlanQuery } from 'src/queries/expenses'
 import type { PlanWithItems } from 'src/api'
 import type { CurrencyCode } from 'src/utils/currency'
 import type { CategoryBudget } from 'src/types'
@@ -151,7 +150,6 @@ const emit = defineEmits<{
 }>()
 
 const planIdRef = computed(() => props.plan?.id ?? null)
-const { sortedExpenses } = useExpensesByPlanQuery(planIdRef)
 
 const showCategoryModal = ref(false)
 const showAllExpensesModal = ref(false)
@@ -165,11 +163,17 @@ const planCurrency = computed((): CurrencyCode => {
 
 const planId = computed(() => props.plan?.id || '')
 
-const { categoryBudgets, recentExpenses, totalBudget, totalSpent, remainingBudget } =
-  usePlanOverview(
-    planId,
-    computed(() => props.plan),
-  )
+const {
+  categoryBudgets,
+  recentExpenses,
+  sortedExpenses,
+  totalBudget,
+  totalSpent,
+  remainingBudget,
+} = usePlanOverview(
+  planIdRef,
+  computed(() => props.plan),
+)
 
 const mobileCategoryBudgets = computed(() => {
   if (showAllMobileCategories.value) {

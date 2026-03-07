@@ -21,8 +21,6 @@ type ListPageConfig<T> = {
 export function useListPage<T extends { id: string; name: string }>(
   config: ListPageConfig<T>,
   getAllItems: () => T[],
-  getOwnedItems: () => T[],
-  getSharedItems: () => T[],
   isLoading: () => boolean,
 ) {
   const router = useRouter()
@@ -32,22 +30,11 @@ export function useListPage<T extends { id: string; name: string }>(
 
   const areItemsLoading = computed(() => isLoading() && getAllItems().length === 0)
 
-  const filteredAndSortedOwnedItems = computed(() => {
-    return config.filterAndSortFn(getOwnedItems(), searchQuery.value, sortBy.value)
-  })
-
-  const filteredAndSortedSharedItems = computed(() => {
-    return config.filterAndSortFn(getSharedItems(), searchQuery.value, sortBy.value)
-  })
-
-  const hasItems = computed(
-    () =>
-      filteredAndSortedOwnedItems.value.length > 0 || filteredAndSortedSharedItems.value.length > 0,
-  )
-
   const allFilteredAndSortedItems = computed(() => {
     return config.filterAndSortFn(getAllItems(), searchQuery.value, sortBy.value)
   })
+
+  const hasItems = computed(() => allFilteredAndSortedItems.value.length > 0)
 
   function goToNew(): void {
     router.push({ name: config.newRouteNameSingular })
@@ -87,8 +74,6 @@ export function useListPage<T extends { id: string; name: string }>(
     searchQuery,
     sortBy,
     areItemsLoading,
-    filteredAndSortedOwnedItems,
-    filteredAndSortedSharedItems,
     hasItems,
     allFilteredAndSortedItems,
     emptyStateConfig,

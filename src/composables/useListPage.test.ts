@@ -49,8 +49,6 @@ const setup = () =>
       deleteFn: vi.fn().mockResolvedValue({ success: true }),
     },
     () => items,
-    () => [items[0]!],
-    () => [items[1]!],
     () => false,
   )
 
@@ -61,10 +59,8 @@ describe('state and derived lists', () => {
     expect(lp.sortBy.value).toBe('created_at')
   })
 
-  it('computes owned and shared filtered lists', () => {
+  it('computes filtered list and hasItems state', () => {
     const lp = setup()
-    expect(lp.filteredAndSortedOwnedItems.value.length).toBe(1)
-    expect(lp.filteredAndSortedSharedItems.value.length).toBe(1)
     expect(lp.hasItems.value).toBe(true)
     expect(lp.allFilteredAndSortedItems.value.length).toBe(2)
   })
@@ -72,7 +68,6 @@ describe('state and derived lists', () => {
   it('filters by search query', () => {
     const lp = setup()
     lp.searchQuery.value = 'alp'
-    expect(lp.filteredAndSortedOwnedItems.value.map((i) => i.name)).toEqual(['Alpha'])
     expect(lp.allFilteredAndSortedItems.value.map((i) => i.name)).toEqual(['Alpha'])
   })
 })
@@ -115,8 +110,6 @@ describe('deletion flow', () => {
           deleteFn,
         },
         () => items,
-        () => items,
-        () => [],
         () => false,
       )
 

@@ -149,7 +149,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, defineAsyncComponent } from 'vue'
+import { ref, computed } from 'vue'
 import { useMeta } from 'quasar'
 import { useRouter } from 'vue-router'
 
@@ -168,12 +168,9 @@ import EmptyPlansState from 'src/components/dashboard/EmptyPlansState.vue'
 import EmptyTemplatesState from 'src/components/dashboard/EmptyTemplatesState.vue'
 import PlanCard from 'src/components/plans/PlanCard.vue'
 import TemplateCard from 'src/components/templates/TemplateCard.vue'
+import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 import SharePlanDialog from 'src/components/plans/SharePlanDialog.vue'
 import ShareTemplateDialog from 'src/components/templates/ShareTemplateDialog.vue'
-
-const ExpenseRegistrationDialog = defineAsyncComponent(
-  () => import('src/components/expenses/ExpenseRegistrationDialog.vue'),
-)
 
 const router = useRouter()
 const userStore = useUserStore()

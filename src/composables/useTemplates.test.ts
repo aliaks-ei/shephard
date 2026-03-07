@@ -52,16 +52,12 @@ const mockTemplates = createMockTemplates(3)
 const mockTemplatesRef = ref<TemplateWithPermission[]>([
   ...mockTemplates,
 ] as TemplateWithPermission[])
-const mockOwnedTemplatesRef = ref<TemplateWithPermission[]>([])
-const mockSharedTemplatesRef = ref<TemplateWithPermission[]>([])
 const mockIsPending = ref(false)
 const mockDeleteMutateAsync = vi.fn().mockResolvedValue(undefined)
 
 vi.mock('src/queries/templates', () => ({
   useTemplatesQuery: vi.fn(() => ({
     templates: mockTemplatesRef,
-    ownedTemplates: mockOwnedTemplatesRef,
-    sharedTemplates: mockSharedTemplatesRef,
     isPending: mockIsPending,
     templatesCount: computed(() => mockTemplatesRef.value.length),
     data: ref(null),
@@ -82,8 +78,6 @@ describe('useTemplates', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockTemplatesRef.value = [...mockTemplates] as TemplateWithPermission[]
-    mockOwnedTemplatesRef.value = mockTemplates.filter((t) => t.owner_id === 'user-1')
-    mockSharedTemplatesRef.value = mockTemplates.filter((t) => t.owner_id !== 'user-1')
     mockIsPending.value = false
   })
 
@@ -122,22 +116,12 @@ describe('useTemplates', () => {
       expect(composable.areItemsLoading.value).toBe(false)
     })
 
-    it('should filter and sort owned templates', () => {
+    it('should filter and sort all templates', () => {
       const composable = useTemplates()
 
-      const expectedTemplates = mockTemplates
-        .filter((t) => t.owner_id === 'user-1')
-        .sort((a, b) => a.name.localeCompare(b.name))
+      const expectedTemplates = [...mockTemplates].sort((a, b) => a.name.localeCompare(b.name))
 
-      expect(composable.filteredAndSortedOwnedItems.value).toEqual(expectedTemplates)
-    })
-
-    it('should filter and sort shared templates', () => {
-      const composable = useTemplates()
-
-      expect(composable.filteredAndSortedSharedItems.value).toEqual(
-        mockTemplates.filter((t) => t.owner_id !== 'user-1'),
-      )
+      expect(composable.allFilteredAndSortedItems.value).toEqual(expectedTemplates)
     })
 
     it('should compute hasTemplates correctly when templates exist', () => {
@@ -147,8 +131,6 @@ describe('useTemplates', () => {
     })
 
     it('should compute hasTemplates correctly when no templates exist', () => {
-      mockOwnedTemplatesRef.value = []
-      mockSharedTemplatesRef.value = []
       mockTemplatesRef.value = []
 
       const composable = useTemplates()
@@ -164,8 +146,7 @@ describe('useTemplates', () => {
       composable.searchQuery.value = 'grocery'
       await nextTick()
 
-      expect(composable.filteredAndSortedOwnedItems.value).toBeDefined()
-      expect(composable.filteredAndSortedSharedItems.value).toBeDefined()
+      expect(composable.allFilteredAndSortedItems.value).toBeDefined()
     })
 
     it('should update filtered templates when sort option changes', async () => {
@@ -174,8 +155,7 @@ describe('useTemplates', () => {
       composable.sortBy.value = 'created_at'
       await nextTick()
 
-      expect(composable.filteredAndSortedOwnedItems.value).toBeDefined()
-      expect(composable.filteredAndSortedSharedItems.value).toBeDefined()
+      expect(composable.allFilteredAndSortedItems.value).toBeDefined()
     })
   })
 
@@ -226,8 +206,6 @@ describe('useTemplates', () => {
     })
 
     it('should react to templates changes', async () => {
-      mockOwnedTemplatesRef.value = []
-      mockSharedTemplatesRef.value = []
       mockTemplatesRef.value = []
 
       const composable = useTemplates()
@@ -236,7 +214,6 @@ describe('useTemplates', () => {
 
       const newTemplate = createMockTemplates(1)[0]
 
-      mockOwnedTemplatesRef.value = [newTemplate as TemplateWithPermission]
       mockTemplatesRef.value = [newTemplate as TemplateWithPermission]
       await nextTick()
 
@@ -251,8 +228,7 @@ describe('useTemplates', () => {
       expect(composable).toHaveProperty('searchQuery')
       expect(composable).toHaveProperty('sortBy')
       expect(composable).toHaveProperty('areItemsLoading')
-      expect(composable).toHaveProperty('filteredAndSortedOwnedItems')
-      expect(composable).toHaveProperty('filteredAndSortedSharedItems')
+      expect(composable).toHaveProperty('allFilteredAndSortedItems')
       expect(composable).toHaveProperty('hasItems')
       expect(composable).toHaveProperty('goToNew')
       expect(composable).toHaveProperty('viewItem')

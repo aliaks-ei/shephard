@@ -172,7 +172,6 @@
 </template>
 
 <script setup lang="ts">
-import { defineAsyncComponent } from 'vue'
 import { useQuasar, useMeta } from 'quasar'
 
 import BaseItemFormPage from 'src/layouts/BaseItemFormPage.vue'
@@ -182,11 +181,8 @@ import PlanOverviewTab from 'src/components/plans/PlanOverviewTab.vue'
 import PlanItemsTrackingTab from 'src/components/plans/PlanItemsTrackingTab.vue'
 import SharePlanDialog from 'src/components/plans/SharePlanDialog.vue'
 import DeleteDialog from 'src/components/shared/DeleteDialog.vue'
+import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 import { usePlanPageState } from 'src/composables/usePlanPageState'
-
-const ExpenseRegistrationDialog = defineAsyncComponent(
-  () => import('src/components/expenses/ExpenseRegistrationDialog.vue'),
-)
 
 const $q = useQuasar()
 const {

@@ -86,7 +86,7 @@
               @click="emit('back')"
             />
 
-            <q-toolbar-title style="flex-basis: 30%">
+            <q-toolbar-title class="detail-title-basis">
               <div class="row items-center no-wrap">
                 {{ pageTitle }}
                 <q-badge
@@ -110,7 +110,7 @@
             <!-- Desktop Actions -->
             <ActionBar
               :actions="actions || []"
-              :visible="!!actionsVisible"
+              :visible="actionsVisible !== false"
               @action-clicked="emit('action-clicked', $event)"
             />
           </q-toolbar>
@@ -173,7 +173,7 @@
     <DetailMobileActionBar
       v-if="isMobile"
       :actions="actions || []"
-      :visible="true"
+      :visible="actionsVisible !== false"
       @action-clicked="emit('action-clicked', $event)"
     />
   </div>
@@ -200,22 +200,31 @@ const emit = defineEmits<{
   (e: 'action-clicked', key: string): void
 }>()
 
-const props = defineProps<{
-  pageTitle: string
-  banners?: BannerConfig[]
-  isLoading?: boolean
-  actions?: ActionBarAction[]
-  actionsVisible?: boolean
-  showReadOnlyBadge?: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    pageTitle: string
+    banners?: BannerConfig[]
+    isLoading?: boolean
+    actions?: ActionBarAction[]
+    actionsVisible?: boolean
+    showReadOnlyBadge?: boolean
+  }>(),
+  {
+    actionsVisible: true,
+  },
+)
 
 const $q = useQuasar()
 
 const isMobile = computed(() => $q.screen.lt.md)
 
 const hasActions = computed(() => {
-  if (isMobile.value) return true
-  return props.actionsVisible !== false && (props.actions?.length || 0) > 0
+  if (props.actionsVisible === false) {
+    return false
+  }
+
+  const actions = props.actions ?? []
+  return actions.some((action) => action.visible !== false)
 })
 </script>
 
@@ -241,5 +250,9 @@ const hasActions = computed(() => {
 
 .toolbar-border {
   border-bottom: 1px solid hsl(var(--border));
+}
+
+.detail-title-basis {
+  flex-basis: 30%;
 }
 </style>

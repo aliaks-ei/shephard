@@ -24,6 +24,8 @@ export function useItemCompletion(planId: MaybeRefOrGetter<string | null>) {
     const previousState = item.is_completed
 
     try {
+      item.is_completed = newCompletionState
+
       if (newCompletionState) {
         const today = new Date()
         const year = today.getFullYear()
@@ -31,38 +33,62 @@ export function useItemCompletion(planId: MaybeRefOrGetter<string | null>) {
         const day = String(today.getDate()).padStart(2, '0')
         const expenseDate = `${year}-${month}-${day}`
 
-        item.is_completed = newCompletionState
-
-        await createExpenseMutation.mutateAsync({
-          plan_id: currentPlanId,
-          category_id: item.category_id,
-          name: item.name,
-          amount: item.amount,
-          expense_date: expenseDate,
-          plan_item_id: item.id,
+        await completionMutation.mutateAsync({
+          itemId: item.id,
+          isCompleted: true,
+          planId: currentPlanId,
         })
+
+        try {
+          await createExpenseMutation.mutateAsync({
+            plan_id: currentPlanId,
+            category_id: item.category_id,
+            name: item.name,
+            amount: item.amount,
+            expense_date: expenseDate,
+            plan_item_id: item.id,
+          })
+        } catch (error) {
+          try {
+            await completionMutation.mutateAsync({
+              itemId: item.id,
+              isCompleted: false,
+              planId: currentPlanId,
+            })
+          } catch {
+            // Best-effort rollback to reduce partial updates.
+          }
+          throw error
+        }
       } else {
+        await completionMutation.mutateAsync({
+          itemId: item.id,
+          isCompleted: false,
+          planId: currentPlanId,
+        })
+
         const expensesToDelete = getExpensesForPlanItem(item.id)
 
-        if (expensesToDelete.length === 0) {
-          showError('No expenses found to remove for this item')
-          return
+        if (expensesToDelete.length > 0) {
+          try {
+            await deleteExpensesBatchMutation.mutateAsync({
+              expenseIds: expensesToDelete.map((expense) => expense.id),
+              planId: currentPlanId,
+            })
+          } catch (error) {
+            try {
+              await completionMutation.mutateAsync({
+                itemId: item.id,
+                isCompleted: true,
+                planId: currentPlanId,
+              })
+            } catch {
+              // Best-effort rollback to reduce partial updates.
+            }
+            throw error
+          }
         }
-
-        item.is_completed = newCompletionState
-        await deleteExpensesBatchMutation.mutateAsync({
-          expenseIds: expensesToDelete.map((expense) => expense.id),
-          planId: currentPlanId,
-          planItemId: item.id,
-          hasRemainingExpensesForItem: false,
-        })
       }
-
-      await completionMutation.mutateAsync({
-        itemId: item.id,
-        isCompleted: newCompletionState,
-        planId: currentPlanId,
-      })
 
       onSuccess?.()
     } catch {

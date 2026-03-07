@@ -260,6 +260,63 @@ it('should pass actions to ActionBar', () => {
   expect(actionBar.attributes('actions')).toBeDefined()
 })
 
+it('should keep ActionBar visible by default when actionsVisible is not provided', () => {
+  const actions = [
+    { key: 'save', label: 'Save', icon: 'eva-save-outline', color: 'primary', handler: vi.fn() },
+  ]
+
+  const wrapper = mount(DetailPageLayout, {
+    props: {
+      pageTitle: 'Test Page',
+      actions,
+    },
+    global: {
+      stubs: {
+        PageBanners: true,
+        BannerContainer: true,
+        DetailMobileActionBar: true,
+        ActionBar: {
+          name: 'ActionBar',
+          template: '<div data-testid="action-bar"></div>',
+          props: ['actions', 'visible'],
+        },
+      },
+    },
+  })
+
+  const actionBar = wrapper.findComponent({ name: 'ActionBar' })
+  expect(actionBar.props('visible')).toBe(true)
+})
+
+it('should hide ActionBar when actionsVisible is false', () => {
+  const actions = [
+    { key: 'save', label: 'Save', icon: 'eva-save-outline', color: 'primary', handler: vi.fn() },
+  ]
+
+  const wrapper = mount(DetailPageLayout, {
+    props: {
+      pageTitle: 'Test Page',
+      actions,
+      actionsVisible: false,
+    },
+    global: {
+      stubs: {
+        PageBanners: true,
+        BannerContainer: true,
+        DetailMobileActionBar: true,
+        ActionBar: {
+          name: 'ActionBar',
+          template: '<div data-testid="action-bar"></div>',
+          props: ['actions', 'visible'],
+        },
+      },
+    },
+  })
+
+  const actionBar = wrapper.findComponent({ name: 'ActionBar' })
+  expect(actionBar.props('visible')).toBe(false)
+})
+
 it('should emit action-clicked event when ActionBar emits it', async () => {
   const wrapper = mount(DetailPageLayout, {
     props: {
