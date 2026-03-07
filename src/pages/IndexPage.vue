@@ -96,7 +96,7 @@
         <!-- Recent Templates Section -->
         <DashboardSection
           title="Recent Templates"
-          icon="eva-bookmark-outline"
+          icon="eva-file-text-outline"
           :items="recentTemplates"
           :count="templatesCount"
           :loading="isLoading"

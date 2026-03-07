@@ -253,7 +253,7 @@ it('should pass correct data to templates section', async () => {
   const templatesSection = dashboardSections[1]
 
   expect(templatesSection?.attributes('title')).toBe('Recent Templates')
-  expect(templatesSection?.attributes('icon')).toBe('eva-bookmark-outline')
+  expect(templatesSection?.attributes('icon')).toBe('eva-file-text-outline')
   expect(templatesSection?.props('viewAllRoute')).toBe('/templates')
 })
 

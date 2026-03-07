@@ -23,6 +23,7 @@ vi.mock('quasar', async () => {
   const actual = await vi.importActual<object>('quasar')
   return {
     ...actual,
+    useMeta: vi.fn(),
     Notify: {
       create: vi.fn(),
     },
