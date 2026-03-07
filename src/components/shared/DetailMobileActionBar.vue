@@ -6,7 +6,7 @@
     :offset="[0, 0]"
   >
     <div class="full-width q-px-sm mobile-action-shell">
-      <div class="q-pa-xs floating-bar">
+      <div class="q-px-xs floating-bar liquid-glass-surface">
         <div class="row q-gutter-xs items-center">
           <div class="col">
             <q-btn
@@ -20,7 +20,7 @@
               stack
               dense
               no-caps
-              class="full-width"
+              class="full-width mobile-action-btn liquid-glass-animated"
               @click="void handleActionClick(slot1Action)"
             />
             <div
@@ -41,7 +41,7 @@
               stack
               dense
               no-caps
-              class="full-width"
+              class="full-width mobile-action-btn liquid-glass-animated"
               @click="void handleActionClick(slot2Action)"
             />
             <div
@@ -54,8 +54,8 @@
             <q-btn
               icon="eva-plus-outline"
               round
-              color="primary"
               size="md"
+              class="mobile-action-add-btn liquid-glass-animated"
               :loading="addExpenseAction?.loading"
               :disable="addExpenseAction?.loading"
               @click="void handleAddExpenseClick()"
@@ -74,7 +74,7 @@
               stack
               dense
               no-caps
-              class="full-width"
+              class="full-width mobile-action-btn liquid-glass-animated"
               @click="void handleActionClick(slot4Action)"
             />
             <div
@@ -93,7 +93,7 @@
               stack
               dense
               no-caps
-              class="full-width"
+              class="full-width mobile-action-btn liquid-glass-animated"
             >
               <q-menu
                 auto-close
@@ -138,7 +138,7 @@
               stack
               dense
               no-caps
-              class="full-width"
+              class="full-width mobile-action-btn liquid-glass-animated"
               @click="void handleActionClick(slot5Action)"
             />
 
@@ -405,15 +405,40 @@ async function handleAddExpenseClick(): Promise<void> {
 
 <style lang="scss" scoped>
 .mobile-action-shell {
-  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(max(12px, env(safe-area-inset-bottom, 0px)) + var(--glass-bottom-offset));
 }
 
 .floating-bar {
-  border-radius: var(--radius-full);
-  background: hsl(var(--card));
-  box-shadow: var(--shadow-md);
-  border: 1px solid hsl(var(--border));
   margin-bottom: 0;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+.mobile-action-btn {
+  border-radius: var(--radius-full);
+  color: hsl(var(--foreground));
+  transition:
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    color 0.2s ease;
+}
+
+.mobile-action-add-btn {
+  background: hsl(var(--glass-fab-bg));
+  color: hsl(var(--primary-foreground));
+  border: 1px solid hsl(var(--glass-border-outer));
+  box-shadow: var(--glass-fab-shadow);
+  transition:
+    transform 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.mobile-action-add-btn:focus-visible {
+  outline: none;
+  box-shadow:
+    var(--glass-fab-shadow),
+    0 0 0 3px hsl(var(--glass-focus-ring));
 }
 
 .mobile-slot-placeholder {
@@ -422,5 +447,23 @@ async function handleAddExpenseClick(): Promise<void> {
 
 .floating-bar :deep(.q-btn__content .block) {
   white-space: nowrap;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mobile-action-btn:hover {
+    background: hsl(var(--glass-active-bg));
+  }
+
+  .mobile-action-add-btn:hover {
+    transform: translateY(-1px);
+    background: hsl(var(--glass-fab-bg-hover));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-action-btn,
+  .mobile-action-add-btn {
+    transition: none;
+  }
 }
 </style>

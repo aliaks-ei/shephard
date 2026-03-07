@@ -74,6 +74,77 @@ body {
   padding-bottom: max(8px, calc(8px + env(safe-area-inset-bottom, 0px)));
 }
 
+@media (display-mode: standalone) and (max-width: ($breakpoint-md-min - 0.02px)) {
+  :root {
+    --glass-bottom-offset: 4px;
+  }
+}
+
+// Liquid glass primitives for mobile floating toolbars.
+.liquid-glass-surface {
+  position: relative;
+  isolation: isolate;
+  border-radius: var(--radius-full);
+  background: hsl(var(--glass-bg));
+  border: 1px solid hsl(var(--glass-border-outer));
+  box-shadow: var(--glass-shadow);
+  -webkit-backdrop-filter: saturate(var(--glass-saturation)) blur(var(--glass-blur));
+  backdrop-filter: saturate(var(--glass-saturation)) blur(var(--glass-blur));
+  transition:
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.liquid-glass-surface::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid hsl(var(--glass-border-inner));
+  pointer-events: none;
+}
+
+.liquid-glass-surface::after {
+  content: '';
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  top: 1px;
+  height: 48%;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(180deg, hsl(var(--glass-highlight)), transparent 78%);
+}
+
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .liquid-glass-surface {
+    background: hsl(var(--glass-bg-fallback));
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .liquid-glass-surface::after {
+    opacity: 0.42;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .liquid-glass-surface {
+    background: hsl(var(--glass-bg-fallback));
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .liquid-glass-surface,
+  .liquid-glass-animated {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
 // Shared page and section spacing utilities
 .item-amount-section {
   max-width: 80px;

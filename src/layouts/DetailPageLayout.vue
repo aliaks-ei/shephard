@@ -222,7 +222,9 @@ const hasActions = computed(() => {
 <style lang="scss" scoped>
 .mobile-content-spacing {
   @media (max-width: 1023px) {
-    padding-bottom: calc(72px + max(12px, env(safe-area-inset-bottom, 0px)));
+    padding-bottom: calc(
+      72px + max(12px, env(safe-area-inset-bottom, 0px)) + var(--glass-bottom-offset)
+    );
   }
 }
 

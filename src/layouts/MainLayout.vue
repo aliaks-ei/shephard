@@ -162,6 +162,6 @@ const showMobileBottomNav = computed(() => {
 }
 
 .mobile-nav-footer {
-  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(max(12px, env(safe-area-inset-bottom, 0px)) + var(--glass-bottom-offset));
 }
 </style>
