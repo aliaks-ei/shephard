@@ -170,10 +170,10 @@
     <slot name="dialogs" />
 
     <!-- Mobile Actions Only -->
-    <ActionBar
+    <DetailMobileActionBar
       v-if="isMobile"
       :actions="actions || []"
-      :visible="!!actionsVisible"
+      :visible="true"
       @action-clicked="emit('action-clicked', $event)"
     />
   </div>
@@ -185,6 +185,7 @@ import { useQuasar } from 'quasar'
 import PageBanners from 'src/components/shared/PageBanners.vue'
 import BannerContainer from 'src/components/shared/BannerContainer.vue'
 import ActionBar from 'src/components/shared/ActionBar.vue'
+import DetailMobileActionBar from 'src/components/shared/DetailMobileActionBar.vue'
 import type { ActionBarAction } from 'src/components/shared/ActionBar.vue'
 
 export interface BannerConfig {
@@ -213,6 +214,7 @@ const $q = useQuasar()
 const isMobile = computed(() => $q.screen.lt.md)
 
 const hasActions = computed(() => {
+  if (isMobile.value) return true
   return props.actionsVisible !== false && (props.actions?.length || 0) > 0
 })
 </script>

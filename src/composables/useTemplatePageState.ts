@@ -101,7 +101,7 @@ export function useTemplatePageState() {
       label: isNewTemplate.value ? 'Create' : 'Save',
       color: isNewTemplate.value ? 'primary' : 'positive',
       priority: 'primary',
-      loading: deleteTemplateMutation.isPending.value,
+      visible: isEditMode.value,
       handler: saveTemplate,
     },
     {
