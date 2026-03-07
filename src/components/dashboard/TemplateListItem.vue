@@ -8,7 +8,7 @@
       class="q-pr-sm"
     >
       <q-icon
-        name="eva-bookmark-outline"
+        name="eva-file-text-outline"
         color="primary"
         size="16px"
       />
