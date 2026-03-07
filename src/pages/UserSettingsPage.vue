@@ -1,6 +1,6 @@
 <template>
   <div class="row justify-center page-content-spacing">
-    <div class="col-12 col-md-10 col-lg-8 col-xl-6">
+    <div class="col-12 col-lg-10 col-xl-8">
       <!-- Profile Hero -->
       <div class="row items-center q-mb-lg q-pa-sm">
         <div class="col-auto q-mr-md">

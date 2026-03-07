@@ -89,7 +89,7 @@ export function useTemplatePageState() {
     {
       key: 'add-category',
       icon: 'eva-plus-outline',
-      label: 'Category',
+      label: 'Add category',
       color: 'primary',
       priority: 'primary',
       visible: isEditMode.value,

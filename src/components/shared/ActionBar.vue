@@ -4,19 +4,62 @@
     v-if="!isMobile && hasVisibleActions"
     class="row items-center q-gutter-sm"
   >
-    <!-- All Actions - No grouping needed -->
+    <!-- Primary Actions (Solid background, no icons) -->
     <q-btn
-      v-for="action in visibleActions"
+      v-for="action in mainActions"
       :key="action.key"
-      :icon="action.icon"
       :label="action.label"
-      :color="action.color"
       :loading="action.loading"
       :disabled="action.loading"
+      :color="action.color === 'negative' ? 'negative' : 'primary'"
+      unelevated
       no-caps
-      outline
+      class="q-px-md rounded-borders"
       @click="handleActionClick(action)"
     />
+
+    <!-- Overflow Menu for Secondary Actions -->
+    <q-btn
+      v-if="overflowActions.length > 0"
+      flat
+      round
+      dense
+      icon="eva-more-vertical-outline"
+      color="grey-8"
+    >
+      <q-menu
+        auto-close
+        anchor="bottom right"
+        self="top right"
+        class="shadow-4"
+      >
+        <q-list style="min-width: 160px">
+          <q-item
+            v-for="action in overflowActions"
+            :key="action.key"
+            clickable
+            @click="handleActionClick(action)"
+          >
+            <!-- Icons are kept here because they help scanning dropdown lists -->
+            <q-item-section
+              v-if="action.icon"
+              avatar
+              style="min-width: 36px"
+            >
+              <q-icon
+                :name="action.icon"
+                :color="action.color === 'negative' ? 'negative' : 'grey-7'"
+                size="sm"
+              />
+            </q-item-section>
+
+            <q-item-section :class="action.color === 'negative' ? 'text-negative' : ''">
+              {{ action.label }}
+            </q-item-section>
+          </q-item>
+        </q-list>
+      </q-menu>
+    </q-btn>
   </div>
 
   <!-- Mobile: Bottom Action Bar -->
@@ -31,10 +74,10 @@
         class="q-pa-xs"
         :style="floatingBarStyle"
       >
-        <!-- All Actions in Single Row -->
+        <!-- Main Actions -->
         <div class="row q-gutter-xs items-center">
           <div
-            v-for="action in visibleActions"
+            v-for="action in mainActions"
             :key="action.key"
             class="col"
           >
@@ -52,6 +95,57 @@
               class="full-width"
               @click="handleActionClick(action)"
             />
+          </div>
+
+          <!-- Mobile Overflow Menu -->
+          <div
+            v-if="overflowActions.length > 0"
+            class="col-auto"
+          >
+            <q-btn
+              icon="eva-more-horizontal-outline"
+              label="More"
+              :style="{ borderRadius: 'var(--radius-full)' }"
+              size="sm"
+              flat
+              stack
+              dense
+              no-caps
+              class="full-width"
+            >
+              <q-menu
+                auto-close
+                anchor="top right"
+                self="bottom right"
+                class="shadow-4"
+                :offset="[0, 10]"
+              >
+                <q-list style="min-width: 160px">
+                  <q-item
+                    v-for="action in overflowActions"
+                    :key="action.key"
+                    clickable
+                    @click="handleActionClick(action)"
+                  >
+                    <q-item-section
+                      v-if="action.icon"
+                      avatar
+                      style="min-width: 36px"
+                    >
+                      <q-icon
+                        :name="action.icon"
+                        :color="action.color === 'negative' ? 'negative' : 'grey-7'"
+                        size="sm"
+                      />
+                    </q-item-section>
+
+                    <q-item-section :class="action.color === 'negative' ? 'text-negative' : ''">
+                      {{ action.label }}
+                    </q-item-section>
+                  </q-item>
+                </q-list>
+              </q-menu>
+            </q-btn>
           </div>
         </div>
       </div>
@@ -102,6 +196,17 @@ const visibleActions = computed(() => {
 
 const hasVisibleActions = computed(() => {
   return props.visible !== false && visibleActions.value.length > 0
+})
+
+const mainActions = computed(() => {
+  const primary = visibleActions.value.filter((a) => a.priority === 'primary')
+  // Fallback: if no primary action is defined, just show the first one
+  return primary.length > 0 ? primary : visibleActions.value.slice(0, 1)
+})
+
+const overflowActions = computed(() => {
+  const mainKeys = new Set(mainActions.value.map((a) => a.key))
+  return visibleActions.value.filter((a) => !mainKeys.has(a.key))
 })
 
 async function handleActionClick(action: ActionBarAction): Promise<void> {
