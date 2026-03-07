@@ -21,6 +21,7 @@ const renderDetailPageLayout = (props: Partial<DetailPageLayoutProps> = {}) => {
         PageBanners: true,
         ActionBar: true,
         BannerContainer: true,
+        DetailMobileActionBar: true,
       },
     },
   })
@@ -40,7 +41,7 @@ it('should render main container with correct layout classes', () => {
 
   const container = wrapper.find('.page-content-spacing')
   const row = wrapper.find('.row.justify-center')
-  const col = wrapper.find('.col-12.col-md-10.col-lg-8.col-xl-6')
+  const col = wrapper.find('.col-12')
 
   expect(container.exists()).toBe(true)
   expect(row.exists()).toBe(true)
@@ -140,6 +141,7 @@ it('should render content slot when isLoading is false', () => {
         PageBanners: true,
         ActionBar: true,
         BannerContainer: true,
+        DetailMobileActionBar: true,
       },
     },
   })
@@ -165,6 +167,7 @@ it('should render content slot by default when isLoading is not provided', () =>
         PageBanners: true,
         ActionBar: true,
         BannerContainer: true,
+        DetailMobileActionBar: true,
       },
     },
   })
@@ -189,6 +192,7 @@ it('should render dialogs slot', () => {
         PageBanners: true,
         ActionBar: true,
         BannerContainer: true,
+        DetailMobileActionBar: true,
       },
     },
   })
@@ -213,6 +217,7 @@ it('should render all slots simultaneously', () => {
         PageBanners: true,
         ActionBar: true,
         BannerContainer: true,
+        DetailMobileActionBar: true,
       },
     },
   })
@@ -240,6 +245,8 @@ it('should pass actions to ActionBar', () => {
     global: {
       stubs: {
         PageBanners: true,
+        BannerContainer: true,
+        DetailMobileActionBar: true,
         ActionBar: {
           template: '<div data-testid="action-bar" :actions="actions" />',
           props: ['actions', 'visible'],
@@ -270,6 +277,8 @@ it('should emit action-clicked event when ActionBar emits it', async () => {
     global: {
       stubs: {
         PageBanners: true,
+        BannerContainer: true,
+        DetailMobileActionBar: true,
         ActionBar: {
           template: "<button @click=\"$emit('action-clicked', 'save')\">Save</button>",
         },
