@@ -1,7 +1,7 @@
 <template>
   <div :class="containerClass">
     <!-- Section Header -->
-    <div class="row items-center justify-between q-mb-md">
+    <div class="row items-center justify-between q-mb-sm">
       <div class="row items-center">
         <q-icon
           :name="icon"
