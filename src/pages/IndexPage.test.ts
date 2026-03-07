@@ -230,7 +230,7 @@ it('should navigate to template when edit is triggered', async () => {
 it('should render with proper responsive layout', () => {
   const wrapper = createWrapper()
   expect(wrapper.find('.row.justify-center').exists()).toBe(true)
-  expect(wrapper.find('.col-12.col-md-10.col-lg-8.col-xl-6').exists()).toBe(true)
+  expect(wrapper.find('.col-12.col-lg-10.col-xl-8').exists()).toBe(true)
 })
 
 it('should pass correct data to plans section', async () => {

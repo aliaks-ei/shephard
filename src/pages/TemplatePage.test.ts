@@ -357,6 +357,32 @@ function createWrapper(
             },
           },
         },
+        ActionBar: {
+          template:
+            '<div v-if="visible" class="action-bar"><button v-for="action in visibleActions" :key="action.key" :data-label="action.label" @click="$emit(\'action-clicked\', action.key); action.handler()">{{ action.label }}</button></div>',
+          props: ['actions', 'visible'],
+          emits: ['action-clicked'],
+          computed: {
+            visibleActions() {
+              return this.actions.filter(
+                (action: { visible?: boolean }) => action.visible !== false,
+              )
+            },
+          },
+        },
+        DetailMobileActionBar: {
+          template:
+            '<div v-if="visible" class="detail-mobile-action-bar"><button v-for="action in visibleActions" :key="action.key" :data-label="action.label" @click="$emit(\'action-clicked\', action.key); action.handler()">{{ action.label }}</button></div>',
+          props: ['actions', 'visible'],
+          emits: ['action-clicked'],
+          computed: {
+            visibleActions() {
+              return this.actions.filter(
+                (action: { visible?: boolean }) => action.visible !== false,
+              )
+            },
+          },
+        },
       },
     },
   })

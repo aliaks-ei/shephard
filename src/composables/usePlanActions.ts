@@ -99,6 +99,34 @@ export function usePlanActions(context: PlanActionsContext) {
       visible: context.isEditMode.value,
       handler: context.handlers.onShare,
     },
+    {
+      key: 'cancel',
+      icon: 'eva-close-circle-outline',
+      label: 'Cancel',
+      color: 'negative',
+      priority: 'secondary',
+      visible:
+        !context.isNewPlan.value &&
+        !!context.currentPlan.value &&
+        getPlanStatus(context.currentPlan.value) === 'active' &&
+        context.isEditMode.value,
+      handler: context.handlers.onCancel,
+    },
+    {
+      key: 'delete',
+      icon: 'eva-trash-2-outline',
+      label: 'Delete',
+      color: 'negative',
+      priority: 'secondary',
+      visible:
+        !context.isNewPlan.value &&
+        !!context.currentPlan.value &&
+        (getPlanStatus(context.currentPlan.value) === 'pending' ||
+          getPlanStatus(context.currentPlan.value) === 'completed' ||
+          getPlanStatus(context.currentPlan.value) === 'cancelled') &&
+        context.isEditMode.value,
+      handler: context.handlers.onDelete,
+    },
   ])
 
   const itemsActions = computed<ActionBarAction[]>(() => [
@@ -128,6 +156,34 @@ export function usePlanActions(context: PlanActionsContext) {
       priority: 'secondary',
       visible: context.isEditMode.value,
       handler: context.handlers.onShare,
+    },
+    {
+      key: 'cancel',
+      icon: 'eva-close-circle-outline',
+      label: 'Cancel',
+      color: 'negative',
+      priority: 'secondary',
+      visible:
+        !context.isNewPlan.value &&
+        !!context.currentPlan.value &&
+        getPlanStatus(context.currentPlan.value) === 'active' &&
+        context.isEditMode.value,
+      handler: context.handlers.onCancel,
+    },
+    {
+      key: 'delete',
+      icon: 'eva-trash-2-outline',
+      label: 'Delete',
+      color: 'negative',
+      priority: 'secondary',
+      visible:
+        !context.isNewPlan.value &&
+        !!context.currentPlan.value &&
+        (getPlanStatus(context.currentPlan.value) === 'pending' ||
+          getPlanStatus(context.currentPlan.value) === 'completed' ||
+          getPlanStatus(context.currentPlan.value) === 'cancelled') &&
+        context.isEditMode.value,
+      handler: context.handlers.onDelete,
     },
   ])
 

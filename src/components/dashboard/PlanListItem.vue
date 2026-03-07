@@ -35,10 +35,26 @@
       </q-item-label>
     </q-item-section>
 
-    <q-item-section side>
+    <q-item-section
+      side
+      class="items-end"
+    >
       <span class="text-weight-medium text-body2">
         {{ formatAmount(plan.total) }}
       </span>
+      <q-skeleton
+        v-if="isOverviewLoading"
+        type="text"
+        width="60px"
+        class="q-mt-xs"
+      />
+      <div
+        v-else
+        class="text-caption text-grey-6"
+      >
+        {{ remainingBudget >= 0 ? 'Still to pay' : 'Over' }}:
+        <span :class="remainingColorClass">{{ formatAmount(Math.abs(remainingBudget)) }}</span>
+      </div>
     </q-item-section>
   </q-item>
 </template>
@@ -50,6 +66,9 @@ import { formatDateRange } from 'src/utils/plans'
 import { useUserStore } from 'src/stores/user'
 import { usePreferencesStore } from 'src/stores/preferences'
 import type { PlanWithPermission } from 'src/api'
+import { usePlanDetailQuery } from 'src/queries/plans'
+import { usePlanOverview } from 'src/composables/usePlanOverview'
+import { getBudgetRemainingColorClass } from 'src/utils/budget'
 
 const emit = defineEmits<{
   click: [planId: string]
@@ -60,10 +79,25 @@ const props = defineProps<{
 }>()
 
 const userStore = useUserStore()
+const userId = computed(() => userStore.userProfile?.id)
 const preferencesStore = usePreferencesStore()
 
 const isOwner = computed(() => props.plan.owner_id === userStore.userProfile?.id)
 const isViewOnly = computed(() => props.plan.permission_level === 'view')
+
+const planId = computed(() => props.plan.id)
+const planDetailQuery = usePlanDetailQuery(planId, userId)
+const planWithItems = computed(() => planDetailQuery.data.value ?? null)
+const isOverviewLoading = computed(() => planDetailQuery.isPending.value)
+
+const { totalBudget, totalSpent, remainingBudget } = usePlanOverview(planId, planWithItems)
+
+const progressPercentage = computed(() => {
+  if (totalBudget.value === 0) return 0
+  return (totalSpent.value / totalBudget.value) * 100
+})
+
+const remainingColorClass = computed(() => getBudgetRemainingColorClass(progressPercentage.value))
 
 function formatAmount(amount: number | null | undefined): string {
   const currency = props.plan.currency as CurrencyCode

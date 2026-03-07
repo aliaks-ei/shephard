@@ -34,7 +34,7 @@ it('should render main container with correct layout classes', () => {
   const wrapper = renderListPageLayout()
 
   const container = wrapper.find('.row.justify-center')
-  const col = wrapper.find('.col-12.col-md-10.col-lg-8.col-xl-6')
+  const col = wrapper.find('.col-12.col-lg-10.col-xl-8')
 
   expect(container.exists()).toBe(true)
   expect(col.exists()).toBe(true)
@@ -151,14 +151,13 @@ it('should apply responsive grid classes correctly', () => {
   const wrapper = renderListPageLayout()
 
   const mainContainer = wrapper.find('.row.justify-center')
-  const responsiveColumn = wrapper.find('.col-12.col-md-10.col-lg-8.col-xl-6')
+  const responsiveColumn = wrapper.find('.col-12.col-lg-10.col-xl-8')
 
   expect(mainContainer.exists()).toBe(true)
   expect(responsiveColumn.exists()).toBe(true)
   expect(responsiveColumn.classes()).toContain('col-12')
-  expect(responsiveColumn.classes()).toContain('col-md-10')
-  expect(responsiveColumn.classes()).toContain('col-lg-8')
-  expect(responsiveColumn.classes()).toContain('col-xl-6')
+  expect(responsiveColumn.classes()).toContain('col-lg-10')
+  expect(responsiveColumn.classes()).toContain('col-xl-8')
 })
 
 it('should render with all props and slot content', () => {

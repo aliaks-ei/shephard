@@ -77,8 +77,8 @@
       class="page-content-spacing"
     >
       <div class="row justify-center">
-        <div class="col-12 col-md-10 col-lg-8 col-xl-6">
-          <q-toolbar class="q-mb-lg q-px-none shadow-1 q-pa-md sticky-toolbar detail-toolbar">
+        <div class="col-12 col-lg-10 col-xl-8">
+          <q-toolbar class="q-mb-lg q-px-none q-pa-md sticky-toolbar detail-toolbar toolbar-border">
             <q-btn
               flat
               round
@@ -235,5 +235,9 @@ const hasActions = computed(() => {
 .detail-toolbar {
   background: hsl(var(--card));
   color: hsl(var(--foreground));
+}
+
+.toolbar-border {
+  border-bottom: 1px solid hsl(var(--border));
 }
 </style>

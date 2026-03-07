@@ -26,7 +26,7 @@
         no-caps
         full-width
         align="left"
-        class="q-pa-sm"
+        class="full-width q-pa-sm"
       >
         <UserAvatar
           size="36px"

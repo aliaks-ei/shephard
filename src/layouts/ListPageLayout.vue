@@ -1,6 +1,6 @@
 <template>
   <div class="row justify-center page-content-spacing">
-    <div class="col-12 col-md-10 col-lg-8 col-xl-6">
+    <div class="col-12 col-lg-10 col-xl-8">
       <!-- Header Section -->
       <div
         class="row items-center"

@@ -1,7 +1,7 @@
 <template>
   <section class="page-content-spacing">
     <div class="row justify-center">
-      <div class="col-12 col-md-10 col-lg-8 col-xl-6">
+      <div class="col-12 col-lg-10 col-xl-8">
         <!-- Dashboard Header -->
         <DashboardHeader />
 
