@@ -11,7 +11,7 @@ export default defineConfig((ctx) => {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
-    boot: [...(ctx.dev ? ['mocks'] : []), 'vue-query', 'auth', 'notifications'],
+    boot: [...(ctx.dev ? ['mocks'] : []), 'vue-query', 'auth', 'addressbar-color'],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#css
     css: ['app.scss'],
@@ -202,7 +202,7 @@ export default defineConfig((ctx) => {
       // directives: [],
 
       // Quasar plugins
-      plugins: ['Dark', 'Notify', 'Dialog'],
+      plugins: ['Dark', 'Notify', 'Dialog', 'Meta', 'AddressbarColor'],
     },
 
     // animations: 'all', // --- includes all animations

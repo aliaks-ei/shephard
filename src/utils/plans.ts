@@ -1,3 +1,4 @@
+import { date as quasarDate } from 'quasar'
 import type { Plan } from 'src/api/plans'
 
 export type PlanStatus = 'pending' | 'active' | 'completed' | 'cancelled'
@@ -165,19 +166,8 @@ export function getStatusIcon(plan: Plan): string {
 }
 
 export function formatDateRange(startDate: string, endDate: string): string {
-  const start = new Date(startDate)
-  const end = new Date(endDate)
-
-  const startFormatted = start.toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-  })
-
-  const endFormatted = end.toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
+  const startFormatted = quasarDate.formatDate(new Date(startDate), 'D MMM')
+  const endFormatted = quasarDate.formatDate(new Date(endDate), 'D MMM YYYY')
 
   return `${startFormatted} - ${endFormatted}`
 }

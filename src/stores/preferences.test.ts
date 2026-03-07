@@ -3,7 +3,6 @@ import { createTestingPinia } from '@pinia/testing'
 import { ref, type ComputedRef } from 'vue'
 import { usePreferencesStore } from './preferences'
 import { useAuthStore } from './auth'
-import { useNotificationStore } from './notification'
 import * as userApi from 'src/api/user'
 import { useError } from 'src/composables/useError'
 import { useTheme } from 'src/composables/useTheme'
@@ -11,10 +10,6 @@ import type { User } from 'src/api/user'
 
 vi.mock('./auth', () => ({
   useAuthStore: vi.fn(),
-}))
-
-vi.mock('./notification', () => ({
-  useNotificationStore: vi.fn(),
 }))
 
 vi.mock('src/composables/useError', () => ({
@@ -38,7 +33,6 @@ vi.mock('src/api/user', () => ({
 
 describe('Preferences Store', () => {
   const mockHandleError = vi.fn()
-  const mockShowInfo = vi.fn()
   const mockSystemDarkMode = ref(false)
   const mockIsDark = ref(false)
   let mockUser: User | null = null
@@ -65,10 +59,6 @@ describe('Preferences Store', () => {
       user: mockUser,
       isAuthenticated: true,
     } as unknown as ReturnType<typeof useAuthStore>)
-
-    vi.mocked(useNotificationStore).mockReturnValue({
-      showInfo: mockShowInfo,
-    } as unknown as ReturnType<typeof useNotificationStore>)
 
     createTestingPinia({
       createSpy: vi.fn,

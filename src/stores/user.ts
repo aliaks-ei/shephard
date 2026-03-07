@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed } from 'vue'
-import { useDateFormat } from '@vueuse/core'
+import { date as quasarDate } from 'quasar'
 
 import { useAuthStore } from './auth'
 import { usePreferencesStore } from './preferences'
@@ -25,7 +25,10 @@ export const useUserStore = defineStore('user', () => {
       nameInitial: getUserInitial(authStore.user.email),
       authProvider: authStore.user.app_metadata?.provider,
       createdAt: authStore.user.created_at,
-      formattedCreatedAt: useDateFormat(new Date(authStore.user.created_at), 'MMMM D, YYYY').value,
+      formattedCreatedAt: quasarDate.formatDate(
+        new Date(authStore.user.created_at),
+        'MMMM D, YYYY',
+      ),
       preferences: preferencesStore.preferences,
     }
   })

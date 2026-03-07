@@ -108,7 +108,10 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useMeta } from 'quasar'
 import { useRouter } from 'vue-router'
+
+useMeta({ title: 'Settings' })
 
 import UserAvatar from 'src/components/UserAvatar.vue'
 import { useUserStore } from 'src/stores/user'

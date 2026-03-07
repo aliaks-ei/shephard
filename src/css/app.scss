@@ -736,6 +736,22 @@ h6,
   min-width: 0;
 }
 
+.min-w-auto {
+  min-width: auto;
+}
+
+.menu-list {
+  min-width: 160px;
+}
+
+.menu-list--wide {
+  min-width: 180px;
+}
+
+.menu-avatar {
+  min-width: 36px;
+}
+
 .focus-ring {
   &:focus-visible {
     outline: none;
