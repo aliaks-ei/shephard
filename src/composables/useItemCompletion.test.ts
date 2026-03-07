@@ -27,8 +27,8 @@ vi.mock('src/queries/plans', () => ({
   })),
 }))
 
-vi.mock('src/stores/notification', () => ({
-  useNotificationStore: vi.fn(() => ({
+vi.mock('src/composables/useBanner', () => ({
+  useBanner: vi.fn(() => ({
     showError: mockShowError,
   })),
 }))

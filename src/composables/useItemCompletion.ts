@@ -5,7 +5,7 @@ import {
   useExpensesByPlanQuery,
 } from 'src/queries/expenses'
 import { useUpdatePlanItemCompletionMutation } from 'src/queries/plans'
-import { useNotificationStore } from 'src/stores/notification'
+import { useBanner } from 'src/composables/useBanner'
 import type { PlanItem } from 'src/api/plans'
 
 export function useItemCompletion(planId: MaybeRefOrGetter<string | null>) {
@@ -14,7 +14,7 @@ export function useItemCompletion(planId: MaybeRefOrGetter<string | null>) {
   const createExpenseMutation = useCreateExpenseMutation()
   const deleteExpensesBatchMutation = useDeleteExpensesBatchMutation()
   const completionMutation = useUpdatePlanItemCompletionMutation()
-  const notificationStore = useNotificationStore()
+  const { showError } = useBanner()
 
   async function toggleItemCompletion(item: PlanItem, value?: boolean, onSuccess?: () => void) {
     const currentPlanId = toValue(planId)
@@ -45,7 +45,7 @@ export function useItemCompletion(planId: MaybeRefOrGetter<string | null>) {
         const expensesToDelete = getExpensesForPlanItem(item.id)
 
         if (expensesToDelete.length === 0) {
-          notificationStore.showError('No expenses found to remove for this item')
+          showError('No expenses found to remove for this item')
           return
         }
 
@@ -68,7 +68,7 @@ export function useItemCompletion(planId: MaybeRefOrGetter<string | null>) {
     } catch {
       item.is_completed = previousState
       const action = newCompletionState ? 'completed' : 'incomplete'
-      notificationStore.showError(`Failed to mark item as ${action}. Please try again.`)
+      showError(`Failed to mark item as ${action}. Please try again.`)
     }
   }
 

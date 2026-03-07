@@ -16,7 +16,10 @@
 </template>
 
 <script setup lang="ts">
+import { useMeta } from 'quasar'
 import AuthLoginCard from 'src/components/auth/AuthLoginCard.vue'
+
+useMeta({ title: 'Sign In' })
 import GoogleAuthButton from 'src/components/GoogleAuthButton.vue'
 import EmailOtpForm from 'src/components/EmailOtpForm.vue'
 </script>

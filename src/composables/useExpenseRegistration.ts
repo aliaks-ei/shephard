@@ -14,7 +14,7 @@ import {
   useLastExpenseForPlanQuery,
 } from 'src/queries/expenses'
 import { useUserStore } from 'src/stores/user'
-import { useNotificationStore } from 'src/stores/notification'
+import { useBanner } from 'src/composables/useBanner'
 import { getPlanStatus } from 'src/utils/plans'
 import { calculateStillToPay } from 'src/utils/budget-calculations'
 import { convertCurrency } from 'src/api/currency'
@@ -38,7 +38,7 @@ export type QuickSelectPhase = 'selection' | 'finalize'
 
 export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undefined>) {
   const userStore = useUserStore()
-  const notificationStore = useNotificationStore()
+  const { showError } = useBanner()
   const userId = computed(() => userStore.userProfile?.id)
   const { plans, plansForExpenses } = usePlansQuery(userId)
   const { categories } = useCategoriesQuery()
@@ -239,7 +239,7 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
 
   function proceedToFinalize() {
     if (selectedPlanItems.value.length === 0) {
-      notificationStore.showError('Please select at least one item to continue')
+      showError('Please select at least one item to continue')
       return
     }
     quickSelectPhase.value = 'finalize'
@@ -279,12 +279,12 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
 
   async function handleQuickSelectSubmit(onSuccess: () => void) {
     if (selectedPlanItems.value.length === 0) {
-      notificationStore.showError('Please select at least one item')
+      showError('Please select at least one item')
       return
     }
 
     if (!form.value.expenseDate) {
-      notificationStore.showError('Please select an expense date')
+      showError('Please select an expense date')
       return
     }
 
@@ -320,18 +320,18 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
       onSuccess()
     } catch (error) {
       console.error('Error registering expenses:', error)
-      notificationStore.showError('Failed to register expenses. Please try again.')
+      showError('Failed to register expenses. Please try again.')
     }
   }
 
   async function handleCustomEntrySubmit(isFormValid: boolean, onSuccess: () => void) {
     if (!isFormValid) {
-      notificationStore.showError('Please fix the form errors before submitting')
+      showError('Please fix the form errors before submitting')
       return
     }
 
     if (!form.value.planId || !form.value.categoryId || !form.value.amount) {
-      notificationStore.showError('Please fill in all required fields')
+      showError('Please fill in all required fields')
       return
     }
 
@@ -378,7 +378,7 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
       onSuccess()
     } catch (error) {
       console.error('Error registering expense:', error)
-      notificationStore.showError('Failed to register expense. Please try again.')
+      showError('Failed to register expense. Please try again.')
     }
   }
 

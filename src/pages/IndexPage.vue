@@ -150,7 +150,10 @@
 
 <script setup lang="ts">
 import { ref, computed, defineAsyncComponent } from 'vue'
+import { useMeta } from 'quasar'
 import { useRouter } from 'vue-router'
+
+useMeta({ title: 'Home' })
 import { usePlansQuery } from 'src/queries/plans'
 import { useTemplatesQuery } from 'src/queries/templates'
 import { useUserStore } from 'src/stores/user'

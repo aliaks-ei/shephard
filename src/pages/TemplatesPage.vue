@@ -50,8 +50,11 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useMeta } from 'quasar'
 
 import ListPageLayout from 'src/layouts/ListPageLayout.vue'
+
+useMeta({ title: 'Templates' })
 import SearchAndSort from 'src/components/shared/SearchAndSort.vue'
 import ListPageSkeleton from 'src/components/shared/ListPageSkeleton.vue'
 import EmptyState from 'src/components/shared/EmptyState.vue'

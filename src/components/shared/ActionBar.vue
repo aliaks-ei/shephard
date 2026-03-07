@@ -86,7 +86,7 @@
               :loading="action.loading"
               :label="action.label"
               :disabled="action.loading"
-              :style="{ borderRadius: 'var(--radius-full)' }"
+              round
               size="sm"
               flat
               stack
@@ -105,7 +105,7 @@
             <q-btn
               icon="eva-more-horizontal-outline"
               label="More"
-              :style="{ borderRadius: 'var(--radius-full)' }"
+              round
               size="sm"
               flat
               stack

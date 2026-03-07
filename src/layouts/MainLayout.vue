@@ -68,24 +68,26 @@
 <script setup lang="ts">
 import { computed, defineAsyncComponent, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { useQuasar } from 'quasar'
+import { useQuasar, useMeta, Notify } from 'quasar'
 
 import PrivacyModeToggle from 'src/components/PrivacyModeToggle.vue'
 import NavigationDrawer from 'src/components/NavigationDrawer.vue'
 import MobileBottomNavigation from 'src/components/MobileBottomNavigation.vue'
 import { useUserStore } from 'src/stores/user'
 import { usePwaInstall } from 'src/composables/usePwaInstall'
-import { useNotificationStore } from 'src/stores/notification'
 
 const ExpenseRegistrationDialog = defineAsyncComponent(
   () => import('src/components/expenses/ExpenseRegistrationDialog.vue'),
 )
 
+useMeta({
+  titleTemplate: (title) => `${title} | Shephard`,
+})
+
 const userStore = useUserStore()
 const route = useRoute()
 const $q = useQuasar()
 const { isInstallable, promptInstall, dismissInstall } = usePwaInstall()
-const notificationStore = useNotificationStore()
 
 const hasOpenedExpenseDialog = ref(false)
 const showExpenseDialog = ref(false)
@@ -102,8 +104,11 @@ watch(isInstallable, (installable) => {
 })
 
 function showPwaInstallNotification() {
-  notificationStore.showNotification('Install Shephard for a better experience!', 'info', {
-    timeout: 0, // Persistent notification
+  Notify.create({
+    message: 'Install Shephard for a better experience!',
+    type: 'info',
+    icon: 'eva-info-outline',
+    timeout: 0,
     actions: [
       {
         label: 'Install',

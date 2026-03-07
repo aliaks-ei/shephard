@@ -173,7 +173,7 @@
 
 <script setup lang="ts">
 import { defineAsyncComponent } from 'vue'
-import { useQuasar } from 'quasar'
+import { useQuasar, useMeta } from 'quasar'
 
 import BaseItemFormPage from 'src/layouts/BaseItemFormPage.vue'
 import PlanFormSection from 'src/components/plans/PlanFormSection.vue'
@@ -238,4 +238,8 @@ const {
   openExpenseRegistrationFromCategory,
   openExpenseRegistrationFromItem,
 } = usePlanPageState()
+
+useMeta(() => ({
+  title: pageTitle.value || 'Plan',
+}))
 </script>

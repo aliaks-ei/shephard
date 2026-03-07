@@ -75,6 +75,7 @@
 </template>
 
 <script setup lang="ts">
+import { useMeta } from 'quasar'
 import BaseItemFormPage from 'src/layouts/BaseItemFormPage.vue'
 import TemplateEditView from 'src/components/templates/TemplateEditView.vue'
 import TemplateReadOnlyView from 'src/components/templates/TemplateReadOnlyView.vue'
@@ -120,4 +121,8 @@ const {
   onTemplateShared,
   deleteTemplate,
 } = useTemplatePageState()
+
+useMeta(() => ({
+  title: pageTitle.value || 'Template',
+}))
 </script>

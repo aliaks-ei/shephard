@@ -17,13 +17,6 @@ vi.mock('quasar', () => ({
   Quasar: {},
 }))
 
-// Notification store mock via direct import pattern in tests
-vi.mock('src/stores/notification', () => ({
-  useNotificationStore: () => ({
-    showSuccess: vi.fn(),
-  }),
-}))
-
 type Item = { id: string; name: string; total?: number; created_at?: string }
 
 const items: Item[] = [

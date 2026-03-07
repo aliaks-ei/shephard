@@ -3,7 +3,6 @@ import { ref } from 'vue'
 import { createTestingPinia, type TestingPinia } from '@pinia/testing'
 import { setActivePinia } from 'pinia'
 import { useExpenseRegistration } from './useExpenseRegistration'
-import { useNotificationStore } from 'src/stores/notification'
 import type { Tables } from 'src/lib/supabase/types'
 
 type Plan = Tables<'plans'>
@@ -85,6 +84,21 @@ vi.mock('src/queries/expenses', () => ({
   useLastExpenseForPlanQuery: vi.fn(() => ({
     data: mockLastExpenseData,
     isPending: ref(false),
+  })),
+}))
+
+const mockShowError = vi.fn()
+
+vi.mock('src/composables/useBanner', () => ({
+  useBanner: vi.fn(() => ({
+    showError: mockShowError,
+    showSuccess: vi.fn(),
+    showWarning: vi.fn(),
+    showInfo: vi.fn(),
+    banners: ref([]),
+    showBanner: vi.fn(),
+    dismissBanner: vi.fn(),
+    clearAllBanners: vi.fn(),
   })),
 }))
 
@@ -336,15 +350,12 @@ describe('useExpenseRegistration', () => {
     })
 
     it('shows error when trying to finalize without items', () => {
-      const notificationStore = useNotificationStore()
       const { proceedToFinalize, quickSelectPhase } = useExpenseRegistration()
 
       proceedToFinalize()
 
       expect(quickSelectPhase.value).toBe('selection')
-      expect(notificationStore.showError).toHaveBeenCalledWith(
-        'Please select at least one item to continue',
-      )
+      expect(mockShowError).toHaveBeenCalledWith('Please select at least one item to continue')
     })
 
     it('goes back to selection phase', () => {
@@ -396,18 +407,16 @@ describe('useExpenseRegistration', () => {
     })
 
     it('shows error when no items selected', async () => {
-      const notificationStore = useNotificationStore()
       const onSuccess = vi.fn()
       const { handleQuickSelectSubmit } = useExpenseRegistration()
 
       await handleQuickSelectSubmit(onSuccess)
 
-      expect(notificationStore.showError).toHaveBeenCalledWith('Please select at least one item')
+      expect(mockShowError).toHaveBeenCalledWith('Please select at least one item')
       expect(onSuccess).not.toHaveBeenCalled()
     })
 
     it('shows error when no date selected', async () => {
-      const notificationStore = useNotificationStore()
       const onSuccess = vi.fn()
       const { handleQuickSelectSubmit, selectedPlanItems, form } = useExpenseRegistration()
       selectedPlanItems.value = [mockPlanItems[0]!]
@@ -415,7 +424,7 @@ describe('useExpenseRegistration', () => {
 
       await handleQuickSelectSubmit(onSuccess)
 
-      expect(notificationStore.showError).toHaveBeenCalledWith('Please select an expense date')
+      expect(mockShowError).toHaveBeenCalledWith('Please select an expense date')
       expect(onSuccess).not.toHaveBeenCalled()
     })
 
@@ -480,15 +489,12 @@ describe('useExpenseRegistration', () => {
     })
 
     it('shows error when form is not valid', async () => {
-      const notificationStore = useNotificationStore()
       const onSuccess = vi.fn()
       const { handleCustomEntrySubmit } = useExpenseRegistration()
 
       await handleCustomEntrySubmit(false, onSuccess)
 
-      expect(notificationStore.showError).toHaveBeenCalledWith(
-        'Please fix the form errors before submitting',
-      )
+      expect(mockShowError).toHaveBeenCalledWith('Please fix the form errors before submitting')
       expect(onSuccess).not.toHaveBeenCalled()
     })
   })
