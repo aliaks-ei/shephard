@@ -33,7 +33,7 @@
         self="top right"
         class="shadow-4"
       >
-        <q-list style="min-width: 160px">
+        <q-list class="action-menu-list">
           <q-item
             v-for="action in overflowActions"
             :key="action.key"
@@ -44,7 +44,7 @@
             <q-item-section
               v-if="action.icon"
               avatar
-              style="min-width: 36px"
+              class="action-menu-avatar"
             >
               <q-icon
                 :name="action.icon"
@@ -70,10 +70,7 @@
     :offset="[0, 0]"
   >
     <div class="full-width q-px-sm mobile-action-shell">
-      <div
-        class="q-pa-xs"
-        :style="floatingBarStyle"
-      >
+      <div class="q-pa-xs floating-bar">
         <!-- Main Actions -->
         <div class="row q-gutter-xs items-center">
           <div
@@ -120,7 +117,7 @@
                 class="shadow-4"
                 :offset="[0, 10]"
               >
-                <q-list style="min-width: 160px">
+                <q-list class="action-menu-list">
                   <q-item
                     v-for="action in overflowActions"
                     :key="action.key"
@@ -130,7 +127,7 @@
                     <q-item-section
                       v-if="action.icon"
                       avatar
-                      style="min-width: 36px"
+                      class="action-menu-avatar"
                     >
                       <q-icon
                         :name="action.icon"
@@ -154,7 +151,6 @@
 </template>
 
 <script setup lang="ts">
-import type { StyleValue } from 'vue'
 import { computed } from 'vue'
 import { useQuasar } from 'quasar'
 
@@ -181,14 +177,6 @@ const props = defineProps<{
 const $q = useQuasar()
 
 const isMobile = computed(() => $q.screen.lt.md)
-
-const floatingBarStyle: StyleValue = {
-  borderRadius: 'var(--radius-full)',
-  background: 'hsl(var(--card))',
-  boxShadow: 'var(--shadow-md)',
-  border: '1px solid hsl(var(--border))',
-  marginBottom: '0',
-}
 
 const visibleActions = computed(() => {
   return props.actions.filter((action) => action.visible !== false)
@@ -218,5 +206,21 @@ async function handleActionClick(action: ActionBarAction): Promise<void> {
 <style lang="scss" scoped>
 .mobile-action-shell {
   padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+}
+
+.floating-bar {
+  border-radius: var(--radius-full);
+  background: hsl(var(--card));
+  box-shadow: var(--shadow-md);
+  border: 1px solid hsl(var(--border));
+  margin-bottom: 0;
+}
+
+.action-menu-list {
+  min-width: 160px;
+}
+
+.action-menu-avatar {
+  min-width: 36px;
 }
 </style>

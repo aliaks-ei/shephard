@@ -37,8 +37,6 @@ export function usePlans() {
       },
     },
     () => plans.value,
-    () => plans.value.filter((plan) => plan.owner_id === userId.value),
-    () => plans.value.filter((plan) => plan.owner_id !== userId.value),
     () => isPending.value && plans.value.length === 0,
   )
 }

@@ -141,6 +141,12 @@ describe('usePlanOverview', () => {
   ]
 
   describe('currentPlanWithItems', () => {
+    it('accepts a nullable plan id ref', () => {
+      const { totalBudget } = usePlanOverview(ref<string | null>(null), ref(mockPlanWithItems))
+
+      expect(totalBudget.value).toBe(800)
+    })
+
     it('returns plan from argument when provided', () => {
       const planArg = ref(mockPlanWithItems)
       const { totalBudget } = usePlanOverview('plan-1', planArg)

@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { ref } from 'vue'
 import { useDetailPageState, type DetailPageConfig } from './useDetailPageState'
 
 const baseConfig: DetailPageConfig = {
@@ -23,25 +24,18 @@ describe('titles', () => {
     const { pageTitle } = useDetailPageState(baseConfig, false, false)
     expect(pageTitle.value).toBe('Edit Plan')
   })
-})
 
-describe('banners', () => {
-  it('shows readonly banner when isReadOnly is true', () => {
-    const { banners } = useDetailPageState(baseConfig, false, true)
-    expect(banners.value.length).toBe(1)
-    expect(banners.value[0]).toMatchObject({
-      type: 'readonly',
-      icon: 'eva-eye-outline',
-    })
-    const msg = banners.value[0]?.message
-    expect(msg).toBeDefined()
-    if (msg) {
-      expect(msg).toContain('read-only mode')
-    }
-  })
+  it('reacts to state changes when refs are passed', () => {
+    const isNew = ref(false)
+    const isReadOnly = ref(true)
+    const { pageTitle } = useDetailPageState(baseConfig, isNew, isReadOnly)
 
-  it('returns empty banners when not read-only', () => {
-    const { banners } = useDetailPageState(baseConfig, true, false)
-    expect(banners.value.length).toBe(0)
+    expect(pageTitle.value).toBe('View Plan')
+
+    isReadOnly.value = false
+    expect(pageTitle.value).toBe('Edit Plan')
+
+    isNew.value = true
+    expect(pageTitle.value).toBe('Create Plan')
   })
 })

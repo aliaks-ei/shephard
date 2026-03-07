@@ -126,8 +126,7 @@
           <q-badge
             v-if="totalItemsCount > 0"
             color="primary"
-            class="relative-position"
-            style="top: 0"
+            class="relative-position category-dialog-badge"
             floating
           >
             {{ completedItemsCount }}/{{ totalItemsCount }}
@@ -141,8 +140,7 @@
           <q-badge
             v-if="expenses.length > 0"
             color="primary"
-            class="relative-position"
-            style="top: 0"
+            class="relative-position category-dialog-badge"
             floating
           >
             {{ expenses.length }}
@@ -178,8 +176,7 @@
               :class="item.is_completed ? 'text-strike' : ''"
             >
               <q-item-section
-                class="q-pr-sm"
-                style="min-width: auto"
+                class="q-pr-sm category-dialog-icon-section"
                 avatar
               >
                 <q-checkbox
@@ -224,8 +221,7 @@
                 class="text-grey-6"
               >
                 <q-item-section
-                  class="q-pr-sm"
-                  style="min-width: auto"
+                  class="q-pr-sm category-dialog-icon-section"
                   avatar
                 >
                   <q-icon
@@ -427,8 +423,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, defineAsyncComponent } from 'vue'
+import { ref, computed, watch } from 'vue'
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
+import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import { formatDate } from 'src/utils/date'
 import { getBudgetProgressColor, getBudgetRemainingColorClass } from 'src/utils/budget'
@@ -437,10 +434,6 @@ import { useExpenseActions } from 'src/composables/useExpenseActions'
 import { useTrackablePlanItems } from 'src/composables/useTrackablePlanItems'
 import type { PlanItem } from 'src/api/plans'
 import type { ExpenseWithCategory } from 'src/api'
-
-const ExpenseRegistrationDialog = defineAsyncComponent(
-  () => import('src/components/expenses/ExpenseRegistrationDialog.vue'),
-)
 
 interface CategoryData {
   categoryId: string
@@ -527,5 +520,13 @@ watch(
 <style lang="scss" scoped>
 .category-expenses-virtual-list {
   max-height: min(58vh, 480px);
+}
+
+.category-dialog-badge {
+  top: 0;
+}
+
+.category-dialog-icon-section {
+  min-width: auto;
 }
 </style>

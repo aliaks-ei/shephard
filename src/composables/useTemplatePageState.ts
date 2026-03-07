@@ -51,7 +51,11 @@ export function useTemplatePageState() {
     listIcon: 'eva-grid-outline',
   }
 
-  const { pageTitle } = useDetailPageState(pageConfig, isNewTemplate.value, !isEditMode.value)
+  const { pageTitle } = useDetailPageState(
+    pageConfig,
+    isNewTemplate,
+    computed(() => !isEditMode.value),
+  )
 
   const { openDialog, closeDialog, getDialogState } = useEditablePage()
 
@@ -89,7 +93,7 @@ export function useTemplatePageState() {
     {
       key: 'add-category',
       icon: 'eva-plus-outline',
-      label: 'Add category',
+      label: 'Category',
       color: 'primary',
       priority: 'primary',
       visible: isEditMode.value,

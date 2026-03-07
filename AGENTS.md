@@ -2,46 +2,70 @@
 
 ## Project Structure & Module Organization
 
-- `src/` contains the app code: `api/` (data fetchers), `queries/` (TanStack Query hooks for server state), `stores/` (Pinia client-side state), `components/`, `pages/`, `layouts/`, `composables/`, `utils/`, and `router/`.
-- Tests are co-located with source files using the `.test.ts` suffix (for example, `src/pages/PlansPage.test.ts`).
-- `public/` holds static assets; `src/assets/` for bundled assets.
-- `src-pwa/` contains PWA configuration (manifest and service worker); `src-capacitor/` for mobile wrapper.
-- `supabase/` includes backend config and edge functions; `dist/` is the production build output.
+- `src/` contains the app code:
+  - `api/` for data access
+  - `queries/` for TanStack Query hooks
+  - `stores/` for client-only state
+  - `components/`, `pages/`, `layouts/`, `composables/`, `utils/`, `router/`
+- Tests are co-located with implementation files as `*.test.ts`.
+- `public/` contains static assets; `src/assets/` contains bundled assets.
+- `src-pwa/` contains PWA config.
+- `src-capacitor/` contains mobile wrapper config.
+- `supabase/` contains backend config and edge functions.
 
 ## Build, Test, and Development Commands
 
-- `npm run dev`: run the Quasar PWA dev server with hot reload.
-- `npm run build`: create a production PWA build in `dist/`.
-- `npm run preview`: build and serve the PWA locally on port 4173.
-- `npm run lint` / `npm run format`: run ESLint and Prettier across the repo.
-- `npm run type-check`: TypeScript type checking via `vue-tsc`.
-- `npm run test:unit` / `npm run test:unit:ci`: Vitest watch mode or single-run (CI).
+- `npm run dev`: run Quasar PWA dev server.
+- `npm run dev:mock`: run dev server with MSW enabled.
+- `npm run build`: production PWA build.
+- `npm run build:analyze`: build with bundle analysis.
+- `npm run preview`: build + serve locally on port 4173.
+- `npm run lint` / `npm run format`: lint and format the repo.
+- `npm run type-check`: TypeScript check with `vue-tsc`.
+- `npm run test:unit` / `npm run test:unit:ci`: unit tests in watch / CI mode.
+- `npm run check:bundle-budgets`: enforce bundle guardrails.
 
 ## Coding Style & Naming Conventions
 
-- Vue 3 Composition API with `<script setup>` only; keep logic out of templates.
-- Use types over interfaces, avoid enums, prefer `unknown` with type guards.
-- Use `import type` for type-only imports and Supabase-generated types where possible.
-- Formatting is enforced by ESLint + Prettier; default to 2-space indentation.
-- Prefer Quasar utilities (`q-pa-*`, `q-ma-*`) and `q-btn` with `to` for navigation.
+- Vue 3 Composition API with `<script setup>`.
+- Use `type` over `interface` when possible; avoid enums.
+- Use `import type` for type-only imports.
+- Keep logic in composables/services, not templates.
+- Prefer Quasar utility classes (`q-pa-*`, `q-ma-*`, etc.) and scoped CSS classes over inline `style` attributes.
+- Avoid obvious/non-informative comments.
 
 ## Architecture & Error Handling
 
-- Four-layer pattern: `src/api/` (throws errors), `src/queries/` (TanStack Query hooks for server state, caching, and mutations), `src/stores/` (client-side state only: auth, user, notification, preferences), UI components (render only).
-- Mutations handle errors via `createMutationErrorHandler` in `src/queries/mutation-utils.ts`; client-side stores use `useError().handleError()` with keys from `src/config/error-messages.ts`; components do not implement error handling.
+- Four-layer pattern:
+  - `src/api/`: throws typed/meaningful errors
+  - `src/queries/`: owns fetching/caching/mutations
+  - `src/stores/`: client-only state
+  - UI: render + user interactions only
+- Keep expense data subscriptions centralized per page context to avoid duplicate query usage (for plan overview, consume expense data via `usePlanOverview`).
+- For multi-step writes (for example expense creation + completion updates), use best-effort rollback to reduce partial updates.
+- Mutations should use shared query error handlers; components should not own mutation error translation.
+
+## Quasar/UI Practices
+
+- Use `q-btn` with `to` for navigation when applicable.
+- Prefer classes/utilities instead of inline styles for spacing/sizing/positioning.
+- Keep dialog imports direct by default; do not lazy-load dialogs unless there is a measured, compelling performance reason.
+- Detail page action visibility should come from action state (`visible !== false`) and explicit visibility flags (`actionsVisible !== false`).
 
 ## Testing Guidelines
 
-- Frameworks: Vitest + `@vue/test-utils`; tests live next to sources as `.test.ts`.
-- Use `installQuasarPlugin()` for component tests and `createTestingPinia({ createSpy: vi.fn })` for store tests.
-- Mock query hooks (`src/queries/*`) with `vi.mock()` returning objects with `data`, `isPending`, `mutateAsync` refs/fns.
-- For Vue components, avoid a root `describe` block and check `__mocks__` before `vi.mock()`.
+- Frameworks: Vitest + `@vue/test-utils`.
+- Use `installQuasarPlugin()` for component tests.
+- Use `createTestingPinia({ createSpy: vi.fn })` for Pinia-dependent tests.
+- Mock query hooks with `vi.mock()` and return refs/fns (`data`, `isPending`, `mutateAsync`).
+- Add coverage for mutation rollback paths and visibility/guard logic when behavior changes.
 
 ## Commit & Pull Request Guidelines
 
-- Commit subjects are short and descriptive; optional issue/PR references in parentheses (for example, `UI cleanup (#67)`).
-- PRs should include a concise summary, testing notes, and screenshots or clips for UI changes when applicable.
+- Use concise commit subjects; conventional commit format is preferred.
+- PRs should include summary, testing notes, and visual proof for UI changes.
 
 ## Environment & Configuration
 
-- Create a `.env` with `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, and `VITE_GOOGLE_CLIENT_ID`; do not commit secrets.
+- Create `.env` with `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_GOOGLE_CLIENT_ID`.
+- Never commit secrets.

@@ -66,19 +66,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar, useMeta, Notify } from 'quasar'
 
 import PrivacyModeToggle from 'src/components/PrivacyModeToggle.vue'
 import NavigationDrawer from 'src/components/NavigationDrawer.vue'
 import MobileBottomNavigation from 'src/components/MobileBottomNavigation.vue'
+import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 import { useUserStore } from 'src/stores/user'
 import { usePwaInstall } from 'src/composables/usePwaInstall'
-
-const ExpenseRegistrationDialog = defineAsyncComponent(
-  () => import('src/components/expenses/ExpenseRegistrationDialog.vue'),
-)
 
 useMeta({
   titleTemplate: (title) => `${title} | Shephard`,

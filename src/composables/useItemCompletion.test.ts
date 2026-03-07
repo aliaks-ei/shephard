@@ -53,7 +53,7 @@ describe('useItemCompletion', () => {
     mockCompletionMutateAsync.mockResolvedValue(undefined)
   })
 
-  it('deletes all related expenses in a single batch call when unchecking an item', async () => {
+  it('updates completion first and then deletes related expenses when unchecking', async () => {
     mockGetExpensesForPlanItem.mockReturnValue([{ id: 'exp-1' }, { id: 'exp-2' }])
 
     const planId = ref('plan-1')
@@ -61,30 +61,31 @@ describe('useItemCompletion', () => {
 
     await toggleItemCompletion({ ...planItem }, false)
 
-    expect(mockDeleteExpensesBatchMutateAsync).toHaveBeenCalledTimes(1)
-    expect(mockDeleteExpensesBatchMutateAsync).toHaveBeenCalledWith({
-      expenseIds: ['exp-1', 'exp-2'],
-      planId: 'plan-1',
-      planItemId: 'item-1',
-      hasRemainingExpensesForItem: false,
-    })
     expect(mockCompletionMutateAsync).toHaveBeenCalledWith({
       itemId: 'item-1',
       isCompleted: false,
       planId: 'plan-1',
     })
+    expect(mockDeleteExpensesBatchMutateAsync).toHaveBeenCalledTimes(1)
+    expect(mockDeleteExpensesBatchMutateAsync).toHaveBeenCalledWith({
+      expenseIds: ['exp-1', 'exp-2'],
+      planId: 'plan-1',
+    })
   })
 
-  it('shows an error and aborts when unchecking item with no linked expenses', async () => {
+  it('still marks item incomplete when unchecking item with no linked expenses', async () => {
     mockGetExpensesForPlanItem.mockReturnValue([])
 
     const { toggleItemCompletion } = useItemCompletion(ref('plan-1'))
 
     await toggleItemCompletion({ ...planItem }, false)
 
-    expect(mockShowError).toHaveBeenCalledWith('No expenses found to remove for this item')
     expect(mockDeleteExpensesBatchMutateAsync).not.toHaveBeenCalled()
-    expect(mockCompletionMutateAsync).not.toHaveBeenCalled()
+    expect(mockCompletionMutateAsync).toHaveBeenCalledWith({
+      itemId: 'item-1',
+      isCompleted: false,
+      planId: 'plan-1',
+    })
   })
 
   it('creates an expense when checking an incomplete item', async () => {
@@ -93,10 +94,59 @@ describe('useItemCompletion', () => {
     await toggleItemCompletion({ ...planItem, is_completed: false }, true)
 
     expect(mockCreateExpenseMutateAsync).toHaveBeenCalledTimes(1)
-    expect(mockCompletionMutateAsync).toHaveBeenCalledWith({
+    expect(mockCompletionMutateAsync).toHaveBeenNthCalledWith(1, {
       itemId: 'item-1',
       isCompleted: true,
       planId: 'plan-1',
     })
+  })
+
+  it('rolls completion back if expense creation fails while checking', async () => {
+    mockCreateExpenseMutateAsync.mockRejectedValueOnce(new Error('create failed'))
+
+    const { toggleItemCompletion } = useItemCompletion(ref('plan-1'))
+    const item = { ...planItem, is_completed: false }
+
+    await toggleItemCompletion(item, true)
+
+    expect(mockCompletionMutateAsync).toHaveBeenNthCalledWith(1, {
+      itemId: 'item-1',
+      isCompleted: true,
+      planId: 'plan-1',
+    })
+    expect(mockCompletionMutateAsync).toHaveBeenNthCalledWith(2, {
+      itemId: 'item-1',
+      isCompleted: false,
+      planId: 'plan-1',
+    })
+    expect(item.is_completed).toBe(false)
+    expect(mockShowError).toHaveBeenCalledWith(
+      'Failed to mark item as completed. Please try again.',
+    )
+  })
+
+  it('rolls completion back if delete fails while unchecking', async () => {
+    mockGetExpensesForPlanItem.mockReturnValue([{ id: 'exp-1' }])
+    mockDeleteExpensesBatchMutateAsync.mockRejectedValueOnce(new Error('delete failed'))
+
+    const { toggleItemCompletion } = useItemCompletion(ref('plan-1'))
+    const item = { ...planItem, is_completed: true }
+
+    await toggleItemCompletion(item, false)
+
+    expect(mockCompletionMutateAsync).toHaveBeenNthCalledWith(1, {
+      itemId: 'item-1',
+      isCompleted: false,
+      planId: 'plan-1',
+    })
+    expect(mockCompletionMutateAsync).toHaveBeenNthCalledWith(2, {
+      itemId: 'item-1',
+      isCompleted: true,
+      planId: 'plan-1',
+    })
+    expect(item.is_completed).toBe(true)
+    expect(mockShowError).toHaveBeenCalledWith(
+      'Failed to mark item as incomplete. Please try again.',
+    )
   })
 })

@@ -8,7 +8,7 @@ import type { TemplateWithPermission } from 'src/api'
 export function useTemplates() {
   const userStore = useUserStore()
   const userId = computed(() => userStore.userProfile?.id)
-  const { templates, ownedTemplates, sharedTemplates, isPending } = useTemplatesQuery(userId)
+  const { templates, isPending } = useTemplatesQuery(userId)
   const deleteTemplateMutation = useDeleteTemplateMutation()
 
   const sortOptions = [
@@ -37,8 +37,6 @@ export function useTemplates() {
       },
     },
     () => templates.value,
-    () => ownedTemplates.value,
-    () => sharedTemplates.value,
     () => isPending.value && templates.value.length === 0,
   )
 }

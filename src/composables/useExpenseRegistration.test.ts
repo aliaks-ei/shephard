@@ -60,6 +60,8 @@ const mockExpensesByCategory = ref<
 >({})
 const mockCreateExpenseMutateAsync = vi.fn().mockResolvedValue(undefined)
 const mockCreateExpensesBatchMutateAsync = vi.fn().mockResolvedValue(undefined)
+const mockDeleteExpenseMutateAsync = vi.fn().mockResolvedValue(undefined)
+const mockDeleteExpensesBatchMutateAsync = vi.fn().mockResolvedValue(undefined)
 
 vi.mock('src/queries/expenses', () => ({
   useExpensesByPlanQuery: vi.fn(() => ({
@@ -79,6 +81,14 @@ vi.mock('src/queries/expenses', () => ({
   })),
   useCreateExpensesBatchMutation: vi.fn(() => ({
     mutateAsync: mockCreateExpensesBatchMutateAsync,
+    isPending: ref(false),
+  })),
+  useDeleteExpenseMutation: vi.fn(() => ({
+    mutateAsync: mockDeleteExpenseMutateAsync,
+    isPending: ref(false),
+  })),
+  useDeleteExpensesBatchMutation: vi.fn(() => ({
+    mutateAsync: mockDeleteExpensesBatchMutateAsync,
     isPending: ref(false),
   })),
   useLastExpenseForPlanQuery: vi.fn(() => ({
@@ -127,6 +137,10 @@ beforeEach(() => {
   mockLastExpenseData.value = null
   mockCompletionMutateAsync.mockResolvedValue(undefined)
   mockBatchCompletionMutateAsync.mockResolvedValue(undefined)
+  mockCreateExpenseMutateAsync.mockResolvedValue(undefined)
+  mockCreateExpensesBatchMutateAsync.mockResolvedValue(undefined)
+  mockDeleteExpenseMutateAsync.mockResolvedValue(undefined)
+  mockDeleteExpensesBatchMutateAsync.mockResolvedValue(undefined)
 })
 
 describe('useExpenseRegistration', () => {
@@ -406,6 +420,24 @@ describe('useExpenseRegistration', () => {
       expect(onSuccess).toHaveBeenCalled()
     })
 
+    it('rolls back created expenses when completion update fails', async () => {
+      const onSuccess = vi.fn()
+      mockCreateExpensesBatchMutateAsync.mockResolvedValueOnce([{ id: 'exp-1', plan_id: 'plan-1' }])
+      mockBatchCompletionMutateAsync.mockRejectedValueOnce(new Error('completion failed'))
+
+      const { handleQuickSelectSubmit, selectedPlanItems, form } = useExpenseRegistration()
+      selectedPlanItems.value = [mockPlanItems[0]!]
+      form.value.expenseDate = '2024-01-15'
+
+      await handleQuickSelectSubmit(onSuccess)
+
+      expect(mockDeleteExpensesBatchMutateAsync).toHaveBeenCalledWith({
+        expenseIds: ['exp-1'],
+        planId: 'plan-1',
+      })
+      expect(onSuccess).not.toHaveBeenCalled()
+    })
+
     it('shows error when no items selected', async () => {
       const onSuccess = vi.fn()
       const { handleQuickSelectSubmit } = useExpenseRegistration()
@@ -486,6 +518,28 @@ describe('useExpenseRegistration', () => {
         isCompleted: true,
         planId: 'plan-1',
       })
+    })
+
+    it('rolls back created expense when completion update fails', async () => {
+      mockPlans.value = [mockPlan]
+      mockCreateExpenseMutateAsync.mockResolvedValueOnce({ id: 'expense-123' })
+      mockCompletionMutateAsync.mockRejectedValueOnce(new Error('completion failed'))
+
+      const onSuccess = vi.fn()
+      const { handleCustomEntrySubmit, form } = useExpenseRegistration()
+      form.value.planId = 'plan-1'
+      form.value.categoryId = 'cat-1'
+      form.value.name = 'Test Expense'
+      form.value.amount = 50
+      form.value.planItemId = 'item-1'
+
+      await handleCustomEntrySubmit(true, onSuccess)
+
+      expect(mockDeleteExpenseMutateAsync).toHaveBeenCalledWith({
+        expenseId: 'expense-123',
+        planId: 'plan-1',
+      })
+      expect(onSuccess).not.toHaveBeenCalled()
     })
 
     it('shows error when form is not valid', async () => {
