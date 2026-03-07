@@ -403,6 +403,63 @@ describe('usePlanOverview', () => {
 
       expect(remainingBudget.value).toBe(50)
     })
+
+    it('does not subtract fixed-linked expenses from non-fixed budget in mixed categories', () => {
+      const planWithMixedItems: PlanWithItems = {
+        ...mockPlanWithItems,
+        plan_items: [
+          {
+            id: 'item-fixed',
+            plan_id: 'plan-1',
+            category_id: 'cat-1',
+            name: 'Fixed bill',
+            amount: 100,
+            is_completed: false,
+            is_fixed_payment: true,
+            created_at: '2024-01-01',
+            updated_at: '2024-01-01',
+          },
+          {
+            id: 'item-non-fixed',
+            plan_id: 'plan-1',
+            category_id: 'cat-1',
+            name: 'Variable budget',
+            amount: 200,
+            is_completed: false,
+            is_fixed_payment: false,
+            created_at: '2024-01-01',
+            updated_at: '2024-01-01',
+          },
+        ],
+      }
+
+      mockExpenseSummary.value = [
+        {
+          category_id: 'cat-1',
+          planned_amount: 300,
+          actual_amount: 100,
+          remaining_amount: 200,
+          expense_count: 1,
+        },
+      ]
+      mockExpensesByCategory.value = {
+        'cat-1': [
+          {
+            ...testExpenses[0]!,
+            id: 'expense-fixed-linked',
+            amount: 100,
+            category_id: 'cat-1',
+            plan_item_id: 'item-fixed',
+            categories: testCategories[0]!,
+          },
+        ],
+      }
+      mockCategories.value = [testCategories[0]!]
+
+      const { remainingBudget } = usePlanOverview('plan-1', ref(planWithMixedItems))
+
+      expect(remainingBudget.value).toBe(300)
+    })
   })
 
   describe('categoryBudgets', () => {

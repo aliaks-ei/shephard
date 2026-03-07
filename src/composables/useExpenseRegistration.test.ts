@@ -56,10 +56,19 @@ vi.mock('src/queries/categories', () => ({
 }))
 
 const mockExpenseSummary = ref<unknown[]>([])
+const mockExpensesByCategory = ref<
+  Record<string, Array<{ amount: number; plan_item_id: string | null }>>
+>({})
 const mockCreateExpenseMutateAsync = vi.fn().mockResolvedValue(undefined)
 const mockCreateExpensesBatchMutateAsync = vi.fn().mockResolvedValue(undefined)
 
 vi.mock('src/queries/expenses', () => ({
+  useExpensesByPlanQuery: vi.fn(() => ({
+    expensesByCategory: mockExpensesByCategory,
+    totalExpensesAmount: ref(0),
+    sortedExpenses: ref([]),
+    expenses: ref([]),
+  })),
   useExpenseSummaryQuery: vi.fn(() => ({
     expenseSummary: mockExpenseSummary,
     isPending: ref(false),
@@ -99,6 +108,7 @@ beforeEach(() => {
   mockPlans.value = []
   mockCategories.value = []
   mockExpenseSummary.value = []
+  mockExpensesByCategory.value = {}
   mockPlanItemsData.value = []
   mockLastExpenseData.value = null
   mockCompletionMutateAsync.mockResolvedValue(undefined)
@@ -218,6 +228,65 @@ describe('useExpenseRegistration', () => {
       const { categoryOptions } = useExpenseRegistration()
 
       expect(categoryOptions.value).toEqual([])
+    })
+
+    it('does not reduce non-fixed budget by fixed-linked expenses in mixed categories', () => {
+      mockPlansForExpenses.value = [mockPlan]
+      mockPlans.value = [mockPlan]
+      mockCategories.value = [
+        {
+          id: 'cat-1',
+          name: 'Food',
+          color: '#FF5733',
+          icon: 'eva-shopping-bag-outline',
+          created_at: '2024-01-01',
+          updated_at: '2024-01-01',
+          templates: [],
+        },
+      ]
+      mockPlanItemsData.value = [
+        {
+          id: 'item-fixed',
+          plan_id: 'plan-1',
+          category_id: 'cat-1',
+          name: 'Fixed',
+          amount: 100,
+          is_completed: false,
+          is_fixed_payment: true,
+          created_at: '2024-01-01',
+          updated_at: '2024-01-01',
+        },
+        {
+          id: 'item-non-fixed',
+          plan_id: 'plan-1',
+          category_id: 'cat-1',
+          name: 'Variable',
+          amount: 200,
+          is_completed: false,
+          is_fixed_payment: false,
+          created_at: '2024-01-01',
+          updated_at: '2024-01-01',
+        },
+      ]
+      mockExpenseSummary.value = [
+        {
+          category_id: 'cat-1',
+          planned_amount: 300,
+          actual_amount: 100,
+          remaining_amount: 200,
+          expense_count: 1,
+        },
+      ]
+      mockExpensesByCategory.value = {
+        'cat-1': [{ amount: 100, plan_item_id: 'item-fixed' }],
+      }
+
+      const { form, onPlanSelected, categoryOptions } = useExpenseRegistration()
+      form.value.planId = 'plan-1'
+      onPlanSelected('plan-1')
+
+      expect(categoryOptions.value).toHaveLength(1)
+      expect(categoryOptions.value[0]?.remainingAmount).toBe(300)
     })
   })
 

@@ -60,6 +60,7 @@ export function usePlanOverview(
           item.category_id,
           plan?.plan_items || [],
           item.actual_amount,
+          expensesByCategory.value[item.category_id],
         )
 
         return {
