@@ -5,7 +5,6 @@ import { z } from 'https://esm.sh/zod@3.24.1'
 import {
   createResponseWithRetry,
   isCategory,
-  normalizeCategoryName,
   parseModelJsonObject,
   sortCategoriesDeterministically,
   type Category,
@@ -22,7 +21,7 @@ const clampUnitInterval = (value: number): number => Math.min(1, Math.max(0, val
 const photoAnalysisSchema = z.object({
   expenseName: z.string().trim().min(1).max(120),
   amount: z.coerce.number().finite(),
-  categoryName: z.string().trim().min(1),
+  categoryIndex: z.coerce.number().int().min(1),
   confidence: z.coerce.number().finite().transform(clampUnitInterval),
   reasoning: z.string().trim().min(1).max(300),
 })
@@ -187,44 +186,66 @@ Deno.serve(async (req) => {
     const categoryList = categories.map((c, idx) => `${idx + 1}. ${c.name}`).join('\n')
 
     const instructions = `
-      You are an expense receipt analyzer. Analyze this expense receipt/photo and extract:
+      <task>
+      Extract expense details from the image and assign the best category.
+      </task>
 
-      1. The expense name/description (keep it brief and descriptive)
-      2. The total amount (numbers only, no currency symbols)
-      3. The most appropriate category from the user's list
+      <categories>
+      ${categoryList}
+      </categories>
 
-      User's categories: ${categoryList}
-      User's currency: ${currency}
+      <currency>
+      ${currency}
+      </currency>
 
-      You must respond in JSON format. Respond ONLY with valid JSON in this exact format:
-      {
-        "expenseName": "brief-descriptive-name",
-        "amount": 123.45,
-        "categoryName": "exact-category-name-from-list",
-        "confidence": 0.95,
-        "reasoning": "brief explanation of what you see"
-      }
-
-      Rules:
-      - expenseName should be concise (2-5 words max), like "Grocery Shopping" or "Gas Station"
-      - amount must be a number (extract from receipt total, ignore currency symbols)
-      - categoryName must EXACTLY match one from the list above (case-insensitive)
-      - confidence must be between 0 and 1:
-        * 0.8-1.0: Clear receipt with readable text and obvious category match
-        * 0.5-0.8: Partial information visible or uncertain category
-        * 0-0.5: Unclear image, can't read text, or no receipt visible
-      - reasoning: briefly explain what text/details you recognized (max 50 words)
-      - If image is too blurry or unclear to read, use low confidence (< 0.5)
-      - If no receipt/expense document is visible, use confidence 0
-
-      Return only a single JSON object.
+      <rules>
+      - Return only valid JSON that follows the output schema.
+      - expenseName should be concise (2-5 words).
+      - amount must be a numeric total (no currency symbol).
+      - categoryIndex must be the 1-based index from the categories list.
+      - confidence must be between 0 and 1.
+      - reasoning must be short (max 50 words).
+      - For blurry/no-receipt images, set low confidence (0 to 0.5).
+      </rules>
     `
+
+    const photoAnalysisJsonSchema = {
+      type: 'object',
+      additionalProperties: false,
+      required: ['expenseName', 'amount', 'categoryIndex', 'confidence', 'reasoning'],
+      properties: {
+        expenseName: {
+          type: 'string',
+          minLength: 1,
+          maxLength: 120,
+        },
+        amount: {
+          type: 'number',
+          minimum: 0,
+        },
+        categoryIndex: {
+          type: 'integer',
+          minimum: 1,
+          maximum: categories.length,
+        },
+        confidence: {
+          type: 'number',
+          minimum: 0,
+          maximum: 1,
+        },
+        reasoning: {
+          type: 'string',
+          minLength: 1,
+          maxLength: 300,
+        },
+      },
+    }
 
     const response = await createResponseWithRetry({
       timeoutMs: OPENAI_TIMEOUT_MS,
       operation: () =>
         openai.responses.create({
-          model: 'gpt-5-nano',
+          model: 'gpt-5-mini',
           instructions,
           input: [
             {
@@ -232,7 +253,7 @@ Deno.serve(async (req) => {
               content: [
                 {
                   type: 'input_text',
-                  text: 'Analyze this expense receipt and extract the details in JSON format.',
+                  text: 'Extract the structured expense details from this image.',
                 },
                 {
                   type: 'input_image',
@@ -242,9 +263,14 @@ Deno.serve(async (req) => {
             },
           ],
           reasoning: { effort: 'minimal' },
+          max_output_tokens: 220,
+          store: false,
           text: {
             format: {
-              type: 'json_object',
+              type: 'json_schema',
+              name: 'expense_photo_analysis',
+              schema: photoAnalysisJsonSchema,
+              strict: true,
             },
             verbosity: 'low',
           },
@@ -254,7 +280,7 @@ Deno.serve(async (req) => {
     const fallbackAnalysis = {
       expenseName: 'Unknown Expense',
       amount: 0,
-      categoryName: categories[0].name,
+      categoryIndex: 1,
       confidence: 0,
       reasoning: 'Could not extract valid expense details from image',
     }
@@ -262,10 +288,9 @@ Deno.serve(async (req) => {
     const validatedAnalysis = photoAnalysisSchema.safeParse(parsedModelOutput)
     const analysis = validatedAnalysis.success ? validatedAnalysis.data : fallbackAnalysis
 
-    const matchedCategory = categories.find(
-      (category) =>
-        normalizeCategoryName(category.name) === normalizeCategoryName(analysis.categoryName),
-    )
+    const hasValidCategoryIndex =
+      analysis.categoryIndex >= 1 && analysis.categoryIndex <= categories.length
+    const matchedCategory = hasValidCategoryIndex ? categories[analysis.categoryIndex - 1] : null
 
     const categoryId = matchedCategory?.id ?? categories[0].id
     const categoryName = matchedCategory?.name ?? categories[0].name

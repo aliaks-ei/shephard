@@ -5,7 +5,6 @@ import { z } from 'https://esm.sh/zod@3.24.1'
 import {
   createResponseWithRetry,
   isCategory,
-  normalizeCategoryName,
   parseModelJsonObject,
   sortCategoriesDeterministically,
   type Category,
@@ -20,7 +19,7 @@ const OPENAI_TIMEOUT_MS = 12000
 const clampUnitInterval = (value: number): number => Math.min(1, Math.max(0, value))
 
 const categorySuggestionSchema = z.object({
-  categoryName: z.string().trim().min(1),
+  categoryIndex: z.coerce.number().int().min(1),
   confidence: z.coerce.number().finite().transform(clampUnitInterval),
   reasoning: z.string().trim().min(1).max(200),
 })
@@ -147,26 +146,45 @@ Deno.serve(async (req) => {
     const categoryList = categories.map((c, idx) => `${idx + 1}. ${c.name}`).join('\n')
 
     const instructions = `
-      You are an expense categorization assistant.
-      Analyze the expense name and suggest the most appropriate category from the user's list.
+      <task>
+      Pick the single best category for a user expense name.
+      </task>
 
-      User's categories:
+      <categories>
       ${categoryList}
+      </categories>
 
-      Respond ONLY with valid json in this exact format:
-      {
-        "categoryName": "exact-category-name-from-list",
-        "confidence": 0.95,
-        "reasoning": "brief one-sentence explanation"
-      }
-
-      Rules:
-      - categoryName must EXACTLY match one from the list above (case-insensitive)
-      - confidence must be between 0 and 1 (use 0.8+ for strong matches, 0.65-0.8 for reasonable matches, below 0.65 for weak matches)
-      - reasoning must be concise (max 50 words)
-      - If no good match exists, pick the closest one but use confidence < 0.65
-      - Return only a single json object as the answer
+      <rules>
+      - Return only valid JSON that follows the output schema.
+      - categoryIndex must be the 1-based index from the categories list.
+      - confidence must be between 0 and 1.
+      - reasoning must be a single short sentence (max 50 words).
+      - If no good match exists, pick the closest category with confidence below 0.65.
+      </rules>
     `
+
+    const categorySuggestionJsonSchema = {
+      type: 'object',
+      additionalProperties: false,
+      required: ['categoryIndex', 'confidence', 'reasoning'],
+      properties: {
+        categoryIndex: {
+          type: 'integer',
+          minimum: 1,
+          maximum: categories.length,
+        },
+        confidence: {
+          type: 'number',
+          minimum: 0,
+          maximum: 1,
+        },
+        reasoning: {
+          type: 'string',
+          minLength: 1,
+          maxLength: 200,
+        },
+      },
+    }
 
     const response = await createResponseWithRetry({
       timeoutMs: OPENAI_TIMEOUT_MS,
@@ -174,11 +192,16 @@ Deno.serve(async (req) => {
         openai.responses.create({
           model: 'gpt-5-nano',
           instructions,
-          input: `Categorize this expense: "${expenseName}". Return a JSON object.`,
+          input: `<expense_name>${expenseName}</expense_name>`,
           reasoning: { effort: 'minimal' },
+          max_output_tokens: 120,
+          store: false,
           text: {
             format: {
-              type: 'json_object',
+              type: 'json_schema',
+              name: 'expense_category_suggestion',
+              schema: categorySuggestionJsonSchema,
+              strict: true,
             },
             verbosity: 'low',
           },
@@ -186,7 +209,7 @@ Deno.serve(async (req) => {
     })
 
     const fallbackSuggestion = {
-      categoryName: categories[0].name,
+      categoryIndex: 1,
       confidence: 0,
       reasoning: 'No reliable category suggestion returned by AI',
     }
@@ -194,10 +217,9 @@ Deno.serve(async (req) => {
     const validatedSuggestion = categorySuggestionSchema.safeParse(parsedModelOutput)
     const suggestion = validatedSuggestion.success ? validatedSuggestion.data : fallbackSuggestion
 
-    const matchedCategory = categories.find(
-      (category) =>
-        normalizeCategoryName(category.name) === normalizeCategoryName(suggestion.categoryName),
-    )
+    const hasValidCategoryIndex =
+      suggestion.categoryIndex >= 1 && suggestion.categoryIndex <= categories.length
+    const matchedCategory = hasValidCategoryIndex ? categories[suggestion.categoryIndex - 1] : null
 
     const categoryId = matchedCategory?.id ?? categories[0].id
     const categoryName = matchedCategory?.name ?? categories[0].name
