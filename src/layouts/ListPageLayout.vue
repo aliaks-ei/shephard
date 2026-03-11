@@ -30,6 +30,7 @@
             :label="createButtonLabel"
             unelevated
             no-caps
+            dense
             @click="emit('create')"
           />
         </div>

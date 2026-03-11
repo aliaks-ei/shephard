@@ -39,6 +39,7 @@
         <q-btn
           flat
           :label="cancelLabel"
+          dense
           :disabled="isDeleting"
           no-caps
           @click="emit('update:modelValue', false)"
@@ -46,6 +47,7 @@
         <q-btn
           color="negative"
           :label="confirmLabel"
+          dense
           :loading="isDeleting"
           no-caps
           @click="emit('confirm')"

@@ -24,6 +24,7 @@
       :model-value="modelValue"
       for="template-select-label"
       dense
+      options-dense
       :options="templateOptions"
       option-label="name"
       option-value="id"

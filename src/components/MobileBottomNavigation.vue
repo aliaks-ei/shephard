@@ -1,5 +1,5 @@
 <template>
-  <div class="floating-nav liquid-glass-surface q-mx-sm q-px-xs">
+  <div class="floating-nav liquid-glass-surface q-mx-sm">
     <div class="mobile-nav-row">
       <div
         class="mobile-nav-highlight liquid-glass-animated"
@@ -114,8 +114,7 @@ const highlightStyle = computed(() => {
 <style lang="scss" scoped>
 .floating-nav {
   margin-bottom: 0;
-  padding-top: 2px;
-  padding-bottom: 2px;
+  padding: 2px;
 }
 
 .mobile-nav-row {

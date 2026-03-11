@@ -220,6 +220,7 @@
         <q-btn
           color="primary"
           label="Add First Expense"
+          dense
           no-caps
           @click="$emit('add-expense')"
         />

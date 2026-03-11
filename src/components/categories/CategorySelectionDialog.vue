@@ -111,6 +111,7 @@
         <q-btn
           flat
           label="Cancel"
+          dense
           no-caps
           @click="$emit('update:modelValue', false)"
         />

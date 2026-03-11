@@ -5,16 +5,19 @@
     self="top right"
     :offset="[0, 8]"
   >
-    <q-list separator>
+    <q-list dense>
       <q-item
         v-if="canEdit"
         clickable
         @click="emit('share')"
       >
-        <q-item-section side>
+        <q-item-section
+          class="q-pr-sm"
+          side
+        >
           <q-icon
             name="eva-share-outline"
-            size="18px"
+            size="xs"
           />
         </q-item-section>
         <q-item-section>
@@ -27,11 +30,14 @@
         class="text-negative q-px-md"
         @click="emit('delete')"
       >
-        <q-item-section side>
+        <q-item-section
+          class="q-pr-sm"
+          side
+        >
           <q-icon
             name="eva-trash-2-outline"
             color="negative"
-            size="18px"
+            size="xs"
           />
         </q-item-section>
         <q-item-section>

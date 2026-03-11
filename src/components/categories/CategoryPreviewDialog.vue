@@ -159,6 +159,7 @@
         <q-btn
           label="Cancel"
           flat
+          dense
           no-caps
           @click="closeDialog"
         />

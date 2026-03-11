@@ -33,6 +33,7 @@
             :options="sortOptions"
             :label="sortLabel"
             dense
+            options-dense
             :display-value="displayValue"
             :hide-dropdown-icon="$q.screen.lt.md"
             option-label="label"

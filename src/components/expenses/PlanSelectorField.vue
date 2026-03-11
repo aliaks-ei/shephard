@@ -15,6 +15,7 @@
       outlined
       dense
       emit-value
+      options-dense
       map-options
       :hide-bottom-space="!showAutoSelectHint"
       :hint="showAutoSelectHint ? 'Most recently used plan selected' : undefined"

@@ -50,6 +50,7 @@
                   dense
                   outlined
                   emit-value
+                  options-dense
                   hide-bottom-space
                   @update:model-value="updatePreference('currency', $event)"
                 />
@@ -79,6 +80,7 @@
                   dense
                   outlined
                   emit-value
+                  options-dense
                   map-options
                   hide-bottom-space
                   @update:model-value="updatePreference('theme', $event)"
@@ -92,11 +94,12 @@
       <!-- Sign Out -->
       <div class="text-center">
         <q-btn
-          flat
+          outline
           no-caps
           color="negative"
           icon="eva-log-out-outline"
           label="Sign Out"
+          dense
           padding="sm lg"
           :loading="isSigningOut"
           @click="handleSignOut"

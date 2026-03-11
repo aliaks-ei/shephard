@@ -8,6 +8,7 @@
             label="Shephard"
             to="/"
             flat
+            dense
             no-caps
           />
         </q-toolbar-title>

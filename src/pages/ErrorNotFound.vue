@@ -28,6 +28,7 @@
           label="Go to Home"
           to="/"
           no-caps
+          dense
           class="q-py-md q-px-lg"
           aria-label="Go to Home"
         />
@@ -39,6 +40,7 @@
           label="View Plans"
           :to="{ name: 'plans' }"
           no-caps
+          dense
           class="q-py-md q-px-lg"
           aria-label="Go to Plans"
         />
@@ -50,6 +52,7 @@
           label="Open Settings"
           :to="{ name: 'settings' }"
           no-caps
+          dense
           class="q-py-md q-px-lg"
           aria-label="Open Settings"
         />

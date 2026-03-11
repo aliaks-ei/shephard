@@ -20,6 +20,7 @@
         label="Create Template"
         icon="eva-plus-outline"
         unelevated
+        dense
         no-caps
         to="/templates"
       />

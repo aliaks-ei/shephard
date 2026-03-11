@@ -101,7 +101,10 @@
                 self="bottom right"
                 class="shadow-4"
               >
-                <q-list class="detail-mobile-menu-list">
+                <q-list
+                  dense
+                  class="detail-mobile-menu-list"
+                >
                   <q-item
                     v-for="action in moreMenuActions"
                     :key="action.key"
@@ -110,12 +113,12 @@
                   >
                     <q-item-section
                       avatar
-                      class="detail-mobile-menu-avatar"
+                      class="detail-mobile-menu-avatar q-pr-sm"
                     >
                       <q-icon
                         :name="action.icon"
                         :color="isDestructiveAction(action) ? 'negative' : 'grey-7'"
-                        size="sm"
+                        size="xs"
                       />
                     </q-item-section>
 
