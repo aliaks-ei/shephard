@@ -3,7 +3,7 @@
   "short_name": "Shephard",
   "description": "Smart expenses wallet to manage your finances efficiently",
   "orientation": "portrait",
-  "background_color": "#ffffff",
+  "background_color": "#f7f7f7",
   "theme_color": "#00919a",
   "display": "standalone",
   "start_url": "/",

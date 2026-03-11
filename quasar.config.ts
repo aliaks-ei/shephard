@@ -3,6 +3,49 @@
 
 import { defineConfig } from '#q-app/wrappers'
 
+const extraAppleStartupImages = [
+  {
+    filename: 'icons/apple-launch-1206x2622.png',
+    media:
+      '(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)',
+  },
+  {
+    filename: 'icons/apple-launch-2622x1206.png',
+    media:
+      '(device-width: 874px) and (device-height: 402px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)',
+  },
+  {
+    filename: 'icons/apple-launch-2796x1290.png',
+    media:
+      '(device-width: 932px) and (device-height: 430px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)',
+  },
+]
+
+const createApplePwaCompatibilityPlugin = (publicPath: string) => ({
+  name: 'inject-apple-pwa-compatibility-tags',
+  transformIndexHtml() {
+    return [
+      {
+        tag: 'meta',
+        attrs: {
+          name: 'apple-mobile-web-app-capable',
+          content: 'yes',
+        },
+        injectTo: 'head-prepend' as const,
+      },
+      ...extraAppleStartupImages.map(({ filename, media }) => ({
+        tag: 'link',
+        attrs: {
+          rel: 'apple-touch-startup-image',
+          href: `${publicPath}${filename}`,
+          media,
+        },
+        injectTo: 'head-prepend' as const,
+      })),
+    ]
+  },
+})
+
 export default defineConfig((ctx) => {
   return {
     // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
@@ -62,6 +105,9 @@ export default defineConfig((ctx) => {
       extendViteConf(viteConf) {
         // Ensure build config exists
         if (!viteConf.build) viteConf.build = {}
+        if (!Array.isArray(viteConf.plugins)) viteConf.plugins = []
+
+        viteConf.plugins.push(createApplePwaCompatibilityPlugin(viteConf.base || '/'))
 
         // Bundle size optimizations
         viteConf.build = {
