@@ -13,6 +13,7 @@
       :disabled="action.loading"
       :color="action.color === 'negative' ? 'negative' : 'primary'"
       unelevated
+      dense
       no-caps
       class="q-px-md rounded-borders"
       @click="handleActionClick(action)"
