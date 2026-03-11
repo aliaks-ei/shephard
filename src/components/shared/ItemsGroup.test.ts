@@ -41,6 +41,16 @@ describe('ItemsGroup', () => {
     expect(wrapper.find('.chip').text()).toContain('2')
   })
 
+  it('renders the cards container as a list with presentational wrappers', () => {
+    const wrapper = renderComponent({ items: [{ id: '1' }, { id: '2' }], title: 'Group' })
+
+    const list = wrapper.find('[role="list"]')
+    const presentations = wrapper.findAll('[role="presentation"]')
+
+    expect(list.exists()).toBe(true)
+    expect(presentations).toHaveLength(2)
+  })
+
   it('renders one card per item and passes slot props', () => {
     const items = [
       { id: 'a', name: 'Alpha' },

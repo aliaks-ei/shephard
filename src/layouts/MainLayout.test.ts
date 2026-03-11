@@ -1,9 +1,10 @@
-import { mount } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 import { createTestingPinia } from '@pinia/testing'
 import { vi, it, expect, beforeEach } from 'vitest'
 import type { ComponentProps } from 'vue-component-type-helpers'
 import { ref } from 'vue'
+import { Screen } from 'quasar'
 
 import MainLayout from './MainLayout.vue'
 
@@ -26,6 +27,16 @@ vi.mock('src/composables/usePwaInstall', () => ({
 }))
 
 type MainLayoutProps = ComponentProps<typeof MainLayout>
+
+function setScreenWidth(width: number) {
+  Object.defineProperty(window, 'innerWidth', {
+    configurable: true,
+    writable: true,
+    value: width,
+  })
+
+  window.dispatchEvent(new Event('resize'))
+}
 
 const renderMainLayout = (props: MainLayoutProps = {}) => {
   const pinia = createTestingPinia({
@@ -65,14 +76,23 @@ const renderMainLayout = (props: MainLayoutProps = {}) => {
           template: '<div data-testid="navigation-drawer" :items="items" />',
           props: ['items'],
         },
-        MobileBottomNavigation: true,
-        ExpenseRegistrationDialog: true,
+        MobileBottomNavigation: {
+          template:
+            '<button data-testid="mobile-bottom-navigation" @click="$emit(\'open-expense-dialog\')" />',
+          emits: ['open-expense-dialog'],
+        },
+        ExpenseRegistrationDialog: {
+          template: '<div data-testid="expense-dialog" />',
+          props: ['modelValue', 'autoSelectRecentPlan'],
+        },
       },
     },
   })
 }
 
 beforeEach(() => {
+  Screen.setDebounce(0)
+  setScreenWidth(1280)
   vi.clearAllMocks()
 })
 
@@ -122,6 +142,21 @@ it('should render QDrawer with NavigationDrawer', () => {
 
 it('should not render expense dialog by default', () => {
   const wrapper = renderMainLayout()
-  const expenseDialog = wrapper.findComponent({ name: 'ExpenseRegistrationDialog' })
+  const expenseDialog = wrapper.find('[data-testid="expense-dialog"]')
   expect(expenseDialog.exists()).toBe(false)
+})
+
+it('should load expense dialog only after the mobile expense action is triggered', async () => {
+  setScreenWidth(600)
+
+  const wrapper = renderMainLayout()
+  const mobileBottomNavigation = wrapper.find('[data-testid="mobile-bottom-navigation"]')
+
+  expect(mobileBottomNavigation.exists()).toBe(true)
+  expect(wrapper.find('[data-testid="expense-dialog"]').exists()).toBe(false)
+
+  await mobileBottomNavigation.trigger('click')
+  await flushPromises()
+
+  expect(wrapper.find('[data-testid="expense-dialog"]').exists()).toBe(true)
 })
