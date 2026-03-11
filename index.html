@@ -20,6 +20,167 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover"
     />
+    <meta
+      name="color-scheme"
+      content="light dark"
+    />
+    <meta
+      name="theme-color"
+      content="#f7f7f7"
+      media="(prefers-color-scheme: light)"
+    />
+    <meta
+      name="theme-color"
+      content="#0a0a0a"
+      media="(prefers-color-scheme: dark)"
+    />
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+
+      body {
+        margin: 0;
+      }
+
+      #app-boot {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: grid;
+        place-items: center;
+        padding: max(20px, env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-right, 0px))
+          max(20px, env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px));
+        overflow: hidden;
+        pointer-events: none;
+        user-select: none;
+        opacity: 0;
+        visibility: hidden;
+        background: #f7f7f7;
+        filter: blur(0);
+        transition:
+          opacity 220ms ease,
+          filter 220ms ease,
+          visibility 220ms ease;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      }
+
+      html[data-ios-standalone-boot='true'] #app-boot {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      html[data-boot-theme='dark'] #app-boot {
+        background: #0a0a0a;
+      }
+
+      #app-boot::before {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 224px;
+        height: 224px;
+        border-radius: 9999px;
+        transform: translate(-50%, -50%);
+        background: radial-gradient(
+          circle,
+          rgb(0 145 154 / 0.22) 0%,
+          rgb(0 145 154 / 0.1) 42%,
+          transparent 74%
+        );
+        filter: blur(18px);
+        animation: app-boot-pulse 1.8s ease-in-out infinite;
+      }
+
+      html[data-boot-theme='dark'] #app-boot::before {
+        background: radial-gradient(
+          circle,
+          rgb(0 242 254 / 0.28) 0%,
+          rgb(0 145 154 / 0.14) 42%,
+          transparent 74%
+        );
+        filter: blur(24px);
+      }
+
+      .app-boot__inner {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        place-items: center;
+      }
+
+      .app-boot__icon {
+        width: 92px;
+        height: 92px;
+        display: block;
+      }
+
+      #app-boot.app-boot--closing {
+        opacity: 0;
+        filter: blur(4px);
+      }
+
+      @keyframes app-boot-pulse {
+        0%,
+        100% {
+          transform: translate(-50%, -50%) scale(0.94);
+          opacity: 0.72;
+        }
+
+        50% {
+          transform: translate(-50%, -50%) scale(1.04);
+          opacity: 1;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        #app-boot {
+          transition:
+            opacity 160ms linear,
+            visibility 160ms linear;
+        }
+
+        #app-boot::before {
+          animation: none;
+        }
+
+        #app-boot.app-boot--closing {
+          filter: none;
+        }
+      }
+    </style>
+    <script>
+      ;(() => {
+        const { navigator } = window
+        const platform = navigator.platform || ''
+        const userAgent = navigator.userAgent || ''
+        const maxTouchPoints = navigator.maxTouchPoints || 0
+        const isIOS =
+          /iPad|iPhone|iPod/.test(userAgent) || (platform === 'MacIntel' && maxTouchPoints > 1)
+        const isStandalone = navigator.standalone === true
+        const root = document.documentElement
+
+        if (isIOS && isStandalone) {
+          const prefersDark =
+            window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+
+          root.dataset.iosStandaloneBoot = 'true'
+          root.dataset.bootTheme = prefersDark ? 'dark' : 'light'
+          root.dataset.bootStartedAt = String(Date.now())
+          return
+        }
+
+        root.dataset.iosStandaloneBoot = 'false'
+        window.addEventListener(
+          'DOMContentLoaded',
+          () => {
+            document.getElementById('app-boot')?.remove()
+          },
+          { once: true },
+        )
+      })()
+    </script>
 
     <!-- PWA iOS startup images -->
     <link
@@ -144,6 +305,21 @@
     />
   </head>
   <body>
+    <div
+      id="app-boot"
+      aria-hidden="true"
+    >
+      <div class="app-boot__inner">
+        <img
+          class="app-boot__icon"
+          src="/icons/app-icon.svg"
+          alt=""
+          width="92"
+          height="92"
+          fetchpriority="high"
+        />
+      </div>
+    </div>
     <!-- quasar:entry-point -->
   </body>
 </html>
