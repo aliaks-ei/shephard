@@ -3,6 +3,8 @@ import type { ActionBarAction } from 'src/components/shared/ActionBar.vue'
 import type { PlanWithItems } from 'src/api'
 import { getPlanStatus } from 'src/utils/plans'
 
+export type PlanSaveState = 'idle' | 'saving' | 'saved'
+
 export type PlanActionHandlers = {
   onSave: () => void
   onShare: () => void
@@ -19,6 +21,7 @@ export type PlanActionsContext = {
   canEditPlanData: Ref<boolean> | ComputedRef<boolean>
   currentPlan: Ref<PlanWithItems | null> | ComputedRef<PlanWithItems | null>
   currentTab: Ref<string>
+  saveState: Ref<PlanSaveState> | ComputedRef<PlanSaveState>
   handlers: PlanActionHandlers
 }
 
@@ -78,13 +81,34 @@ export function usePlanActions(context: PlanActionsContext) {
     },
   ])
 
+  const saveActionLabel = computed(() => {
+    if (context.saveState.value === 'saving') {
+      return context.isNewPlan.value ? 'Creating...' : 'Saving...'
+    }
+
+    if (!context.isNewPlan.value && context.saveState.value === 'saved') {
+      return 'Saved'
+    }
+
+    return context.isNewPlan.value ? 'Create' : 'Save'
+  })
+
+  const saveActionIcon = computed(() => {
+    if (!context.isNewPlan.value && context.saveState.value === 'saved') {
+      return 'eva-checkmark-outline'
+    }
+
+    return 'eva-save-outline'
+  })
+
   const editActions = computed<ActionBarAction[]>(() => [
     {
       key: 'save',
-      icon: 'eva-save-outline',
-      label: context.isNewPlan.value ? 'Create' : 'Save',
+      icon: saveActionIcon.value,
+      label: saveActionLabel.value,
       color: context.isNewPlan.value ? 'primary' : 'positive',
       priority: 'primary',
+      loading: context.saveState.value === 'saving',
       handler: context.handlers.onSave,
     },
     ...sharedSecondaryActions.value,

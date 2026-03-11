@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { describe, expect, it, vi } from 'vitest'
-import { usePlanActions, type PlanActionsContext } from './usePlanActions'
+import { usePlanActions, type PlanActionsContext, type PlanSaveState } from './usePlanActions'
 import type { PlanWithItems } from 'src/api'
 
 describe('usePlanActions', () => {
@@ -50,6 +50,7 @@ describe('usePlanActions', () => {
     canEditPlanData: ref(true),
     currentPlan: ref(createMockPlan('active')),
     currentTab: ref('edit'),
+    saveState: ref<PlanSaveState>('idle'),
     handlers: {
       onSave: vi.fn(),
       onShare: vi.fn(),
@@ -78,6 +79,25 @@ describe('usePlanActions', () => {
       const saveAction = actionBarActions.value.find((a) => a.key === 'save')
       expect(saveAction?.label).toBe('Save')
       expect(saveAction?.color).toBe('positive')
+    })
+
+    it('shows Saving state while save is in progress', () => {
+      const context = createContext({ saveState: ref<PlanSaveState>('saving') })
+      const { actionBarActions } = usePlanActions(context)
+
+      const saveAction = actionBarActions.value.find((a) => a.key === 'save')
+      expect(saveAction?.label).toBe('Saving...')
+      expect(saveAction?.loading).toBe(true)
+    })
+
+    it('shows Saved state after a successful save', () => {
+      const context = createContext({ saveState: ref<PlanSaveState>('saved') })
+      const { actionBarActions } = usePlanActions(context)
+
+      const saveAction = actionBarActions.value.find((a) => a.key === 'save')
+      expect(saveAction?.label).toBe('Saved')
+      expect(saveAction?.icon).toBe('eva-checkmark-outline')
+      expect(saveAction?.loading).toBe(false)
     })
 
     it('shows Share button when not new plan and user can edit', () => {

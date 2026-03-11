@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useCategoriesQuery } from 'src/queries/categories'
@@ -10,12 +10,14 @@ import { usePlanItems } from 'src/composables/usePlanItems'
 import { useDetailPageState } from 'src/composables/useDetailPageState'
 import { useEditablePage } from 'src/composables/useEditablePage'
 import { useCategoryRefs } from 'src/composables/useCategoryRefs'
-import { usePlanActions } from 'src/composables/usePlanActions'
+import { usePlanActions, type PlanSaveState } from 'src/composables/usePlanActions'
 import { validateItemForm } from 'src/composables/useItemFormValidation'
 import { calculateEndDate } from 'src/utils/plans'
 import { formatDateInput } from 'src/utils/date'
 import { getTemplateWithItems, type TemplateWithItems, type PlanWithItems } from 'src/api'
 import type { PlanItemUI } from 'src/types'
+
+const SAVE_SUCCESS_RESET_MS = 4000
 
 export function usePlanPageState() {
   const router = useRouter()
@@ -83,6 +85,8 @@ export function usePlanPageState() {
   const selectedCategory = ref<{ categoryId: string; itemId?: string } | null>(null)
   const hasOpenedExpenseDialog = ref(false)
   const showExpenseDialog = ref(false)
+  const saveState = ref<PlanSaveState>('idle')
+  let saveStateResetTimer: ReturnType<typeof setTimeout> | null = null
 
   const form = ref({
     name: '',
@@ -122,6 +126,7 @@ export function usePlanPageState() {
     canEditPlanData,
     currentPlan,
     currentTab: activeTab,
+    saveState,
     handlers: {
       onSave: () => {
         void handleSavePlan()
@@ -141,6 +146,7 @@ export function usePlanPageState() {
   })
 
   async function onTemplateSelected(templateId: string | null): Promise<void> {
+    clearSaveFeedback()
     clearTemplateError()
 
     if (!templateId) {
@@ -176,14 +182,17 @@ export function usePlanPageState() {
   }
 
   function handleUpdateItem(itemId: string, updatedItem: PlanItemUI): void {
+    clearSaveFeedback()
     updatePlanItem(itemId, updatedItem)
   }
 
   function handleRemoveItem(itemId: string): void {
+    clearSaveFeedback()
     removePlanItem(itemId)
   }
 
   function handleAddItem(categoryId: string, categoryColor: string): void {
+    clearSaveFeedback()
     addPlanItem(categoryId, categoryColor)
   }
 
@@ -215,6 +224,8 @@ export function usePlanPageState() {
 
     if (!validationResult.isValid) return
 
+    clearSaveResetTimer()
+    saveState.value = 'saving'
     await savePlan()
   }
 
@@ -241,9 +252,14 @@ export function usePlanPageState() {
       if (isNewPlan.value) {
         router.push({ name: 'plans' })
       } else if (result.data) {
+        saveState.value = 'saved'
+        scheduleSaveFeedbackReset()
         router.push({ name: 'plan', params: { id: result.data.id } })
       }
+      return
     }
+
+    saveState.value = 'idle'
   }
 
   async function cancelPlan(): Promise<void> {
@@ -278,6 +294,32 @@ export function usePlanPageState() {
   function clearTemplateError(): void {
     templateError.value = false
     templateErrorMessage.value = ''
+  }
+
+  function clearSaveFeedback(): void {
+    if (saveState.value !== 'saved') {
+      return
+    }
+
+    clearSaveResetTimer()
+    saveState.value = 'idle'
+  }
+
+  function clearSaveResetTimer(): void {
+    if (!saveStateResetTimer) {
+      return
+    }
+
+    clearTimeout(saveStateResetTimer)
+    saveStateResetTimer = null
+  }
+
+  function scheduleSaveFeedbackReset(): void {
+    clearSaveResetTimer()
+    saveStateResetTimer = setTimeout(() => {
+      saveState.value = 'idle'
+      saveStateResetTimer = null
+    }, SAVE_SUCCESS_RESET_MS)
   }
 
   function openExpenseRegistration(): void {
@@ -323,6 +365,18 @@ export function usePlanPageState() {
     }
   })
 
+  watch(
+    form,
+    () => {
+      clearSaveFeedback()
+    },
+    { deep: true },
+  )
+
+  onUnmounted(() => {
+    clearSaveResetTimer()
+  })
+
   return {
     currentPlan,
     isPlanLoading,
@@ -358,6 +412,7 @@ export function usePlanPageState() {
     hasOpenedExpenseDialog,
     showExpenseDialog,
     selectedCategory,
+    saveState,
     handleSavePlan,
     onTemplateSelected,
     toggleAllCategories,
