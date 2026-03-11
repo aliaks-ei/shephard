@@ -87,7 +87,8 @@ const renderPlanCard = (
         'q-card-section': { template: '<div><slot /></div>' },
         'q-card-actions': { template: '<div><slot /></div>' },
         'q-btn': {
-          template: '<button @click="$emit(\'click\')"><slot /></button>',
+          template:
+            '<button class="q-btn" v-bind="$attrs" @click.stop="$emit(\'click\', $event)"><slot /></button>',
           props: ['flat', 'label', 'color', 'unelevated'],
           emits: ['click'],
         },
@@ -159,6 +160,27 @@ describe('PlanCard', () => {
 
     expect(wrapper.emitted('edit')).toBeTruthy()
     expect(wrapper.emitted('edit')?.[0]).toEqual([mockPlan.id])
+  })
+
+  it('should set an accessible name on the overflow actions button', () => {
+    const wrapper = renderPlanCard({
+      plan: mockPlan,
+    })
+
+    const actionsButton = wrapper.find('button[aria-label="Actions for Test Plan"]')
+    expect(actionsButton.exists()).toBe(true)
+    expect(actionsButton.attributes('aria-haspopup')).toBe('menu')
+  })
+
+  it('should not emit edit when the overflow actions button is clicked', async () => {
+    const wrapper = renderPlanCard({
+      plan: mockPlan,
+    })
+
+    const actionsButton = wrapper.find('button[aria-label="Actions for Test Plan"]')
+    await actionsButton.trigger('click')
+
+    expect(wrapper.emitted('edit')).toBeFalsy()
   })
 
   it('should emit share event when menu emits share', () => {

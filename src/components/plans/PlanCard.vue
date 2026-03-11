@@ -42,6 +42,8 @@
               size="sm"
               icon="eva-more-vertical-outline"
               class="text-grey-7"
+              :aria-label="menuButtonLabel"
+              aria-haspopup="menu"
               @click.stop
             >
               <PlanCardMenu
@@ -155,6 +157,7 @@ const isOwner = computed(() => props.plan.owner_id === userStore.userProfile?.id
 const canEdit = computed(() => isOwner.value || props.plan.permission_level === 'edit')
 const planStatus = computed(() => getPlanStatus(props.plan))
 const isViewOnly = computed(() => props.plan.permission_level === 'view')
+const menuButtonLabel = computed(() => `Actions for ${props.plan.name}`)
 
 function formatAmount(amount: number | null | undefined): string {
   const currency = props.plan.currency as CurrencyCode

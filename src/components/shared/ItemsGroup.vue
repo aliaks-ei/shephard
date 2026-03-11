@@ -20,11 +20,13 @@
   <div
     class="row"
     :class="$q.screen.lt.md ? 'q-col-gutter-sm' : 'q-col-gutter-md'"
+    role="list"
   >
     <div
       v-for="item in items"
       :key="item.id"
       class="col-12 col-sm-6 col-md-4"
+      role="presentation"
     >
       <slot
         name="item-card"
