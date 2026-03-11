@@ -25,6 +25,7 @@
           flat
           color="primary"
           label="Clear Search"
+          dense
           no-caps
           @click="emit('clearSearch')"
         />
@@ -35,6 +36,7 @@
           :label="createButtonLabel"
           unelevated
           no-caps
+          dense
           @click="emit('create')"
         />
       </div>

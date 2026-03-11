@@ -20,6 +20,7 @@
         label="Create Plan"
         icon="eva-plus-outline"
         unelevated
+        dense
         no-caps
         to="/plans"
       />

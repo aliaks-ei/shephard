@@ -50,7 +50,10 @@
           self="top right"
           :offset="[4, 0]"
         >
-          <q-list style="min-width: 260px">
+          <q-list
+            dense
+            style="min-width: 260px"
+          >
             <div class="row no-wrap items-center q-pa-sm">
               <UserAvatar
                 :avatar-url="userStore.userProfile?.avatarUrl"
@@ -77,12 +80,12 @@
               class="q-py-sm"
             >
               <q-item-section
-                class="min-w-0"
+                class="min-w-0 q-pr-sm"
                 avatar
               >
                 <q-icon
                   name="eva-settings-2-outline"
-                  size="sm"
+                  size="xs"
                 />
               </q-item-section>
               <q-item-section>Settings</q-item-section>
@@ -95,12 +98,12 @@
               @click="handleTogglePrivacy"
             >
               <q-item-section
-                class="min-w-0"
+                class="min-w-0 q-pr-sm"
                 avatar
               >
                 <q-icon
                   :name="privacyIcon"
-                  size="sm"
+                  size="xs"
                 />
               </q-item-section>
               <q-item-section>{{ privacyLabel }}</q-item-section>
@@ -113,12 +116,12 @@
               @click="handleSignOut"
             >
               <q-item-section
-                class="min-w-0"
+                class="min-w-0 q-pr-sm"
                 avatar
               >
                 <q-icon
                   name="eva-log-out-outline"
-                  size="sm"
+                  size="xs"
                   color="negative"
                 />
               </q-item-section>

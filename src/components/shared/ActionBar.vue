@@ -13,6 +13,7 @@
       :disabled="action.loading"
       :color="action.color === 'negative' ? 'negative' : 'primary'"
       unelevated
+      dense
       no-caps
       class="q-px-md rounded-borders"
       @click="handleActionClick(action)"
@@ -33,7 +34,10 @@
         self="top right"
         class="shadow-4"
       >
-        <q-list class="action-menu-list">
+        <q-list
+          dense
+          class="action-menu-list"
+        >
           <q-item
             v-for="action in overflowActions"
             :key="action.key"
@@ -44,12 +48,12 @@
             <q-item-section
               v-if="action.icon"
               avatar
-              class="action-menu-avatar"
+              class="action-menu-avatar q-pr-sm"
             >
               <q-icon
                 :name="action.icon"
                 :color="action.color === 'negative' ? 'negative' : 'grey-7'"
-                size="sm"
+                size="xs"
               />
             </q-item-section>
 
@@ -117,7 +121,10 @@
                 class="shadow-4"
                 :offset="[0, 10]"
               >
-                <q-list class="action-menu-list">
+                <q-list
+                  dense
+                  class="action-menu-list"
+                >
                   <q-item
                     v-for="action in overflowActions"
                     :key="action.key"
@@ -127,12 +134,12 @@
                     <q-item-section
                       v-if="action.icon"
                       avatar
-                      class="action-menu-avatar"
+                      class="action-menu-avatar q-pr-sm"
                     >
                       <q-icon
                         :name="action.icon"
                         :color="action.color === 'negative' ? 'negative' : 'grey-7'"
-                        size="sm"
+                        size="xs"
                       />
                     </q-item-section>
 

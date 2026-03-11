@@ -185,7 +185,7 @@
               </q-item-section>
             </template>
 
-            <q-card-section class="q-pt-none">
+            <q-card-section class="q-pt-none q-pb-xs q-px-sm">
               <q-list>
                 <!-- Fixed payment items (trackable with checkbox) -->
                 <q-item

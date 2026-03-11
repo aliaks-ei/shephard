@@ -73,6 +73,7 @@
           outlined
           dense
           emit-value
+          options-dense
           map-options
           :disable="!selectedPlan"
           :readonly="!!defaultCategoryId"

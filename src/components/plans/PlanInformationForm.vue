@@ -73,6 +73,7 @@
                       label="Cancel"
                       color="primary"
                       flat
+                      dense
                       no-caps
                     />
                   </div>

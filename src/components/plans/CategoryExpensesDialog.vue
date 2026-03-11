@@ -397,6 +397,7 @@
         <q-btn
           label="Close"
           flat
+          dense
           no-caps
           @click="$emit('update:modelValue', false)"
         />
@@ -405,6 +406,7 @@
           label="Add Expense"
           color="primary"
           unelevated
+          dense
           no-caps
           @click="openExpenseDialog"
         />

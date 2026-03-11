@@ -9,6 +9,7 @@
     multiple
     outlined
     dense
+    options-dense
     :loading="loading"
     hide-bottom-space
     @filter="filterUsers"

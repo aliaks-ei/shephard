@@ -33,6 +33,7 @@
             color="primary"
             label="Add Your First Category"
             unelevated
+            dense
             no-caps
             @click="handleOpenCategoryDialog"
           />
@@ -65,6 +66,7 @@
             v-if="!$q.screen.lt.md"
             label="Add category"
             color="primary"
+            dense
             no-caps
             @click="handleOpenCategoryDialog"
           />

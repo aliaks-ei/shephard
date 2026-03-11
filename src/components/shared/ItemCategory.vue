@@ -58,6 +58,7 @@
             color="primary"
             outline
             label="Add Item"
+            dense
             no-caps
             @click="$emit('add-item', categoryId, categoryColor)"
           />

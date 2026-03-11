@@ -20,7 +20,7 @@
               stack
               dense
               no-caps
-              class="full-width mobile-action-btn liquid-glass-animated"
+              :class="getMobileActionButtonClasses(slot1Action)"
               @click="void handleActionClick(slot1Action)"
             />
             <div
@@ -41,7 +41,7 @@
               stack
               dense
               no-caps
-              class="full-width mobile-action-btn liquid-glass-animated"
+              :class="getMobileActionButtonClasses(slot2Action)"
               @click="void handleActionClick(slot2Action)"
             />
             <div
@@ -74,7 +74,7 @@
               stack
               dense
               no-caps
-              class="full-width mobile-action-btn liquid-glass-animated"
+              :class="getMobileActionButtonClasses(slot4Action)"
               @click="void handleActionClick(slot4Action)"
             />
             <div
@@ -101,7 +101,10 @@
                 self="bottom right"
                 class="shadow-4"
               >
-                <q-list class="detail-mobile-menu-list">
+                <q-list
+                  dense
+                  class="detail-mobile-menu-list"
+                >
                   <q-item
                     v-for="action in moreMenuActions"
                     :key="action.key"
@@ -110,12 +113,12 @@
                   >
                     <q-item-section
                       avatar
-                      class="detail-mobile-menu-avatar"
+                      class="detail-mobile-menu-avatar q-pr-sm"
                     >
                       <q-icon
                         :name="action.icon"
                         :color="isDestructiveAction(action) ? 'negative' : 'grey-7'"
-                        size="sm"
+                        size="xs"
                       />
                     </q-item-section>
 
@@ -138,7 +141,7 @@
               stack
               dense
               no-caps
-              class="full-width mobile-action-btn liquid-glass-animated"
+              :class="getMobileActionButtonClasses(slot5Action)"
               @click="void handleActionClick(slot5Action)"
             />
 
@@ -307,6 +310,10 @@ function isDestructiveAction(action: ActionBarAction): boolean {
   return action.key === 'cancel' || action.key === 'delete'
 }
 
+function isHighlightedAction(action: ToolbarAction): boolean {
+  return action.key === 'save'
+}
+
 const nonDestructiveActions = computed(() => {
   return nonExpenseActions.value.filter((action) => !isDestructiveAction(action))
 })
@@ -397,6 +404,19 @@ async function handleAddExpenseClick(): Promise<void> {
 
   hasOpenedExpenseDialog.value = true
   showExpenseDialog.value = true
+}
+
+function getMobileActionButtonClasses(
+  action: ToolbarAction,
+): Array<string | Record<string, boolean>> {
+  return [
+    'full-width',
+    'mobile-action-btn',
+    'liquid-glass-animated',
+    {
+      'text-primary': isHighlightedAction(action),
+    },
+  ]
 }
 </script>
 

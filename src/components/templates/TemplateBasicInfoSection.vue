@@ -65,6 +65,7 @@
             :model-value="modelValue.duration"
             :options="durationOptions"
             dense
+            options-dense
             outlined
             emit-value
             map-options
@@ -93,6 +94,7 @@
             :model-value="modelValue.currency"
             :options="currencyOptions"
             dense
+            options-dense
             outlined
             emit-value
             map-options

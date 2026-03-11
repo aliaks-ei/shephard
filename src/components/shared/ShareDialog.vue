@@ -130,6 +130,7 @@
         <q-btn
           label="Cancel"
           flat
+          dense
           no-caps
           @click="closeDialog"
         />
@@ -137,6 +138,7 @@
           label="Share"
           color="primary"
           unelevated
+          dense
           no-caps
           :loading="isSharing"
           :disable="selectedUsers.length === 0"

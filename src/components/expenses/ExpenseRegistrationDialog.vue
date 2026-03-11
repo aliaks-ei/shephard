@@ -143,6 +143,7 @@
           <q-btn
             label="Cancel"
             flat
+            dense
             no-caps
             :disable="isLoading"
             @click="closeDialog"
@@ -151,6 +152,7 @@
             v-if="showBackButton"
             label="Back"
             flat
+            dense
             no-caps
             :disable="isLoading"
             class="q-mr-sm"
@@ -161,6 +163,7 @@
             type="submit"
             color="primary"
             unelevated
+            dense
             no-caps
             :loading="isLoading"
             :disable="!canSubmit"

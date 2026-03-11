@@ -23,6 +23,7 @@
         class="q-mt-md"
         no-caps
         unelevated
+        dense
       />
     </div>
 

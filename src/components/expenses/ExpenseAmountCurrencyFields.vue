@@ -34,6 +34,7 @@
         dense
         no-error-icon
         emit-value
+        options-dense
         map-options
         class="currency-select"
         :disable="disable"

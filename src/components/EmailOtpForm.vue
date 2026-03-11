@@ -66,6 +66,7 @@
         :loading="isSendingEmail"
         no-caps
         unelevated
+        dense
       />
     </template>
 
@@ -119,6 +120,7 @@
         :loading="isVerifying"
         no-caps
         unelevated
+        dense
       />
 
       <div class="row items-center justify-between q-mt-md">
