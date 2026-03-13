@@ -1,42 +1,14 @@
 <template>
-  <q-dialog
+  <AppDialogShell
     :model-value="modelValue"
-    :transition-show="$q.screen.lt.md ? 'slide-up' : 'scale'"
-    :transition-hide="$q.screen.lt.md ? 'slide-down' : 'scale'"
-    :maximized="$q.screen.xs"
-    :full-width="$q.screen.xs"
-    :full-height="$q.screen.xs"
+    title="Select Category"
+    subtitle="Choose from available predefined categories"
+    body-class="q-pa-none"
+    :body-scrollable="false"
     @update:model-value="$emit('update:modelValue', $event)"
   >
-    <q-card class="column full-height">
-      <!-- Fixed header section -->
-      <q-card-section class="row items-center q-pb-none">
-        <div class="col">
-          <h2
-            class="q-my-none"
-            :class="$q.screen.lt.md ? 'text-subtitle2' : 'text-h6'"
-          >
-            Select Category
-          </h2>
-          <p
-            class="text-grey-6 q-my-none"
-            :class="$q.screen.lt.md ? 'text-caption' : 'text-body2'"
-          >
-            Choose from available predefined categories
-          </p>
-        </div>
-        <q-btn
-          icon="eva-close-outline"
-          flat
-          round
-          dense
-          :size="$q.screen.lt.md ? 'sm' : 'md'"
-          @click="$emit('update:modelValue', false)"
-        />
-      </q-card-section>
-
-      <!-- Fixed search section -->
-      <q-card-section>
+    <div class="column no-wrap category-selection-dialog__content">
+      <div class="q-px-md q-pt-md q-pb-sm">
         <q-input
           v-model="searchQuery"
           placeholder="Search categories..."
@@ -51,12 +23,12 @@
             <q-icon name="eva-search-outline" />
           </template>
         </q-input>
-      </q-card-section>
+      </div>
 
       <q-separator />
 
       <!-- Scrollable content section -->
-      <q-card-section class="col q-pt-none scroll">
+      <div class="col q-pt-none scroll">
         <q-list class="full-height">
           <div v-if="filteredCategories.length > 0">
             <q-item
@@ -66,7 +38,7 @@
               @click="selectCategory(category)"
             >
               <q-item-section
-                style="min-width: auto"
+                class="min-w-auto"
                 avatar
               >
                 <CategoryIcon
@@ -101,36 +73,30 @@
             </div>
           </div>
         </q-list>
-      </q-card-section>
+      </div>
+    </div>
 
-      <!-- Fixed footer actions -->
-      <q-card-actions
-        align="right"
-        class="q-mt-auto safe-area-bottom"
-      >
-        <q-btn
-          flat
-          label="Cancel"
-          dense
-          no-caps
-          @click="$emit('update:modelValue', false)"
-        />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
+    <template #footer>
+      <q-btn
+        flat
+        label="Cancel"
+        dense
+        no-caps
+        @click="$emit('update:modelValue', false)"
+      />
+    </template>
+  </AppDialogShell>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { useQuasar } from 'quasar'
+import AppDialogShell from 'src/components/shared/AppDialogShell.vue'
 import CategoryIcon from './CategoryIcon.vue'
 import type { Category } from 'src/api'
 
-const $q = useQuasar()
-
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void
-  (e: 'category-selected', category: Category): void
+  'update:modelValue': [value: boolean]
+  'category-selected': [category: Category]
 }>()
 
 const props = defineProps<{
@@ -169,3 +135,10 @@ function selectCategory(category: Category): void {
   emit('update:modelValue', false)
 }
 </script>
+
+<style lang="scss" scoped>
+.category-selection-dialog__content {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+</style>

@@ -31,6 +31,7 @@
 - Use `type` over `interface` when possible; avoid enums.
 - Use `import type` for type-only imports.
 - Keep logic in composables/services, not templates.
+- Use Vue 3.3+ object emit syntax: `defineEmits<{ 'event-name': [payload: Type] }>()`.
 - Prefer Quasar utility classes (`q-pa-*`, `q-ma-*`, etc.) and scoped CSS classes over inline `style` attributes.
 - Avoid obvious/non-informative comments.
 

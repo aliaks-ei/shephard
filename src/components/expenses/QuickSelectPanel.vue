@@ -3,7 +3,7 @@
     <!-- Phase 1: Item Selection -->
     <q-slide-transition>
       <div v-show="phase === 'selection'">
-        <q-card-section>
+        <q-card-section class="q-pt-none">
           <PlanSelectorField
             v-model="localPlanId"
             :plan-options="planOptions"
@@ -36,7 +36,7 @@
     <!-- Phase 2: Finalize Expense -->
     <q-slide-transition>
       <div v-show="phase === 'finalize'">
-        <q-card-section>
+        <q-card-section class="q-pt-none">
           <div class="row items-center q-mb-md">
             <q-icon
               name="eva-clipboard-outline"
@@ -120,58 +120,6 @@
               </div>
             </q-card-section>
           </q-card>
-
-          <!-- Expense Date Selection -->
-          <div class="q-mb-md">
-            <label
-              for="quick-expense-date-label"
-              class="form-label form-label--required"
-            >
-              Expense Date
-            </label>
-            <q-input
-              for="quick-expense-date-label"
-              :model-value="expenseDate"
-              placeholder="YYYY-MM-DD"
-              outlined
-              dense
-              no-error-icon
-              inputmode="none"
-              :rules="[(val: string) => !!val || 'Date is required']"
-              hide-bottom-space
-              @update:model-value="handleUpdateExpenseDate"
-            >
-              <template #append>
-                <q-icon
-                  name="eva-calendar-outline"
-                  class="cursor-pointer"
-                >
-                  <q-popup-proxy
-                    cover
-                    transition-show="scale"
-                    transition-hide="scale"
-                  >
-                    <q-date
-                      :model-value="expenseDate"
-                      mask="YYYY-MM-DD"
-                      @update:model-value="handleUpdateExpenseDate"
-                    >
-                      <div class="row items-center justify-end">
-                        <q-btn
-                          v-close-popup
-                          label="Cancel"
-                          color="primary"
-                          flat
-                          dense
-                          no-caps
-                        />
-                      </div>
-                    </q-date>
-                  </q-popup-proxy>
-                </q-icon>
-              </template>
-            </q-input>
-          </div>
         </q-card-section>
       </div>
     </q-slide-transition>
@@ -185,13 +133,13 @@ import PlanItemSelector from './PlanItemSelector.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import type { PlanItem } from 'src/api/plans'
 
-interface Plan {
+type Plan = {
   id: string
   name: string
   currency: string | null
 }
 
-interface Props {
+type Props = {
   phase: 'selection' | 'finalize'
   planId: string | null
   selectedPlan: Plan | null
@@ -200,7 +148,6 @@ interface Props {
   planItems: PlanItem[]
   selectedPlanItems: PlanItem[]
   selectedItemsTotal: number
-  expenseDate: string
   readonly?: boolean
   loading?: boolean
   showAutoSelectHint?: boolean
@@ -217,12 +164,11 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  (e: 'update:planId', value: string | null): void
-  (e: 'update:expenseDate', value: string): void
-  (e: 'plan-selected', value: string | null): void
-  (e: 'items-selected', items: PlanItem[]): void
-  (e: 'selection-changed', items: PlanItem[]): void
-  (e: 'remove-item', itemId: string): void
+  'update:planId': [value: string | null]
+  'plan-selected': [value: string | null]
+  'items-selected': [items: PlanItem[]]
+  'selection-changed': [items: PlanItem[]]
+  'remove-item': [itemId: string]
 }>()
 
 const planItemSelectorRef = ref()
@@ -246,10 +192,6 @@ const handleSelectionChanged = (items: PlanItem[]) => {
 
 const handleRemoveItem = (itemId: string) => {
   emit('remove-item', itemId)
-}
-
-const handleUpdateExpenseDate = (value: string | number | null) => {
-  emit('update:expenseDate', String(value || ''))
 }
 
 defineExpose({

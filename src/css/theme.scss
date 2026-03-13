@@ -55,6 +55,20 @@
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 
+  // Tabs
+  --tab-surface: 210 35% 95%;
+  --tab-surface-border: 214 32% 90%;
+  --tab-surface-highlight: 0 0% 100% / 0.7;
+  --tab-surface-hover: 0 0% 100% / 0.52;
+  --tab-active-bg: 0 0% 100%;
+  --tab-active-foreground: 184 100% 30%;
+  --tab-inactive-foreground: 220 16% 47%;
+  --tab-active-shadow: 0 10px 18px -18px rgb(15 23 42 / 0.4), 0 2px 6px -4px rgb(15 23 42 / 0.16);
+  --tab-track-padding: 0.25rem;
+  --tab-gap: 0.25rem;
+  --tab-min-height: 2.25rem;
+  --tab-min-height-dense: 2.25rem;
+
   // Liquid glass surface tokens (mobile floating toolbars)
   --glass-blur: 14px;
   --glass-saturation: 135%;
@@ -93,6 +107,7 @@
   --card-border: transparent;
   --card-hover-bg: transparent;
   --caption-color: hsl(var(--muted-foreground));
+  --caption-secondary: 0 0% 46%; // theme-aware secondary caption (light ≈ grey-6)
   --section-title: hsl(var(--foreground));
   --btn-negative: hsl(var(--destructive));
   --btn-negative-text: hsl(var(--destructive-foreground));
@@ -153,6 +168,16 @@
   --shadow-md: 0 3px 8px -4px rgb(0 0 0 / 0.32);
   --shadow-lg: 0 8px 16px -8px rgb(0 0 0 / 0.36);
 
+  // Tabs
+  --tab-surface: 0 0% 11%;
+  --tab-surface-border: 0 0% 100% / 0.08;
+  --tab-surface-highlight: 0 0% 100% / 0.08;
+  --tab-surface-hover: 0 0% 100% / 0.08;
+  --tab-active-bg: 0 0% 16%;
+  --tab-active-foreground: 184 100% 42%;
+  --tab-inactive-foreground: 0 0% 72%;
+  --tab-active-shadow: 0 14px 22px -20px rgb(0 0 0 / 0.72), 0 4px 10px -8px rgb(0 0 0 / 0.44);
+
   // Liquid glass surface tokens (mobile floating toolbars)
   --glass-blur: 14px;
   --glass-saturation: 140%;
@@ -180,6 +205,7 @@
   --border-color-readonly: rgba(255, 255, 255, 0.24);
   --separator-color: hsl(var(--border));
   --caption-color: hsl(var(--muted-foreground));
+  --caption-secondary: 0 0% 74%; // theme-aware secondary caption (dark ≈ grey-4)
   --section-title: hsl(var(--foreground));
   --ring-color: hsl(var(--ring));
   --ring-color-primary: hsl(var(--ring));

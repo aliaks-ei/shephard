@@ -1,158 +1,127 @@
 <template>
-  <q-dialog
+  <AppDialogShell
     :model-value="modelValue"
-    :transition-show="$q.screen.lt.md ? 'slide-up' : 'scale'"
-    :transition-hide="$q.screen.lt.md ? 'slide-down' : 'scale'"
-    :maximized="$q.screen.xs"
-    :full-width="$q.screen.xs"
-    :full-height="$q.screen.xs"
+    :title="`Share ${entityName}`"
+    :body-class="$q.screen.lt.md ? 'q-pa-sm' : 'q-pa-md'"
+    :primary-action-label="'Share'"
+    :primary-action-loading="isSharing"
+    :primary-action-disable="selectedUsers.length === 0"
     @update:model-value="emit('update:modelValue', $event)"
+    @primary="handleShare"
   >
-    <q-card
-      class="column no-wrap"
-      :class="$q.screen.lt.md ? 'full-height' : ''"
+    <!-- Search & Add -->
+    <SharedUsersSelect
+      v-model="selectedUsers"
+      :current-user-id="currentUserId"
+      :owner-user-id="ownerUserId"
+      :search-results="userSearchResults"
+      :shared-users="sharedUsers"
+      :loading="isSearchingUsers"
+      @update:search-query="debouncedSearch"
+    />
+
+    <!-- Permission toggle (shown when users selected) -->
+    <div
+      v-if="selectedUsers.length > 0"
+      class="q-mt-sm"
     >
-      <!-- Header -->
-      <q-card-section class="row items-center q-py-sm">
-        <div class="text-h6 q-my-none">Share {{ entityName }}</div>
-        <q-space />
-        <q-btn
-          icon="eva-close-outline"
-          flat
-          round
-          dense
-          size="sm"
-          @click="closeDialog"
-        />
-      </q-card-section>
+      <q-btn-toggle
+        v-model="selectedPermission"
+        :options="permissionOptions"
+        unelevated
+        toggle-color="primary"
+        size="sm"
+        no-caps
+        dense
+      />
+    </div>
 
-      <q-separator />
+    <!-- People with access -->
+    <div class="q-mt-md">
+      <div class="text-caption text-grey-6 q-mb-xs">
+        People with access{{
+          !isLoadingShares && visibleSharedUsers.length > 0 ? ` (${visibleSharedUsers.length})` : ''
+        }}
+      </div>
 
-      <!-- Content -->
-      <q-card-section
-        class="col overflow-auto"
-        :class="$q.screen.lt.md ? 'q-pa-sm' : 'q-pa-md'"
+      <!-- Loading skeleton -->
+      <q-list
+        v-if="isLoadingShares"
+        bordered
+        class="rounded-borders"
       >
-        <!-- Search & Add -->
-        <SharedUsersSelect
-          v-model="selectedUsers"
-          :current-user-id="currentUserId"
-          :owner-user-id="ownerUserId"
-          :search-results="userSearchResults"
-          :shared-users="sharedUsers"
-          :loading="isSearchingUsers"
-          @update:search-query="debouncedSearch"
-        />
-
-        <!-- Permission toggle (shown when users selected) -->
-        <div
-          v-if="selectedUsers.length > 0"
-          class="q-mt-sm"
+        <q-item
+          v-for="n in 2"
+          :key="n"
+          class="q-py-xs q-px-sm"
         >
-          <q-btn-toggle
-            v-model="selectedPermission"
-            :options="permissionOptions"
-            unelevated
-            toggle-color="primary"
-            size="sm"
-            no-caps
-            dense
-          />
-        </div>
+          <q-item-section avatar>
+            <q-skeleton
+              type="QAvatar"
+              size="24px"
+            />
+          </q-item-section>
+          <q-item-section>
+            <q-skeleton
+              type="text"
+              width="40%"
+            />
+          </q-item-section>
+          <q-item-section side>
+            <q-skeleton
+              type="QBtn"
+              width="60px"
+              height="24px"
+            />
+          </q-item-section>
+        </q-item>
+      </q-list>
 
-        <!-- People with access -->
-        <div class="q-mt-md">
-          <div class="text-caption text-grey-6 q-mb-xs">
-            People with access{{
-              !isLoadingShares && visibleSharedUsers.length > 0
-                ? ` (${visibleSharedUsers.length})`
-                : ''
-            }}
-          </div>
+      <!-- Shared users list -->
+      <SharedUsersList
+        v-else-if="visibleSharedUsers.length > 0"
+        :users="visibleSharedUsers"
+        :permission-options="permissionOptions"
+        @update:user-permission="handleUpdateUserPermission"
+        @remove:user="handleRemoveUserAccess"
+      />
 
-          <!-- Loading skeleton -->
-          <q-list
-            v-if="isLoadingShares"
-            bordered
-            class="rounded-borders"
-          >
-            <q-item
-              v-for="n in 2"
-              :key="n"
-              class="q-py-xs q-px-sm"
-            >
-              <q-item-section avatar>
-                <q-skeleton
-                  type="QAvatar"
-                  size="24px"
-                />
-              </q-item-section>
-              <q-item-section>
-                <q-skeleton
-                  type="text"
-                  width="40%"
-                />
-              </q-item-section>
-              <q-item-section side>
-                <q-skeleton
-                  type="QBtn"
-                  width="60px"
-                  height="24px"
-                />
-              </q-item-section>
-            </q-item>
-          </q-list>
-
-          <!-- Shared users list -->
-          <SharedUsersList
-            v-else-if="visibleSharedUsers.length > 0"
-            :users="visibleSharedUsers"
-            :permission-options="permissionOptions"
-            @update:user-permission="handleUpdateUserPermission"
-            @remove:user="handleRemoveUserAccess"
-          />
-
-          <!-- Empty state -->
-          <div
-            v-else
-            class="text-caption text-grey-6 q-py-sm"
-          >
-            Not shared with anyone yet
-          </div>
-        </div>
-      </q-card-section>
-
-      <!-- Actions -->
-      <q-card-actions
-        align="right"
-        class="q-pa-sm safe-area-bottom"
+      <!-- Empty state -->
+      <div
+        v-else
+        class="text-caption text-grey-6 q-py-sm"
       >
-        <q-btn
-          label="Cancel"
-          flat
-          dense
-          no-caps
-          @click="closeDialog"
-        />
-        <q-btn
-          label="Share"
-          color="primary"
-          unelevated
-          dense
-          no-caps
-          :loading="isSharing"
-          :disable="selectedUsers.length === 0"
-          @click="handleShare"
-        />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
+        Not shared with anyone yet
+      </div>
+    </div>
+
+    <template #footer>
+      <q-btn
+        label="Cancel"
+        flat
+        dense
+        no-caps
+        @click="closeDialog"
+      />
+      <q-btn
+        label="Share"
+        color="primary"
+        unelevated
+        dense
+        no-caps
+        :loading="isSharing"
+        :disable="selectedUsers.length === 0"
+        @click="handleShare"
+      />
+    </template>
+  </AppDialogShell>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 
+import AppDialogShell from 'src/components/shared/AppDialogShell.vue'
 import SharedUsersList from 'src/components/shared/SharedUsersList.vue'
 import SharedUsersSelect from 'src/components/shared/SharedUsersSelect.vue'
 import { useUserStore } from 'src/stores/user'

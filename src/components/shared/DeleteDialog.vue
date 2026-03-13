@@ -1,68 +1,55 @@
 <template>
-  <q-dialog
+  <AppDialogShell
     :model-value="modelValue"
-    :transition-show="$q.screen.lt.md ? 'slide-up' : 'scale'"
-    :transition-hide="$q.screen.lt.md ? 'slide-down' : 'scale'"
-    :maximized="$q.screen.xs"
-    :full-width="$q.screen.xs"
-    :full-height="$q.screen.xs"
+    :title="title"
+    body-class="q-pa-md"
+    :primary-action-label="confirmLabel"
+    primary-action-color="negative"
+    :primary-action-loading="isDeleting"
+    :primary-action-disable="isDeleting"
     @update:model-value="emit('update:modelValue', $event)"
+    @primary="emit('confirm')"
   >
-    <q-card
-      class="column"
-      :class="$q.screen.lt.md ? 'full-height' : ''"
+    <q-banner
+      rounded
+      class="bg-red-1 text-red-8 q-mb-md"
     >
-      <q-card-section>
-        <h2 class="text-h6 q-my-none">{{ title }}</h2>
-      </q-card-section>
-
-      <q-card-section class="q-pt-none col">
-        <q-banner
-          rounded
-          class="bg-red-1 text-red-8 q-mb-md"
-        >
-          <template #avatar>
-            <q-icon
-              size="sm"
-              name="eva-alert-triangle-outline"
-            />
-          </template>
-          {{ warningMessage }}
-        </q-banner>
-        {{ confirmationMessage }}
-      </q-card-section>
-
-      <q-card-actions
-        align="right"
-        class="q-mt-auto safe-area-bottom"
-      >
-        <q-btn
-          flat
-          :label="cancelLabel"
-          dense
-          :disabled="isDeleting"
-          no-caps
-          @click="emit('update:modelValue', false)"
+      <template #avatar>
+        <q-icon
+          size="sm"
+          name="eva-alert-triangle-outline"
         />
-        <q-btn
-          color="negative"
-          :label="confirmLabel"
-          dense
-          :loading="isDeleting"
-          no-caps
-          @click="emit('confirm')"
-        />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
+      </template>
+      {{ warningMessage }}
+    </q-banner>
+
+    <div>{{ confirmationMessage }}</div>
+
+    <template #footer>
+      <q-btn
+        flat
+        :label="cancelLabel"
+        dense
+        :disable="isDeleting"
+        no-caps
+        @click="emit('update:modelValue', false)"
+      />
+      <q-btn
+        color="negative"
+        :label="confirmLabel"
+        dense
+        :loading="isDeleting"
+        no-caps
+        @click="emit('confirm')"
+      />
+    </template>
+  </AppDialogShell>
 </template>
 
 <script setup lang="ts">
-import { useQuasar } from 'quasar'
+import AppDialogShell from './AppDialogShell.vue'
 
-const $q = useQuasar()
-
-interface DeleteDialogProps {
+type DeleteDialogProps = {
   modelValue: boolean
   title: string
   warningMessage: string
@@ -79,7 +66,7 @@ withDefaults(defineProps<DeleteDialogProps>(), {
 })
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void
-  (e: 'confirm'): void
+  'update:modelValue': [value: boolean]
+  confirm: []
 }>()
 </script>

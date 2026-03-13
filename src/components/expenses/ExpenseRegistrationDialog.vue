@@ -1,181 +1,168 @@
 <template>
-  <q-dialog
+  <AppDialogShell
     :model-value="modelValue"
-    persistent
-    :transition-show="$q.screen.lt.md ? 'slide-up' : 'scale'"
-    :transition-hide="$q.screen.lt.md ? 'slide-down' : 'scale'"
-    :maximized="$q.screen.xs"
-    :full-width="$q.screen.xs"
-    :full-height="$q.screen.xs"
+    title="Register New Expense"
+    body-class="q-pa-none"
+    :body-scrollable="false"
+    persistent-desktop
+    :footer-separator="false"
+    :primary-action-label="getSubmitButtonLabel"
+    :primary-action-icon="submitButtonIcon"
+    :primary-action-loading="isLoading"
+    :primary-action-disable="!canSubmit"
     @update:model-value="emit('update:modelValue', $event)"
     @hide="handleDialogHide"
+    @primary="void handleSubmit()"
   >
-    <q-card
-      class="column no-wrap"
-      :class="$q.screen.lt.md ? 'full-height' : ''"
-    >
-      <!-- Fixed Header -->
-      <q-card-section class="row items-center">
-        <q-icon
-          name="eva-plus-circle-outline"
-          :size="$q.screen.lt.md ? '24px' : '32px'"
-          class="q-mr-sm"
-        />
-        <h2
-          class="q-my-none"
-          :class="$q.screen.lt.md ? 'text-subtitle2' : 'text-h6'"
-        >
-          Register New Expense
-        </h2>
-        <q-space />
-        <q-btn
-          icon="eva-close-outline"
-          flat
-          round
-          dense
-          :size="$q.screen.lt.md ? 'sm' : 'md'"
-          @click="closeDialog"
-        />
-      </q-card-section>
-      <q-separator />
+    <template #header-prefix>
+      <q-icon
+        name="eva-plus-circle-outline"
+        size="32px"
+        class="q-mr-sm"
+      />
+    </template>
 
+    <template #mobile-header-extra>
+      <q-btn
+        v-if="showBackButton"
+        label="Back"
+        flat
+        dense
+        no-caps
+        :disable="isLoading"
+        @click="goBackToSelection"
+      />
+    </template>
+
+    <q-form
+      ref="formRef"
+      class="column no-wrap expense-registration-dialog__form"
+      @submit="handleSubmit"
+    >
       <!-- Fixed Tabs -->
       <q-tabs
         v-model="currentMode"
+        dense
         no-caps
-        inline-label
         align="justify"
         active-color="primary"
-        indicator-color="primary"
-        class="text-grey-7"
+        indicator-color="transparent"
+        class="q-mx-md q-mt-md q-mb-md"
       >
         <q-tab
           name="custom-entry"
           label="Custom Entry"
-          icon="eva-edit-outline"
+          :ripple="false"
         />
         <q-tab
           name="quick-select"
-          label="Quick Select Items"
-          icon="eva-checkmark-square-2-outline"
+          label="Quick Select"
+          :ripple="false"
         />
       </q-tabs>
 
-      <q-separator />
-
-      <q-form
-        class="column no-wrap"
+      <!-- Scrollable Content Area -->
+      <q-tab-panels
+        v-model="currentMode"
+        animated
+        :swipeable="$q.screen.lt.md"
+        :transition-prev="$q.screen.lt.md ? 'slide-right' : 'fade'"
+        :transition-next="$q.screen.lt.md ? 'slide-left' : 'fade'"
+        class="col overflow-auto bg-transparent"
         style="flex: 1; min-height: 0"
-        ref="formRef"
-        @submit="handleSubmit"
       >
-        <!-- Scrollable Content Area -->
-        <q-tab-panels
-          v-model="currentMode"
-          animated
-          :swipeable="$q.screen.lt.md"
-          :transition-prev="$q.screen.lt.md ? 'slide-right' : 'fade'"
-          :transition-next="$q.screen.lt.md ? 'slide-left' : 'fade'"
-          class="col overflow-auto bg-transparent"
-          style="flex: 1; min-height: 0"
+        <!-- Custom Entry Mode -->
+        <q-tab-panel
+          name="custom-entry"
+          class="q-pa-none"
         >
-          <!-- Custom Entry Mode -->
-          <q-tab-panel
-            name="custom-entry"
-            class="q-pa-none"
-          >
-            <CustomEntryPanel
-              v-model:plan-id="form.planId"
-              v-model:category-id="form.categoryId"
-              v-model:name="form.name"
-              v-model:amount="form.amount"
-              v-model:currency="form.currency"
-              v-model:expense-date="form.expenseDate"
-              :selected-plan="selectedPlan"
-              :plan-options="planOptions"
-              :plan-display-value="planDisplayValue"
-              :category-options="categoryOptions"
-              :name-rules="nameRules"
-              :amount-rules="amountRules"
-              :default-expense-currency="defaultExpenseCurrency"
-              :readonly="!!defaultPlanId"
-              :loading="false"
-              :show-auto-select-hint="didAutoSelectPlan"
-              :default-category-id="defaultCategoryId ?? null"
-              @plan-selected="handlePlanSelected"
-            />
-          </q-tab-panel>
+          <CustomEntryPanel
+            v-model:plan-id="form.planId"
+            v-model:category-id="form.categoryId"
+            v-model:name="form.name"
+            v-model:amount="form.amount"
+            v-model:currency="form.currency"
+            :selected-plan="selectedPlan"
+            :plan-options="planOptions"
+            :plan-display-value="planDisplayValue"
+            :category-options="categoryOptions"
+            :name-rules="nameRules"
+            :amount-rules="amountRules"
+            :default-expense-currency="defaultExpenseCurrency"
+            :readonly="!!defaultPlanId"
+            :loading="false"
+            :show-auto-select-hint="didAutoSelectPlan"
+            :default-category-id="defaultCategoryId ?? null"
+            @plan-selected="handlePlanSelected"
+          />
+        </q-tab-panel>
 
-          <!-- Quick Select Items Mode -->
-          <q-tab-panel
-            name="quick-select"
-            class="q-pa-none"
-          >
-            <QuickSelectPanel
-              ref="quickSelectPanelRef"
-              :phase="quickSelectPhase"
-              v-model:plan-id="form.planId"
-              v-model:expense-date="form.expenseDate"
-              :selected-plan="selectedPlan"
-              :plan-options="planOptions"
-              :plan-display-value="planDisplayValue"
-              :plan-items="planItems"
-              :selected-plan-items="selectedPlanItems"
-              :selected-items-total="selectedItemsTotal"
-              :readonly="!!defaultPlanId"
-              :loading="false"
-              :show-auto-select-hint="didAutoSelectPlan"
-              :is-loading-plan-items="isLoadingPlanItems"
-              :selected-category-id="defaultCategoryId ?? null"
-              @plan-selected="handlePlanSelected"
-              @items-selected="onItemsSelected"
-              @selection-changed="onSelectionChanged"
-              @remove-item="handleRemoveItem"
-            />
-          </q-tab-panel>
-        </q-tab-panels>
-
-        <!-- Fixed Footer Actions -->
-        <q-card-actions
-          align="right"
-          class="q-pa-sm safe-area-bottom"
+        <!-- Quick Select Items Mode -->
+        <q-tab-panel
+          name="quick-select"
+          class="q-pa-none"
         >
-          <q-btn
-            label="Cancel"
-            flat
-            dense
-            no-caps
-            :disable="isLoading"
-            @click="closeDialog"
+          <QuickSelectPanel
+            ref="quickSelectPanelRef"
+            :phase="quickSelectPhase"
+            v-model:plan-id="form.planId"
+            :selected-plan="selectedPlan"
+            :plan-options="planOptions"
+            :plan-display-value="planDisplayValue"
+            :plan-items="planItems"
+            :selected-plan-items="selectedPlanItems"
+            :selected-items-total="selectedItemsTotal"
+            :readonly="!!defaultPlanId"
+            :loading="false"
+            :show-auto-select-hint="didAutoSelectPlan"
+            :is-loading-plan-items="isLoadingPlanItems"
+            :selected-category-id="defaultCategoryId ?? null"
+            @plan-selected="handlePlanSelected"
+            @items-selected="onItemsSelected"
+            @selection-changed="onSelectionChanged"
+            @remove-item="handleRemoveItem"
           />
-          <q-btn
-            v-if="showBackButton"
-            label="Back"
-            flat
-            dense
-            no-caps
-            :disable="isLoading"
-            class="q-mr-sm"
-            @click="goBackToSelection"
-          />
-          <q-btn
-            :label="getSubmitButtonLabel"
-            type="submit"
-            color="primary"
-            unelevated
-            dense
-            no-caps
-            :loading="isLoading"
-            :disable="!canSubmit"
-          />
-        </q-card-actions>
-      </q-form>
-    </q-card>
-  </q-dialog>
+        </q-tab-panel>
+      </q-tab-panels>
+    </q-form>
+
+    <template #footer>
+      <q-btn
+        label="Cancel"
+        flat
+        dense
+        no-caps
+        :disable="isLoading"
+        @click="closeDialog"
+      />
+      <q-btn
+        v-if="showBackButton"
+        label="Back"
+        flat
+        dense
+        no-caps
+        :disable="isLoading"
+        class="q-mr-sm"
+        @click="goBackToSelection"
+      />
+      <q-btn
+        :label="getSubmitButtonLabel"
+        :icon="submitButtonIcon"
+        color="primary"
+        unelevated
+        dense
+        no-caps
+        :loading="isLoading"
+        :disable="!canSubmit"
+        @click="void handleSubmit()"
+      />
+    </template>
+  </AppDialogShell>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, toRef } from 'vue'
+import { computed, ref, watch, toRef } from 'vue'
+import AppDialogShell from 'src/components/shared/AppDialogShell.vue'
 import QuickSelectPanel from './QuickSelectPanel.vue'
 import CustomEntryPanel from './CustomEntryPanel.vue'
 import { useExpenseRegistration } from 'src/composables/useExpenseRegistration'
@@ -228,8 +215,19 @@ const {
   handleQuickSelectSubmit,
   handleCustomEntrySubmit,
   initialize,
-  determineInitialMode,
 } = useExpenseRegistration(defaultPlanIdRef)
+
+const submitButtonIcon = computed(() => {
+  if (currentMode.value === 'quick-select' && quickSelectPhase.value === 'selection') {
+    return 'eva-arrow-forward-outline'
+  }
+
+  if (currentMode.value === 'custom-entry') {
+    return 'eva-plus-circle-outline'
+  }
+
+  return 'eva-checkmark-circle-2-outline'
+})
 
 function closeDialog() {
   emit('update:modelValue', false)
@@ -291,10 +289,15 @@ watch(
           form.value.categoryId = props.defaultCategoryId
         }
       }
-
-      determineInitialMode()
     }
   },
   { immediate: true },
 )
 </script>
+
+<style lang="scss" scoped>
+.expense-registration-dialog__form {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+</style>

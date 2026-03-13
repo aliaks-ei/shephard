@@ -1,26 +1,30 @@
 <template>
-  <q-card-section class="q-pt-md">
+  <q-card-section class="q-pt-none">
     <ExpensePhotoAnalysisSection
       ref="photoAnalysisSectionRef"
       :plan-id="planId"
       :selected-plan-currency="selectedPlan?.currency ?? null"
       :default-category-id="defaultCategoryId ?? null"
+      class="q-mb-md"
       @analysis-applied="handlePhotoAnalysisApplied"
     />
 
-    <!-- Plan Selection -->
-    <PlanSelectorField
-      v-model="localPlanId"
-      :plan-options="planOptions"
-      :readonly="readonly ?? false"
-      :loading="loading ?? false"
-      :show-auto-select-hint="(showAutoSelectHint ?? false) && !!selectedPlan"
-      class="q-mb-md"
-      :display-value="planDisplayValue"
-      @plan-selected="handlePlanSelected"
+    <ExpenseAmountCurrencyFields
+      :display-amount="displayAmount"
+      :amount-rules="amountRules"
+      :selected-currency="selectedCurrency"
+      :currency-options="currencyOptions"
+      :disable="loading ?? false"
+      :should-show-conversion="shouldShowConversion"
+      :is-converting="isConverting"
+      :has-conversion-error="hasConversionError"
+      :conversion-error="conversionError ?? ''"
+      :conversion-result="conversionResult"
+      :converted-amount-display="convertedAmountDisplay"
+      @update:amount="handleUpdateAmount"
+      @update:currency="selectedCurrency = $event"
     />
 
-    <!-- Expense Name -->
     <label
       class="q-mb-sm block"
       for="expense-name-input"
@@ -35,29 +39,12 @@
         no-error-icon
         inputmode="text"
         :rules="nameRules"
-        :disable="!selectedPlan"
+        :disable="loading ?? false"
         hide-bottom-space
         @update:model-value="handleUpdateName"
       />
     </label>
 
-    <ExpenseAmountCurrencyFields
-      :display-amount="displayAmount"
-      :amount-rules="amountRules"
-      :selected-currency="selectedCurrency"
-      :currency-options="currencyOptions"
-      :disable="!selectedPlan"
-      :should-show-conversion="shouldShowConversion"
-      :is-converting="isConverting"
-      :has-conversion-error="hasConversionError"
-      :conversion-error="conversionError ?? ''"
-      :conversion-result="conversionResult"
-      :converted-amount-display="convertedAmountDisplay"
-      @update:amount="handleUpdateAmount"
-      @update:currency="selectedCurrency = $event"
-    />
-
-    <!-- Category Selection -->
     <div class="column q-mb-sm">
       <label
         class="block"
@@ -75,7 +62,7 @@
           emit-value
           options-dense
           map-options
-          :disable="!selectedPlan"
+          :disable="!selectedPlan || (loading ?? false)"
           :readonly="!!defaultCategoryId"
           :rules="[(val: string) => !!val || 'Category is required']"
           :hint="
@@ -117,7 +104,10 @@
             </q-chip>
           </template>
           <template #option="scope">
-            <q-item v-bind="scope.itemProps">
+            <q-item
+              v-bind="scope.itemProps"
+              class="custom-entry-panel__category-option"
+            >
               <q-item-section avatar>
                 <CategoryIcon
                   :color="scope.opt.color"
@@ -152,7 +142,7 @@
             </q-item>
           </template>
           <template #no-option>
-            <q-item>
+            <q-item class="custom-entry-panel__category-option">
               <q-item-section class="text-grey">
                 {{ selectedPlan ? 'No categories in selected plan' : 'Select a plan first' }}
               </q-item-section>
@@ -195,9 +185,15 @@
       </q-banner>
     </div>
 
-    <ExpenseDateField
-      :expense-date="expenseDate"
-      @update:expense-date="handleUpdateExpenseDate"
+    <PlanSelectorField
+      v-model="localPlanId"
+      :plan-options="planOptions"
+      :readonly="readonly ?? false"
+      :loading="loading ?? false"
+      :show-auto-select-hint="(showAutoSelectHint ?? false) && !!selectedPlan"
+      class="q-mb-md"
+      :display-value="planDisplayValue"
+      @plan-selected="handlePlanSelected"
     />
 
     <!-- Budget Impact Display -->
@@ -215,7 +211,6 @@
 import { computed, watch, ref, toRef, watchEffect, defineAsyncComponent } from 'vue'
 import PlanSelectorField, { type PlanOption } from './PlanSelectorField.vue'
 import ExpenseAmountCurrencyFields from './ExpenseAmountCurrencyFields.vue'
-import ExpenseDateField from './ExpenseDateField.vue'
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import BudgetImpactCard from './BudgetImpactCard.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
@@ -223,13 +218,13 @@ import { parseDecimalInput } from 'src/utils/decimal'
 import { useAICategorization } from 'src/composables/useAICategorization'
 import { useCurrencyConversion } from 'src/composables/useCurrencyConversion'
 
-interface Plan {
+type Plan = {
   id: string
   name: string
   currency: string | null
 }
 
-interface CategoryOption {
+type CategoryOption = {
   label: string
   value: string
   color: string
@@ -239,7 +234,7 @@ interface CategoryOption {
   remainingAmount: number
 }
 
-interface Props {
+type Props = {
   planId: string | null
   selectedPlan: Plan | null
   planOptions: PlanOption[]
@@ -249,7 +244,6 @@ interface Props {
   name: string
   amount: number | null
   currency: string | null
-  expenseDate: string
   nameRules: ((val: string) => boolean | string)[]
   amountRules: ((val: number) => boolean | string)[]
   readonly?: boolean
@@ -267,13 +261,12 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  (e: 'update:planId', value: string | null): void
-  (e: 'update:categoryId', value: string | null): void
-  (e: 'update:name', value: string): void
-  (e: 'update:amount', value: number | null): void
-  (e: 'update:currency', value: string | null): void
-  (e: 'update:expenseDate', value: string): void
-  (e: 'plan-selected', value: string | null): void
+  'update:planId': [value: string | null]
+  'update:categoryId': [value: string | null]
+  'update:name': [value: string]
+  'update:amount': [value: number | null]
+  'update:currency': [value: string | null]
+  'plan-selected': [value: string | null]
 }>()
 
 const ExpensePhotoAnalysisSection = defineAsyncComponent(
@@ -430,10 +423,6 @@ const handleUpdateAmount = (value: number | string | null) => {
   emit('update:amount', numValue)
 }
 
-const handleUpdateExpenseDate = (value: string | number | null) => {
-  emit('update:expenseDate', String(value || ''))
-}
-
 watch(
   () => props.planId,
   () => {
@@ -443,3 +432,10 @@ watch(
   },
 )
 </script>
+
+<style lang="scss" scoped>
+.custom-entry-panel__category-option {
+  padding-block: 4px;
+  padding-inline: 16px;
+}
+</style>
