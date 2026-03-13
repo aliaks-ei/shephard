@@ -35,35 +35,36 @@
     />
 
     <div v-else-if="!isNewPlan">
-      <q-tabs
-        v-model="activeTab"
-        :dense="$q.screen.lt.md"
-        no-caps
-        inline-label
-        align="justify"
-        active-color="primary"
-        indicator-color="primary"
-      >
-        <q-tab
-          name="overview"
-          label="Overview"
-          icon="eva-pie-chart-outline"
-        />
-        <q-tab
-          v-if="isEditMode"
-          name="items"
-          label="Items"
-          icon="eva-checkmark-square-2-outline"
-        />
-        <q-tab
-          v-if="isEditMode"
-          name="edit"
-          label="Edit"
-          icon="eva-edit-outline"
-        />
-      </q-tabs>
-
-      <q-separator />
+      <div class="row q-mb-md">
+        <q-tabs
+          v-model="activeTab"
+          dense
+          :shrink="!$q.screen.lt.md"
+          no-caps
+          :align="$q.screen.lt.md ? 'justify' : 'left'"
+          active-color="primary"
+          indicator-color="transparent"
+          :class="$q.screen.lt.md ? 'full-width' : ''"
+        >
+          <q-tab
+            name="overview"
+            label="Overview"
+            :ripple="false"
+          />
+          <q-tab
+            v-if="isEditMode"
+            name="items"
+            label="Items"
+            :ripple="false"
+          />
+          <q-tab
+            v-if="isEditMode"
+            name="edit"
+            label="Edit"
+            :ripple="false"
+          />
+        </q-tabs>
+      </div>
 
       <q-tab-panels
         v-model="activeTab"
@@ -71,7 +72,7 @@
         :swipeable="$q.screen.lt.md"
         :transition-prev="$q.screen.lt.md ? 'slide-right' : 'fade'"
         :transition-next="$q.screen.lt.md ? 'slide-left' : 'fade'"
-        class="q-mt-md bg-transparent"
+        class="bg-transparent"
       >
         <q-tab-panel
           class="q-pa-none q-pa-md-sm"

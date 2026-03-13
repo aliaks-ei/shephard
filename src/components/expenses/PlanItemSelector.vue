@@ -1,19 +1,5 @@
 <template>
   <div>
-    <div class="row items-center q-mb-xs">
-      <q-icon
-        name="eva-checkmark-square-2-outline"
-        class="q-mr-sm"
-        size="20px"
-      />
-      <h2 class="text-h6 q-my-none">Quick Select Items</h2>
-    </div>
-
-    <div class="text-grey-7 text-caption q-mb-lg">
-      Select items from your plan to quickly register expenses. You can modify the amount and
-      description after selection.
-    </div>
-
     <div
       v-if="isLoading"
       class="q-gutter-sm"
@@ -115,7 +101,7 @@
         >
           <template #header>
             <q-item-section
-              style="min-width: auto"
+              class="min-w-auto"
               avatar
             >
               <CategoryIcon
@@ -147,7 +133,7 @@
             </q-item-section>
           </template>
 
-          <q-card-section class="q-pt-none">
+          <q-card-section class="q-pt-none q-pb-sm">
             <q-list>
               <q-item
                 v-for="item in group.availableItems"
@@ -157,7 +143,7 @@
                 @click="toggleItemSelection(item)"
               >
                 <q-item-section
-                  style="min-width: auto"
+                  class="min-w-auto"
                   avatar
                 >
                   <q-checkbox
@@ -185,13 +171,12 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useQuasar } from 'quasar'
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import { useCategoriesQuery } from 'src/queries/categories'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import type { PlanItem } from 'src/api/plans'
 
-interface CategoryGroup {
+type CategoryGroup = {
   categoryId: string
   categoryName: string
   categoryColor: string
@@ -208,11 +193,10 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'item-selected', items: PlanItem[]): void
-  (e: 'selection-changed', items: PlanItem[]): void
+  'item-selected': [items: PlanItem[]]
+  'selection-changed': [items: PlanItem[]]
 }>()
 
-const $q = useQuasar()
 const { getCategoryById } = useCategoriesQuery()
 
 const selectedItemIds = ref<Set<string>>(new Set())

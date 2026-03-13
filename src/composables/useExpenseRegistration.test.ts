@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { createTestingPinia, type TestingPinia } from '@pinia/testing'
 import { setActivePinia } from 'pinia'
 import { useExpenseRegistration } from './useExpenseRegistration'
+import { formatDateInput } from 'src/utils/date'
 import type { Tables } from 'src/lib/supabase/types'
 
 type Plan = Tables<'plans'>
@@ -144,6 +145,8 @@ beforeEach(() => {
 })
 
 describe('useExpenseRegistration', () => {
+  const todayExpenseDate = formatDateInput(new Date())
+
   const mockPlan: Plan = {
     id: 'plan-1',
     name: 'Monthly Budget',
@@ -396,9 +399,8 @@ describe('useExpenseRegistration', () => {
   describe('handleQuickSelectSubmit', () => {
     it('registers multiple expenses successfully', async () => {
       const onSuccess = vi.fn()
-      const { handleQuickSelectSubmit, selectedPlanItems, form } = useExpenseRegistration()
+      const { handleQuickSelectSubmit, selectedPlanItems } = useExpenseRegistration()
       selectedPlanItems.value = [mockPlanItems[0]!]
-      form.value.expenseDate = '2024-01-15'
 
       await handleQuickSelectSubmit(onSuccess)
 
@@ -408,7 +410,7 @@ describe('useExpenseRegistration', () => {
           category_id: 'cat-1',
           name: 'Groceries',
           amount: 100,
-          expense_date: '2024-01-15',
+          expense_date: todayExpenseDate,
           plan_item_id: 'item-1',
         },
       ])
@@ -425,9 +427,8 @@ describe('useExpenseRegistration', () => {
       mockCreateExpensesBatchMutateAsync.mockResolvedValueOnce([{ id: 'exp-1', plan_id: 'plan-1' }])
       mockBatchCompletionMutateAsync.mockRejectedValueOnce(new Error('completion failed'))
 
-      const { handleQuickSelectSubmit, selectedPlanItems, form } = useExpenseRegistration()
+      const { handleQuickSelectSubmit, selectedPlanItems } = useExpenseRegistration()
       selectedPlanItems.value = [mockPlanItems[0]!]
-      form.value.expenseDate = '2024-01-15'
 
       await handleQuickSelectSubmit(onSuccess)
 
@@ -448,26 +449,13 @@ describe('useExpenseRegistration', () => {
       expect(onSuccess).not.toHaveBeenCalled()
     })
 
-    it('shows error when no date selected', async () => {
-      const onSuccess = vi.fn()
-      const { handleQuickSelectSubmit, selectedPlanItems, form } = useExpenseRegistration()
-      selectedPlanItems.value = [mockPlanItems[0]!]
-      form.value.expenseDate = ''
-
-      await handleQuickSelectSubmit(onSuccess)
-
-      expect(mockShowError).toHaveBeenCalledWith('Please select an expense date')
-      expect(onSuccess).not.toHaveBeenCalled()
-    })
-
     it('submits multiple selected items with one batch create and one batch completion call', async () => {
       const onSuccess = vi.fn()
-      const { handleQuickSelectSubmit, selectedPlanItems, form } = useExpenseRegistration()
+      const { handleQuickSelectSubmit, selectedPlanItems } = useExpenseRegistration()
       selectedPlanItems.value = [
         mockPlanItems[0]!,
         { ...mockPlanItems[0]!, id: 'item-2', amount: 200, name: 'Transport' },
       ]
-      form.value.expenseDate = '2024-01-15'
 
       await handleQuickSelectSubmit(onSuccess)
 
@@ -555,12 +543,11 @@ describe('useExpenseRegistration', () => {
 
   describe('canSubmit', () => {
     it('returns true for valid quick select submission', () => {
-      const { canSubmit, currentMode, quickSelectPhase, selectedPlanItems, form } =
+      const { canSubmit, currentMode, quickSelectPhase, selectedPlanItems } =
         useExpenseRegistration()
       currentMode.value = 'quick-select'
       quickSelectPhase.value = 'finalize'
       selectedPlanItems.value = [mockPlanItems[0]!]
-      form.value.expenseDate = '2024-01-15'
 
       expect(canSubmit.value).toBe(true)
     })

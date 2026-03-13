@@ -116,7 +116,6 @@ vi.mock('src/composables/useExpenseRegistration', () => ({
     handleQuickSelectSubmit: vi.fn(),
     handleCustomEntrySubmit: vi.fn(),
     initialize: vi.fn(),
-    determineInitialMode: vi.fn(),
   })),
 }))
 

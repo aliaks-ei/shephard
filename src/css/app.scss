@@ -660,17 +660,102 @@ body {
 // Tabs (q-tabs) - shadcn-vue conventions
 // --------------------------------------------
 .q-tabs {
+  border-radius: var(--radius-md);
+  background: hsl(var(--tab-surface));
+  border: var(--border-width) solid hsl(var(--tab-surface-border));
+  box-shadow: inset 0 1px 0 hsl(var(--tab-surface-highlight));
+  padding: var(--tab-track-padding);
+  min-height: calc(var(--tab-min-height) + (var(--tab-track-padding) * 2));
+
+  .q-tabs__content {
+    gap: var(--tab-gap);
+    border-radius: inherit;
+    min-height: var(--tab-min-height);
+  }
+
   .q-tab {
+    min-height: var(--tab-min-height);
     border-radius: var(--radius-md);
+    padding: 0;
+    color: hsl(var(--tab-inactive-foreground));
+    transition:
+      background-color 0.18s ease,
+      box-shadow 0.18s ease,
+      color 0.18s ease;
+
+    .q-tab__content {
+      min-height: inherit;
+      gap: 0.5rem;
+      padding: 0 1rem;
+      font-weight: 600;
+      letter-spacing: var(--tracking-tight);
+    }
+
+    .q-tab__label {
+      font-size: 0.95rem;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
+    .q-tab__icon {
+      font-size: 1rem;
+      opacity: 0.72;
+    }
+
+    .q-tab__indicator {
+      opacity: 0;
+    }
+
+    .q-focus-helper {
+      border-radius: inherit;
+    }
 
     &--active {
-      box-shadow: var(--shadow-sm);
+      background: hsl(var(--tab-active-bg));
+      color: hsl(var(--tab-active-foreground));
+      box-shadow: var(--tab-active-shadow);
+    }
+
+    &--active .q-tab__icon {
+      opacity: 1;
+    }
+
+    &--inactive:hover {
+      background: hsl(var(--tab-surface-hover));
+      color: hsl(var(--foreground));
+    }
+
+    &.q-focusable:focus-visible,
+    &.q-manual-focusable--focused,
+    &:focus-visible {
+      outline: none;
+      box-shadow:
+        0 0 0 var(--ring-width) hsl(var(--ring) / 0.16),
+        var(--tab-active-shadow);
     }
   }
 }
 
-.q-tabs__content {
-  border-radius: var(--radius-lg);
+.q-tabs--dense {
+  padding: calc(var(--tab-track-padding) - 1px);
+  min-height: calc(var(--tab-min-height-dense) + (var(--tab-track-padding) * 2));
+
+  .q-tab,
+  .q-tab .q-tab__content {
+    min-height: var(--tab-min-height-dense);
+  }
+
+  .q-tab .q-tab__content {
+    padding: 0 0.875rem;
+  }
+
+  .q-tab .q-tab__label {
+    font-size: 0.875rem;
+  }
+}
+
+.q-tab-panels {
+  background: transparent;
 }
 
 // ============================================
@@ -778,6 +863,10 @@ h6,
 
 .text-muted {
   color: hsl(var(--muted-foreground));
+}
+
+.text-caption-secondary {
+  color: hsl(var(--caption-secondary));
 }
 
 .bg-muted {

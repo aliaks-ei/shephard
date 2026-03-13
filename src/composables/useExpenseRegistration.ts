@@ -72,6 +72,7 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
   )
   const selectedPlanItems = ref<PlanItem[]>([])
   const lastExpenseCurrency = computed(() => lastExpenseQuery.data.value?.original_currency ?? null)
+  const getTodayExpenseDate = () => formatDateInput(new Date())
 
   const form = ref<ExpenseRegistrationForm>({
     planId: null,
@@ -79,7 +80,7 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
     name: '',
     amount: null,
     currency: null,
-    expenseDate: formatDateInput(new Date()),
+    expenseDate: getTodayExpenseDate(),
     planItemId: null,
   })
 
@@ -201,7 +202,7 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
       if (quickSelectPhase.value === 'selection') {
         return selectedPlanItems.value.length > 0
       }
-      return selectedPlanItems.value.length > 0 && !!form.value.expenseDate
+      return selectedPlanItems.value.length > 0
     }
     return (
       !!form.value.planId && !!form.value.categoryId && !!form.value.name && !!form.value.amount
@@ -272,7 +273,7 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
       name: '',
       amount: null,
       currency: null,
-      expenseDate: formatDateInput(new Date()),
+      expenseDate: getTodayExpenseDate(),
       planItemId: null,
     }
     didAutoSelectPlan.value = false
@@ -288,18 +289,16 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
       return
     }
 
-    if (!form.value.expenseDate) {
-      showError('Please select an expense date')
-      return
-    }
-
     try {
+      const expenseDate = getTodayExpenseDate()
+      form.value.expenseDate = expenseDate
+
       const expensesForCreate = selectedPlanItems.value.map((item) => ({
         plan_id: item.plan_id,
         category_id: item.category_id,
         name: item.name,
         amount: item.amount,
-        expense_date: form.value.expenseDate,
+        expense_date: expenseDate,
         plan_item_id: item.id,
       }))
 
@@ -363,6 +362,8 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
       const expenseCurrency = (form.value.currency || selectedPlan.value?.currency) as CurrencyCode
       const planCurrency = selectedPlan.value?.currency as CurrencyCode
       const originalAmount = form.value.amount
+      const expenseDate = getTodayExpenseDate()
+      form.value.expenseDate = expenseDate
 
       let finalAmount = originalAmount
       let originalCurrencyToStore: string | null = null
@@ -387,7 +388,7 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
         currency: planCurrency,
         original_amount: originalAmountToStore,
         original_currency: originalCurrencyToStore,
-        expense_date: form.value.expenseDate,
+        expense_date: expenseDate,
         plan_item_id: form.value.planItemId || null,
       })
 
@@ -432,15 +433,6 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
     }
   }
 
-  function determineInitialMode() {
-    if (form.value.planId) {
-      setTimeout(() => {
-        currentMode.value = 'custom-entry'
-        quickSelectPhase.value = 'selection'
-      }, 100)
-    }
-  }
-
   return {
     form,
     isLoading,
@@ -473,6 +465,5 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
     handleQuickSelectSubmit,
     handleCustomEntrySubmit,
     initialize,
-    determineInitialMode,
   }
 }

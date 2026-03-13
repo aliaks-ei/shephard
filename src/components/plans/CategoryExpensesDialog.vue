@@ -1,55 +1,30 @@
 <template>
-  <q-dialog
+  <AppDialogShell
     :model-value="modelValue"
-    :transition-show="$q.screen.lt.md ? 'slide-up' : 'scale'"
-    :transition-hide="$q.screen.lt.md ? 'slide-down' : 'scale'"
-    :maximized="$q.screen.xs"
-    :full-width="$q.screen.xs"
-    :full-height="$q.screen.xs"
+    :title="category?.categoryName || 'Category'"
+    body-class="q-pa-none"
+    :body-scrollable="false"
+    :primary-action-label="canEdit ? 'Add Expense' : undefined"
     @update:model-value="emit('update:modelValue', $event)"
+    @primary="openExpenseDialog"
   >
-    <q-card class="column no-wrap full-height">
-      <!-- Header -->
-      <q-card-section class="row items-center">
-        <div class="row items-center">
-          <CategoryIcon
-            :color="category?.categoryColor || '#666'"
-            :icon="category?.categoryIcon || 'eva-folder-outline'"
-            size="sm"
-            class="q-mr-sm"
-          />
-          <h2
-            class="q-my-none"
-            :class="$q.screen.lt.md ? 'text-subtitle2' : 'text-h6'"
-          >
-            {{ category?.categoryName }}
-          </h2>
-        </div>
-        <q-space />
-        <q-btn
-          icon="eva-close-outline"
-          flat
-          round
-          dense
-          :size="$q.screen.lt.md ? 'sm' : 'md'"
-          @click="emit('update:modelValue', false)"
-        />
-      </q-card-section>
+    <template #header-prefix>
+      <CategoryIcon
+        :color="category?.categoryColor || '#666'"
+        :icon="category?.categoryIcon || 'eva-folder-outline'"
+        size="sm"
+        class="q-mr-sm"
+      />
+    </template>
 
-      <q-separator />
-
+    <div class="column no-wrap category-expenses-dialog__content">
       <!-- Category Summary -->
       <q-card-section class="q-pa-md themed-muted-surface">
         <!-- Budget Overview -->
         <div class="row q-col-gutter-sm q-mb-sm">
           <div class="col-4">
             <div class="text-center">
-              <div
-                class="text-caption"
-                :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-6'"
-              >
-                Budget
-              </div>
+              <div class="text-caption text-caption-secondary">Budget</div>
               <div class="text-body1 text-weight-bold">
                 {{ formatCurrency(category?.plannedAmount || 0, currency) }}
               </div>
@@ -57,12 +32,7 @@
           </div>
           <div class="col-4">
             <div class="text-center">
-              <div
-                class="text-caption"
-                :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-6'"
-              >
-                Spent
-              </div>
+              <div class="text-caption text-caption-secondary">Spent</div>
               <div class="text-body1 text-weight-bold text-info">
                 {{ formatCurrency(category?.actualAmount || 0, currency) }}
               </div>
@@ -70,10 +40,7 @@
           </div>
           <div class="col-4">
             <div class="text-center">
-              <div
-                class="text-caption"
-                :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-6'"
-              >
+              <div class="text-caption text-caption-secondary">
                 {{ (category?.remainingAmount || 0) >= 0 ? 'Still to pay' : 'Over' }}
               </div>
               <div
@@ -89,12 +56,7 @@
         <!-- Progress Bar -->
         <div>
           <div class="row items-center justify-between q-mb-xs">
-            <div
-              class="text-caption"
-              :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-6'"
-            >
-              Progress
-            </div>
+            <div class="text-caption text-caption-secondary">Progress</div>
             <div class="text-caption text-weight-medium">{{ Math.round(progressPercentage) }}%</div>
           </div>
           <q-linear-progress
@@ -111,23 +73,24 @@
       <!-- Tabs Navigation -->
       <q-tabs
         v-model="activeTab"
+        dense
         no-caps
         inline-label
         align="justify"
         active-color="primary"
-        indicator-color="primary"
+        indicator-color="transparent"
+        class="q-mx-md q-my-md"
       >
         <q-tab
           v-if="hasAnyPlanItems"
           name="items"
           label="Items to Track"
-          icon="eva-checkmark-square-2-outline"
+          :ripple="false"
         >
           <q-badge
             v-if="totalItemsCount > 0"
             color="primary"
-            class="relative-position category-dialog-badge"
-            floating
+            class="category-dialog-badge"
           >
             {{ completedItemsCount }}/{{ totalItemsCount }}
           </q-badge>
@@ -135,20 +98,17 @@
         <q-tab
           name="expenses"
           label="Expenses"
-          icon="eva-list-outline"
+          :ripple="false"
         >
           <q-badge
             v-if="expenses.length > 0"
             color="primary"
-            class="relative-position category-dialog-badge"
-            floating
+            class="category-dialog-badge"
           >
             {{ expenses.length }}
           </q-badge>
         </q-tab>
       </q-tabs>
-
-      <q-separator />
 
       <!-- Tab Panels -->
       <q-tab-panels
@@ -157,7 +117,7 @@
         :swipeable="$q.screen.lt.md"
         :transition-prev="$q.screen.lt.md ? 'slide-right' : 'fade'"
         :transition-next="$q.screen.lt.md ? 'slide-left' : 'fade'"
-        class="col overflow-auto"
+        class="col overflow-auto bg-transparent"
       >
         <!-- Items to Track Panel -->
         <q-tab-panel
@@ -207,8 +167,7 @@
               />
               <q-item-label
                 header
-                class="text-caption q-py-xs"
-                :class="$q.dark.isActive ? 'text-grey-5' : 'text-grey-6'"
+                class="text-caption q-py-xs text-caption-secondary"
               >
                 For Reference
               </q-item-label>
@@ -227,16 +186,16 @@
                   <q-icon
                     name="eva-bookmark-outline"
                     size="24px"
-                    :class="$q.dark.isActive ? 'text-grey-6' : 'text-grey-5'"
+                    class="text-caption-secondary"
                   />
                 </q-item-section>
 
                 <q-item-section>
-                  <q-item-label :class="$q.dark.isActive ? 'text-grey-5' : 'text-grey-6'">
+                  <q-item-label class="text-caption-secondary">
                     {{ item.name }}
                   </q-item-label>
                   <q-item-label caption>
-                    <span :class="$q.dark.isActive ? 'text-grey-6' : 'text-grey-7'">
+                    <span class="text-caption-secondary">
                       {{ formatCurrency(item.amount, currency) }}
                     </span>
                   </q-item-label>
@@ -259,185 +218,78 @@
             class="category-expenses-virtual-list"
           >
             <template #default="{ item: expense }">
-              <q-slide-item
-                v-if="$q.screen.lt.md && canEdit"
-                class="mobile-expense-swipe-item"
-                right-color="negative"
-                @right="(details) => handleSwipeDelete(expense, details)"
-              >
-                <template #right>
-                  <div class="row items-center q-gutter-sm">
-                    <q-icon
-                      name="eva-trash-2-outline"
-                      size="20px"
-                    />
-                    <span class="text-weight-medium">Delete</span>
-                  </div>
-                </template>
-
-                <q-item class="q-px-md">
-                  <q-item-section>
-                    <q-item-label class="text-weight-medium">
-                      {{ expense.name }}
-                    </q-item-label>
-                    <q-item-label
-                      caption
-                      class="q-mt-xs"
-                    >
-                      {{ formatDate(expense.expense_date) }}
-                    </q-item-label>
-                  </q-item-section>
-
-                  <q-item-section
-                    side
-                    class="items-end"
-                  >
-                    <div class="row items-center q-gutter-sm">
-                      <div class="column items-end">
-                        <q-item-label class="text-weight-bold text-primary">
-                          {{ formatCurrency(expense.amount, currency) }}
-                        </q-item-label>
-                        <q-item-label
-                          v-if="expense.original_amount && expense.original_currency"
-                          caption
-                          class="text-caption text-grey-6"
-                        >
-                          {{
-                            formatCurrency(
-                              expense.original_amount,
-                              expense.original_currency as CurrencyCode,
-                            )
-                          }}
-                        </q-item-label>
-                      </div>
-                    </div>
-                  </q-item-section>
-                </q-item>
-              </q-slide-item>
-
-              <q-item
-                v-else
-                class="q-px-md"
-              >
-                <q-item-section>
-                  <q-item-label class="text-weight-medium">
-                    {{ expense.name }}
-                  </q-item-label>
-                  <q-item-label
-                    caption
-                    class="q-mt-xs"
-                  >
-                    {{ formatDate(expense.expense_date) }}
-                  </q-item-label>
-                </q-item-section>
-
-                <q-item-section
-                  side
-                  class="items-end"
-                >
-                  <div class="row items-center q-gutter-sm">
-                    <div class="column items-end">
-                      <q-item-label class="text-weight-bold text-primary">
-                        {{ formatCurrency(expense.amount, currency) }}
-                      </q-item-label>
-                      <q-item-label
-                        v-if="expense.original_amount && expense.original_currency"
-                        caption
-                        class="text-caption text-grey-6"
-                      >
-                        {{
-                          formatCurrency(
-                            expense.original_amount,
-                            expense.original_currency as CurrencyCode,
-                          )
-                        }}
-                      </q-item-label>
-                    </div>
-                    <q-btn
-                      v-if="canEdit"
-                      flat
-                      round
-                      size="sm"
-                      icon="eva-trash-2-outline"
-                      color="negative"
-                      @click="confirmDeleteExpense(expense, () => emit('refresh'))"
-                    >
-                      <q-tooltip v-if="!$q.screen.lt.md">Delete expense</q-tooltip>
-                    </q-btn>
-                  </div>
-                </q-item-section>
-              </q-item>
+              <ExpenseListItem
+                :key="expense.id"
+                :expense="expense"
+                :currency="currency"
+                :can-edit="canEdit"
+                item-class="q-px-md"
+                @deleted="emit('refresh')"
+              />
             </template>
           </q-virtual-scroll>
 
           <!-- Empty State -->
           <div
             v-else
-            class="text-center q-py-xl"
-            :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-6'"
+            class="text-center q-py-xl text-caption-secondary"
           >
             <q-icon
               name="eva-shopping-cart-outline"
               size="48px"
-              :class="$q.dark.isActive ? 'text-grey-5 q-mb-md' : 'q-mb-md'"
+              class="q-mb-md"
             />
             <div class="text-subtitle1 q-mb-sm">No expenses yet</div>
             <div class="text-body2">Start tracking your expenses in this category</div>
           </div>
         </q-tab-panel>
       </q-tab-panels>
+    </div>
 
-      <q-separator />
+    <template #footer>
+      <q-btn
+        label="Close"
+        flat
+        dense
+        no-caps
+        @click="$emit('update:modelValue', false)"
+      />
+      <q-btn
+        v-if="canEdit"
+        label="Add Expense"
+        color="primary"
+        unelevated
+        dense
+        no-caps
+        @click="openExpenseDialog"
+      />
+    </template>
+  </AppDialogShell>
 
-      <!-- Fixed Action Footer -->
-      <q-card-actions
-        align="right"
-        class="safe-area-bottom"
-      >
-        <q-btn
-          label="Close"
-          flat
-          dense
-          no-caps
-          @click="$emit('update:modelValue', false)"
-        />
-        <q-btn
-          v-if="canEdit"
-          label="Add Expense"
-          color="primary"
-          unelevated
-          dense
-          no-caps
-          @click="openExpenseDialog"
-        />
-      </q-card-actions>
-    </q-card>
-
-    <!-- Expense Registration Dialog -->
-    <ExpenseRegistrationDialog
-      v-if="hasOpenedExpenseDialog"
-      v-model="showExpenseDialog"
-      :default-plan-id="planId || null"
-      :default-category-id="category?.categoryId || null"
-      @expense-created="onExpenseCreated"
-    />
-  </q-dialog>
+  <!-- Expense Registration Dialog -->
+  <ExpenseRegistrationDialog
+    v-if="hasOpenedExpenseDialog"
+    v-model="showExpenseDialog"
+    :default-plan-id="planId || null"
+    :default-category-id="category?.categoryId || null"
+    @expense-created="onExpenseCreated"
+  />
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import AppDialogShell from 'src/components/shared/AppDialogShell.vue'
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
+import ExpenseListItem from 'src/components/expenses/ExpenseListItem.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
-import { formatDate } from 'src/utils/date'
 import { getBudgetProgressColor, getBudgetRemainingColorClass } from 'src/utils/budget'
 import { useItemCompletion } from 'src/composables/useItemCompletion'
-import { useExpenseActions } from 'src/composables/useExpenseActions'
 import { useTrackablePlanItems } from 'src/composables/useTrackablePlanItems'
 import type { PlanItem } from 'src/api/plans'
 import type { ExpenseWithCategory } from 'src/api'
 
-interface CategoryData {
+type CategoryData = {
   categoryId: string
   categoryName: string
   categoryColor: string
@@ -466,7 +318,6 @@ const emit = defineEmits<{
 
 const planIdRef = computed(() => props.planId ?? null)
 const { toggleItemCompletion: toggleCompletion } = useItemCompletion(planIdRef)
-const { confirmDeleteExpense, deleteExpense } = useExpenseActions()
 const { fixedPlanItems, nonFixedPlanItems, hasAnyPlanItems, completedItemsCount, totalItemsCount } =
   useTrackablePlanItems(computed(() => props.planItems ?? []))
 
@@ -501,11 +352,6 @@ function handleToggleItemCompletion(item: PlanItem, value?: boolean) {
   toggleCompletion(item, value, () => emit('refresh'))
 }
 
-function handleSwipeDelete(expense: ExpenseWithCategory, details: { reset: () => void }) {
-  details.reset()
-  void deleteExpense(expense, () => emit('refresh'))
-}
-
 watch(
   hasAnyPlanItems,
   () => {
@@ -520,12 +366,13 @@ watch(
 </script>
 
 <style lang="scss" scoped>
-.category-expenses-virtual-list {
-  max-height: min(58vh, 480px);
+.category-expenses-dialog__content {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
-.category-dialog-badge {
-  top: 0;
+.category-expenses-virtual-list {
+  max-height: min(58vh, 480px);
 }
 
 .category-dialog-icon-section {
