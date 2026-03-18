@@ -1,0 +1,242 @@
+name: Codex Docs Update
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Pull request number to update docs for
+        required: true
+        type: string
+      request:
+        description: Optional maintainer note for the docs update
+        required: false
+        type: string
+  issue_comment:
+    types: [created]
+
+concurrency:
+  group: codex-doc-update-${{ github.event_name }}-${{ github.event.issue.number || inputs.pr_number || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  update_docs:
+    name: Update durable docs
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event_name == 'issue_comment' &&
+        github.event.issue.pull_request &&
+        contains(github.event.comment.body, '@codex update docs') &&
+        (
+          github.event.comment.author_association == 'OWNER' ||
+          github.event.comment.author_association == 'MEMBER' ||
+          github.event.comment.author_association == 'COLLABORATOR'
+        )
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Resolve pull request metadata
+        id: pr
+        uses: actions/github-script@v7
+        env:
+          WORKFLOW_PR_NUMBER: ${{ inputs.pr_number }}
+          WORKFLOW_REQUEST: ${{ inputs.request }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const prNumber = context.eventName === 'workflow_dispatch'
+              ? Number(process.env.WORKFLOW_PR_NUMBER)
+              : context.payload.issue.number
+            const request = context.eventName === 'workflow_dispatch'
+              ? (process.env.WORKFLOW_REQUEST || '').replace(/\s+/g, ' ').trim()
+              : context.payload.comment.body.replace(/\s+/g, ' ').trim()
+
+            if (!Number.isInteger(prNumber) || prNumber <= 0) {
+              core.setFailed('A valid pull request number is required.')
+              return
+            }
+
+            const { owner, repo } = context.repo
+            const { data: pullRequest } = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number: prNumber,
+            })
+
+            core.setOutput('pr_number', String(pullRequest.number))
+            core.setOutput('base_ref', pullRequest.base.ref)
+            core.setOutput('head_ref', pullRequest.head.ref)
+            core.setOutput('head_sha', pullRequest.head.sha)
+            core.setOutput('head_repo', pullRequest.head.repo.full_name)
+            core.setOutput(
+              'same_repo',
+              String(pullRequest.head.repo.full_name === `${owner}/${repo}`)
+            )
+            core.setOutput('request', request)
+
+      - name: Comment when the PR branch is not in this repository
+        if: ${{ steps.pr.outputs.same_repo != 'true' }}
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const marker = '<!-- codex-doc-update -->'
+            const body = [
+              marker,
+              '## Codex Docs Update',
+              '',
+              'Automatic doc commits only run for pull requests whose head branch lives in this repository.',
+              'For forked pull requests, use a maintainer-run workflow on a trusted branch or update the docs manually.',
+            ].join('\n')
+            const { owner, repo } = context.repo
+            const issue_number = Number('${{ steps.pr.outputs.pr_number }}')
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            })
+            const existing = comments.find((comment) => {
+              return comment.user?.type === 'Bot' && comment.body?.includes(marker)
+            })
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              })
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              })
+            }
+
+      - name: Checkout pull request head branch
+        if: ${{ steps.pr.outputs.same_repo == 'true' }}
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ steps.pr.outputs.head_repo }}
+          ref: ${{ steps.pr.outputs.head_ref }}
+          fetch-depth: 0
+
+      - name: Pre-fetch base ref
+        if: ${{ steps.pr.outputs.same_repo == 'true' }}
+        run: git fetch --no-tags origin ${{ steps.pr.outputs.base_ref }}
+
+      - name: Run Codex docs update
+        if: ${{ steps.pr.outputs.same_repo == 'true' }}
+        id: run_codex
+        uses: openai/codex-action@v1
+        env:
+          CODEX_DOC_PR_NUMBER: ${{ steps.pr.outputs.pr_number }}
+          CODEX_DOC_BASE_REF: ${{ steps.pr.outputs.base_ref }}
+          CODEX_DOC_DIFF_RANGE: origin/${{ steps.pr.outputs.base_ref }}...HEAD
+          CODEX_DOC_UPDATE_REQUEST: ${{ steps.pr.outputs.request }}
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          prompt-file: .github/codex/prompts/docs-update.md
+          output-file: codex-doc-update-summary.txt
+          codex-args: '["--full-auto"]'
+          safety-strategy: drop-sudo
+          sandbox: workspace-write
+
+      - name: Ensure only docs changed
+        if: ${{ steps.pr.outputs.same_repo == 'true' }}
+        id: changed_docs
+        run: node scripts/check-codex-doc-edits.mjs
+
+      - name: Commit documentation changes
+        if: ${{ steps.pr.outputs.same_repo == 'true' && steps.changed_docs.outputs.has_changes == 'true' }}
+        id: commit_docs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add AGENTS.md README.md agent_docs
+          git commit -m "docs: update durable guidance for PR #${{ steps.pr.outputs.pr_number }}"
+          git push origin HEAD:${{ steps.pr.outputs.head_ref }}
+          echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Upsert docs update comment
+        if: ${{ steps.pr.outputs.same_repo == 'true' }}
+        uses: actions/github-script@v7
+        env:
+          HAS_CHANGES: ${{ steps.changed_docs.outputs.has_changes }}
+          CHANGED_FILES_JSON: ${{ steps.changed_docs.outputs.changed_files_json }}
+          UPDATE_SUMMARY_PATH: codex-doc-update-summary.txt
+          COMMIT_SHA: ${{ steps.commit_docs.outputs.commit_sha }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const fs = require('node:fs')
+            const marker = '<!-- codex-doc-update -->'
+            const changedFiles = JSON.parse(process.env.CHANGED_FILES_JSON || '[]')
+            const summary = fs.existsSync(process.env.UPDATE_SUMMARY_PATH)
+              ? fs.readFileSync(process.env.UPDATE_SUMMARY_PATH, 'utf8').trim()
+              : ''
+            const hasChanges = process.env.HAS_CHANGES === 'true'
+            const commitSha = process.env.COMMIT_SHA || ''
+            const lines = [
+              marker,
+              '## Codex Docs Update',
+              '',
+            ]
+
+            if (hasChanges) {
+              lines.push(
+                `Pushed documentation updates to \`${{ steps.pr.outputs.head_ref }}\`.`,
+                '',
+                `Commit: \`${commitSha}\``,
+                ''
+              )
+            } else {
+              lines.push('Codex reviewed the pull request and did not make any documentation changes.', '')
+            }
+
+            if (changedFiles.length > 0) {
+              lines.push('Changed files:', ...changedFiles.map((filePath) => `- \`${filePath}\``), '')
+            }
+
+            if (summary) {
+              lines.push('Codex summary:', '', summary)
+            }
+
+            const body = lines.join('\n')
+            const { owner, repo } = context.repo
+            const issue_number = Number('${{ steps.pr.outputs.pr_number }}')
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            })
+            const existing = comments.find((comment) => {
+              return comment.user?.type === 'Bot' && comment.body?.includes(marker)
+            })
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              })
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              })
+            }
