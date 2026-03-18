@@ -90,6 +90,13 @@ npm run preview
 npm run check:bundle-budgets
 ```
 
+## CI And Docs Automation
+
+- `.github/workflows/ci.yml` runs lint, type-check, unit tests, and a production build on `main`, `dev`, and matching pull requests.
+- `.github/workflows/codex-doc-review.yml` runs Codex in read-only mode on same-repo pull requests and comments when `AGENTS.md`, `agent_docs/*.md`, or `README.md` look stale.
+- `.github/workflows/codex-doc-update.yml` is maintainer-triggered. It can update only `AGENTS.md`, `agent_docs/*.md`, and `README.md`, then push the doc commit back to the pull request branch.
+- Codex workflows require a repository secret named `OPENAI_API_KEY`.
+
 ## Testing
 
 - Tests are co-located with sources as `*.test.ts`
