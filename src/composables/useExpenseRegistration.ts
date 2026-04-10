@@ -17,6 +17,7 @@ import {
 } from 'src/queries/expenses'
 import { useUserStore } from 'src/stores/user'
 import { useBanner } from 'src/composables/useBanner'
+import { useNotificationEvents } from 'src/composables/useNotificationEvents'
 import { getPlanStatus } from 'src/utils/plans'
 import { calculateStillToPay } from 'src/utils/budget-calculations'
 import { convertCurrency } from 'src/api/currency'
@@ -42,6 +43,7 @@ export type QuickSelectPhase = 'selection' | 'finalize'
 export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undefined>) {
   const userStore = useUserStore()
   const { showError } = useBanner()
+  const { emitNotificationEvent } = useNotificationEvents()
   const userId = computed(() => userStore.userProfile?.id)
   const { plans, plansForExpenses } = usePlansQuery(userId)
   const { categories } = useCategoriesQuery()
@@ -341,6 +343,16 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
         throw error
       }
 
+      if (form.value.planId) {
+        await emitNotificationEvent({
+          type: 'shared_plan_expense_added',
+          entityType: 'plan',
+          entityId: form.value.planId,
+          expenseName:
+            selectedPlanItems.value.length === 1 ? selectedPlanItems.value[0]?.name : undefined,
+        })
+      }
+
       onSuccess()
     } catch {
       showError('Failed to register expenses. Please try again.')
@@ -411,6 +423,13 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
           throw error
         }
       }
+
+      await emitNotificationEvent({
+        type: 'shared_plan_expense_added',
+        entityType: 'plan',
+        entityId: form.value.planId,
+        expenseName: createdExpense.name,
+      })
 
       onSuccess()
     } catch {

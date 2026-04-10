@@ -62,6 +62,14 @@ export type ErrorMessageKey =
   | 'EXPENSES.PLAN_NOT_FOUND'
   | 'EXPENSES.PLAN_ITEM_NOT_FOUND'
   | 'EXPENSES.PERMISSION_DENIED'
+  | 'NOTIFICATIONS.LOAD_FAILED'
+  | 'NOTIFICATIONS.LOAD_COUNT_FAILED'
+  | 'NOTIFICATIONS.MARK_READ_FAILED'
+  | 'NOTIFICATIONS.MARK_ALL_READ_FAILED'
+  | 'NOTIFICATIONS.REMOVE_FAILED'
+  | 'NOTIFICATIONS.REMOVE_ALL_FAILED'
+  | 'NOTIFICATIONS.EMIT_FAILED'
+  | 'NOTIFICATIONS.PUSH_SETUP_FAILED'
   | 'AI.CATEGORIZATION_FAILED'
   | 'AI.PHOTO_ANALYSIS_FAILED'
   | 'AI.PHOTO_TOO_LARGE'
@@ -421,6 +429,49 @@ export const ERROR_MESSAGES: Record<ErrorMessageKey, ErrorMessageConfig> = {
     notify: true,
     log: true,
   },
+
+  // Notification errors
+  'NOTIFICATIONS.LOAD_FAILED': {
+    message: "We couldn't load your notifications. Please try again.",
+    notify: true,
+    log: true,
+  },
+  'NOTIFICATIONS.LOAD_COUNT_FAILED': {
+    message: "We couldn't update your unread notification count.",
+    notify: false,
+    log: true,
+  },
+  'NOTIFICATIONS.MARK_READ_FAILED': {
+    message: "We couldn't mark that notification as read.",
+    notify: true,
+    log: true,
+  },
+  'NOTIFICATIONS.MARK_ALL_READ_FAILED': {
+    message: "We couldn't mark all notifications as read.",
+    notify: true,
+    log: true,
+  },
+  'NOTIFICATIONS.REMOVE_FAILED': {
+    message: "We couldn't remove that notification.",
+    notify: true,
+    log: true,
+  },
+  'NOTIFICATIONS.REMOVE_ALL_FAILED': {
+    message: "We couldn't clear your notifications.",
+    notify: true,
+    log: true,
+  },
+  'NOTIFICATIONS.EMIT_FAILED': {
+    message: "We couldn't send notification updates for that action.",
+    notify: false,
+    log: true,
+  },
+  'NOTIFICATIONS.PUSH_SETUP_FAILED': {
+    message: "We couldn't update push notifications on this device.",
+    notify: true,
+    log: true,
+  },
+
   'AI.CATEGORIZATION_FAILED': {
     message:
       "We couldn't automatically categorize this expense. Please select a category manually.",

@@ -14,10 +14,12 @@ import { toActionResult } from 'src/queries/mutation-utils'
 import { canEditPlan } from 'src/utils/plans'
 import type { CurrencyCode, PlanWithItems } from 'src/api'
 import type { ActionResult } from 'src/types'
+import { useNotificationEvents } from './useNotificationEvents'
 
 export function usePlan() {
   const route = useRoute()
   const userStore = useUserStore()
+  const { emitNotificationEvent } = useNotificationEvents()
 
   const isNewPlan = computed(() => route.name === 'new-plan')
   const routePlanId = computed(() => (typeof route.params.id === 'string' ? route.params.id : null))
@@ -204,6 +206,12 @@ export function usePlan() {
     const refreshed = await loadPlan()
     if (!refreshed) return { success: false }
 
+    await emitNotificationEvent({
+      type: 'shared_plan_updated',
+      entityType: 'plan',
+      entityId: planResult.data.id,
+    })
+
     return { success: true, data: refreshed }
   }
 
@@ -217,12 +225,22 @@ export function usePlan() {
   async function cancelCurrentPlan(): Promise<ActionResult> {
     if (!routePlanId.value) return { success: false }
 
-    return toActionResult(() =>
+    const result = await toActionResult(() =>
       updatePlanMutation.mutateAsync({
         id: routePlanId.value!,
         updates: { status: 'cancelled' },
       }),
     )
+
+    if (result.success) {
+      await emitNotificationEvent({
+        type: 'shared_plan_cancelled',
+        entityType: 'plan',
+        entityId: routePlanId.value,
+      })
+    }
+
+    return result
   }
 
   return {

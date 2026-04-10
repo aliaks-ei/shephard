@@ -5,6 +5,7 @@ import { vi, it, expect, beforeEach } from 'vitest'
 import type { ComponentProps } from 'vue-component-type-helpers'
 import { ref } from 'vue'
 import { Screen } from 'quasar'
+import { defaultNotificationPushPreferences } from 'src/types/notifications'
 
 import MainLayout from './MainLayout.vue'
 
@@ -23,6 +24,19 @@ vi.mock('src/composables/usePwaInstall', () => ({
     isInstallable: ref(false),
     promptInstall: vi.fn(),
     dismissInstall: vi.fn(),
+  }),
+}))
+
+vi.mock('src/composables/useNotifications', () => ({
+  useNotifications: () => ({
+    notifications: ref([]),
+    unreadCount: ref(0),
+    isLoading: ref(false),
+    openNotification: vi.fn(),
+    markAsRead: vi.fn(),
+    removeNotification: vi.fn(),
+    markAllAsRead: vi.fn(),
+    clearAllNotifications: vi.fn(),
   }),
 }))
 
@@ -59,6 +73,7 @@ const renderMainLayout = (props: MainLayoutProps = {}) => {
         preferences: {
           theme: 'auto',
           pushNotificationsEnabled: false,
+          pushNotificationsByType: { ...defaultNotificationPushPreferences },
           currency: 'USD',
         },
       },
@@ -85,6 +100,20 @@ const renderMainLayout = (props: MainLayoutProps = {}) => {
           template: '<div data-testid="expense-dialog" />',
           props: ['modelValue', 'autoSelectRecentPlan'],
         },
+        AppDialogShell: {
+          template:
+            '<div v-if="modelValue" data-testid="app-dialog-shell" :data-title="title" :data-subtitle="subtitle"><slot name="mobile-header-extra" /><slot /></div>',
+          props: ['modelValue', 'title', 'subtitle', 'bodyClass', 'bodyScrollable'],
+          emits: ['update:modelValue', 'hide', 'primary'],
+        },
+        NotificationInbox: {
+          template:
+            '<div data-testid="notification-inbox" :data-show-header="String(showHeader)" />',
+          props: ['showHeader'],
+        },
+        NotificationInboxHeaderActions: {
+          template: '<div data-testid="notification-header-actions" />',
+        },
       },
     },
   })
@@ -109,6 +138,14 @@ it('should render header with toolbar', () => {
 
   expect(header.exists()).toBe(true)
   expect(toolbar.exists()).toBe(true)
+})
+
+it('should expose menu popup semantics for notifications on desktop', () => {
+  const wrapper = renderMainLayout()
+  const notificationsButton = wrapper.find('button[aria-label="Notifications"]')
+
+  expect(notificationsButton.attributes('aria-haspopup')).toBe('menu')
+  expect(notificationsButton.attributes('aria-expanded')).toBe('false')
 })
 
 it('should render Shephard title button with correct attributes', () => {
@@ -159,4 +196,28 @@ it('should load expense dialog only after the mobile expense action is triggered
   await flushPromises()
 
   expect(wrapper.find('[data-testid="expense-dialog"]').exists()).toBe(true)
+})
+
+it('should open notifications in the shared mobile dialog shell', async () => {
+  setScreenWidth(600)
+
+  const wrapper = renderMainLayout()
+  const notificationsButton = wrapper.find('button[aria-label="Notifications"]')
+
+  expect(notificationsButton.attributes('aria-haspopup')).toBe('dialog')
+  expect(notificationsButton.attributes('aria-expanded')).toBe('false')
+  expect(wrapper.find('[data-testid="app-dialog-shell"]').exists()).toBe(false)
+
+  await notificationsButton.trigger('click')
+  await flushPromises()
+
+  const dialogShell = wrapper.find('[data-testid="app-dialog-shell"]')
+  const notificationInbox = wrapper.find('[data-testid="notification-inbox"]')
+  const headerActions = wrapper.find('[data-testid="notification-header-actions"]')
+
+  expect(dialogShell.exists()).toBe(true)
+  expect(dialogShell.attributes('data-title')).toBe('Notifications')
+  expect(notificationInbox.attributes('data-show-header')).toBe('false')
+  expect(headerActions.exists()).toBe(true)
+  expect(notificationsButton.attributes('aria-expanded')).toBe('true')
 })

@@ -2,12 +2,31 @@ import type { Tables } from 'src/lib/supabase/types'
 import type { PlanExpenseSummary } from 'src/api/expenses'
 import type { TemplateSharedUser } from 'src/api/templates'
 import type { PlanSharedUser } from 'src/api/plans'
+import { defaultNotificationPushPreferences } from 'src/types/notifications'
 
 // ── IDs ──
 
 export const MOCK_USER_ID = '00000000-0000-4000-a000-000000000001'
 export const MOCK_SHARED_USER_ID = '00000000-0000-4000-a000-000000000002'
 export const MOCK_VIEWER_USER_ID = '00000000-0000-4000-a000-000000000003'
+
+function minutesAgoIso(minutes: number): string {
+  const date = new Date()
+  date.setMinutes(date.getMinutes() - minutes)
+  return date.toISOString()
+}
+
+function hoursAgoIso(hours: number): string {
+  const date = new Date()
+  date.setHours(date.getHours() - hours)
+  return date.toISOString()
+}
+
+function daysAgoIso(days: number): string {
+  const date = new Date()
+  date.setDate(date.getDate() - days)
+  return date.toISOString()
+}
 
 // ── Categories ──
 
@@ -64,8 +83,13 @@ export const users: Tables<'users'>[] = [
     avatar: null,
     preferences: {
       theme: 'light',
-      currency: 'EUR',
       pushNotificationsEnabled: false,
+      pushNotificationsByType: {
+        ...defaultNotificationPushPreferences,
+        shared_plan_expense_added: false,
+        shared_template_updated: false,
+      },
+      currency: 'EUR',
       isPrivacyModeEnabled: false,
     },
     created_at: '2025-01-01T00:00:00Z',
@@ -76,7 +100,13 @@ export const users: Tables<'users'>[] = [
     name: 'Jane Smith',
     email: 'jane@example.com',
     avatar: null,
-    preferences: null,
+    preferences: {
+      theme: 'system',
+      pushNotificationsEnabled: true,
+      pushNotificationsByType: { ...defaultNotificationPushPreferences },
+      currency: 'EUR',
+      isPrivacyModeEnabled: false,
+    },
     created_at: '2025-01-10T00:00:00Z',
     updated_at: null,
   },
@@ -85,7 +115,16 @@ export const users: Tables<'users'>[] = [
     name: 'Bob Viewer',
     email: 'bob@example.com',
     avatar: null,
-    preferences: null,
+    preferences: {
+      theme: 'system',
+      pushNotificationsEnabled: true,
+      pushNotificationsByType: {
+        ...defaultNotificationPushPreferences,
+        shared_plan_cancelled: false,
+      },
+      currency: 'USD',
+      isPrivacyModeEnabled: false,
+    },
     created_at: '2025-02-01T00:00:00Z',
     updated_at: null,
   },
@@ -833,6 +872,289 @@ export const expenses: Tables<'expenses'>[] = [
     original_currency: null,
     created_at: twoMonthsAgoEnd.toISOString(),
     updated_at: null,
+  },
+]
+
+export const notifications: Tables<'notifications'>[] = [
+  {
+    id: 'notif-1',
+    user_id: MOCK_USER_ID,
+    actor_user_id: MOCK_SHARED_USER_ID,
+    type: 'template_shared',
+    entity_type: 'template',
+    entity_id: 'tmpl-shared-edit',
+    title: 'Jane Smith shared a template',
+    body: 'Household Expenses is now available in your templates.',
+    payload: {
+      actorName: 'Jane Smith',
+      entityName: 'Household Expenses',
+      route: '/templates/tmpl-shared-edit',
+    },
+    read_at: null,
+    deleted_at: null,
+    created_at: minutesAgoIso(12),
+    push_attempted_at: null,
+    push_sent_at: null,
+    push_error: null,
+  },
+  {
+    id: 'notif-2',
+    user_id: MOCK_USER_ID,
+    actor_user_id: MOCK_SHARED_USER_ID,
+    type: 'shared_template_updated',
+    entity_type: 'template',
+    entity_id: 'tmpl-shared-edit',
+    title: 'Shared template updated',
+    body: 'Jane Smith updated Household Expenses.',
+    payload: {
+      actorName: 'Jane Smith',
+      entityName: 'Household Expenses',
+      route: '/templates/tmpl-shared-edit',
+    },
+    read_at: null,
+    deleted_at: null,
+    created_at: minutesAgoIso(42),
+    push_attempted_at: null,
+    push_sent_at: null,
+    push_error: null,
+  },
+  {
+    id: 'notif-3',
+    user_id: MOCK_USER_ID,
+    actor_user_id: MOCK_SHARED_USER_ID,
+    type: 'shared_template_permission_changed',
+    entity_type: 'template',
+    entity_id: 'tmpl-shared-edit',
+    title: 'Template access updated',
+    body: 'Jane Smith changed your Household Expenses access to edit.',
+    payload: {
+      actorName: 'Jane Smith',
+      entityName: 'Household Expenses',
+      permissionLevel: 'edit',
+      route: '/templates/tmpl-shared-edit',
+    },
+    read_at: hoursAgoIso(6),
+    deleted_at: null,
+    created_at: hoursAgoIso(7),
+    push_attempted_at: hoursAgoIso(7),
+    push_sent_at: hoursAgoIso(7),
+    push_error: null,
+  },
+  {
+    id: 'notif-4',
+    user_id: MOCK_USER_ID,
+    actor_user_id: MOCK_SHARED_USER_ID,
+    type: 'plan_shared',
+    entity_type: 'plan',
+    entity_id: 'plan-shared-edit',
+    title: 'Jane Smith shared a plan',
+    body: 'Household February is now available in your plans.',
+    payload: {
+      actorName: 'Jane Smith',
+      entityName: 'Household February',
+      route: '/plans/plan-shared-edit',
+    },
+    read_at: null,
+    deleted_at: null,
+    created_at: minutesAgoIso(18),
+    push_attempted_at: null,
+    push_sent_at: null,
+    push_error: null,
+  },
+  {
+    id: 'notif-5',
+    user_id: MOCK_USER_ID,
+    actor_user_id: MOCK_SHARED_USER_ID,
+    type: 'shared_plan_expense_added',
+    entity_type: 'plan',
+    entity_id: 'plan-shared-edit',
+    title: 'Expense added to shared plan',
+    body: 'Jane Smith added Internet bill to Household February.',
+    payload: {
+      actorName: 'Jane Smith',
+      entityName: 'Household February',
+      expenseName: 'Internet bill',
+      route: '/plans/plan-shared-edit',
+    },
+    read_at: null,
+    deleted_at: null,
+    created_at: minutesAgoIso(55),
+    push_attempted_at: null,
+    push_sent_at: null,
+    push_error: null,
+  },
+  {
+    id: 'notif-6',
+    user_id: MOCK_USER_ID,
+    actor_user_id: MOCK_SHARED_USER_ID,
+    type: 'shared_plan_updated',
+    entity_type: 'plan',
+    entity_id: 'plan-shared-edit',
+    title: 'Shared plan updated',
+    body: 'Jane Smith updated Household February.',
+    payload: {
+      actorName: 'Jane Smith',
+      entityName: 'Household February',
+      route: '/plans/plan-shared-edit',
+    },
+    read_at: hoursAgoIso(4),
+    deleted_at: null,
+    created_at: hoursAgoIso(5),
+    push_attempted_at: hoursAgoIso(5),
+    push_sent_at: hoursAgoIso(5),
+    push_error: null,
+  },
+  {
+    id: 'notif-7',
+    user_id: MOCK_USER_ID,
+    actor_user_id: MOCK_SHARED_USER_ID,
+    type: 'shared_plan_permission_changed',
+    entity_type: 'plan',
+    entity_id: 'plan-shared-edit',
+    title: 'Plan access updated',
+    body: 'Jane Smith changed your Household February access to edit.',
+    payload: {
+      actorName: 'Jane Smith',
+      entityName: 'Household February',
+      permissionLevel: 'edit',
+      route: '/plans/plan-shared-edit',
+    },
+    read_at: daysAgoIso(1),
+    deleted_at: null,
+    created_at: daysAgoIso(1),
+    push_attempted_at: daysAgoIso(1),
+    push_sent_at: daysAgoIso(1),
+    push_error: null,
+  },
+  {
+    id: 'notif-8',
+    user_id: MOCK_USER_ID,
+    actor_user_id: MOCK_VIEWER_USER_ID,
+    type: 'shared_plan_cancelled',
+    entity_type: 'plan',
+    entity_id: 'plan-shared-view',
+    title: 'Shared plan cancelled',
+    body: 'Bob Viewer cancelled Travel Week.',
+    payload: {
+      actorName: 'Bob Viewer',
+      entityName: 'Travel Week',
+      route: '/plans/plan-shared-view',
+    },
+    read_at: daysAgoIso(2),
+    deleted_at: null,
+    created_at: daysAgoIso(2),
+    push_attempted_at: daysAgoIso(2),
+    push_sent_at: daysAgoIso(2),
+    push_error: null,
+  },
+  {
+    id: 'notif-9',
+    user_id: MOCK_USER_ID,
+    actor_user_id: MOCK_VIEWER_USER_ID,
+    type: 'shared_template_removed',
+    entity_type: 'template',
+    entity_id: 'tmpl-shared-view',
+    title: 'Shared template removed',
+    body: 'Bob Viewer removed your access to Travel Fund.',
+    payload: {
+      actorName: 'Bob Viewer',
+      entityName: 'Travel Fund',
+      route: '/templates',
+    },
+    read_at: null,
+    deleted_at: null,
+    created_at: daysAgoIso(3),
+    push_attempted_at: daysAgoIso(3),
+    push_sent_at: daysAgoIso(3),
+    push_error: null,
+  },
+  {
+    id: 'notif-10',
+    user_id: MOCK_USER_ID,
+    actor_user_id: MOCK_VIEWER_USER_ID,
+    type: 'shared_plan_removed',
+    entity_type: 'plan',
+    entity_id: 'plan-shared-view',
+    title: 'Shared plan removed',
+    body: 'Bob Viewer removed your access to Travel Week.',
+    payload: {
+      actorName: 'Bob Viewer',
+      entityName: 'Travel Week',
+      route: '/plans',
+    },
+    read_at: daysAgoIso(4),
+    deleted_at: null,
+    created_at: daysAgoIso(4),
+    push_attempted_at: daysAgoIso(4),
+    push_sent_at: daysAgoIso(4),
+    push_error: null,
+  },
+  {
+    id: 'notif-11',
+    user_id: MOCK_USER_ID,
+    actor_user_id: MOCK_SHARED_USER_ID,
+    type: 'shared_template_removed',
+    entity_type: 'template',
+    entity_id: 'tmpl-old-hidden',
+    title: 'Shared template removed',
+    body: 'A hidden cleared notification for empty-state testing.',
+    payload: {
+      actorName: 'Jane Smith',
+      entityName: 'Archive Template',
+      route: '/templates',
+    },
+    read_at: daysAgoIso(8),
+    deleted_at: daysAgoIso(7),
+    created_at: daysAgoIso(8),
+    push_attempted_at: daysAgoIso(8),
+    push_sent_at: daysAgoIso(8),
+    push_error: null,
+  },
+  {
+    id: 'notif-12',
+    user_id: MOCK_SHARED_USER_ID,
+    actor_user_id: MOCK_USER_ID,
+    type: 'shared_plan_updated',
+    entity_type: 'plan',
+    entity_id: 'plan-active',
+    title: 'Shared plan updated',
+    body: 'Demo User updated February Budget.',
+    payload: {
+      actorName: 'Demo User',
+      entityName: 'February Budget',
+      route: '/plans/plan-active',
+    },
+    read_at: null,
+    deleted_at: null,
+    created_at: minutesAgoIso(10),
+    push_attempted_at: minutesAgoIso(10),
+    push_sent_at: minutesAgoIso(10),
+    push_error: null,
+  },
+]
+
+export const pushSubscriptions: Tables<'push_subscriptions'>[] = [
+  {
+    id: 'push-1',
+    user_id: MOCK_SHARED_USER_ID,
+    endpoint: 'https://push.mock.local/subscriptions/jane-primary',
+    p256dh: 'BJanePrimaryMockP256dhKey1234567890abcdef1234567890abcdef1234567890abcdef123456',
+    auth: 'JanePrimaryAuthKey123456',
+    user_agent: 'Mock Browser',
+    created_at: daysAgoIso(5),
+    updated_at: minutesAgoIso(30),
+    revoked_at: null,
+  },
+  {
+    id: 'push-2',
+    user_id: MOCK_VIEWER_USER_ID,
+    endpoint: 'https://push.mock.local/subscriptions/bob-revoked',
+    p256dh: 'BBobRevokedMockP256dhKey1234567890abcdef1234567890abcdef1234567890abcdef123456',
+    auth: 'BobRevokedAuthKey123456',
+    user_agent: 'Mock Browser',
+    created_at: daysAgoIso(9),
+    updated_at: daysAgoIso(3),
+    revoked_at: daysAgoIso(2),
   },
 ]
 

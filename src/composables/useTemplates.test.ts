@@ -48,6 +48,21 @@ vi.mock('src/composables/useError', () => ({
   }),
 }))
 
+vi.mock('src/composables/useNotificationEvents', () => ({
+  useNotificationEvents: () => ({
+    emitNotificationEvent: vi.fn().mockResolvedValue(true),
+    emitRemovalNotification: vi.fn().mockResolvedValue(undefined),
+  }),
+}))
+
+vi.mock('src/api', async () => {
+  const actual = await vi.importActual<object>('src/api')
+  return {
+    ...actual,
+    getTemplateSharedUsers: vi.fn().mockResolvedValue([]),
+  }
+})
+
 const mockTemplates = createMockTemplates(3)
 const mockTemplatesRef = ref<TemplateWithPermission[]>([
   ...mockTemplates,
@@ -182,11 +197,11 @@ describe('useTemplates', () => {
   })
 
   describe('deleteTemplate', () => {
-    it('should delete template via mutation', () => {
+    it('should delete template via mutation', async () => {
       const composable = useTemplates()
       const template = mockTemplates[0] as TemplateWithPermission
 
-      composable.deleteItem(template)
+      await composable.deleteItem(template)
 
       expect(mockDeleteMutateAsync).toHaveBeenCalledWith(template.id)
     })

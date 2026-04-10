@@ -25,6 +25,12 @@ vi.mock('vue-router', () => ({
   useRoute: () => mockRoute,
 }))
 
+vi.mock('src/composables/useNotificationEvents', () => ({
+  useNotificationEvents: () => ({
+    emitNotificationEvent: vi.fn().mockResolvedValue(true),
+  }),
+}))
+
 vi.mock('src/utils/plans', () => ({
   canEditPlan: vi.fn((plan: unknown) => Boolean(plan)),
 }))

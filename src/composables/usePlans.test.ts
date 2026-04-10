@@ -45,6 +45,17 @@ vi.mock('src/queries/plans', () => ({
     mutateAsync: vi.fn(),
     isPending: ref(false),
   })),
+  useUpdatePlanMutation: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: ref(false),
+  })),
+}))
+
+vi.mock('src/composables/useNotificationEvents', () => ({
+  useNotificationEvents: () => ({
+    emitNotificationEvent: vi.fn().mockResolvedValue(true),
+    emitRemovalNotification: vi.fn().mockResolvedValue(undefined),
+  }),
 }))
 
 vi.mock('src/stores/user', () => ({

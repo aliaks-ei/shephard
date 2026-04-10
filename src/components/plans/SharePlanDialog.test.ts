@@ -39,6 +39,12 @@ vi.mock('src/stores/user', () => ({
   })),
 }))
 
+vi.mock('src/composables/useNotificationEvents', () => ({
+  useNotificationEvents: () => ({
+    emitNotificationEvent: vi.fn().mockResolvedValue(true),
+  }),
+}))
+
 type SharePlanDialogProps = ComponentProps<typeof SharePlanDialog>
 
 const renderSharePlanDialog = (props: SharePlanDialogProps) => {

@@ -14,14 +14,21 @@ import { usePlanActions, type PlanSaveState } from 'src/composables/usePlanActio
 import { validateItemForm } from 'src/composables/useItemFormValidation'
 import { calculateEndDate } from 'src/utils/plans'
 import { formatDateInput } from 'src/utils/date'
-import { getTemplateWithItems, type TemplateWithItems, type PlanWithItems } from 'src/api'
+import {
+  getPlanSharedUsers,
+  getTemplateWithItems,
+  type TemplateWithItems,
+  type PlanWithItems,
+} from 'src/api'
 import type { PlanItemUI } from 'src/types'
+import { useNotificationEvents } from 'src/composables/useNotificationEvents'
 
 const SAVE_SUCCESS_RESET_MS = 4000
 
 export function usePlanPageState() {
   const router = useRouter()
   const userStore = useUserStore()
+  const { emitRemovalNotification } = useNotificationEvents()
   const userId = computed(() => userStore.userProfile?.id)
   const { categories } = useCategoriesQuery()
   const { templates, isPending: isTemplatesLoading } = useTemplatesQuery(userId)
@@ -273,6 +280,10 @@ export function usePlanPageState() {
 
   async function deletePlan(): Promise<void> {
     if (!currentPlan.value) return
+
+    await emitRemovalNotification('plan', currentPlan.value.id, currentPlan.value.name, () =>
+      getPlanSharedUsers(currentPlan.value!.id),
+    )
 
     await deletePlanMutation.mutateAsync(currentPlan.value.id)
     showDeleteDialog.value = false

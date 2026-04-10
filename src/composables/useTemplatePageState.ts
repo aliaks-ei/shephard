@@ -10,12 +10,14 @@ import { useEditablePage } from 'src/composables/useEditablePage'
 import { useCategoryRefs } from 'src/composables/useCategoryRefs'
 import { validateItemForm } from 'src/composables/useItemFormValidation'
 import type { ActionBarAction } from 'src/components/shared/ActionBar.vue'
-import type { Category, CurrencyCode } from 'src/api'
+import { getTemplateSharedUsers, type Category, type CurrencyCode } from 'src/api'
+import { useNotificationEvents } from 'src/composables/useNotificationEvents'
 
 export function useTemplatePageState() {
   const router = useRouter()
   const { categories } = useCategoriesQuery()
   const deleteTemplateMutation = useDeleteTemplateMutation()
+  const { emitRemovalNotification } = useNotificationEvents()
 
   const {
     currentTemplate,
@@ -232,6 +234,13 @@ export function useTemplatePageState() {
 
   async function deleteTemplate(): Promise<void> {
     if (!routeTemplateId.value) return
+
+    await emitRemovalNotification(
+      'template',
+      routeTemplateId.value,
+      form.value.name.trim() || currentTemplate.value?.name,
+      () => getTemplateSharedUsers(routeTemplateId.value!),
+    )
 
     await deleteTemplateMutation.mutateAsync(routeTemplateId.value)
     showDeleteDialog.value = false

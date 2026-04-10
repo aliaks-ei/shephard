@@ -145,7 +145,7 @@ const props = defineProps<ShareDialogProps>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  'share-with-user': [entityId: string, email: string, permission: 'view' | 'edit']
+  'share-with-user': [entityId: string, userId: string, email: string, permission: 'view' | 'edit']
   'update-user-permission': [entityId: string, userId: string, permission: 'view' | 'edit']
   'remove-user-access': [entityId: string, userId: string]
   'search-users': [query: string]
@@ -190,7 +190,7 @@ function handleShare() {
   if (selectedUsers.value.length === 0) return
 
   selectedUsers.value.forEach((user) => {
-    emit('share-with-user', props.entityId, user.email, selectedPermission.value)
+    emit('share-with-user', props.entityId, user.id, user.email, selectedPermission.value)
   })
 
   selectedUsers.value = []

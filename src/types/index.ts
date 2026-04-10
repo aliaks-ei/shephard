@@ -8,6 +8,12 @@ export type {
   PlanCategoryUI,
   CategoryBudget,
 } from './ui'
+export type {
+  NotificationType,
+  NotificationEntityType,
+  NotificationPushPreferences,
+  PartialNotificationPushPreferences,
+} from './notifications'
 
 export type ActionResult<T = void> = T extends void
   ? { success: boolean; error?: unknown }

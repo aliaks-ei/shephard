@@ -7,6 +7,7 @@ import * as userApi from 'src/api/user'
 import { useError } from 'src/composables/useError'
 import { useTheme } from 'src/composables/useTheme'
 import type { User } from 'src/api/user'
+import { defaultNotificationPushPreferences } from 'src/types/notifications'
 
 vi.mock('./auth', () => ({
   useAuthStore: vi.fn(),
@@ -26,6 +27,18 @@ vi.mock('src/api/user', () => ({
   DEFAULT_PREFERENCES: {
     theme: 'light',
     pushNotificationsEnabled: false,
+    pushNotificationsByType: {
+      plan_shared: true,
+      template_shared: true,
+      shared_plan_updated: true,
+      shared_template_updated: true,
+      shared_plan_expense_added: true,
+      shared_plan_removed: true,
+      shared_template_removed: true,
+      shared_plan_cancelled: true,
+      shared_plan_permission_changed: true,
+      shared_template_permission_changed: true,
+    },
     currency: 'EUR',
     isPrivacyModeEnabled: false,
   },
@@ -99,6 +112,7 @@ describe('Preferences Store', () => {
       const mockPreferences = {
         theme: 'dark' as const,
         pushNotificationsEnabled: true,
+        pushNotificationsByType: { ...defaultNotificationPushPreferences },
         currency: 'USD',
         isPrivacyModeEnabled: false,
       }

@@ -294,7 +294,7 @@ export default defineConfig((ctx) => {
 
     // https://v2.quasar.dev/quasar-cli-vite/developing-pwa/configuring-pwa
     pwa: {
-      workboxMode: 'GenerateSW', // 'GenerateSW' or 'InjectManifest'
+      workboxMode: 'InjectManifest', // 'GenerateSW' or 'InjectManifest'
       // swFilename: 'sw.js',
       // manifestFilename: 'manifest.json',
       extendManifestJson(json) {
@@ -308,16 +308,7 @@ export default defineConfig((ctx) => {
       // useCredentialsForManifestTag: true,
       // injectPwaMetaTags: false,
       // extendPWACustomSWConf (esbuildConf) {},
-      extendGenerateSWOptions(cfg) {
-        // Optimize caching strategies
-        cfg.skipWaiting = true
-        cfg.clientsClaim = true
-        cfg.cleanupOutdatedCaches = true
-
-        // More aggressive navigation preload
-        cfg.navigationPreload = true
-
-        // Keep precache focused on runtime-critical assets
+      extendInjectManifestOptions(cfg) {
         cfg.globIgnores = [
           '**/_redirects',
           '**/.DS_Store',
@@ -326,76 +317,7 @@ export default defineConfig((ctx) => {
           '**/mockServiceWorker.js',
           '**/icons/apple-launch-*.png',
         ]
-
-        // Disable offline Google Analytics (not used)
-        cfg.offlineGoogleAnalytics = false
-
-        // Optimize runtime caching
-        cfg.runtimeCaching = [
-          // API responses with Network First strategy
-          {
-            urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/v1\/.*/,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'supabase-api',
-              networkTimeoutSeconds: 3,
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 5, // 5 minutes
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
-
-          // Auth requests - Network Only
-          {
-            urlPattern: /^https:\/\/.*\.supabase\.co\/auth\/.*/,
-            handler: 'NetworkOnly',
-          },
-
-          // Static assets - Cache First with longer expiration
-          {
-            urlPattern: /\.(?:js|css)$/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'static-assets',
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
-              },
-            },
-          },
-
-          // Fonts - Cache First with long expiration
-          {
-            urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts',
-              expiration: {
-                maxEntries: 20,
-                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
-              },
-            },
-          },
-
-          // Images - Cache First with size limit
-          {
-            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|avif)$/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'images',
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 90, // 90 days
-              },
-            },
-          },
-        ]
       },
-      // extendInjectManifestOptions (cfg) {}
     },
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/developing-cordova-apps/configuring-cordova

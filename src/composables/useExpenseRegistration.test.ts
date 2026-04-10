@@ -59,7 +59,10 @@ const mockExpenseSummary = ref<unknown[]>([])
 const mockExpensesByCategory = ref<
   Record<string, Array<{ amount: number; plan_item_id: string | null }>>
 >({})
-const mockCreateExpenseMutateAsync = vi.fn().mockResolvedValue(undefined)
+const mockCreateExpenseMutateAsync = vi.fn().mockResolvedValue({
+  id: 'expense-1',
+  name: 'Test Expense',
+})
 const mockCreateExpensesBatchMutateAsync = vi.fn().mockResolvedValue(undefined)
 const mockDeleteExpenseMutateAsync = vi.fn().mockResolvedValue(undefined)
 const mockDeleteExpensesBatchMutateAsync = vi.fn().mockResolvedValue(undefined)
@@ -123,6 +126,12 @@ vi.mock('src/api/currency', () => ({
   convertCurrency: vi.fn().mockResolvedValue({ convertedAmount: 50, rate: 1 }),
 }))
 
+vi.mock('src/composables/useNotificationEvents', () => ({
+  useNotificationEvents: () => ({
+    emitNotificationEvent: vi.fn().mockResolvedValue(true),
+  }),
+}))
+
 let pinia: TestingPinia
 
 beforeEach(() => {
@@ -138,7 +147,10 @@ beforeEach(() => {
   mockLastExpenseData.value = null
   mockCompletionMutateAsync.mockResolvedValue(undefined)
   mockBatchCompletionMutateAsync.mockResolvedValue(undefined)
-  mockCreateExpenseMutateAsync.mockResolvedValue(undefined)
+  mockCreateExpenseMutateAsync.mockResolvedValue({
+    id: 'expense-1',
+    name: 'Test Expense',
+  })
   mockCreateExpensesBatchMutateAsync.mockResolvedValue(undefined)
   mockDeleteExpenseMutateAsync.mockResolvedValue(undefined)
   mockDeleteExpensesBatchMutateAsync.mockResolvedValue(undefined)

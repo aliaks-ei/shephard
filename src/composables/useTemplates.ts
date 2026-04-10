@@ -3,13 +3,15 @@ import { useTemplatesQuery, useDeleteTemplateMutation } from 'src/queries/templa
 import { useUserStore } from 'src/stores/user'
 import { useListPage } from './useListPage'
 import { filterAndSortTemplates } from 'src/utils/list-filters'
-import type { TemplateWithPermission } from 'src/api'
+import { getTemplateSharedUsers, type TemplateWithPermission } from 'src/api'
+import { useNotificationEvents } from './useNotificationEvents'
 
 export function useTemplates() {
   const userStore = useUserStore()
   const userId = computed(() => userStore.userProfile?.id)
   const { templates, isPending } = useTemplatesQuery(userId)
   const deleteTemplateMutation = useDeleteTemplateMutation()
+  const { emitRemovalNotification } = useNotificationEvents()
 
   const sortOptions = [
     { label: 'Name', value: 'name' },
@@ -27,9 +29,13 @@ export function useTemplates() {
       sortOptions,
       defaultSort: 'name',
       filterAndSortFn: filterAndSortTemplates,
-      deleteFn: async (id: string) => {
+      deleteFn: async (template: TemplateWithPermission) => {
         try {
-          await deleteTemplateMutation.mutateAsync(id)
+          await emitRemovalNotification('template', template.id, template.name, () =>
+            getTemplateSharedUsers(template.id),
+          )
+
+          await deleteTemplateMutation.mutateAsync(template.id)
           return { success: true }
         } catch {
           return { success: false }

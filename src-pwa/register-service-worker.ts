@@ -1,4 +1,9 @@
 import { register } from 'register-service-worker'
+import {
+  revokePushSubscription,
+  savePushSubscription,
+  type BrowserPushSubscription,
+} from 'src/api/notifications'
 
 const UPDATE_CHECK_INTERVAL_MS = 5 * 60 * 1000
 
@@ -8,6 +13,7 @@ type BrowserDocument = {
 }
 
 type BrowserLocation = {
+  href: string
   reload: () => void
 }
 
@@ -18,12 +24,58 @@ type BrowserLikeGlobal = typeof globalThis & {
 
 const browserGlobal = globalThis as BrowserLikeGlobal
 
+type ServiceWorkerMessage =
+  | {
+      type: 'open-notification-route'
+      url: string
+    }
+  | {
+      type: 'push-subscription-changed'
+      oldEndpoint?: string | null
+      subscription: BrowserPushSubscription | null
+    }
+
 function checkForUpdates(registration?: ServiceWorkerRegistration): void {
   if (!registration) {
     return
   }
 
   void registration.update()
+}
+
+function isServiceWorkerMessage(data: unknown): data is ServiceWorkerMessage {
+  if (typeof data !== 'object' || data === null || !('type' in data)) {
+    return false
+  }
+
+  return data.type === 'open-notification-route' || data.type === 'push-subscription-changed'
+}
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', (event: MessageEvent<unknown>) => {
+    const message = event.data
+
+    if (!isServiceWorkerMessage(message)) {
+      return
+    }
+
+    if (message.type === 'open-notification-route') {
+      if (message.url && browserGlobal.location) {
+        browserGlobal.location.href = message.url
+      }
+      return
+    }
+
+    void (async () => {
+      if (message.oldEndpoint) {
+        await revokePushSubscription(message.oldEndpoint)
+      }
+
+      if (message.subscription?.endpoint) {
+        await savePushSubscription(message.subscription)
+      }
+    })()
+  })
 }
 
 // The ready(), registered(), cached(), updatefound() and updated()

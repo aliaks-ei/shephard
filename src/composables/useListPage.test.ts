@@ -116,7 +116,7 @@ describe('deletion flow', () => {
     const lp = use()
     lp.deleteItem({ id: '1', name: 'Alpha' })
 
-    expect(deleteFn).toHaveBeenCalledWith('1')
+    expect(deleteFn).toHaveBeenCalledWith({ id: '1', name: 'Alpha' })
   })
 })
 

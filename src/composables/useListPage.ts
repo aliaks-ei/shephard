@@ -15,7 +15,7 @@ type ListPageConfig<T> = {
   sortOptions: SortOption[]
   defaultSort: string
   filterAndSortFn: (items: T[], searchQuery: string, sortBy: string) => T[]
-  deleteFn: (id: string) => Promise<ActionResult>
+  deleteFn: (item: T) => Promise<ActionResult>
 }
 
 export function useListPage<T extends { id: string; name: string }>(
@@ -45,7 +45,7 @@ export function useListPage<T extends { id: string; name: string }>(
   }
 
   async function deleteItem(item: T): Promise<void> {
-    await config.deleteFn(item.id)
+    await config.deleteFn(item)
   }
 
   function clearSearch(): void {

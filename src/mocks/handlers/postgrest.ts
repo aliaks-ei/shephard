@@ -13,6 +13,8 @@ type TableName =
   | 'plan_items'
   | 'plan_shares'
   | 'expenses'
+  | 'notifications'
+  | 'push_subscriptions'
 
 const VALID_TABLES = new Set<TableName>([
   'categories',
@@ -24,6 +26,8 @@ const VALID_TABLES = new Set<TableName>([
   'plan_items',
   'plan_shares',
   'expenses',
+  'notifications',
+  'push_subscriptions',
 ])
 
 function isValidTable(name: string): name is TableName {

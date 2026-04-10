@@ -30,6 +30,13 @@ export const queryKeys = {
     byCategory: (planId: string, categoryId: string) =>
       [...queryKeys.expenses.all, 'by-category', planId, categoryId] as const,
   },
+  notifications: {
+    all: ['notifications'] as const,
+    list: (userId: string, limit: number) =>
+      [...queryKeys.notifications.all, 'list', userId, limit] as const,
+    unreadCount: (userId: string) =>
+      [...queryKeys.notifications.all, 'unread-count', userId] as const,
+  },
   users: {
     all: ['users'] as const,
     search: (query: string) => [...queryKeys.users.all, 'search', query] as const,

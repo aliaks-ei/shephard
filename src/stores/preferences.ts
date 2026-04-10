@@ -12,6 +12,7 @@ import {
 } from 'src/api/user'
 import { useError } from 'src/composables/useError'
 import { useTheme } from 'src/composables/useTheme'
+import { defaultNotificationPushPreferences } from 'src/types/notifications'
 
 export const usePreferencesStore = defineStore('preferences', () => {
   const authStore = useAuthStore()
@@ -24,6 +25,7 @@ export const usePreferencesStore = defineStore('preferences', () => {
 
   const theme = computed(() => preferences.value.theme)
   const arePushNotificationsEnabled = computed(() => preferences.value.pushNotificationsEnabled)
+  const pushNotificationsByType = computed(() => preferences.value.pushNotificationsByType)
   const currency = computed(() => preferences.value.currency)
   const isPrivacyModeEnabled = computed(() => preferences.value.isPrivacyModeEnabled)
 
@@ -46,6 +48,10 @@ export const usePreferencesStore = defineStore('preferences', () => {
         theme: userPreferences.theme ?? DEFAULT_PREFERENCES.theme,
         pushNotificationsEnabled:
           userPreferences.pushNotificationsEnabled ?? DEFAULT_PREFERENCES.pushNotificationsEnabled,
+        pushNotificationsByType: {
+          ...defaultNotificationPushPreferences,
+          ...(userPreferences.pushNotificationsByType ?? {}),
+        },
         currency: userPreferences.currency ?? DEFAULT_PREFERENCES.currency,
         isPrivacyModeEnabled:
           userPreferences.isPrivacyModeEnabled ?? DEFAULT_PREFERENCES.isPrivacyModeEnabled,
@@ -61,6 +67,10 @@ export const usePreferencesStore = defineStore('preferences', () => {
     preferences.value = {
       ...preferences.value,
       ...updates,
+      pushNotificationsByType: {
+        ...preferences.value.pushNotificationsByType,
+        ...(updates.pushNotificationsByType ?? {}),
+      },
     }
 
     try {
@@ -87,6 +97,7 @@ export const usePreferencesStore = defineStore('preferences', () => {
     theme,
     isDark,
     arePushNotificationsEnabled,
+    pushNotificationsByType,
     currency,
     isPrivacyModeEnabled,
     loadPreferences,

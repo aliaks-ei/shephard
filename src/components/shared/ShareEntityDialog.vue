@@ -29,6 +29,7 @@ import {
   useSearchUsersQuery,
 } from 'src/queries/sharing'
 import { useUserStore } from 'src/stores/user'
+import { useNotificationEvents } from 'src/composables/useNotificationEvents'
 
 const props = defineProps<{
   entityId: string
@@ -44,6 +45,7 @@ const emit = defineEmits<{
 }>()
 
 const userStore = useUserStore()
+const { emitNotificationEvent } = useNotificationEvents()
 const userId = computed(() => userStore.userProfile?.id)
 
 const reactiveEntityId = ref(props.entityId)
@@ -75,8 +77,20 @@ function clearSearch() {
   searchQuery.value = ''
 }
 
-async function handleShareWithUser(entityId: string, email: string, permission: 'view' | 'edit') {
+async function handleShareWithUser(
+  entityId: string,
+  targetUserId: string,
+  email: string,
+  permission: 'view' | 'edit',
+) {
   await shareMutation.mutateAsync({ entityId, userEmail: email, permission })
+  await emitNotificationEvent({
+    type: props.entityType === 'plan' ? 'plan_shared' : 'template_shared',
+    entityType: props.entityType,
+    entityId,
+    targetUserId,
+    targetPermission: permission,
+  })
   emit('shared')
 }
 
@@ -90,9 +104,25 @@ async function handleUpdateUserPermission(
     userId: targetUserId,
     permission,
   })
+  await emitNotificationEvent({
+    type:
+      props.entityType === 'plan'
+        ? 'shared_plan_permission_changed'
+        : 'shared_template_permission_changed',
+    entityType: props.entityType,
+    entityId,
+    targetUserId,
+    targetPermission: permission,
+  })
 }
 
 async function handleRemoveUserAccess(entityId: string, targetUserId: string) {
   await unshareMutation.mutateAsync({ entityId, userId: targetUserId })
+  await emitNotificationEvent({
+    type: props.entityType === 'plan' ? 'shared_plan_removed' : 'shared_template_removed',
+    entityType: props.entityType,
+    entityId,
+    targetUserId,
+  })
 }
 </script>
