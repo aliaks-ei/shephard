@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useTemplate } from './useTemplate'
 import { useUserStore } from 'src/stores/user'
 import type { TemplateWithItems } from 'src/api'
+import { defaultNotificationPushPreferences } from 'src/types/notifications'
 import { setupTestingPinia } from 'test/helpers/pinia-mocks'
 
 // Simple inline helpers for this test
@@ -24,6 +25,7 @@ const createMockPreferences = (currency = 'USD') => ({
   currency,
   theme: 'light' as const,
   pushNotificationsEnabled: true,
+  pushNotificationsByType: { ...defaultNotificationPushPreferences },
   isPrivacyModeEnabled: false,
 })
 
@@ -37,6 +39,12 @@ const mockRoute = ref<{
 
 vi.mock('vue-router', () => ({
   useRoute: () => mockRoute.value,
+}))
+
+vi.mock('src/composables/useNotificationEvents', () => ({
+  useNotificationEvents: () => ({
+    emitNotificationEvent: vi.fn().mockResolvedValue(true),
+  }),
 }))
 
 const {

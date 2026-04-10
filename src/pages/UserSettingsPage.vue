@@ -19,77 +19,72 @@
       </div>
 
       <!-- Preferences -->
-      <q-card
-        :bordered="$q.dark.isActive"
-        class="shadow-1 q-mb-lg"
-      >
-        <q-card-section>
-          <div class="text-subtitle1 text-weight-medium q-mb-md">Preferences</div>
-
-          <q-list>
-            <q-item class="q-pa-sm">
-              <q-item-section avatar>
-                <q-avatar
-                  size="36px"
-                  class="settings-icon-avatar"
-                  text-color="primary"
-                >
-                  <q-icon
-                    name="eva-credit-card-outline"
-                    size="18px"
-                  />
-                </q-avatar>
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="text-body2">Currency</q-item-label>
-              </q-item-section>
-              <q-item-section side>
-                <q-select
-                  :model-value="selectedCurrency"
-                  :options="currencyOptions"
-                  dense
-                  outlined
-                  emit-value
-                  options-dense
-                  hide-bottom-space
-                  @update:model-value="updatePreference('currency', $event)"
+      <SettingsSectionCard title="Preferences">
+        <q-list>
+          <q-item class="q-pa-sm">
+            <q-item-section avatar>
+              <q-avatar
+                size="36px"
+                class="settings-section-card__icon-avatar"
+                text-color="primary"
+              >
+                <q-icon
+                  name="eva-credit-card-outline"
+                  size="18px"
                 />
-              </q-item-section>
-            </q-item>
+              </q-avatar>
+            </q-item-section>
+            <q-item-section>
+              <q-item-label class="text-body2">Currency</q-item-label>
+            </q-item-section>
+            <q-item-section side>
+              <q-select
+                :model-value="selectedCurrency"
+                :options="currencyOptions"
+                dense
+                outlined
+                emit-value
+                options-dense
+                hide-bottom-space
+                @update:model-value="updatePreference('currency', $event)"
+              />
+            </q-item-section>
+          </q-item>
 
-            <q-item class="q-pa-sm">
-              <q-item-section avatar>
-                <q-avatar
-                  size="36px"
-                  class="settings-icon-avatar"
-                  text-color="primary"
-                >
-                  <q-icon
-                    :name="themeIcon"
-                    size="18px"
-                  />
-                </q-avatar>
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="text-body2">Theme</q-item-label>
-              </q-item-section>
-              <q-item-section side>
-                <q-select
-                  :model-value="selectedTheme"
-                  :options="themeOptions"
-                  dense
-                  outlined
-                  emit-value
-                  options-dense
-                  map-options
-                  hide-bottom-space
-                  @update:model-value="updatePreference('theme', $event)"
+          <q-item class="q-pa-sm">
+            <q-item-section avatar>
+              <q-avatar
+                size="36px"
+                class="settings-section-card__icon-avatar"
+                text-color="primary"
+              >
+                <q-icon
+                  :name="themeIcon"
+                  size="18px"
                 />
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-card-section>
-      </q-card>
+              </q-avatar>
+            </q-item-section>
+            <q-item-section>
+              <q-item-label class="text-body2">Theme</q-item-label>
+            </q-item-section>
+            <q-item-section side>
+              <q-select
+                :model-value="selectedTheme"
+                :options="themeOptions"
+                dense
+                outlined
+                emit-value
+                options-dense
+                map-options
+                hide-bottom-space
+                @update:model-value="updatePreference('theme', $event)"
+              />
+            </q-item-section>
+          </q-item>
+        </q-list>
+      </SettingsSectionCard>
+
+      <NotificationSettingsSection />
 
       <!-- Sign Out -->
       <div class="text-center">
@@ -117,6 +112,8 @@ import { useRouter } from 'vue-router'
 useMeta({ title: 'Settings' })
 
 import UserAvatar from 'src/components/UserAvatar.vue'
+import NotificationSettingsSection from 'src/components/settings/NotificationSettingsSection.vue'
+import SettingsSectionCard from 'src/components/settings/SettingsSectionCard.vue'
 import { useUserStore } from 'src/stores/user'
 
 const userStore = useUserStore()
@@ -147,10 +144,7 @@ const themeIcon = computed(() => {
   return 'eva-sun-outline'
 })
 
-function updatePreference(
-  preferenceKey: 'pushNotificationsEnabled' | 'theme' | 'currency',
-  value: boolean | string,
-) {
+function updatePreference(preferenceKey: 'theme' | 'currency', value: string) {
   userStore.updateUserPreferences({
     preferences: { [preferenceKey]: value },
   })
@@ -165,14 +159,3 @@ async function handleSignOut() {
   isSigningOut.value = false
 }
 </script>
-
-<style lang="scss" scoped>
-.settings-icon-avatar {
-  background: hsl(var(--muted));
-}
-
-:global(.body--dark) .settings-icon-avatar {
-  background: rgba(255, 255, 255, 0.045);
-  border: 1px solid hsl(var(--border));
-}
-</style>

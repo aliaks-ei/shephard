@@ -4,6 +4,7 @@ import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-v
 import { createTestingPinia } from '@pinia/testing'
 import UserSettingsPage from './UserSettingsPage.vue'
 import { useUserStore } from 'src/stores/user'
+import { defaultNotificationPushPreferences } from 'src/types/notifications'
 
 beforeEach(() => {
   vi.useFakeTimers()
@@ -43,6 +44,7 @@ function createWrapper() {
                 preferences: {
                   theme: 'light',
                   pushNotificationsEnabled: true,
+                  pushNotificationsByType: { ...defaultNotificationPushPreferences },
                   currency: 'EUR',
                 },
               },
@@ -50,6 +52,15 @@ function createWrapper() {
           },
         }),
       ],
+      stubs: {
+        NotificationSettingsSection: {
+          template: `
+            <div class="shadow-1 q-mb-lg" data-testid="notification-settings-section">
+              <div class="text-subtitle1 text-weight-medium">Notifications</div>
+            </div>
+          `,
+        },
+      },
     },
   })
 
@@ -64,6 +75,10 @@ it('renders user profile information correctly', () => {
   expect(wrapper.find('.text-h5').exists()).toBe(true)
   expect(wrapper.find('.text-caption').exists()).toBe(true)
   expect(wrapper.find('.q-btn').exists()).toBe(true)
+  expect(wrapper.text()).toContain('Preferences')
+  expect(wrapper.text()).toContain('Notifications')
+  expect(wrapper.findAll('.shadow-1.q-mb-lg')).toHaveLength(2)
+  expect(wrapper.find('[data-testid="notification-settings-section"]').exists()).toBe(true)
 })
 
 it('updates currency preference when select is changed', () => {

@@ -12,10 +12,12 @@ import {
 import { toActionResult } from 'src/queries/mutation-utils'
 import type { CurrencyCode, TemplateWithItems } from 'src/api'
 import type { ActionResult } from 'src/types'
+import { useNotificationEvents } from './useNotificationEvents'
 
 export function useTemplate() {
   const route = useRoute()
   const userStore = useUserStore()
+  const { emitNotificationEvent } = useNotificationEvents()
 
   const isNewTemplate = computed(() => route.name === 'new-template')
   const routeTemplateId = computed(() =>
@@ -136,10 +138,26 @@ export function useTemplate() {
     })
 
     if (items.length > 0) {
-      return toActionResult(() =>
+      const result = await toActionResult(() =>
         createItemsMutation.mutateAsync({ templateId: templateResult.data!.id, items }),
       )
+
+      if (result.success) {
+        await emitNotificationEvent({
+          type: 'shared_template_updated',
+          entityType: 'template',
+          entityId: templateResult.data.id,
+        })
+      }
+
+      return result
     }
+
+    await emitNotificationEvent({
+      type: 'shared_template_updated',
+      entityType: 'template',
+      entityId: templateResult.data.id,
+    })
 
     return { success: true }
   }

@@ -9,3 +9,15 @@ entrypoint = "./functions/categorize-expense/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/categorize-expense/*.html" ]
+
+[functions.emit-notification-event]
+enabled = true
+verify_jwt = true
+import_map = "./functions/emit-notification-event/deno.json"
+entrypoint = "./functions/emit-notification-event/index.ts"
+
+[functions.push-subscriptions]
+enabled = true
+verify_jwt = true
+import_map = "./functions/push-subscriptions/deno.json"
+entrypoint = "./functions/push-subscriptions/index.ts"

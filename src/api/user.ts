@@ -1,6 +1,11 @@
 import { supabase } from 'src/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
 import type { Tables, TablesUpdate } from 'src/lib/supabase/types'
+import {
+  defaultNotificationPushPreferences,
+  type NotificationPushPreferences,
+  type PartialNotificationPushPreferences,
+} from 'src/types/notifications'
 
 export type { User }
 
@@ -9,15 +14,23 @@ export type ThemePreference = 'system' | 'light' | 'dark'
 export type UserPreferences = Partial<{
   theme: ThemePreference
   pushNotificationsEnabled: boolean
+  pushNotificationsByType: PartialNotificationPushPreferences
   currency: string
   isPrivacyModeEnabled: boolean
 }>
 
-export type CompleteUserPreferences = Required<UserPreferences>
+export type CompleteUserPreferences = {
+  theme: ThemePreference
+  pushNotificationsEnabled: boolean
+  pushNotificationsByType: NotificationPushPreferences
+  currency: string
+  isPrivacyModeEnabled: boolean
+}
 
 export const DEFAULT_PREFERENCES: CompleteUserPreferences = {
   theme: 'light',
   pushNotificationsEnabled: false,
+  pushNotificationsByType: { ...defaultNotificationPushPreferences },
   currency: 'EUR',
   isPrivacyModeEnabled: false,
 } as const

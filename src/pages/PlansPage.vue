@@ -62,7 +62,6 @@ import EmptyState from 'src/components/shared/EmptyState.vue'
 import PlansGroup from 'src/components/plans/PlansGroup.vue'
 import SharePlanDialog from 'src/components/plans/SharePlanDialog.vue'
 import { usePlans } from 'src/composables/usePlans'
-import { useUpdatePlanMutation } from 'src/queries/plans'
 import type { PlanWithPermission } from 'src/api'
 
 const {
@@ -77,9 +76,8 @@ const {
   viewItem,
   deleteItem,
   clearSearch,
+  cancelPlan,
 } = usePlans()
-
-const updatePlanMutation = useUpdatePlanMutation()
 
 const isShareDialogOpen = ref(false)
 const sharePlanId = ref<string | null>(null)
@@ -90,13 +88,6 @@ const sharePlanOwnerId = computed(() => {
 
 function handleDeletePlan(plan: PlanWithPermission): void {
   deleteItem(plan)
-}
-
-async function cancelPlan(plan: PlanWithPermission): Promise<void> {
-  await updatePlanMutation.mutateAsync({
-    id: plan.id,
-    updates: { status: 'cancelled' },
-  })
 }
 
 function openShareDialog(planId: string): void {

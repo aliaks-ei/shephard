@@ -10,15 +10,6 @@ installQuasarPlugin()
 
 vi.mock('src/composables/usePlans')
 
-const mockUpdatePlanMutateAsync = vi.fn()
-
-vi.mock('src/queries/plans', () => ({
-  useUpdatePlanMutation: vi.fn(() => ({
-    mutateAsync: mockUpdatePlanMutateAsync,
-    isPending: ref(false),
-  })),
-}))
-
 const PlansGroupStub = {
   template: `
     <div
@@ -206,6 +197,7 @@ function createWrapper(
     viewItem: vi.fn(),
     deleteItem: vi.fn(),
     clearSearch: vi.fn(),
+    cancelPlan: vi.fn(),
   }
 
   vi.mocked(usePlans).mockReturnValue(mockUsePlansReturn)
@@ -434,8 +426,8 @@ it('should close share dialog when plan is shared', async () => {
   // TanStack Query invalidation handles refetching
 })
 
-it('should call updatePlanMutation when cancel button is clicked', async () => {
-  const { wrapper } = createWrapper({
+it('should call cancelPlan when cancel button is clicked', async () => {
+  const { wrapper, mockUsePlans } = createWrapper({
     ownedPlans: mockOwnedPlans,
     hasPlans: true,
   })
@@ -443,10 +435,7 @@ it('should call updatePlanMutation when cancel button is clicked', async () => {
   const cancelButton = wrapper.find('.cancel-btn')
   await cancelButton.trigger('click')
 
-  expect(mockUpdatePlanMutateAsync).toHaveBeenCalledWith({
-    id: 'plan-1',
-    updates: { status: 'cancelled' },
-  })
+  expect(mockUsePlans.cancelPlan).toHaveBeenCalledWith(mockOwnedPlans[0])
 })
 
 it('should update search query when search input changes', async () => {

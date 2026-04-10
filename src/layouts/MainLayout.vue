@@ -13,6 +13,48 @@
           />
         </q-toolbar-title>
 
+        <q-btn
+          flat
+          round
+          dense
+          icon="eva-bell-outline"
+          aria-label="Notifications"
+          :aria-haspopup="notificationsPopupType"
+          :aria-expanded="String(notificationsPopupExpanded)"
+          class="q-mr-sm"
+          @click="handleNotificationsButtonClick"
+        >
+          <q-badge
+            v-if="unreadCount > 0"
+            floating
+            rounded
+            color="negative"
+          >
+            {{ unreadCountLabel }}
+          </q-badge>
+
+          <q-menu
+            v-if="showNotificationsDesktopMenu"
+            v-model="showNotificationsMenu"
+            anchor="bottom right"
+            self="top right"
+            :offset="[0, 8]"
+            class="notifications-menu-panel"
+            :style="notificationsMenuStyle"
+          >
+            <NotificationInbox
+              :notifications="notifications"
+              :unread-count="unreadCount"
+              :loading="isNotificationsLoading"
+              @open="handleOpenNotification"
+              @mark-read="markAsRead"
+              @remove="removeNotification"
+              @mark-all-read="markAllAsRead"
+              @clear-all="clearAllNotifications"
+            />
+          </q-menu>
+        </q-btn>
+
         <PrivacyModeToggle
           v-if="$q.screen.lt.md"
           class="q-mr-sm"
@@ -63,6 +105,37 @@
       v-model="showExpenseDialog"
       auto-select-recent-plan
     />
+
+    <AppDialogShell
+      v-model="showNotificationsDialog"
+      title="Notifications"
+      :subtitle="notificationsDialogSubtitle"
+      body-class="q-pa-none"
+      :body-scrollable="false"
+    >
+      <template #mobile-header-extra>
+        <NotificationInboxHeaderActions
+          :has-notifications="notifications.length > 0"
+          :unread-count="unreadCount"
+          @mark-all-read="markAllAsRead"
+          @clear-all="clearAllNotifications"
+        />
+      </template>
+
+      <NotificationInbox
+        mobile
+        class="col"
+        :notifications="notifications"
+        :unread-count="unreadCount"
+        :loading="isNotificationsLoading"
+        :show-header="false"
+        @open="handleOpenNotification"
+        @mark-read="markAsRead"
+        @remove="removeNotification"
+        @mark-all-read="markAllAsRead"
+        @clear-all="clearAllNotifications"
+      />
+    </AppDialogShell>
   </q-layout>
 </template>
 
@@ -74,8 +147,12 @@ import { useQuasar, useMeta, Notify } from 'quasar'
 import PrivacyModeToggle from 'src/components/PrivacyModeToggle.vue'
 import NavigationDrawer from 'src/components/NavigationDrawer.vue'
 import MobileBottomNavigation from 'src/components/MobileBottomNavigation.vue'
+import NotificationInbox from 'src/components/notifications/NotificationInbox.vue'
+import NotificationInboxHeaderActions from 'src/components/notifications/NotificationInboxHeaderActions.vue'
+import AppDialogShell from 'src/components/shared/AppDialogShell.vue'
 import { useUserStore } from 'src/stores/user'
 import { usePwaInstall } from 'src/composables/usePwaInstall'
+import { useNotifications } from 'src/composables/useNotifications'
 
 useMeta({
   titleTemplate: (title) => `${title} | Shephard`,
@@ -91,10 +168,62 @@ const ExpenseRegistrationDialog = defineAsyncComponent(
 
 const hasOpenedExpenseDialog = ref(false)
 const showExpenseDialog = ref(false)
+const showNotificationsMenu = ref(false)
+const showNotificationsDialog = ref(false)
+
+const {
+  notifications,
+  unreadCount,
+  isLoading: isNotificationsLoading,
+  openNotification,
+  markAsRead,
+  removeNotification,
+  markAllAsRead,
+  clearAllNotifications,
+} = useNotifications()
 
 function openExpenseDialog() {
   hasOpenedExpenseDialog.value = true
   showExpenseDialog.value = true
+}
+
+const unreadCountLabel = computed(() => {
+  return unreadCount.value > 99 ? '99+' : String(unreadCount.value)
+})
+
+const showNotificationsDesktopMenu = computed(() => !$q.screen.lt.md)
+const notificationsPopupType = computed(() => {
+  return showNotificationsDesktopMenu.value ? 'menu' : 'dialog'
+})
+const notificationsPopupExpanded = computed(() => {
+  return showNotificationsDesktopMenu.value
+    ? showNotificationsMenu.value
+    : showNotificationsDialog.value
+})
+
+const notificationsMenuStyle = {
+  width: 'min(420px, calc(100vw - 16px))',
+  maxWidth: '420px',
+}
+
+const notificationsDialogSubtitle = computed(() => {
+  if (unreadCount.value === 0) {
+    return 'All caught up'
+  }
+
+  return unreadCount.value === 1 ? '1 unread item' : `${unreadCount.value} unread items`
+})
+
+function handleNotificationsButtonClick() {
+  if (!showNotificationsDesktopMenu.value) {
+    showNotificationsDialog.value = true
+  }
+}
+
+async function handleOpenNotification(notification: (typeof notifications.value)[number]) {
+  await openNotification(notification)
+  showNotificationsMenu.value = false
+  showNotificationsDialog.value = false
 }
 
 watch(isInstallable, (installable) => {
@@ -163,5 +292,13 @@ const showMobileBottomNav = computed(() => {
 
 .mobile-nav-footer {
   padding-bottom: calc(max(12px, env(safe-area-inset-bottom, 0px)) + var(--glass-bottom-offset));
+}
+
+:deep(.notifications-menu-panel) {
+  overflow: hidden;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-xl);
+  background: hsl(var(--card));
+  box-shadow: var(--shadow-lg);
 }
 </style>

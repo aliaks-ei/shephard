@@ -2,6 +2,7 @@ import { vi, beforeEach, it, expect } from 'vitest'
 import type { PostgrestError } from '@supabase/supabase-js'
 import { supabase } from 'src/lib/supabase/client'
 import { getUserPreferences, saveUserPreferences, DEFAULT_PREFERENCES } from './user'
+import { defaultNotificationPushPreferences } from 'src/types/notifications'
 
 const createPostgrestError = (message: string): PostgrestError =>
   ({
@@ -186,6 +187,7 @@ it('DEFAULT_PREFERENCES should have expected default values', () => {
   expect(DEFAULT_PREFERENCES).toEqual({
     theme: 'light',
     pushNotificationsEnabled: false,
+    pushNotificationsByType: { ...defaultNotificationPushPreferences },
     currency: 'EUR',
     isPrivacyModeEnabled: false,
   })
