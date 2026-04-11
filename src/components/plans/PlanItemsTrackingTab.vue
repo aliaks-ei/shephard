@@ -147,7 +147,7 @@
           >
             <template #header>
               <q-item-section
-                style="min-width: auto"
+                class="min-w-auto"
                 avatar
               >
                 <CategoryIcon
@@ -198,7 +198,7 @@
                   :class="item.is_completed ? 'text-strike' : ''"
                 >
                   <q-item-section
-                    style="min-width: auto"
+                    class="min-w-auto"
                     avatar
                   >
                     <q-checkbox
@@ -243,7 +243,7 @@
                     class="q-px-sm text-grey-6"
                   >
                     <q-item-section
-                      style="min-width: auto"
+                      class="min-w-auto"
                       avatar
                     >
                       <q-icon

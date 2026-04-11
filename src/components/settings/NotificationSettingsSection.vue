@@ -3,7 +3,7 @@
     title="Notifications"
     description="Inbox alerts stay on. Push is optional and can be tailored by activity."
   >
-    <q-list separator>
+    <q-list>
       <q-item
         class="notification-settings__item bg-transparent no-border-radius q-pl-sm q-pr-none q-py-sm"
       >
@@ -144,7 +144,6 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useUserStore } from 'src/stores/user'
 import {
   notificationPreferenceGroups,
   notificationTypeLabels,
@@ -153,15 +152,14 @@ import {
 import { usePushNotifications } from 'src/composables/usePushNotifications'
 import SettingsSectionCard from './SettingsSectionCard.vue'
 
-const userStore = useUserStore()
 const {
+  availabilityReason,
   permission,
-  isSupported,
   isSubscribed,
   isConfigLoading,
   isGlobalToggleLoading,
   canManagePush,
-  pushConfig,
+  globalPushEnabled,
   pushPreferences,
   setPushNotificationsEnabled,
   updateNotificationTypePreference,
@@ -169,7 +167,6 @@ const {
 
 const isExpanded = ref(false)
 
-const globalPushEnabled = computed(() => userStore.preferences.arePushNotificationsEnabled)
 const globalToggleDisabled = computed(() => {
   return (
     isConfigLoading.value ||
@@ -185,48 +182,64 @@ const helperToneClass = computed(() =>
 )
 
 const pushHelperText = computed(() => {
-  if (isConfigLoading.value) {
+  if (isConfigLoading.value && !isGlobalToggleLoading.value) {
     return 'Checking push availability...'
   }
 
-  if (!isSupported.value) {
+  if (availabilityReason.value === 'ios_requires_install') {
+    return 'On iPhone and iPad, install Shephard to your Home Screen to enable push alerts.'
+  }
+
+  if (availabilityReason.value === 'unsupported') {
     return 'Push is unavailable on this device. Inbox notifications still work.'
   }
 
-  if (!pushConfig.value.configured) {
+  if (availabilityReason.value === 'not_configured') {
     return 'Push is not configured yet. Inbox notifications still work.'
   }
 
   if (permission.value === 'denied') {
-    return 'Push is blocked in browser settings. Re-enable it there to resume delivery.'
+    return 'Push is blocked in device settings. Re-enable it there to resume delivery.'
+  }
+
+  if (isGlobalToggleLoading.value && globalPushEnabled.value) {
+    return 'Turning on push for this device...'
+  }
+
+  if (isGlobalToggleLoading.value && !globalPushEnabled.value) {
+    return 'Turning off push for this device...'
   }
 
   if (globalPushEnabled.value && isSubscribed.value) {
-    return 'Enabled for this browser.'
+    return 'Enabled for this device.'
   }
 
   if (globalPushEnabled.value) {
-    return 'Enabled in preferences. Waiting for browser subscription to finish.'
+    return 'Enabled in preferences. Waiting for device subscription to finish.'
   }
 
   return 'Turn on push to receive alerts outside the in-app inbox.'
 })
 
 const customizeHelperText = computed(() => {
-  if (isConfigLoading.value) {
+  if (isConfigLoading.value && !isGlobalToggleLoading.value) {
     return 'Available after push setup is checked.'
   }
 
-  if (!isSupported.value) {
+  if (availabilityReason.value === 'ios_requires_install') {
+    return 'Install the app on your Home Screen first, then choose which alerts reach this device.'
+  }
+
+  if (availabilityReason.value === 'unsupported') {
     return 'Per-activity push alerts are unavailable on this device.'
   }
 
-  if (!pushConfig.value.configured) {
+  if (availabilityReason.value === 'not_configured') {
     return 'Per-activity push alerts will appear once push is configured.'
   }
 
   if (permission.value === 'denied') {
-    return 'Browser permission is blocked. Re-enable notifications to adjust alert types.'
+    return 'Notification permission is blocked. Re-enable it in device settings to adjust alert types.'
   }
 
   if (!globalPushEnabled.value) {

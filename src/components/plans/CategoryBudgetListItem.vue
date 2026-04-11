@@ -6,8 +6,7 @@
   >
     <q-item-section
       avatar
-      class="q-pr-md"
-      style="min-width: auto"
+      class="q-pr-md min-w-auto"
     >
       <CategoryIcon
         :color="category.categoryColor"

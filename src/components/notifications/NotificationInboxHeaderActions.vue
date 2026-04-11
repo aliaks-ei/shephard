@@ -34,7 +34,10 @@
             :disable="!hasNotifications || unreadCount === 0"
             @click="$emit('mark-all-read')"
           >
-            <q-item-section avatar>
+            <q-item-section
+              class="min-w-auto"
+              avatar
+            >
               <q-icon
                 name="eva-checkmark-outline"
                 size="16px"
@@ -48,7 +51,10 @@
             :disable="!hasNotifications"
             @click="$emit('clear-all')"
           >
-            <q-item-section avatar>
+            <q-item-section
+              class="min-w-auto"
+              avatar
+            >
               <q-icon
                 name="eva-trash-2-outline"
                 size="16px"

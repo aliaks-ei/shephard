@@ -65,6 +65,10 @@ type PushPayload = {
   url?: string
 }
 
+function isSameOrigin(url: URL): boolean {
+  return url.origin === self.location.origin
+}
+
 type StrategyPlugin = NonNullable<
   NonNullable<ConstructorParameters<typeof NetworkFirst>[0]>['plugins']
 >[number]
@@ -110,7 +114,8 @@ registerRoute(
 )
 
 registerRoute(
-  ({ request }) => request.destination === 'script' || request.destination === 'style',
+  ({ request, url }) =>
+    isSameOrigin(url) && (request.destination === 'script' || request.destination === 'style'),
   new CacheFirst({
     cacheName: 'static-assets',
     plugins: [
@@ -140,7 +145,7 @@ registerRoute(
 )
 
 registerRoute(
-  ({ request }) => request.destination === 'image',
+  ({ request, url }) => isSameOrigin(url) && request.destination === 'image',
   new CacheFirst({
     cacheName: 'images',
     plugins: [

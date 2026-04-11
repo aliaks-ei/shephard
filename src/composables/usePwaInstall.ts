@@ -1,5 +1,6 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useStorage } from '@vueuse/core'
+import { isRunningStandaloneApp } from 'src/utils/pwa'
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>
@@ -31,20 +32,7 @@ export function usePwaInstall() {
   }
 
   function checkIfInstalled(): boolean {
-    // Check if running in standalone mode (installed PWA)
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      return true
-    }
-
-    // Check for iOS standalone mode
-    if (
-      'standalone' in window.navigator &&
-      (window.navigator as unknown as { standalone?: boolean }).standalone
-    ) {
-      return true
-    }
-
-    return false
+    return isRunningStandaloneApp()
   }
 
   function handleBeforeInstallPrompt(event: Event) {

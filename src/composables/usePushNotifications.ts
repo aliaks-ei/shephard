@@ -1,5 +1,6 @@
 import { computed, ref, watch } from 'vue'
 import { useUserStore } from 'src/stores/user'
+import { isAppleMobileDevice, isRunningStandaloneApp } from 'src/utils/pwa'
 import { useError } from './useError'
 import {
   getPushSubscriptionConfig,
@@ -18,6 +19,13 @@ import {
   type PushPermissionState,
 } from 'src/utils/push'
 
+export type PushAvailabilityReason =
+  | 'checking'
+  | 'ready'
+  | 'unsupported'
+  | 'ios_requires_install'
+  | 'not_configured'
+
 export function usePushNotifications() {
   const userStore = useUserStore()
   const { handleError } = useError()
@@ -27,10 +35,16 @@ export function usePushNotifications() {
   const isSubscribed = ref(false)
   const isConfigLoading = ref(false)
   const isGlobalToggleLoading = ref(false)
+  const optimisticEnabled = ref<boolean | null>(null)
+  const availabilityReason = ref<PushAvailabilityReason>('checking')
   const pushConfig = ref<PushSubscriptionConfig>({
     publicKey: null,
     configured: false,
   })
+
+  const globalPushEnabled = computed(
+    () => optimisticEnabled.value ?? userStore.preferences.arePushNotificationsEnabled,
+  )
 
   const pushPreferences = computed(() => ({
     ...defaultNotificationPushPreferences,
@@ -38,30 +52,44 @@ export function usePushNotifications() {
   }))
 
   const canManagePush = computed(() => {
-    return isSupported.value && pushConfig.value.configured && !!pushConfig.value.publicKey
+    return availabilityReason.value === 'ready' && !!pushConfig.value.publicKey
   })
 
   async function refreshPushState() {
     if (!userStore.userProfile?.id) {
+      availabilityReason.value = 'checking'
       return
     }
 
     isSupported.value = isPushSupported()
     permission.value = getPushPermissionState()
 
+    if (isAppleMobileDevice() && !isRunningStandaloneApp()) {
+      availabilityReason.value = 'ios_requires_install'
+      pushConfig.value = { publicKey: null, configured: false }
+      isSubscribed.value = false
+      isSupported.value = false
+      return
+    }
+
     if (!isSupported.value) {
+      availabilityReason.value = 'unsupported'
       pushConfig.value = { publicKey: null, configured: false }
       isSubscribed.value = false
       return
     }
 
     isConfigLoading.value = true
+    availabilityReason.value = 'checking'
 
     try {
       pushConfig.value = await getPushSubscriptionConfig()
       const currentSubscription = await getCurrentBrowserPushSubscription()
       isSubscribed.value = !!currentSubscription
+      availabilityReason.value =
+        pushConfig.value.configured && !!pushConfig.value.publicKey ? 'ready' : 'not_configured'
     } catch (error) {
+      availabilityReason.value = 'not_configured'
       handleError('NOTIFICATIONS.PUSH_SETUP_FAILED', error)
     } finally {
       isConfigLoading.value = false
@@ -118,6 +146,7 @@ export function usePushNotifications() {
 
   async function setPushNotificationsEnabled(enabled: boolean) {
     isGlobalToggleLoading.value = true
+    optimisticEnabled.value = enabled
 
     try {
       if (enabled) {
@@ -126,8 +155,10 @@ export function usePushNotifications() {
         await disablePushNotifications()
       }
     } catch (error) {
+      optimisticEnabled.value = userStore.preferences.arePushNotificationsEnabled
       handleError('NOTIFICATIONS.PUSH_SETUP_FAILED', error)
     } finally {
+      optimisticEnabled.value = null
       isGlobalToggleLoading.value = false
     }
   }
@@ -157,6 +188,8 @@ export function usePushNotifications() {
     isSubscribed,
     isConfigLoading,
     isGlobalToggleLoading,
+    globalPushEnabled,
+    availabilityReason,
     canManagePush,
     pushConfig,
     pushPreferences,

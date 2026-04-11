@@ -5,23 +5,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import NotificationSettingsSection from './NotificationSettingsSection.vue'
 
-const mockUserStore = reactive({
-  preferences: {
-    arePushNotificationsEnabled: true,
-  },
-})
-
 const mockState = {
+  availabilityReason: ref<
+    'checking' | 'ready' | 'unsupported' | 'ios_requires_install' | 'not_configured'
+  >('ready'),
   permission: ref<'default' | 'granted' | 'denied'>('default'),
-  isSupported: ref(true),
   isSubscribed: ref(false),
   isConfigLoading: ref(false),
   isGlobalToggleLoading: ref(false),
+  globalPushEnabled: ref(true),
   canManagePush: ref(true),
-  pushConfig: ref({
-    publicKey: 'public-key',
-    configured: true,
-  }),
   pushPreferences: computed(() => ({
     plan_shared: true,
     template_shared: true,
@@ -39,7 +32,7 @@ const mockState = {
 }
 
 vi.mock('src/stores/user', () => ({
-  useUserStore: () => mockUserStore,
+  useUserStore: () => reactive({}),
 }))
 
 vi.mock('src/composables/usePushNotifications', () => ({
@@ -54,17 +47,13 @@ function renderSection() {
 
 describe('NotificationSettingsSection', () => {
   beforeEach(() => {
-    mockUserStore.preferences.arePushNotificationsEnabled = true
+    mockState.availabilityReason.value = 'ready'
     mockState.permission.value = 'default'
-    mockState.isSupported.value = true
     mockState.isSubscribed.value = false
     mockState.isConfigLoading.value = false
     mockState.isGlobalToggleLoading.value = false
+    mockState.globalPushEnabled.value = true
     mockState.canManagePush.value = true
-    mockState.pushConfig.value = {
-      publicKey: 'public-key',
-      configured: true,
-    }
     vi.clearAllMocks()
   })
 
@@ -81,7 +70,7 @@ describe('NotificationSettingsSection', () => {
   })
 
   it('shows compact helper copy when push is unsupported', async () => {
-    mockState.isSupported.value = false
+    mockState.availabilityReason.value = 'unsupported'
     mockState.canManagePush.value = false
 
     const wrapper = renderSection()
@@ -106,10 +95,10 @@ describe('NotificationSettingsSection', () => {
     const wrapper = renderSection()
 
     expect(wrapper.text()).toContain(
-      'Push is blocked in browser settings. Re-enable it there to resume delivery.',
+      'Push is blocked in device settings. Re-enable it there to resume delivery.',
     )
     expect(wrapper.text()).toContain(
-      'Browser permission is blocked. Re-enable notifications to adjust alert types.',
+      'Notification permission is blocked. Re-enable it in device settings to adjust alert types.',
     )
     expect(wrapper.text()).not.toContain(
       'Browser permission is blocked. Re-enable notifications in browser settings to resume push delivery.',
@@ -140,11 +129,35 @@ describe('NotificationSettingsSection', () => {
   })
 
   it('requires global push before per-type alerts apply', () => {
-    mockUserStore.preferences.arePushNotificationsEnabled = false
+    mockState.globalPushEnabled.value = false
 
     const wrapper = renderSection()
 
     expect(wrapper.text()).toContain('Enable push first to choose which alerts reach this device.')
+  })
+
+  it('shows an install hint on iPhone and iPad when push requires the installed app', () => {
+    mockState.availabilityReason.value = 'ios_requires_install'
+    mockState.globalPushEnabled.value = false
+    mockState.canManagePush.value = false
+
+    const wrapper = renderSection()
+
+    expect(wrapper.text()).toContain(
+      'On iPhone and iPad, install Shephard to your Home Screen to enable push alerts.',
+    )
+    expect(wrapper.text()).toContain(
+      'Install the app on your Home Screen first, then choose which alerts reach this device.',
+    )
+  })
+
+  it('shows optimistic helper copy while turning push on', () => {
+    mockState.globalPushEnabled.value = true
+    mockState.isGlobalToggleLoading.value = true
+
+    const wrapper = renderSection()
+
+    expect(wrapper.text()).toContain('Turning on push for this device...')
   })
 
   it('forwards toggle changes to the push notifications composable', async () => {

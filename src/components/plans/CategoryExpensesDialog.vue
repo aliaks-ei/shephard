@@ -136,7 +136,7 @@
               :class="item.is_completed ? 'text-strike' : ''"
             >
               <q-item-section
-                class="q-pr-sm category-dialog-icon-section"
+                class="q-pr-sm min-w-auto"
                 avatar
               >
                 <q-checkbox
@@ -373,9 +373,5 @@ watch(
 
 .category-expenses-virtual-list {
   max-height: min(58vh, 480px);
-}
-
-.category-dialog-icon-section {
-  min-width: auto;
 }
 </style>
