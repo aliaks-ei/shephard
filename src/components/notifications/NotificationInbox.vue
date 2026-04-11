@@ -9,7 +9,6 @@
     >
       <div class="notifications-inbox__title-block">
         <div class="notifications-inbox__title">Notifications</div>
-        <div class="notifications-inbox__summary">{{ unreadCountLabel }}</div>
       </div>
 
       <NotificationInboxHeaderActions
@@ -22,7 +21,10 @@
 
     <q-separator v-if="showHeader" />
 
-    <q-scroll-area class="col notifications-scroll-area">
+    <q-scroll-area
+      class="col notifications-scroll-area fit"
+      :class="{ 'notifications-scroll-area--empty': !hasNotifications && !loading }"
+    >
       <q-inner-loading
         :showing="loading"
         color="primary"
@@ -203,13 +205,6 @@ defineEmits<{
 
 const hasNotifications = computed(() => props.notifications.length > 0)
 const sections = computed(() => getNotificationSections(props.notifications))
-const unreadCountLabel = computed(() => {
-  if (props.unreadCount === 0) {
-    return 'All caught up'
-  }
-
-  return props.unreadCount === 1 ? '1 unread item' : `${props.unreadCount} unread items`
-})
 </script>
 
 <style lang="scss" scoped>
@@ -246,12 +241,6 @@ const unreadCountLabel = computed(() => {
   line-height: 1.2;
 }
 
-.notifications-inbox__summary {
-  margin-top: 2px;
-  color: hsl(var(--muted-foreground));
-  font-size: 0.79rem;
-}
-
 .notifications-inbox__avatar-section {
   min-width: 28px;
   padding-right: 8px;
@@ -261,8 +250,13 @@ const unreadCountLabel = computed(() => {
   min-height: 0;
 }
 
+.notifications-scroll-area--empty :deep(.q-scrollarea__content) {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
 .notifications-inbox__empty {
-  min-height: 100%;
   padding: 36px 20px;
 }
 

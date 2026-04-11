@@ -1,6 +1,7 @@
 {
   "name": "Shephard - Smart Expenses Wallet",
   "short_name": "Shephard",
+  "id": "/",
   "description": "Smart expenses wallet to manage your finances efficiently",
   "orientation": "portrait",
   "background_color": "#f7f7f7",

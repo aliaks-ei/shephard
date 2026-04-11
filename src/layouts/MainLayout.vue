@@ -109,7 +109,6 @@
     <AppDialogShell
       v-model="showNotificationsDialog"
       title="Notifications"
-      :subtitle="notificationsDialogSubtitle"
       body-class="q-pa-none"
       :body-scrollable="false"
     >
@@ -205,14 +204,6 @@ const notificationsMenuStyle = {
   width: 'min(420px, calc(100vw - 16px))',
   maxWidth: '420px',
 }
-
-const notificationsDialogSubtitle = computed(() => {
-  if (unreadCount.value === 0) {
-    return 'All caught up'
-  }
-
-  return unreadCount.value === 1 ? '1 unread item' : `${unreadCount.value} unread items`
-})
 
 function handleNotificationsButtonClick() {
   if (!showNotificationsDesktopMenu.value) {

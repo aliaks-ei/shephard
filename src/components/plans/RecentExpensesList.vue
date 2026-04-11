@@ -35,7 +35,7 @@
             class="q-px-none"
           >
             <q-item-section
-              style="min-width: auto"
+              class="min-w-auto"
               avatar
             >
               <q-skeleton
@@ -96,7 +96,7 @@
 
             <q-item class="q-px-none">
               <q-item-section
-                style="min-width: auto"
+                class="min-w-auto"
                 avatar
               >
                 <CategoryIcon
@@ -148,7 +148,7 @@
             class="q-px-none"
           >
             <q-item-section
-              style="min-width: auto"
+              class="min-w-auto"
               avatar
             >
               <CategoryIcon
