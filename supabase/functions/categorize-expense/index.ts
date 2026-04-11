@@ -9,6 +9,12 @@ import {
   sortCategoriesDeterministically,
   type Category,
 } from '../_shared/ai-utils.ts'
+import {
+  buildCategorizationInstructions,
+  buildCategoryContexts,
+  findExactCategoryMatch,
+  type CategorizePlanItem,
+} from './helpers.ts'
 
 const openai = new OpenAI({
   apiKey: Deno.env.get('OPENAI_API_KEY'),
@@ -93,12 +99,13 @@ Deno.serve(async (req) => {
     }
 
     let categories: Category[] | undefined
+    let planItemsForCategorization: CategorizePlanItem[] = []
     let categoriesError
 
     if (planId) {
       const { data: planItems, error: itemsError } = await supabaseClient
         .from('plan_items')
-        .select('category_id, categories(id, name)')
+        .select('name, category_id, categories(id, name)')
         .eq('plan_id', planId)
 
       categoriesError = itemsError
@@ -111,6 +118,13 @@ Deno.serve(async (req) => {
             : item.categories
           if (isCategory(categoryValue) && !categoryMap.has(categoryValue.id)) {
             categoryMap.set(categoryValue.id, categoryValue)
+          }
+
+          if (typeof item.name === 'string' && typeof item.category_id === 'string') {
+            planItemsForCategorization.push({
+              categoryId: item.category_id,
+              name: item.name,
+            })
           }
         })
         categories = sortCategoriesDeterministically(Array.from(categoryMap.values()))
@@ -143,25 +157,25 @@ Deno.serve(async (req) => {
       )
     }
 
-    const categoryList = categories.map((c, idx) => `${idx + 1}. ${c.name}`).join('\n')
+    const categoryContexts = buildCategoryContexts(categories, planItemsForCategorization)
+    const exactMatch = findExactCategoryMatch(expenseName, categoryContexts)
 
-    const instructions = `
-      <task>
-      Pick the single best category for a user expense name.
-      </task>
+    if (exactMatch) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: {
+            categoryId: exactMatch.id,
+            categoryName: exactMatch.name,
+            confidence: 0.98,
+            reasoning: 'Matched the expense name to an existing planned item.',
+          },
+        }),
+        { headers: corsHeaders },
+      )
+    }
 
-      <categories>
-      ${categoryList}
-      </categories>
-
-      <rules>
-      - Return only valid JSON that follows the output schema.
-      - categoryIndex must be the 1-based index from the categories list.
-      - confidence must be between 0 and 1.
-      - reasoning must be a single short sentence (max 50 words).
-      - If no good match exists, pick the closest category with confidence below 0.65.
-      </rules>
-    `
+    const instructions = buildCategorizationInstructions(categoryContexts, expenseName)
 
     const categorySuggestionJsonSchema = {
       type: 'object',
@@ -192,7 +206,7 @@ Deno.serve(async (req) => {
         openai.responses.create({
           model: 'gpt-5-nano',
           instructions,
-          input: `<expense_name>${expenseName}</expense_name>`,
+          input: expenseName.trim(),
           reasoning: { effort: 'minimal' },
           max_output_tokens: 120,
           store: false,
