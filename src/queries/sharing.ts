@@ -116,11 +116,19 @@ export function useUpdatePermissionMutation(entityType: EntityType) {
   })
 }
 
-export function useSearchUsersQuery(query: MaybeRefOrGetter<string>) {
+export function useSearchUsersQuery(
+  query: MaybeRefOrGetter<string>,
+  entityType: EntityType,
+  entityId: MaybeRefOrGetter<string>,
+) {
   return useQuery({
-    queryKey: computed(() => queryKeys.users.search(toValue(query))),
-    queryFn: () => searchUsersByEmail(toValue(query)),
-    enabled: computed(() => toValue(query).trim().length > 0),
+    queryKey: computed(() => queryKeys.users.search(entityType, toValue(entityId), toValue(query))),
+    queryFn: () =>
+      searchUsersByEmail(toValue(query), {
+        entityType,
+        entityId: toValue(entityId),
+      }),
+    enabled: computed(() => !!toValue(entityId) && toValue(query).trim().length > 0),
     staleTime: 30 * 1000,
     meta: { errorKey: 'USERS.SEARCH_FAILED' as const },
   })

@@ -78,10 +78,26 @@ export const rpcHandlers = [
 
   // search_users_for_sharing
   http.post(`${SUPABASE_URL}/rest/v1/rpc/search_users_for_sharing`, async ({ request }) => {
-    const body = (await request.json()) as { q: string }
+    const body = (await request.json()) as { q: string; entity_id?: string; entity_type?: string }
     const query = body.q.toLowerCase()
+    const sharedUserIds =
+      body.entity_type === 'plan'
+        ? new Set(
+            getAll('plan_shares')
+              .filter((share) => share.plan_id === body.entity_id)
+              .map((share) => share.shared_with_user_id),
+          )
+        : new Set(
+            getAll('template_shares')
+              .filter((share) => share.template_id === body.entity_id)
+              .map((share) => share.shared_with_user_id),
+          )
     const results = seedUsers
-      .filter((u) => u.email.toLowerCase().includes(query) || u.name.toLowerCase().includes(query))
+      .filter(
+        (u) =>
+          !sharedUserIds.has(u.id) &&
+          (u.email.toLowerCase().includes(query) || u.name.toLowerCase().includes(query)),
+      )
       .map((u) => ({ id: u.id, name: u.name, email: u.email }))
     return HttpResponse.json(results)
   }),

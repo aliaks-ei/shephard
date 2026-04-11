@@ -57,6 +57,11 @@ export type UserSearchResult = {
   email: string
 }
 
+export type ShareSearchContext = {
+  entityType: 'plan' | 'template'
+  entityId: string
+}
+
 async function getUserById(userId: string): Promise<Tables<'users'> | null> {
   const { data, error } = await supabase.from('users').select('*').eq('id', userId).maybeSingle()
 
@@ -86,7 +91,10 @@ export async function saveUserPreferences(
   if (error) throw error
 }
 
-export async function searchUsersByEmail(query: string): Promise<UserSearchResult[]> {
+export async function searchUsersByEmail(
+  query: string,
+  context: ShareSearchContext,
+): Promise<UserSearchResult[]> {
   if (!query.trim()) return []
 
   const { data, error } = await (
@@ -94,6 +102,8 @@ export async function searchUsersByEmail(query: string): Promise<UserSearchResul
       rpc: (fn: string, args?: unknown) => Promise<{ data: unknown; error: unknown }>
     }
   ).rpc('search_users_for_sharing', {
+    entity_type: context.entityType,
+    entity_id: context.entityId,
     q: query.trim(),
   })
 

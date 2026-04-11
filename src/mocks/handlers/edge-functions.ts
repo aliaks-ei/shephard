@@ -60,18 +60,22 @@ function getRecipients(
   actorId: string,
   ownerId: string,
 ): string[] {
+  const participantIds = dedupe([
+    ownerId,
+    ...getShareRows(input.entityType, input.entityId).map((share) => share.shared_with_user_id),
+  ])
+
   if (input.targetUserIds?.length) {
-    return dedupe(input.targetUserIds).filter((userId) => userId !== actorId)
+    return dedupe(input.targetUserIds).filter(
+      (userId) => userId !== actorId && participantIds.includes(userId),
+    )
   }
 
   if (input.targetUserId) {
-    return input.targetUserId === actorId ? [] : [input.targetUserId]
+    return input.targetUserId !== actorId && participantIds.includes(input.targetUserId)
+      ? [input.targetUserId]
+      : []
   }
-
-  const participantIds = [
-    ownerId,
-    ...getShareRows(input.entityType, input.entityId).map((share) => share.shared_with_user_id),
-  ]
 
   return dedupe(participantIds).filter((userId) => userId !== actorId)
 }
