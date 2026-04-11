@@ -1,13 +1,13 @@
 <template>
-  <div class="floating-nav liquid-glass-surface q-mx-sm">
-    <div class="mobile-nav-row">
+  <div class="floating-nav liquid-glass-surface q-mx-sm q-mb-none">
+    <div class="mobile-nav-row items-center">
       <div
-        class="mobile-nav-highlight liquid-glass-animated"
+        class="mobile-nav-highlight liquid-glass-animated no-pointer-events"
         :style="highlightStyle"
       />
 
       <!-- Home -->
-      <div class="mobile-nav-col">
+      <div class="mobile-nav-col min-w-0">
         <q-btn
           icon="eva-home-outline"
           label="Home"
@@ -24,7 +24,7 @@
       </div>
 
       <!-- Plans -->
-      <div class="mobile-nav-col">
+      <div class="mobile-nav-col min-w-0">
         <q-btn
           icon="eva-calendar-outline"
           label="Plans"
@@ -41,19 +41,19 @@
       </div>
 
       <!-- Add Expense FAB -->
-      <div class="mobile-nav-col column items-center justify-center">
+      <div class="mobile-nav-col min-w-0 column items-center justify-center">
         <q-btn
           icon="eva-plus-outline"
           round
           :ripple="false"
           size="md"
-          class="mobile-nav-add-btn liquid-glass-animated"
+          class="mobile-nav-add-btn glass-fab-btn liquid-glass-animated"
           @click="emit('open-expense-dialog')"
         />
       </div>
 
       <!-- Templates -->
-      <div class="mobile-nav-col">
+      <div class="mobile-nav-col min-w-0">
         <q-btn
           icon="eva-file-text-outline"
           label="Templates"
@@ -70,7 +70,7 @@
       </div>
 
       <!-- Settings -->
-      <div class="mobile-nav-col">
+      <div class="mobile-nav-col min-w-0">
         <q-btn
           icon="eva-settings-2-outline"
           label="Settings"
@@ -113,7 +113,6 @@ const highlightStyle = computed(() => {
 
 <style lang="scss" scoped>
 .floating-nav {
-  margin-bottom: 0;
   padding: 2px;
 }
 
@@ -122,12 +121,7 @@ const highlightStyle = computed(() => {
   position: relative;
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  align-items: center;
   gap: var(--mobile-nav-gap);
-}
-
-.mobile-nav-col {
-  min-width: 0;
 }
 
 .mobile-nav-highlight {
@@ -143,7 +137,6 @@ const highlightStyle = computed(() => {
   background: hsl(var(--glass-active-bg));
   box-shadow: inset 0 0 0 1px hsl(var(--glass-active-border));
   transition: left 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
-  pointer-events: none;
   z-index: 0;
 }
 
@@ -161,21 +154,6 @@ const highlightStyle = computed(() => {
 .mobile-nav-add-btn {
   position: relative;
   z-index: 2;
-  background: hsl(var(--glass-fab-bg));
-  color: hsl(var(--primary-foreground));
-  border: 1px solid hsl(var(--glass-border-outer));
-  box-shadow: var(--glass-fab-shadow);
-  transition:
-    transform 0.2s ease,
-    background-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.mobile-nav-add-btn:focus-visible {
-  outline: none;
-  box-shadow:
-    var(--glass-fab-shadow),
-    0 0 0 3px hsl(var(--glass-focus-ring));
 }
 
 .mobile-nav-action :deep(.q-focus-helper),
@@ -187,17 +165,11 @@ const highlightStyle = computed(() => {
   .mobile-nav-action:hover {
     background: transparent;
   }
-
-  .mobile-nav-add-btn:hover {
-    transform: translateY(-1px);
-    background: hsl(var(--glass-fab-bg-hover));
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .mobile-nav-highlight,
-  .mobile-nav-action,
-  .mobile-nav-add-btn {
+  .mobile-nav-action {
     transition: none;
   }
 }

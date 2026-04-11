@@ -4,10 +4,9 @@
     class="shadow-1 full-height"
   >
     <q-item
-      class="column full-height q-pa-md"
+      class="column full-height q-pa-md relative-position"
       clickable
       @click="$emit('click', category)"
-      style="position: relative"
     >
       <!-- Status Icon: Desktop - Top Right -->
       <q-icon
@@ -15,8 +14,7 @@
         :name="statusIcon.icon"
         :color="statusIcon.color"
         size="20px"
-        class="absolute-top-right"
-        style="top: 12px; right: 12px"
+        class="absolute-top-right q-mt-sm q-mr-sm"
       >
         <q-tooltip>{{ statusTooltip }}</q-tooltip>
       </q-icon>
@@ -66,7 +64,7 @@
       </div>
 
       <!-- Metrics Section -->
-      <q-item-section style="flex-grow: 0">
+      <q-item-section class="col-auto">
         <div class="row items-start">
           <!-- Circular Progress: Right side on desktop -->
           <q-circular-progress

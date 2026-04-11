@@ -74,6 +74,14 @@ body {
   padding-bottom: max(8px, calc(8px + env(safe-area-inset-bottom, 0px)));
 }
 
+.safe-area-bottom-toolbar {
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+}
+
+.safe-area-bottom-toolbar--glass {
+  padding-bottom: calc(max(12px, env(safe-area-inset-bottom, 0px)) + var(--glass-bottom-offset));
+}
+
 @media (display-mode: standalone) and (max-width: ($breakpoint-md-min - 0.02px)) {
   :root {
     --glass-bottom-offset: 4px;
@@ -896,6 +904,10 @@ h6,
   box-shadow: var(--shadow-md);
 }
 
+.min-h-0 {
+  min-height: 0;
+}
+
 .min-w-0 {
   min-width: 0;
 }
@@ -920,6 +932,49 @@ h6,
   &:focus-visible {
     outline: none;
     box-shadow: 0 0 0 3px hsl(var(--ring) / 0.5);
+  }
+}
+
+.flex-fill-min-h-0 {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.section-overline {
+  color: hsl(var(--muted-foreground));
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.glass-fab-btn {
+  background: hsl(var(--glass-fab-bg));
+  color: hsl(var(--primary-foreground));
+  border: 1px solid hsl(var(--glass-border-outer));
+  box-shadow: var(--glass-fab-shadow);
+  transition:
+    transform 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.glass-fab-btn:focus-visible {
+  outline: none;
+  box-shadow:
+    var(--glass-fab-shadow),
+    0 0 0 3px hsl(var(--glass-focus-ring));
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .glass-fab-btn:hover {
+    transform: translateY(-1px);
+    background: hsl(var(--glass-fab-bg-hover));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-fab-btn {
+    transition: none;
   }
 }
 

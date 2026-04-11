@@ -7,7 +7,7 @@
     :body-scrollable="false"
     @update:model-value="$emit('update:modelValue', $event)"
   >
-    <div class="column no-wrap category-selection-dialog__content">
+    <div class="column no-wrap flex-fill-min-h-0">
       <div class="q-px-md q-pt-md q-pb-sm">
         <q-input
           v-model="searchQuery"
@@ -135,10 +135,3 @@ function selectCategory(category: Category): void {
   emit('update:modelValue', false)
 }
 </script>
-
-<style lang="scss" scoped>
-.category-selection-dialog__content {
-  flex: 1 1 auto;
-  min-height: 0;
-}
-</style>

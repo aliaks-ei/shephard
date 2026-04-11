@@ -113,21 +113,25 @@ registerRoute(
   new NetworkOnly(),
 )
 
-registerRoute(
-  ({ request, url }) =>
-    isSameOrigin(url) && (request.destination === 'script' || request.destination === 'style'),
-  new CacheFirst({
-    cacheName: 'static-assets',
-    plugins: [
-      asStrategyPlugin(
-        new ExpirationPlugin({
-          maxEntries: 100,
-          maxAgeSeconds: 60 * 60 * 24 * 30,
-        }),
-      ),
-    ],
-  }),
-)
+// Never cache dev-server modules: Vite serves scripts/styles with rotating hashes.
+// CacheFirst here mixes stale and fresh chunks and breaks Vue (e.g. renderSlot / internal `ce`).
+if (process.env.PROD) {
+  registerRoute(
+    ({ request, url }) =>
+      isSameOrigin(url) && (request.destination === 'script' || request.destination === 'style'),
+    new CacheFirst({
+      cacheName: 'static-assets',
+      plugins: [
+        asStrategyPlugin(
+          new ExpirationPlugin({
+            maxEntries: 100,
+            maxAgeSeconds: 60 * 60 * 24 * 30,
+          }),
+        ),
+      ],
+    }),
+  )
+}
 
 registerRoute(
   ({ url }) => /^https:\/\/fonts\.(googleapis|gstatic)\.com/.test(url.href),

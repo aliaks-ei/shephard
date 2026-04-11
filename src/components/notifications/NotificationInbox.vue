@@ -1,13 +1,13 @@
 <template>
   <div
-    class="column no-wrap notifications-inbox"
-    :class="mobile ? 'notifications-inbox--mobile' : 'notifications-inbox--desktop'"
+    class="column no-wrap full-width notifications-inbox"
+    :class="mobile ? 'notifications-inbox--mobile min-h-0' : 'notifications-inbox--desktop'"
   >
     <div
       v-if="showHeader"
-      class="notifications-inbox__topbar col-auto"
+      class="notifications-inbox__topbar row items-center justify-between q-px-md q-py-md col-auto"
     >
-      <div class="notifications-inbox__title-block">
+      <div class="notifications-inbox__title-block min-w-0">
         <div class="notifications-inbox__title">Notifications</div>
       </div>
 
@@ -22,7 +22,7 @@
     <q-separator v-if="showHeader" />
 
     <q-scroll-area
-      class="col notifications-scroll-area fit"
+      class="col fit min-h-0 notifications-scroll-area"
       :class="{ 'notifications-scroll-area--empty': !hasNotifications && !loading }"
     >
       <q-inner-loading
@@ -40,7 +40,7 @@
           class="text-grey-5 q-mb-sm"
         />
         <div class="text-subtitle2 q-mb-xs">No notifications yet</div>
-        <div class="notifications-inbox__empty-copy">
+        <div class="notifications-inbox__empty-copy text-muted">
           Shared plans, templates, and access changes will appear here.
         </div>
       </div>
@@ -55,7 +55,9 @@
           class="notifications-inbox__section"
           :data-section-key="section.key"
         >
-          <div class="notifications-inbox__section-header">
+          <div
+            class="notifications-inbox__section-header row items-center justify-between section-overline text-muted"
+          >
             <span>{{ section.title }}</span>
             <span>{{ section.notifications.length }}</span>
           </div>
@@ -67,7 +69,7 @@
             >
               <q-item
                 clickable
-                class="notifications-inbox__item"
+                class="notifications-inbox__item items-start"
                 :class="
                   mobile
                     ? 'notifications-inbox__item--mobile'
@@ -79,9 +81,9 @@
                 <q-item-section
                   avatar
                   top
-                  class="notifications-inbox__avatar-section"
+                  class="notifications-inbox__avatar-section q-pr-sm"
                 >
-                  <div class="notifications-inbox__leading">
+                  <div class="notifications-inbox__leading flex flex-center">
                     <q-icon
                       :name="getNotificationIcon(notification.type)"
                       size="16px"
@@ -89,11 +91,11 @@
                   </div>
                 </q-item-section>
 
-                <q-item-section class="notifications-inbox__content">
+                <q-item-section class="notifications-inbox__content min-w-0">
                   <div class="row items-start justify-between no-wrap q-col-gutter-sm">
-                    <div class="col notifications-inbox__title-col">
+                    <div class="col min-w-0 notifications-inbox__title-col">
                       <div
-                        class="notifications-inbox__item-title row items-center no-wrap"
+                        class="notifications-inbox__item-title row items-center no-wrap min-w-0"
                         :class="{ 'text-weight-medium': !notification.read_at }"
                       >
                         <span
@@ -108,7 +110,7 @@
                     </div>
 
                     <div
-                      class="notifications-inbox__actions row items-center no-wrap"
+                      class="notifications-inbox__actions row items-center no-wrap col-auto"
                       :class="mobile ? 'q-gutter-xs' : 'notifications-inbox__actions--desktop'"
                     >
                       <q-btn
@@ -143,14 +145,14 @@
                   </div>
 
                   <div
-                    class="notifications-inbox__item-body q-mt-xs"
+                    class="notifications-inbox__item-body text-muted q-mt-xs"
                     :class="{ 'notifications-inbox__item-body--desktop': !mobile }"
                   >
                     {{ notification.body }}
                   </div>
 
                   <div class="row justify-end q-mt-xs">
-                    <span class="notifications-inbox__time">
+                    <span class="notifications-inbox__time text-muted no-wrap">
                       {{ formatNotificationRelativeTime(notification.created_at) }}
                     </span>
                   </div>
@@ -209,7 +211,6 @@ const sections = computed(() => getNotificationSections(props.notifications))
 
 <style lang="scss" scoped>
 .notifications-inbox {
-  width: 100%;
   background: hsl(var(--card));
 }
 
@@ -220,19 +221,11 @@ const sections = computed(() => getNotificationSections(props.notifications))
 
 .notifications-inbox--mobile {
   height: 100%;
-  min-height: 0;
 }
 
 .notifications-inbox__topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   gap: 12px;
-  padding: 12px 14px;
-}
-
-.notifications-inbox__title-block {
-  min-width: 0;
+  padding-block: 12px;
 }
 
 .notifications-inbox__title {
@@ -243,11 +236,6 @@ const sections = computed(() => getNotificationSections(props.notifications))
 
 .notifications-inbox__avatar-section {
   min-width: 28px;
-  padding-right: 8px;
-}
-
-.notifications-scroll-area {
-  min-height: 0;
 }
 
 .notifications-scroll-area--empty :deep(.q-scrollarea__content) {
@@ -262,7 +250,6 @@ const sections = computed(() => getNotificationSections(props.notifications))
 
 .notifications-inbox__empty-copy {
   max-width: 260px;
-  color: hsl(var(--muted-foreground));
   font-size: 0.87rem;
   line-height: 1.45;
 }
@@ -276,19 +263,11 @@ const sections = computed(() => getNotificationSections(props.notifications))
 }
 
 .notifications-inbox__section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   padding: 8px 14px 5px;
-  color: hsl(var(--muted-foreground));
   font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
 }
 
 .notifications-inbox__item {
-  align-items: flex-start;
   background: transparent;
   transition: background-color 0.18s ease;
 }
@@ -307,9 +286,6 @@ const sections = computed(() => getNotificationSections(props.notifications))
 }
 
 .notifications-inbox__leading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   width: 24px;
   height: 24px;
   border-radius: 999px;
@@ -317,16 +293,7 @@ const sections = computed(() => getNotificationSections(props.notifications))
   background: hsl(var(--muted) / 0.72);
 }
 
-.notifications-inbox__content {
-  min-width: 0;
-}
-
-.notifications-inbox__title-col {
-  min-width: 0;
-}
-
 .notifications-inbox__item-title {
-  min-width: 0;
   color: hsl(var(--foreground));
   font-size: 0.9rem;
   line-height: 1.28;
@@ -334,10 +301,10 @@ const sections = computed(() => getNotificationSections(props.notifications))
 
 .notifications-inbox__item-body {
   overflow: hidden;
-  color: hsl(var(--muted-foreground));
   font-size: 0.82rem;
   line-height: 1.36;
   display: -webkit-box;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
@@ -347,13 +314,7 @@ const sections = computed(() => getNotificationSections(props.notifications))
 }
 
 .notifications-inbox__time {
-  color: hsl(var(--muted-foreground));
   font-size: 0.71rem;
-  white-space: nowrap;
-}
-
-.notifications-inbox__actions {
-  flex: 0 0 auto;
 }
 
 .notifications-inbox__actions--desktop {

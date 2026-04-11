@@ -36,7 +36,7 @@
 
     <q-form
       ref="formRef"
-      class="column no-wrap expense-registration-dialog__form"
+      class="column no-wrap flex-fill-min-h-0"
       @submit="handleSubmit"
     >
       <!-- Fixed Tabs -->
@@ -68,8 +68,7 @@
         :swipeable="$q.screen.lt.md"
         :transition-prev="$q.screen.lt.md ? 'slide-right' : 'fade'"
         :transition-next="$q.screen.lt.md ? 'slide-left' : 'fade'"
-        class="col overflow-auto bg-transparent"
-        style="flex: 1; min-height: 0"
+        class="col overflow-auto bg-transparent flex-fill-min-h-0"
       >
         <!-- Custom Entry Mode -->
         <q-tab-panel
@@ -294,10 +293,3 @@ watch(
   { immediate: true },
 )
 </script>
-
-<style lang="scss" scoped>
-.expense-registration-dialog__form {
-  flex: 1 1 auto;
-  min-height: 0;
-}
-</style>

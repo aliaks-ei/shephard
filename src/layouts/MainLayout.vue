@@ -39,7 +39,7 @@
             anchor="bottom right"
             self="top right"
             :offset="[0, 8]"
-            class="notifications-menu-panel"
+            class="notifications-menu-panel overflow-hidden"
             :style="notificationsMenuStyle"
           >
             <NotificationInbox
@@ -79,7 +79,7 @@
 
     <q-footer
       v-if="showMobileBottomNav"
-      class="bg-transparent mobile-nav-footer"
+      class="bg-transparent safe-area-bottom-toolbar--glass"
     >
       <MobileBottomNavigation @open-expense-dialog="openExpenseDialog" />
     </q-footer>
@@ -281,12 +281,7 @@ const showMobileBottomNav = computed(() => {
   border-right: 1px solid hsl(var(--border));
 }
 
-.mobile-nav-footer {
-  padding-bottom: calc(max(12px, env(safe-area-inset-bottom, 0px)) + var(--glass-bottom-offset));
-}
-
 :deep(.notifications-menu-panel) {
-  overflow: hidden;
   border: 1px solid hsl(var(--border));
   border-radius: var(--radius-xl);
   background: hsl(var(--card));

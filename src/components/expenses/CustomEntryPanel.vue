@@ -106,7 +106,7 @@
           <template #option="scope">
             <q-item
               v-bind="scope.itemProps"
-              class="custom-entry-panel__category-option"
+              class="q-py-xs q-px-md"
             >
               <q-item-section avatar>
                 <CategoryIcon
@@ -142,7 +142,7 @@
             </q-item>
           </template>
           <template #no-option>
-            <q-item class="custom-entry-panel__category-option">
+            <q-item class="q-py-xs q-px-md">
               <q-item-section class="text-grey">
                 {{ selectedPlan ? 'No categories in selected plan' : 'Select a plan first' }}
               </q-item-section>
@@ -432,10 +432,3 @@ watch(
   },
 )
 </script>
-
-<style lang="scss" scoped>
-.custom-entry-panel__category-option {
-  padding-block: 4px;
-  padding-inline: 16px;
-}
-</style>
