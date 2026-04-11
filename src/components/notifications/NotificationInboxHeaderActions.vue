@@ -7,7 +7,7 @@
       size="sm"
       icon="eva-settings-2-outline"
       aria-label="Notification settings"
-      class="notifications-header-actions__icon-btn"
+      class="notifications-header-actions__icon-btn text-muted"
       :to="{ name: 'settings' }"
       v-close-popup
     />
@@ -19,14 +19,14 @@
       size="sm"
       icon="eva-more-horizontal-outline"
       aria-label="Notification actions"
-      class="notifications-header-actions__icon-btn"
+      class="notifications-header-actions__icon-btn text-muted"
     >
       <q-menu
         auto-close
         anchor="bottom right"
         self="top right"
         :offset="[0, 6]"
-        class="notifications-header-actions__menu"
+        class="notifications-header-actions__menu menu-list--wide border-subtle shadow-elevated"
       >
         <q-list dense>
           <q-item
@@ -86,14 +86,10 @@ defineEmits<{
   width: 28px;
   min-width: 28px;
   height: 28px;
-  color: hsl(var(--muted-foreground));
 }
 
 .notifications-header-actions__menu {
-  min-width: 180px;
-  border: 1px solid hsl(var(--border));
   border-radius: var(--radius-lg);
   background: hsl(var(--card));
-  box-shadow: var(--shadow-md);
 }
 </style>

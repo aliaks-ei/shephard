@@ -12,7 +12,7 @@
     <q-card
       ref="cardRef"
       v-touch-pan.vertical.mouse="handleSheetPan"
-      class="dialog-shell__card column no-wrap"
+      class="dialog-shell__card column no-wrap min-h-0"
       :class="[
         cardClass,
         {
@@ -43,7 +43,7 @@
           </div>
 
           <div
-            class="dialog-shell__title-block dialog-shell__title-block--mobile full-width text-center"
+            class="dialog-shell__title-block dialog-shell__title-block--mobile full-width min-w-0 text-center"
           >
             <h2 class="text-subtitle1 text-weight-medium ellipsis q-my-none">
               {{ title }}
@@ -68,7 +68,7 @@
       >
         <slot name="header-prefix" />
 
-        <div class="dialog-shell__title-block col">
+        <div class="dialog-shell__title-block col min-w-0">
           <h2 class="text-h6 text-weight-medium ellipsis q-my-none">
             {{ title }}
           </h2>
@@ -98,9 +98,12 @@
       <q-separator />
 
       <div
-        class="dialog-shell__body column col"
+        class="dialog-shell__body column"
         :class="[
+          bodyColumnFlexClass,
+          bodyColumnFlexClass === 'col' ? 'min-h-0' : '',
           isMobile ? 'dialog-shell__body--mobile' : '',
+          isMobile && mobileBodyCardSurface ? 'dialog-shell__body--mobile-card-surface' : '',
           bodyScrollable ? 'dialog-shell__body--scroll overflow-auto' : 'overflow-hidden',
           bodyClass,
         ]"
@@ -166,6 +169,8 @@ const props = withDefaults(
     subtitle?: string
     bodyClass?: string
     cardClass?: string
+    /** Mobile sheet body uses muted surface by default; set true for full lists (e.g. swipe rows) that match card background. */
+    mobileBodyCardSurface?: boolean
     bodyScrollable?: boolean
     persistentDesktop?: boolean
     footerAlign?: FooterAlign
@@ -179,6 +184,7 @@ const props = withDefaults(
   {
     bodyClass: '',
     cardClass: '',
+    mobileBodyCardSurface: false,
     bodyScrollable: true,
     persistentDesktop: false,
     footerAlign: 'right',
@@ -209,6 +215,13 @@ const wasBlockedByScroll = ref(false)
 let closeTimer: ReturnType<typeof setTimeout> | undefined
 
 const isMobile = computed(() => $q.screen.lt.md)
+
+// Desktop cards have no fixed height; a flex-grown body (Quasar `col`) with min-height:0 can
+// collapse to zero when slot content has no intrinsic block size (e.g. q-scroll-area). Mobile
+// sheets use a definite height so the body should still consume remaining space.
+const bodyColumnFlexClass = computed(() =>
+  isMobile.value === true || props.bodyScrollable === true ? 'col' : 'col-auto',
+)
 
 const showFooter = computed(() => {
   return isMobile.value ? Boolean(props.primaryActionLabel) : Boolean(slots.footer)
@@ -432,20 +445,12 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="scss" scoped>
-.dialog-shell__card {
-  min-height: 0;
-}
-
 .dialog-shell__card--mobile {
   overscroll-behavior-y: contain;
 }
 
 .dialog-shell__card--dragging {
   cursor: grabbing;
-}
-
-.dialog-shell__title-block {
-  min-width: 0;
 }
 
 .dialog-shell__title-block--mobile {
@@ -458,10 +463,6 @@ onBeforeUnmount(() => {
 
 .dialog-shell__subtitle {
   color: hsl(var(--muted-foreground));
-}
-
-.dialog-shell__body {
-  min-height: 0;
 }
 
 .dialog-shell__body--mobile {
@@ -485,5 +486,10 @@ onBeforeUnmount(() => {
   :global(.body--dark) .dialog-shell__body--mobile {
     background: color-mix(in srgb, hsl(var(--muted)) 94%, white);
   }
+}
+
+/* Solid card matches q-item / q-slide-item rows during horizontal swipe on mobile. */
+.dialog-shell__body--mobile.dialog-shell__body--mobile-card-surface {
+  background: hsl(var(--card));
 }
 </style>

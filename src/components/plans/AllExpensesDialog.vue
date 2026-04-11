@@ -4,6 +4,7 @@
     title="Expense History"
     body-class="q-pa-none"
     :body-scrollable="false"
+    mobile-body-card-surface
     @update:model-value="$emit('update:modelValue', $event)"
   >
     <template #header-prefix>
@@ -17,8 +18,7 @@
     <q-scroll-area
       ref="scrollAreaRef"
       :style="$q.screen.lt.md ? 'height: 100%' : 'height: 550px'"
-      :class="$q.screen.lt.md ? 'q-px-sm' : 'q-px-md'"
-      class="q-py-sm full-height"
+      :class="[$q.screen.lt.md ? 'q-px-sm full-height' : 'q-px-md', 'q-py-sm']"
     >
       <q-virtual-scroll
         :items="expenses"

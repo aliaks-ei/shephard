@@ -154,6 +154,21 @@ it('renders desktop dialog layout and footer slot', () => {
   expect(wrapper.find('.desktop-prefix').exists()).toBe(true)
   expect(wrapper.find('.desktop-footer-slot').exists()).toBe(true)
   expect(wrapper.find('.dialog-shell__mobile-primary').exists()).toBe(false)
+  expect(wrapper.find('.dialog-shell__body').classes()).toContain('col')
+})
+
+it('uses col-auto for desktop body when not scrollable so content height is preserved', () => {
+  const wrapper = renderShell(
+    {
+      bodyScrollable: false,
+    },
+    {
+      mobile: false,
+    },
+  )
+
+  expect(wrapper.find('.dialog-shell__body').classes()).toContain('col-auto')
+  expect(wrapper.find('.dialog-shell__body').classes()).not.toContain('col')
 })
 
 it('renders the mobile bottom sheet variant with swipe zone and primary action', () => {
@@ -178,6 +193,7 @@ it('renders the mobile bottom sheet variant with swipe zone and primary action',
     'dialog-shell__surface--card',
   )
   expect(wrapper.find('.dialog-shell__body').classes()).toContain('dialog-shell__body--mobile')
+  expect(wrapper.find('.dialog-shell__body').classes()).toContain('col')
   expect(wrapper.find('.dialog-shell__footer--mobile').classes()).toContain(
     'dialog-shell__surface--card',
   )
@@ -188,6 +204,21 @@ it('renders the mobile bottom sheet variant with swipe zone and primary action',
   expect(cardStyle).toContain('height: 95dvh')
   expect(cardStyle).toContain('max-height: 95dvh')
   expect(cardStyle).toContain('border-radius: var(--radius-xl) var(--radius-xl)')
+})
+
+it('applies card surface to mobile body when mobileBodyCardSurface is set', () => {
+  const wrapper = renderShell(
+    {
+      mobileBodyCardSurface: true,
+    },
+    {
+      mobile: true,
+    },
+  )
+
+  const body = wrapper.find('.dialog-shell__body')
+  expect(body.classes()).toContain('dialog-shell__body--mobile')
+  expect(body.classes()).toContain('dialog-shell__body--mobile-card-surface')
 })
 
 it('emits close and primary events on mobile', async () => {

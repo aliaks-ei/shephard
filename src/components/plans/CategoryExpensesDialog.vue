@@ -17,7 +17,7 @@
       />
     </template>
 
-    <div class="column no-wrap category-expenses-dialog__content">
+    <div class="column no-wrap flex-fill-min-h-0">
       <!-- Category Summary -->
       <q-card-section class="q-pa-md themed-muted-surface">
         <!-- Budget Overview -->
@@ -117,7 +117,7 @@
         :swipeable="$q.screen.lt.md"
         :transition-prev="$q.screen.lt.md ? 'slide-right' : 'fade'"
         :transition-next="$q.screen.lt.md ? 'slide-left' : 'fade'"
-        class="col overflow-auto bg-transparent"
+        class="col overflow-auto bg-transparent flex-fill-min-h-0"
       >
         <!-- Items to Track Panel -->
         <q-tab-panel
@@ -366,11 +366,6 @@ watch(
 </script>
 
 <style lang="scss" scoped>
-.category-expenses-dialog__content {
-  flex: 1 1 auto;
-  min-height: 0;
-}
-
 .category-expenses-virtual-list {
   max-height: min(58vh, 480px);
 }

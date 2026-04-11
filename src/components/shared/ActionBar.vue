@@ -36,7 +36,7 @@
       >
         <q-list
           dense
-          class="action-menu-list"
+          class="menu-list"
         >
           <q-item
             v-for="action in overflowActions"
@@ -48,7 +48,7 @@
             <q-item-section
               v-if="action.icon"
               avatar
-              class="action-menu-avatar q-pr-sm"
+              class="menu-avatar q-pr-sm"
             >
               <q-icon
                 :name="action.icon"
@@ -73,8 +73,8 @@
     expand
     :offset="[0, 0]"
   >
-    <div class="full-width q-px-sm mobile-action-shell">
-      <div class="q-pa-xs floating-bar">
+    <div class="full-width q-px-sm safe-area-bottom-toolbar">
+      <div class="q-pa-xs q-mb-none border-subtle shadow-elevated floating-bar">
         <!-- Main Actions -->
         <div class="row q-gutter-xs items-center">
           <div
@@ -123,7 +123,7 @@
               >
                 <q-list
                   dense
-                  class="action-menu-list"
+                  class="menu-list"
                 >
                   <q-item
                     v-for="action in overflowActions"
@@ -134,7 +134,7 @@
                     <q-item-section
                       v-if="action.icon"
                       avatar
-                      class="action-menu-avatar q-pr-sm"
+                      class="menu-avatar q-pr-sm"
                     >
                       <q-icon
                         :name="action.icon"
@@ -211,23 +211,8 @@ async function handleActionClick(action: ActionBarAction): Promise<void> {
 </script>
 
 <style lang="scss" scoped>
-.mobile-action-shell {
-  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
-}
-
 .floating-bar {
   border-radius: var(--radius-full);
   background: hsl(var(--card));
-  box-shadow: var(--shadow-md);
-  border: 1px solid hsl(var(--border));
-  margin-bottom: 0;
-}
-
-.action-menu-list {
-  min-width: 160px;
-}
-
-.action-menu-avatar {
-  min-width: 36px;
 }
 </style>

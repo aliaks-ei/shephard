@@ -82,7 +82,7 @@
           <q-icon
             name="eva-chevron-down-outline"
             size="18px"
-            class="notification-settings__chevron"
+            class="notification-settings__chevron text-muted"
             :class="{ 'notification-settings__chevron--expanded': isExpanded }"
           />
         </q-item-section>
@@ -101,7 +101,7 @@
           :key="group.key"
           class="notification-settings__group"
         >
-          <div class="notification-settings__group-title q-mb-xs">
+          <div class="notification-settings__group-title section-overline q-mb-xs">
             {{ group.title }}
           </div>
 
@@ -178,7 +178,7 @@ const customizeDisabled = computed(() => !canManagePush.value)
 const typeToggleDisabled = computed(() => !globalPushEnabled.value || !canManagePush.value)
 
 const helperToneClass = computed(() =>
-  permission.value === 'denied' ? 'text-negative' : 'text-grey-6',
+  permission.value === 'denied' ? 'text-negative' : 'text-muted',
 )
 
 const pushHelperText = computed(() => {
@@ -276,7 +276,6 @@ function toggleExpanded() {
 }
 
 .notification-settings__chevron {
-  color: hsl(var(--muted-foreground));
   transition: transform 180ms ease;
 }
 
@@ -289,11 +288,7 @@ function toggleExpanded() {
 }
 
 .notification-settings__group-title {
-  color: hsl(var(--muted-foreground));
   font-size: 0.76rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
 }
 
 .notification-settings__toggle-item {

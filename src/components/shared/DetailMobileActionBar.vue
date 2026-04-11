@@ -5,8 +5,8 @@
     expand
     :offset="[0, 0]"
   >
-    <div class="full-width q-px-sm mobile-action-shell">
-      <div class="q-px-xs floating-bar liquid-glass-surface">
+    <div class="full-width q-px-sm safe-area-bottom-toolbar--glass">
+      <div class="q-px-xs q-mb-none floating-bar liquid-glass-surface">
         <div class="row q-gutter-xs items-center">
           <div class="col">
             <q-btn
@@ -55,7 +55,7 @@
               icon="eva-plus-outline"
               round
               size="md"
-              class="mobile-action-add-btn liquid-glass-animated"
+              class="mobile-action-add-btn glass-fab-btn liquid-glass-animated"
               :loading="addExpenseAction?.loading"
               :disable="addExpenseAction?.loading"
               @click="void handleAddExpenseClick()"
@@ -103,7 +103,7 @@
               >
                 <q-list
                   dense
-                  class="detail-mobile-menu-list"
+                  class="menu-list--wide"
                 >
                   <q-item
                     v-for="action in moreMenuActions"
@@ -113,7 +113,7 @@
                   >
                     <q-item-section
                       avatar
-                      class="detail-mobile-menu-avatar q-pr-sm"
+                      class="menu-avatar q-pr-sm"
                     >
                       <q-icon
                         :name="action.icon"
@@ -421,22 +421,9 @@ function getMobileActionButtonClasses(
 </script>
 
 <style lang="scss" scoped>
-.mobile-action-shell {
-  padding-bottom: calc(max(12px, env(safe-area-inset-bottom, 0px)) + var(--glass-bottom-offset));
-}
-
 .floating-bar {
-  margin-bottom: 0;
   padding-top: 2px;
   padding-bottom: 2px;
-}
-
-.detail-mobile-menu-list {
-  min-width: 180px;
-}
-
-.detail-mobile-menu-avatar {
-  min-width: 36px;
 }
 
 .mobile-action-btn {
@@ -446,24 +433,6 @@ function getMobileActionButtonClasses(
     background-color 0.2s ease,
     box-shadow 0.2s ease,
     color 0.2s ease;
-}
-
-.mobile-action-add-btn {
-  background: hsl(var(--glass-fab-bg));
-  color: hsl(var(--primary-foreground));
-  border: 1px solid hsl(var(--glass-border-outer));
-  box-shadow: var(--glass-fab-shadow);
-  transition:
-    transform 0.2s ease,
-    background-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.mobile-action-add-btn:focus-visible {
-  outline: none;
-  box-shadow:
-    var(--glass-fab-shadow),
-    0 0 0 3px hsl(var(--glass-focus-ring));
 }
 
 .mobile-slot-placeholder {
@@ -478,16 +447,10 @@ function getMobileActionButtonClasses(
   .mobile-action-btn:hover {
     background: hsl(var(--glass-active-bg));
   }
-
-  .mobile-action-add-btn:hover {
-    transform: translateY(-1px);
-    background: hsl(var(--glass-fab-bg-hover));
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mobile-action-btn,
-  .mobile-action-add-btn {
+  .mobile-action-btn {
     transition: none;
   }
 }
