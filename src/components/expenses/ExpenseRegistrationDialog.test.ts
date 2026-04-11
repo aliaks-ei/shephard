@@ -1,10 +1,27 @@
-import { it, expect, vi } from 'vitest'
+import { it, expect, vi, afterEach } from 'vitest'
 import { ref } from 'vue'
 import { mount } from '@vue/test-utils'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 import ExpenseRegistrationDialog from './ExpenseRegistrationDialog.vue'
 
 installQuasarPlugin()
+
+const mountedWrappers: ReturnType<typeof mount>[] = []
+
+function mountExpenseRegistrationDialog(
+  ...args: Parameters<typeof mount<typeof ExpenseRegistrationDialog>>
+) {
+  const wrapper = mount(...args)
+  mountedWrappers.push(wrapper)
+  return wrapper
+}
+
+afterEach(() => {
+  for (const wrapper of mountedWrappers) {
+    wrapper.unmount()
+  }
+  mountedWrappers.length = 0
+})
 
 const initializeMock = vi.fn()
 
@@ -97,7 +114,7 @@ const defaultProps = {
 }
 
 it('should initialize on first mount when dialog is initially open', () => {
-  mount(ExpenseRegistrationDialog, {
+  mountExpenseRegistrationDialog(ExpenseRegistrationDialog, {
     props: {
       modelValue: true,
       autoSelectRecentPlan: true,
@@ -108,7 +125,7 @@ it('should initialize on first mount when dialog is initially open', () => {
 })
 
 it('should mount component properly', () => {
-  const wrapper = mount(ExpenseRegistrationDialog, {
+  const wrapper = mountExpenseRegistrationDialog(ExpenseRegistrationDialog, {
     props: defaultProps,
   })
 
@@ -116,7 +133,7 @@ it('should mount component properly', () => {
 })
 
 it('should display dialog when modelValue is true', () => {
-  const wrapper = mount(ExpenseRegistrationDialog, {
+  const wrapper = mountExpenseRegistrationDialog(ExpenseRegistrationDialog, {
     props: {
       modelValue: true,
     },
@@ -127,7 +144,7 @@ it('should display dialog when modelValue is true', () => {
 })
 
 it('should not display dialog when modelValue is false', () => {
-  const wrapper = mount(ExpenseRegistrationDialog, {
+  const wrapper = mountExpenseRegistrationDialog(ExpenseRegistrationDialog, {
     props: {
       modelValue: false,
     },
@@ -138,7 +155,7 @@ it('should not display dialog when modelValue is false', () => {
 })
 
 it('should emit update:modelValue when dialog is closed', async () => {
-  const wrapper = mount(ExpenseRegistrationDialog, {
+  const wrapper = mountExpenseRegistrationDialog(ExpenseRegistrationDialog, {
     props: defaultProps,
   })
 
@@ -150,7 +167,7 @@ it('should emit update:modelValue when dialog is closed', async () => {
 })
 
 it('should pass defaultPlanId to props correctly', () => {
-  const wrapper = mount(ExpenseRegistrationDialog, {
+  const wrapper = mountExpenseRegistrationDialog(ExpenseRegistrationDialog, {
     props: {
       ...defaultProps,
       defaultPlanId: 'plan-1',
@@ -161,7 +178,7 @@ it('should pass defaultPlanId to props correctly', () => {
 })
 
 it('should pass defaultCategoryId to props correctly', () => {
-  const wrapper = mount(ExpenseRegistrationDialog, {
+  const wrapper = mountExpenseRegistrationDialog(ExpenseRegistrationDialog, {
     props: {
       ...defaultProps,
       defaultCategoryId: 'cat-1',
@@ -172,7 +189,7 @@ it('should pass defaultCategoryId to props correctly', () => {
 })
 
 it('should pass autoSelectRecentPlan to props correctly', () => {
-  const wrapper = mount(ExpenseRegistrationDialog, {
+  const wrapper = mountExpenseRegistrationDialog(ExpenseRegistrationDialog, {
     props: {
       ...defaultProps,
       autoSelectRecentPlan: true,
@@ -183,7 +200,7 @@ it('should pass autoSelectRecentPlan to props correctly', () => {
 })
 
 it('should set persistent prop on dialog', () => {
-  const wrapper = mount(ExpenseRegistrationDialog, {
+  const wrapper = mountExpenseRegistrationDialog(ExpenseRegistrationDialog, {
     props: defaultProps,
   })
 
@@ -192,7 +209,7 @@ it('should set persistent prop on dialog', () => {
 })
 
 it('should set maximized on dialog for small screens', () => {
-  const wrapper = mount(ExpenseRegistrationDialog, {
+  const wrapper = mountExpenseRegistrationDialog(ExpenseRegistrationDialog, {
     props: defaultProps,
   })
 
