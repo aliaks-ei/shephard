@@ -39,6 +39,7 @@ export const queryKeys = {
   },
   users: {
     all: ['users'] as const,
-    search: (query: string) => [...queryKeys.users.all, 'search', query] as const,
+    search: (entityType: 'plan' | 'template', entityId: string, query: string) =>
+      [...queryKeys.users.all, 'search', entityType, entityId, query] as const,
   },
 } as const

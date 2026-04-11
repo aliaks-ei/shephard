@@ -617,7 +617,7 @@ export type Database = {
         Returns: boolean
       }
       search_users_for_sharing: {
-        Args: { q: string }
+        Args: { entity_id: string; entity_type: string; q: string }
         Returns: {
           email: string
           id: string

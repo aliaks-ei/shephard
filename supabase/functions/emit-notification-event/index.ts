@@ -204,20 +204,25 @@ async function resolveRecipients(
   actorId: string,
   ownerId: string,
 ): Promise<string[]> {
-  if (input.targetUserIds?.length) {
-    return dedupe(input.targetUserIds).filter((userId) => userId !== actorId)
-  }
-
-  if (input.targetUserId) {
-    return input.targetUserId === actorId ? [] : [input.targetUserId]
-  }
-
   const participants = await getAllParticipants(
     serviceClient,
     input.entityType,
     input.entityId,
     ownerId,
   )
+  const participantSet = new Set(participants)
+
+  if (input.targetUserIds?.length) {
+    return dedupe(input.targetUserIds).filter(
+      (userId) => userId !== actorId && participantSet.has(userId),
+    )
+  }
+
+  if (input.targetUserId) {
+    return input.targetUserId !== actorId && participantSet.has(input.targetUserId)
+      ? [input.targetUserId]
+      : []
+  }
 
   return participants.filter((userId) => userId !== actorId)
 }

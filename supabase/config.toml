@@ -16,6 +16,18 @@ verify_jwt = true
 import_map = "./functions/emit-notification-event/deno.json"
 entrypoint = "./functions/emit-notification-event/index.ts"
 
+[functions.analyze-expense-photo]
+enabled = true
+verify_jwt = true
+import_map = "./functions/analyze-expense-photo/deno.json"
+entrypoint = "./functions/analyze-expense-photo/index.ts"
+
+[functions.convert-currency]
+enabled = true
+verify_jwt = true
+import_map = "./functions/convert-currency/deno.json"
+entrypoint = "./functions/convert-currency/index.ts"
+
 [functions.push-subscriptions]
 enabled = true
 verify_jwt = true

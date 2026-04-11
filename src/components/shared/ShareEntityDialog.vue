@@ -61,7 +61,11 @@ const { data: sharedUsersData, isFetching: isLoadingShares } = useSharedUsersQue
   props.entityType,
   reactiveEntityId,
 )
-const { data: searchData, isFetching: isSearching } = useSearchUsersQuery(searchQuery)
+const { data: searchData, isFetching: isSearching } = useSearchUsersQuery(
+  searchQuery,
+  props.entityType,
+  reactiveEntityId,
+)
 const shareMutation = useShareEntityMutation(props.entityType, userId)
 const unshareMutation = useUnshareEntityMutation(props.entityType)
 const updatePermissionMutation = useUpdatePermissionMutation(props.entityType)
@@ -117,12 +121,12 @@ async function handleUpdateUserPermission(
 }
 
 async function handleRemoveUserAccess(entityId: string, targetUserId: string) {
-  await unshareMutation.mutateAsync({ entityId, userId: targetUserId })
   await emitNotificationEvent({
     type: props.entityType === 'plan' ? 'shared_plan_removed' : 'shared_template_removed',
     entityType: props.entityType,
     entityId,
     targetUserId,
   })
+  await unshareMutation.mutateAsync({ entityId, userId: targetUserId })
 }
 </script>
