@@ -154,7 +154,7 @@
       <!-- AI Suggestion Banner (Low Confidence) -->
       <q-banner
         v-if="aiCategorization.lowConfidenceSuggestion.value && !isAiSelected"
-        class="bg-blue-1 text-blue-9 q-mb-md"
+        class="bg-blue-1 text-blue-9 q-mt-md q-mb-md"
         dense
         rounded
       >
