@@ -193,6 +193,16 @@ describe('PlanCard', () => {
     expect(wrapper.emitted('share')?.[0]).toEqual([mockPlan.id])
   })
 
+  it('should emit export event when menu emits export', () => {
+    const wrapper = renderPlanCard({
+      plan: mockPlan,
+    })
+
+    wrapper.vm.$emit('export', mockPlan.id)
+    expect(wrapper.emitted('export')).toBeTruthy()
+    expect(wrapper.emitted('export')?.[0]).toEqual([mockPlan.id])
+  })
+
   it('should emit delete event when menu emits delete', () => {
     const wrapper = renderPlanCard({
       plan: mockPlan,
@@ -246,6 +256,18 @@ describe('PlanCard', () => {
     })
 
     expect(wrapper.props('plan')).toEqual(planWithoutPermission)
+  })
+
+  it('should render overflow actions button for view-only shared plan', () => {
+    const wrapper = renderPlanCard(
+      {
+        plan: { ...mockPlan, owner_id: 'different-user', permission_level: 'view' },
+      },
+      { id: 'user-1' },
+    )
+
+    const actionsButton = wrapper.find('button[aria-label="Actions for Test Plan"]')
+    expect(actionsButton.exists()).toBe(true)
   })
 
   it('should handle plan that is not shared', () => {
@@ -392,7 +414,7 @@ describe('PlanCard', () => {
     expect(nonOwnerWrapper.text()).toContain('Test Plan')
   })
 
-  it('should not show PlanCardMenu for non-owner without edit permission', () => {
+  it('should still show PlanCardMenu for non-owner without edit permission', () => {
     const wrapper = renderPlanCard(
       {
         plan: { ...mockPlan, owner_id: 'different-user', permission_level: 'view' },
@@ -401,7 +423,7 @@ describe('PlanCard', () => {
     )
 
     const menu = wrapper.findComponent('.plan-card-menu')
-    expect(menu.exists()).toBe(false)
+    expect(menu.exists()).toBe(true)
   })
 
   it('should display real amount when privacy mode is disabled', () => {

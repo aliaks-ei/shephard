@@ -5,6 +5,48 @@ import { ref, computed } from 'vue'
 import PlansPage from './PlansPage.vue'
 import { usePlans } from 'src/composables/usePlans'
 import type { PlanWithPermission } from 'src/api'
+import { getExpensesByPlan, getPlanExpenseSummary, getPlanWithItems } from 'src/api'
+
+vi.mock('src/api', async () => {
+  const actual = await vi.importActual('src/api')
+  return {
+    ...actual,
+    getPlanWithItems: vi.fn(),
+    getExpensesByPlan: vi.fn(),
+    getPlanExpenseSummary: vi.fn(),
+  }
+})
+
+vi.mock('src/queries/categories', () => ({
+  useCategoriesQuery: vi.fn(() => ({
+    categories: ref([
+      {
+        id: 'cat-1',
+        name: 'Food',
+        color: '#FF5722',
+        icon: 'eva-pricetags-outline',
+        created_at: '2023-01-01T00:00:00Z',
+        updated_at: '2023-01-01T00:00:00Z',
+      },
+    ]),
+  })),
+}))
+
+vi.mock('src/stores/user', () => ({
+  useUserStore: vi.fn(() => ({
+    userProfile: { id: 'user-1' },
+  })),
+}))
+
+const mockShowError = vi.fn()
+const mockShowSuccess = vi.fn()
+
+vi.mock('src/composables/useBanner', () => ({
+  useBanner: vi.fn(() => ({
+    showError: mockShowError,
+    showSuccess: mockShowSuccess,
+  })),
+}))
 
 installQuasarPlugin()
 
@@ -21,6 +63,7 @@ const PlansGroupStub = {
     >
       <div v-for="plan in plans" :key="plan.id" class="plan-item">
         <button @click="$emit('edit', plan.id)" class="edit-btn">Edit</button>
+        <button @click="$emit('export', plan.id)" class="export-btn">Export</button>
         <button @click="$emit('delete', plan)" class="delete-btn">Delete</button>
         <button @click="$emit('share', plan.id)" class="share-btn">Share</button>
         <button @click="$emit('cancel', plan)" class="cancel-btn">Cancel</button>
@@ -28,7 +71,7 @@ const PlansGroupStub = {
     </div>
   `,
   props: ['title', 'plans', 'chipColor', 'hideSharedBadge'],
-  emits: ['edit', 'delete', 'share', 'cancel'],
+  emits: ['edit', 'export', 'delete', 'share', 'cancel'],
 }
 
 const SharePlanDialogStub = {
@@ -43,6 +86,19 @@ const SharePlanDialogStub = {
   `,
   props: ['modelValue', 'planId'],
   emits: ['update:modelValue', 'shared'],
+}
+
+const ExportDialogStub = {
+  template: `
+    <div
+      class="export-dialog-mock"
+      :data-model-value="modelValue"
+    >
+      <button @click="$emit('select-format', 'json')" class="export-json-btn">Export JSON</button>
+    </div>
+  `,
+  props: ['modelValue'],
+  emits: ['update:modelValue', 'select-format'],
 }
 
 const SearchAndSortStub = {
@@ -201,12 +257,32 @@ function createWrapper(
   }
 
   vi.mocked(usePlans).mockReturnValue(mockUsePlansReturn)
+  vi.mocked(getPlanWithItems).mockResolvedValue({
+    id: mockOwnedPlans[0]!.id,
+    name: mockOwnedPlans[0]!.name,
+    template_id: mockOwnedPlans[0]!.template_id,
+    start_date: mockOwnedPlans[0]!.start_date,
+    end_date: mockOwnedPlans[0]!.end_date,
+    status: mockOwnedPlans[0]!.status,
+    total: mockOwnedPlans[0]!.total,
+    currency: mockOwnedPlans[0]!.currency,
+    owner_id: mockOwnedPlans[0]!.owner_id,
+    created_at: mockOwnedPlans[0]!.created_at,
+    updated_at: mockOwnedPlans[0]!.updated_at,
+    ...(mockOwnedPlans[0]!.permission_level
+      ? { permission_level: mockOwnedPlans[0]!.permission_level }
+      : {}),
+    plan_items: [],
+  })
+  vi.mocked(getExpensesByPlan).mockResolvedValue([])
+  vi.mocked(getPlanExpenseSummary).mockResolvedValue([])
 
   const wrapper = mount(PlansPage, {
     global: {
       stubs: {
         PlansGroup: PlansGroupStub,
         SharePlanDialog: SharePlanDialogStub,
+        ExportDialog: ExportDialogStub,
         SearchAndSort: SearchAndSortStub,
         ListPageSkeleton: ListPageSkeletonStub,
         EmptyState: EmptyStateStub,
@@ -253,6 +329,18 @@ beforeEach(() => {
 it('should mount component properly', () => {
   const { wrapper } = createWrapper()
   expect(wrapper.exists()).toBe(true)
+})
+
+it('opens export dialog from plans group export action', async () => {
+  const { wrapper } = createWrapper({
+    ownedPlans: mockOwnedPlans,
+    hasPlans: true,
+  })
+
+  await wrapper.find('.export-btn').trigger('click')
+
+  const exportDialog = wrapper.findComponent(ExportDialogStub)
+  expect(exportDialog.attributes('data-model-value')).toBe('true')
 })
 
 it('should render page title and description', () => {

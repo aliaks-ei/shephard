@@ -36,7 +36,7 @@
             </q-icon>
             <!-- Menu button -->
             <q-btn
-              v-if="canEdit"
+              v-if="hasMenuActions"
               flat
               round
               size="sm"
@@ -50,6 +50,7 @@
                 :can-edit="canEdit"
                 :permission-level="plan.permission_level"
                 :plan-status="planStatus"
+                @export="emit('export', plan.id)"
                 @share="emit('share', plan.id)"
                 @delete="showDeleteDialog"
                 @cancel="showCancelDialog"
@@ -132,6 +133,7 @@ import type { PlanWithPermission } from 'src/api'
 
 const emit = defineEmits<{
   (e: 'edit', id: string): void
+  (e: 'export', id: string): void
   (e: 'share', id: string): void
   (e: 'delete', plan: PlanWithPermission): void
   (e: 'cancel', plan: PlanWithPermission): void
@@ -157,6 +159,7 @@ const isOwner = computed(() => props.plan.owner_id === userStore.userProfile?.id
 const canEdit = computed(() => isOwner.value || props.plan.permission_level === 'edit')
 const planStatus = computed(() => getPlanStatus(props.plan))
 const isViewOnly = computed(() => props.plan.permission_level === 'view')
+const hasMenuActions = computed(() => true)
 const menuButtonLabel = computed(() => `Actions for ${props.plan.name}`)
 
 function formatAmount(amount: number | null | undefined): string {

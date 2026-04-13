@@ -10,6 +10,7 @@ export type PlanActionHandlers = {
   onShare: () => void
   onCancel: () => void
   onDelete: () => void
+  onExport: () => void
   onAddExpense: () => void
   onSwitchToEdit: () => void
 }
@@ -52,6 +53,15 @@ export function usePlanActions(context: PlanActionsContext) {
   )
 
   const sharedSecondaryActions = computed<ActionBarAction[]>(() => [
+    {
+      key: 'export',
+      icon: 'eva-download-outline',
+      label: 'Export',
+      color: 'info',
+      priority: 'secondary',
+      visible: !context.isNewPlan.value && !!context.currentPlan.value,
+      handler: context.handlers.onExport,
+    },
     {
       key: 'share',
       icon: 'eva-share-outline',

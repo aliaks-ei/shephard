@@ -12,6 +12,8 @@ import { useEditablePage } from 'src/composables/useEditablePage'
 import { useCategoryRefs } from 'src/composables/useCategoryRefs'
 import { usePlanActions, type PlanSaveState } from 'src/composables/usePlanActions'
 import { validateItemForm } from 'src/composables/useItemFormValidation'
+import { usePlanOverview } from 'src/composables/usePlanOverview'
+import { usePlanExport } from 'src/composables/usePlanExport'
 import { calculateEndDate } from 'src/utils/plans'
 import { formatDateInput } from 'src/utils/date'
 import {
@@ -22,6 +24,7 @@ import {
 } from 'src/api'
 import type { PlanItemUI } from 'src/types'
 import { useNotificationEvents } from 'src/composables/useNotificationEvents'
+import type { ExportFormat } from 'src/utils/export'
 
 const SAVE_SUCCESS_RESET_MS = 4000
 
@@ -77,6 +80,16 @@ export function usePlanPageState() {
   )
 
   const { openDialog, closeDialog, getDialogState } = useEditablePage()
+  const { categoryBudgets, sortedExpenses } = usePlanOverview(
+    computed(() => currentPlan.value?.id ?? null),
+    computed(() => currentPlan.value),
+  )
+  const { exportPlan } = usePlanExport(
+    computed(() => currentPlan.value),
+    categories,
+    categoryBudgets,
+    sortedExpenses,
+  )
 
   const { lastAddedCategoryId, setCategoryRef, scrollToFirstInvalidField, resetLastAddedCategory } =
     useCategoryRefs(planItems)
@@ -126,6 +139,11 @@ export function usePlanPageState() {
     set: (value: boolean) => (value ? openDialog('share') : closeDialog('share')),
   })
 
+  const isExportDialogOpen = computed({
+    get: () => getDialogState('export'),
+    set: (value: boolean) => (value ? openDialog('export') : closeDialog('export')),
+  })
+
   const { actionBarActions, actionsVisible } = usePlanActions({
     isNewPlan,
     isOwner,
@@ -145,6 +163,7 @@ export function usePlanPageState() {
       onDelete: () => {
         showDeleteDialog.value = true
       },
+      onExport: () => openDialog('export'),
       onAddExpense: openExpenseRegistration,
       onSwitchToEdit: () => {
         activeTab.value = 'edit'
@@ -307,6 +326,14 @@ export function usePlanPageState() {
     templateErrorMessage.value = ''
   }
 
+  function handlePlanExport(format: ExportFormat): void {
+    const didExport = exportPlan(format)
+
+    if (didExport) {
+      closeDialog('export')
+    }
+  }
+
   function clearSaveFeedback(): void {
     if (saveState.value !== 'saved') {
       return
@@ -417,6 +444,7 @@ export function usePlanPageState() {
     lastAddedCategoryId,
     setCategoryRef,
     isShareDialogOpen,
+    isExportDialogOpen,
     showCancelDialog,
     showDeleteDialog,
     deletePlanMutation,
@@ -426,6 +454,7 @@ export function usePlanPageState() {
     saveState,
     handleSavePlan,
     onTemplateSelected,
+    handlePlanExport,
     toggleAllCategories,
     handleUpdateItem,
     handleRemoveItem,

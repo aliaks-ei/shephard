@@ -7,6 +7,46 @@ import { useTemplates } from 'src/composables/useTemplates'
 import type { TemplateWithPermission } from 'src/api'
 import { setupTestingPinia } from 'test/helpers/pinia-mocks'
 import { createMockTemplates } from 'test/fixtures'
+import { getTemplateWithItems } from 'src/api'
+
+vi.mock('src/api', async () => {
+  const actual = await vi.importActual('src/api')
+  return {
+    ...actual,
+    getTemplateWithItems: vi.fn(),
+  }
+})
+
+vi.mock('src/queries/categories', () => ({
+  useCategoriesQuery: vi.fn(() => ({
+    categories: ref([
+      {
+        id: 'cat-1',
+        name: 'Food',
+        color: '#FF5722',
+        icon: 'eva-pricetags-outline',
+        created_at: '2023-01-01T00:00:00Z',
+        updated_at: '2023-01-01T00:00:00Z',
+      },
+    ]),
+  })),
+}))
+
+vi.mock('src/stores/user', () => ({
+  useUserStore: vi.fn(() => ({
+    userProfile: { id: 'user-1' },
+  })),
+}))
+
+const mockTemplatesShowError = vi.fn()
+const mockTemplatesShowSuccess = vi.fn()
+
+vi.mock('src/composables/useBanner', () => ({
+  useBanner: vi.fn(() => ({
+    showError: mockTemplatesShowError,
+    showSuccess: mockTemplatesShowSuccess,
+  })),
+}))
 
 installQuasarPlugin()
 
@@ -23,13 +63,14 @@ const TemplatesGroupStub = {
     >
       <div v-for="template in templates" :key="template.id" class="template-item">
         <button @click="$emit('edit', template.id)" class="edit-btn">Edit</button>
+        <button @click="$emit('export', template.id)" class="export-btn">Export</button>
         <button @click="$emit('delete', template)" class="delete-btn">Delete</button>
         <button @click="$emit('share', template.id)" class="share-btn">Share</button>
       </div>
     </div>
   `,
   props: ['title', 'templates', 'chipColor', 'hideSharedBadge'],
-  emits: ['edit', 'delete', 'share'],
+  emits: ['edit', 'export', 'delete', 'share'],
 }
 
 const ShareTemplateDialogStub = {
@@ -44,6 +85,19 @@ const ShareTemplateDialogStub = {
   `,
   props: ['modelValue', 'templateId'],
   emits: ['update:modelValue', 'shared'],
+}
+
+const ExportDialogStub = {
+  template: `
+    <div
+      class="export-dialog-mock"
+      :data-model-value="modelValue"
+    >
+      <button @click="$emit('select-format', 'json')" class="export-json-btn">Export JSON</button>
+    </div>
+  `,
+  props: ['modelValue'],
+  emits: ['update:modelValue', 'select-format'],
 }
 
 const SearchAndSortStub = {
@@ -168,6 +222,18 @@ function createWrapper(
   }
 
   vi.mocked(useTemplates).mockReturnValue(mockTemplatesReturn)
+  vi.mocked(getTemplateWithItems).mockResolvedValue({
+    id: mockOwnedTemplates[0]!.id,
+    name: mockOwnedTemplates[0]!.name,
+    duration: mockOwnedTemplates[0]!.duration,
+    total: mockOwnedTemplates[0]!.total,
+    currency: mockOwnedTemplates[0]!.currency,
+    owner_id: mockOwnedTemplates[0]!.owner_id,
+    created_at: mockOwnedTemplates[0]!.created_at,
+    updated_at: mockOwnedTemplates[0]!.updated_at,
+    permission_level: mockOwnedTemplates[0]!.permission_level,
+    template_items: [],
+  })
 
   setupTestingPinia({ stubActions: true })
 
@@ -176,6 +242,7 @@ function createWrapper(
       stubs: {
         TemplatesGroup: TemplatesGroupStub,
         ShareTemplateDialog: ShareTemplateDialogStub,
+        ExportDialog: ExportDialogStub,
         SearchAndSort: SearchAndSortStub,
         ListPageSkeleton: ListPageSkeletonStub,
         EmptyState: EmptyStateStub,
@@ -222,6 +289,18 @@ beforeEach(() => {
 it('should mount component properly', () => {
   const { wrapper } = createWrapper()
   expect(wrapper.exists()).toBe(true)
+})
+
+it('opens export dialog from templates group export action', async () => {
+  const { wrapper } = createWrapper({
+    ownedTemplates: mockOwnedTemplates,
+    hasTemplates: true,
+  })
+
+  await wrapper.find('.export-btn').trigger('click')
+
+  const exportDialog = wrapper.findComponent(ExportDialogStub)
+  expect(exportDialog.attributes('data-model-value')).toBe('true')
 })
 
 it('should render page title and description', () => {

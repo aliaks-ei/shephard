@@ -31,9 +31,14 @@ version-resolver:
   minor:
     labels:
       - minor
+      - feature
+      - enhancement
   patch:
     labels:
       - patch
+      - fix
+      - bug
+      - bugfix
   default: patch
 
 template: |

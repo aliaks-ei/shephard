@@ -41,7 +41,7 @@
             </q-icon>
             <!-- Menu button -->
             <q-btn
-              v-if="canEdit"
+              v-if="hasMenuActions"
               flat
               round
               size="sm"
@@ -52,6 +52,7 @@
               <TemplateCardMenu
                 :can-edit="canEdit"
                 :permission-level="template.permission_level"
+                @export="emit('export', template.id)"
                 @share="emit('share', template.id)"
                 @delete="showDeleteDialog"
               />
@@ -116,6 +117,7 @@ import type { TemplateWithPermission } from 'src/api'
 
 const emit = defineEmits<{
   (e: 'edit', id: string): void
+  (e: 'export', id: string): void
   (e: 'share', id: string): void
   (e: 'delete', template: TemplateWithPermission): void
 }>()
@@ -140,6 +142,7 @@ const isDeleteDialogOpen = ref(false)
 const isOwner = computed(() => props.template.owner_id === userStore.userProfile?.id)
 const canEdit = computed(() => isOwner.value || props.template.permission_level === 'edit')
 const isViewOnly = computed(() => props.template.permission_level === 'view')
+const hasMenuActions = computed(() => true)
 
 function formatAmount(amount: number | null | undefined): string {
   const currency = props.template.currency as CurrencyCode

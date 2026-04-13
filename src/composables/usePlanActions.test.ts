@@ -56,6 +56,7 @@ describe('usePlanActions', () => {
       onShare: vi.fn(),
       onCancel: vi.fn(),
       onDelete: vi.fn(),
+      onExport: vi.fn(),
       onAddExpense: vi.fn(),
       onSwitchToEdit: vi.fn(),
     },
@@ -109,6 +110,17 @@ describe('usePlanActions', () => {
 
       const shareAction = actionBarActions.value.find((a) => a.key === 'share')
       expect(shareAction?.visible).toBe(true)
+    })
+
+    it('shows Export button for existing plan', () => {
+      const context = createContext({
+        isNewPlan: ref(false),
+        currentPlan: ref(createMockPlan('active')),
+      })
+      const { actionBarActions } = usePlanActions(context)
+
+      const exportAction = actionBarActions.value.find((a) => a.key === 'export')
+      expect(exportAction?.visible).toBe(true)
     })
 
     it('hides Share button when user cannot edit', () => {
@@ -233,6 +245,18 @@ describe('usePlanActions', () => {
       const shareAction = actionBarActions.value.find((a) => a.key === 'share')
       expect(shareAction?.visible).toBe(true)
     })
+
+    it('shows Export button in read-only overview mode', () => {
+      const context = createContext({
+        currentTab: ref('overview'),
+        isEditMode: ref(false),
+        isNewPlan: ref(false),
+      })
+      const { actionBarActions } = usePlanActions(context)
+
+      const exportAction = actionBarActions.value.find((a) => a.key === 'export')
+      expect(exportAction?.visible).toBe(true)
+    })
   })
 
   describe('items tab actions', () => {
@@ -303,6 +327,7 @@ describe('usePlanActions', () => {
         onShare: vi.fn(),
         onCancel: vi.fn(),
         onDelete: vi.fn(),
+        onExport: vi.fn(),
         onAddExpense: vi.fn(),
         onSwitchToEdit: vi.fn(),
       }
@@ -313,6 +338,28 @@ describe('usePlanActions', () => {
       saveAction?.handler()
 
       expect(handlers.onSave).toHaveBeenCalled()
+    })
+
+    it('calls export handler when export action is triggered', () => {
+      const handlers = {
+        onSave: vi.fn(),
+        onShare: vi.fn(),
+        onCancel: vi.fn(),
+        onDelete: vi.fn(),
+        onExport: vi.fn(),
+        onAddExpense: vi.fn(),
+        onSwitchToEdit: vi.fn(),
+      }
+      const context = createContext({
+        currentTab: ref('overview'),
+        handlers,
+      })
+      const { actionBarActions } = usePlanActions(context)
+
+      const exportAction = actionBarActions.value.find((a) => a.key === 'export')
+      exportAction?.handler()
+
+      expect(handlers.onExport).toHaveBeenCalled()
     })
   })
 })

@@ -51,8 +51,19 @@ describe('TemplateCardMenu', () => {
 
     const items = wrapper.findAll('.q-item')
     expect(items.length).toBeGreaterThan(0)
-    await items[0]?.trigger('click')
+    await items[1]?.trigger('click')
     expect(wrapper.emitted('share')).toBeTruthy()
+  })
+
+  it('should emit export event when export item is clicked', async () => {
+    const wrapper = renderTemplateCardMenu({
+      canEdit: true,
+    })
+
+    const items = wrapper.findAll('.q-item')
+    expect(items.length).toBeGreaterThan(0)
+    await items[0]?.trigger('click')
+    expect(wrapper.emitted('export')).toBeTruthy()
   })
 
   it('should emit delete event when delete item is clicked', async () => {
@@ -62,7 +73,7 @@ describe('TemplateCardMenu', () => {
 
     const items = wrapper.findAll('.q-item')
     expect(items.length).toBeGreaterThan(1)
-    await items[1]?.trigger('click')
+    await items[2]?.trigger('click')
     expect(wrapper.emitted('delete')).toBeTruthy()
   })
 
@@ -105,5 +116,13 @@ describe('TemplateCardMenu', () => {
       canEdit: false,
     })
     expect(wrapper.props('permissionLevel')).toBeUndefined()
+  })
+
+  it('shows export item even when canEdit is false', () => {
+    const wrapper = renderTemplateCardMenu({
+      canEdit: false,
+    })
+
+    expect(wrapper.findAll('.q-item').length).toBe(1)
   })
 })
