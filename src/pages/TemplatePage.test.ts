@@ -270,6 +270,11 @@ function createWrapper(
         TemplateCategory: TemplateCategoryStub,
         CategorySelectionDialog: CategorySelectionDialogStub,
         ShareTemplateDialog: ShareTemplateDialogStub,
+        ExportDialog: {
+          template: '<div class="export-dialog-mock" :data-model-value="modelValue"></div>',
+          props: ['modelValue'],
+          emits: ['update:modelValue', 'select-format'],
+        },
         QForm: {
           template: '<form @submit.prevent="$emit(\'submit\')"><slot /></form>',
           emits: ['submit'],
@@ -562,6 +567,20 @@ describe('TemplatePage', () => {
 
     const shareButton = wrapper.find('[data-label="Share"]')
     expect(shareButton.exists()).toBe(false)
+  })
+
+  it('should show export button in read-only mode', () => {
+    const { wrapper } = createWrapper({ isReadOnlyMode: true })
+
+    const exportButton = wrapper.find('[data-label="Export"]')
+    expect(exportButton.exists()).toBe(true)
+  })
+
+  it('should not show export button for new template', () => {
+    const { wrapper } = createWrapper({ isNewTemplate: true })
+
+    const exportButton = wrapper.find('[data-label="Export"]')
+    expect(exportButton.exists()).toBe(false)
   })
 
   it('should open share dialog when share button is clicked', async () => {

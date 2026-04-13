@@ -3,7 +3,7 @@
     :page-title="pageTitle"
     :is-loading="isTemplateLoading"
     :actions="actionBarActions"
-    :actions-visible="isEditMode"
+    :actions-visible="actionsVisible"
     :is-edit-mode="isEditMode"
     :show-read-only-badge="!isEditMode"
     @back="goBack"
@@ -59,6 +59,11 @@
         @shared="onTemplateShared"
       />
 
+      <ExportDialog
+        v-model="isExportDialogOpen"
+        @select-format="handleTemplateExport"
+      />
+
       <DeleteDialog
         v-if="!isNewTemplate"
         v-model="showDeleteDialog"
@@ -82,6 +87,7 @@ import TemplateReadOnlyView from 'src/components/templates/TemplateReadOnlyView.
 import CategorySelectionDialog from 'src/components/categories/CategorySelectionDialog.vue'
 import ShareTemplateDialog from 'src/components/templates/ShareTemplateDialog.vue'
 import DeleteDialog from 'src/components/shared/DeleteDialog.vue'
+import ExportDialog from 'src/components/shared/ExportDialog.vue'
 import { useTemplatePageState } from 'src/composables/useTemplatePageState'
 
 const {
@@ -104,8 +110,10 @@ const {
   form,
   allCategoriesExpanded,
   actionBarActions,
+  actionsVisible,
   showCategoryDialog,
   isShareDialogOpen,
+  isExportDialogOpen,
   showDeleteDialog,
   deleteTemplateMutation,
   getUsedCategoryIds,
@@ -116,6 +124,7 @@ const {
   clearNameError,
   onCategorySelected,
   openCategoryDialog,
+  handleTemplateExport,
   toggleAllCategories,
   goBack,
   onTemplateShared,

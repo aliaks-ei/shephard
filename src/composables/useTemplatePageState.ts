@@ -9,9 +9,11 @@ import { useDetailPageState } from 'src/composables/useDetailPageState'
 import { useEditablePage } from 'src/composables/useEditablePage'
 import { useCategoryRefs } from 'src/composables/useCategoryRefs'
 import { validateItemForm } from 'src/composables/useItemFormValidation'
-import type { ActionBarAction } from 'src/components/shared/ActionBar.vue'
+import { useTemplateActions } from 'src/composables/useTemplateActions'
+import { useTemplateExport } from 'src/composables/useTemplateExport'
 import { getTemplateSharedUsers, type Category, type CurrencyCode } from 'src/api'
 import { useNotificationEvents } from 'src/composables/useNotificationEvents'
+import type { ExportFormat } from 'src/utils/export'
 
 export function useTemplatePageState() {
   const router = useRouter()
@@ -60,6 +62,7 @@ export function useTemplatePageState() {
   )
 
   const { openDialog, closeDialog, getDialogState } = useEditablePage()
+  const { exportTemplate } = useTemplateExport(currentTemplate, categories)
 
   const {
     lastAddedCategoryId,
@@ -91,46 +94,26 @@ export function useTemplatePageState() {
     set: (value: boolean) => (value ? openDialog('share') : closeDialog('share')),
   })
 
-  const actionBarActions = computed<ActionBarAction[]>(() => [
-    {
-      key: 'add-category',
-      icon: 'eva-plus-outline',
-      label: 'Category',
-      color: 'primary',
-      priority: 'primary',
-      visible: isEditMode.value,
-      handler: () => openDialog('category'),
-    },
-    {
-      key: 'save',
-      icon: 'eva-save-outline',
-      label: isNewTemplate.value ? 'Create' : 'Save',
-      color: isNewTemplate.value ? 'primary' : 'positive',
-      priority: 'primary',
-      visible: isEditMode.value,
-      handler: saveTemplate,
-    },
-    {
-      key: 'share',
-      icon: 'eva-share-outline',
-      label: 'Share',
-      color: 'info',
-      priority: 'secondary',
-      visible: !isNewTemplate.value && isEditMode.value,
-      handler: () => openDialog('share'),
-    },
-    {
-      key: 'delete',
-      icon: 'eva-trash-2-outline',
-      label: 'Delete',
-      color: 'negative',
-      priority: 'secondary',
-      visible: !isNewTemplate.value && isEditMode.value,
-      handler: () => {
+  const isExportDialogOpen = computed({
+    get: () => getDialogState('export'),
+    set: (value: boolean) => (value ? openDialog('export') : closeDialog('export')),
+  })
+
+  const { actionBarActions, actionsVisible } = useTemplateActions({
+    isNewTemplate,
+    isEditMode,
+    handlers: {
+      onAddCategory: () => openDialog('category'),
+      onSave: () => {
+        void saveTemplate()
+      },
+      onShare: () => openDialog('share'),
+      onDelete: () => {
         showDeleteDialog.value = true
       },
+      onExport: () => openDialog('export'),
     },
-  ])
+  })
 
   async function handleAddTemplateItem(categoryId: string, categoryColor: string): Promise<void> {
     addTemplateItem(categoryId, categoryColor)
@@ -166,6 +149,14 @@ export function useTemplatePageState() {
   function clearNameError(): void {
     nameError.value = false
     nameErrorMessage.value = ''
+  }
+
+  function handleTemplateExport(format: ExportFormat): void {
+    const didExport = exportTemplate(format)
+
+    if (didExport) {
+      closeDialog('export')
+    }
   }
 
   async function saveTemplate(): Promise<void> {
@@ -275,8 +266,10 @@ export function useTemplatePageState() {
     form,
     allCategoriesExpanded,
     actionBarActions,
+    actionsVisible,
     showCategoryDialog,
     isShareDialogOpen,
+    isExportDialogOpen,
     showDeleteDialog,
     deleteTemplateMutation,
     getUsedCategoryIds,
@@ -287,6 +280,7 @@ export function useTemplatePageState() {
     clearNameError,
     onCategorySelected,
     openCategoryDialog,
+    handleTemplateExport,
     toggleAllCategories,
     goBack,
     onTemplateShared,

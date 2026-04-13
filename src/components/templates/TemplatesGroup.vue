@@ -10,6 +10,7 @@
         :template="item"
         :hide-shared-badge="hideSharedBadge || false"
         @edit="emit('edit', $event)"
+        @export="emit('export', $event)"
         @delete="emit('delete', $event)"
         @share="emit('share', $event)"
       />
@@ -24,6 +25,7 @@ import type { TemplateWithPermission } from 'src/api'
 
 const emit = defineEmits<{
   (e: 'edit', id: string): void
+  (e: 'export', id: string): void
   (e: 'share', id: string): void
   (e: 'delete', template: TemplateWithPermission): void
 }>()

@@ -19,6 +19,7 @@
       title="My Plans"
       :plans="allFilteredAndSortedItems"
       @edit="viewItem"
+      @export="openExportDialog"
       @delete="handleDeletePlan"
       @share="openShareDialog"
       @cancel="cancelPlan"
@@ -46,6 +47,11 @@
       :owner-user-id="sharePlanOwnerId"
       @shared="isShareDialogOpen = false"
     />
+
+    <ExportDialog
+      v-model="isExportDialogOpen"
+      @select-format="handlePlanExport"
+    />
   </ListPageLayout>
 </template>
 
@@ -61,8 +67,20 @@ import ListPageSkeleton from 'src/components/shared/ListPageSkeleton.vue'
 import EmptyState from 'src/components/shared/EmptyState.vue'
 import PlansGroup from 'src/components/plans/PlansGroup.vue'
 import SharePlanDialog from 'src/components/plans/SharePlanDialog.vue'
+import ExportDialog from 'src/components/shared/ExportDialog.vue'
 import { usePlans } from 'src/composables/usePlans'
-import type { PlanWithPermission } from 'src/api'
+import { useCategoriesQuery } from 'src/queries/categories'
+import { useUserStore } from 'src/stores/user'
+import { useBanner } from 'src/composables/useBanner'
+import {
+  getExpensesByPlan,
+  getPlanExpenseSummary,
+  getPlanWithItems,
+  type PlanWithPermission,
+  type Category,
+} from 'src/api'
+import { createPlanExportDownload, downloadExportFile, type ExportFormat } from 'src/utils/export'
+import type { CategoryBudget } from 'src/types'
 
 const {
   searchQuery,
@@ -78,13 +96,38 @@ const {
   clearSearch,
   cancelPlan,
 } = usePlans()
+const { categories } = useCategoriesQuery()
+const userStore = useUserStore()
+const { showError, showSuccess } = useBanner()
 
 const isShareDialogOpen = ref(false)
+const isExportDialogOpen = ref(false)
 const sharePlanId = ref<string | null>(null)
+const exportPlanId = ref<string | null>(null)
 const sharePlanOwnerId = computed(() => {
   if (!sharePlanId.value) return undefined
   return allFilteredAndSortedItems.value.find((p) => p.id === sharePlanId.value)?.owner_id
 })
+
+function mapPlanSummaryToCategoryBudgets(
+  summary: Awaited<ReturnType<typeof getPlanExpenseSummary>>,
+  allCategories: Category[],
+): CategoryBudget[] {
+  return summary.map((item) => {
+    const category = allCategories.find((entry) => entry.id === item.category_id)
+
+    return {
+      categoryId: item.category_id,
+      categoryName: category?.name || '',
+      categoryColor: category?.color || '',
+      categoryIcon: category?.icon || 'eva-folder-outline',
+      plannedAmount: item.planned_amount,
+      actualAmount: item.actual_amount,
+      remainingAmount: item.remaining_amount,
+      expenseCount: item.expense_count,
+    }
+  })
+}
 
 function handleDeletePlan(plan: PlanWithPermission): void {
   deleteItem(plan)
@@ -93,5 +136,43 @@ function handleDeletePlan(plan: PlanWithPermission): void {
 function openShareDialog(planId: string): void {
   sharePlanId.value = planId
   isShareDialogOpen.value = true
+}
+
+function openExportDialog(planId: string): void {
+  exportPlanId.value = planId
+  isExportDialogOpen.value = true
+}
+
+async function handlePlanExport(format: ExportFormat): Promise<void> {
+  if (!exportPlanId.value || !userStore.userProfile?.id) {
+    showError('Plan export is unavailable right now.')
+    return
+  }
+
+  try {
+    const [plan, expenses, summary] = await Promise.all([
+      getPlanWithItems(exportPlanId.value, userStore.userProfile.id),
+      getExpensesByPlan(exportPlanId.value),
+      getPlanExpenseSummary(exportPlanId.value),
+    ])
+
+    if (!plan) {
+      throw new Error('PLAN_NOT_FOUND')
+    }
+
+    const download = createPlanExportDownload(
+      plan,
+      categories.value,
+      mapPlanSummaryToCategoryBudgets(summary, categories.value),
+      expenses,
+      format,
+    )
+
+    downloadExportFile(download)
+    isExportDialogOpen.value = false
+    showSuccess(`Plan exported as ${format.toUpperCase()}.`)
+  } catch {
+    showError(`Failed to export plan as ${format.toUpperCase()}.`)
+  }
 }
 </script>

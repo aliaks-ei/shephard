@@ -139,6 +139,11 @@
         @shared="onPlanShared"
       />
 
+      <ExportDialog
+        v-model="isExportDialogOpen"
+        @select-format="handlePlanExport"
+      />
+
       <DeleteDialog
         v-model="showCancelDialog"
         title="Cancel Plan"
@@ -182,6 +187,7 @@ import PlanOverviewTab from 'src/components/plans/PlanOverviewTab.vue'
 import PlanItemsTrackingTab from 'src/components/plans/PlanItemsTrackingTab.vue'
 import SharePlanDialog from 'src/components/plans/SharePlanDialog.vue'
 import DeleteDialog from 'src/components/shared/DeleteDialog.vue'
+import ExportDialog from 'src/components/shared/ExportDialog.vue'
 import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 import { usePlanPageState } from 'src/composables/usePlanPageState'
 
@@ -215,6 +221,7 @@ const {
   lastAddedCategoryId,
   setCategoryRef,
   isShareDialogOpen,
+  isExportDialogOpen,
   showCancelDialog,
   showDeleteDialog,
   deletePlanMutation,
@@ -223,6 +230,7 @@ const {
   selectedCategory,
   handleSavePlan,
   onTemplateSelected,
+  handlePlanExport,
   toggleAllCategories,
   handleUpdateItem,
   handleRemoveItem,

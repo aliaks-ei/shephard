@@ -113,6 +113,16 @@ describe('TemplateCard', () => {
     expect(wrapper.emitted('share')?.[0]).toEqual([mockTemplate.id])
   })
 
+  it('should emit export event when menu emits export', () => {
+    const wrapper = renderTemplateCard({
+      template: mockTemplate,
+    })
+
+    wrapper.vm.$emit('export', mockTemplate.id)
+    expect(wrapper.emitted('export')).toBeTruthy()
+    expect(wrapper.emitted('export')?.[0]).toEqual([mockTemplate.id])
+  })
+
   it('should emit delete event when menu emits delete', () => {
     const wrapper = renderTemplateCard({
       template: mockTemplate,
@@ -204,5 +214,13 @@ describe('TemplateCard', () => {
 
     expect(vi.mocked(currencyUtils.formatCurrencyPrivate)).toHaveBeenCalled()
     expect(vi.mocked(currencyUtils.formatCurrency)).not.toHaveBeenCalled()
+  })
+
+  it('shows actions button for view-only shared template', () => {
+    const wrapper = renderTemplateCard({
+      template: { ...mockTemplate, owner_id: 'user-2', permission_level: 'view' },
+    })
+
+    expect(wrapper.find('.q-btn').exists()).toBe(true)
   })
 })

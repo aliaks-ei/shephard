@@ -420,6 +420,11 @@ function createWrapper(
       stubs: {
         PlanCategory: PlanCategoryStub,
         SharePlanDialog: SharePlanDialogStub,
+        ExportDialog: {
+          template: '<div class="export-dialog-mock" :data-model-value="modelValue"></div>',
+          props: ['modelValue'],
+          emits: ['update:modelValue', 'select-format'],
+        },
         QForm: {
           template: '<form @submit.prevent="handleSubmit"><slot /></form>',
           emits: ['submit'],
@@ -662,6 +667,29 @@ describe('PlanPage', () => {
     await shareButton.trigger('click')
 
     expect(mockUseEditablePage.openDialog).toHaveBeenCalledWith('share')
+  })
+
+  it('should show export button for existing plan in read-only mode', () => {
+    const { wrapper } = createWrapper({ isReadOnlyMode: true, currentPlan: mockPlan })
+
+    const exportButton = wrapper.find('[data-label="Export"]')
+    expect(exportButton.exists()).toBe(true)
+  })
+
+  it('should not show export button for new plan', () => {
+    const { wrapper } = createWrapper({ isNewPlan: true })
+
+    const exportButton = wrapper.find('[data-label="Export"]')
+    expect(exportButton.exists()).toBe(false)
+  })
+
+  it('should open export dialog when export button is clicked', async () => {
+    const { wrapper } = createWrapper({ currentPlan: mockPlan })
+
+    const exportButton = wrapper.find('[data-label="Export"]')
+    await exportButton.trigger('click')
+
+    expect(mockUseEditablePage.openDialog).toHaveBeenCalledWith('export')
   })
 
   it('should display formatted total amount when items exist', () => {

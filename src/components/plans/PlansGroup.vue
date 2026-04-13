@@ -10,6 +10,7 @@
         :plan="item"
         :hide-shared-badge="hideSharedBadge || false"
         @edit="emit('edit', $event)"
+        @export="emit('export', $event)"
         @delete="emit('delete', $event)"
         @share="emit('share', $event)"
         @cancel="emit('cancel', $event)"
@@ -25,6 +26,7 @@ import type { PlanWithPermission } from 'src/api'
 
 const emit = defineEmits<{
   (e: 'edit', id: string): void
+  (e: 'export', id: string): void
   (e: 'share', id: string): void
   (e: 'delete', plan: PlanWithPermission): void
   (e: 'cancel', plan: PlanWithPermission): void
