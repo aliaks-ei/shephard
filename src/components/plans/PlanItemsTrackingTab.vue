@@ -188,19 +188,18 @@
             <q-card-section class="q-pt-none q-pb-xs q-px-sm">
               <q-list>
                 <!-- Fixed payment items (trackable with checkbox) -->
-                <q-item
+                <CompactDisplayItemRow
                   v-for="item in group.items"
                   :key="item.id"
+                  :name="item.name"
+                  :amount="item.amount"
+                  :currency="currency"
                   clickable
                   :dense="$q.screen.lt.md"
+                  :strike="item.is_completed"
                   @click="handleToggleItemCompletion(item)"
-                  class="q-px-sm"
-                  :class="item.is_completed ? 'text-strike' : ''"
                 >
-                  <q-item-section
-                    class="min-w-auto"
-                    avatar
-                  >
+                  <template #leading>
                     <q-checkbox
                       :model-value="item.is_completed"
                       dense
@@ -208,19 +207,8 @@
                       :disable="!canEdit"
                       color="primary"
                     />
-                  </q-item-section>
-
-                  <q-item-section>
-                    <q-item-label :class="item.is_completed ? 'text-grey-6' : 'text-weight-medium'">
-                      {{ item.name }}
-                    </q-item-label>
-                    <q-item-label caption>
-                      <span :class="item.is_completed ? 'text-grey-5' : ''">
-                        {{ formatCurrency(item.amount, currency) }}
-                      </span>
-                    </q-item-label>
-                  </q-item-section>
-                </q-item>
+                  </template>
+                </CompactDisplayItemRow>
 
                 <!-- Non-fixed items (read-only reference) -->
                 <template v-if="group.nonFixedItems.length > 0">
@@ -236,34 +224,23 @@
                     For Reference
                   </q-item-label>
 
-                  <q-item
+                  <CompactDisplayItemRow
                     v-for="item in group.nonFixedItems"
                     :key="item.id"
+                    :name="item.name"
+                    :amount="item.amount"
+                    :currency="currency"
                     :dense="$q.screen.lt.md"
-                    class="q-px-sm text-grey-6"
+                    muted
                   >
-                    <q-item-section
-                      class="min-w-auto"
-                      avatar
-                    >
+                    <template #leading>
                       <q-icon
                         name="eva-bookmark-outline"
                         size="24px"
                         :class="$q.dark.isActive ? 'text-grey-6' : 'text-grey-5'"
                       />
-                    </q-item-section>
-
-                    <q-item-section>
-                      <q-item-label :class="$q.dark.isActive ? 'text-grey-5' : 'text-grey-6'">
-                        {{ item.name }}
-                      </q-item-label>
-                      <q-item-label caption>
-                        <span :class="$q.dark.isActive ? 'text-grey-6' : 'text-grey-7'">
-                          {{ formatCurrency(item.amount, currency) }}
-                        </span>
-                      </q-item-label>
-                    </q-item-section>
-                  </q-item>
+                    </template>
+                  </CompactDisplayItemRow>
                 </template>
               </q-list>
             </q-card-section>
@@ -277,6 +254,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
+import CompactDisplayItemRow from 'src/components/shared/CompactDisplayItemRow.vue'
 import { useCategoriesQuery } from 'src/queries/categories'
 import { useItemCompletion } from 'src/composables/useItemCompletion'
 import {
@@ -284,7 +262,7 @@ import {
   useTrackablePlanItems,
   type TrackableCategoryGroup,
 } from 'src/composables/useTrackablePlanItems'
-import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
+import type { CurrencyCode } from 'src/utils/currency'
 import type { PlanItem } from 'src/api/plans'
 import type { PlanWithItems } from 'src/api'
 

@@ -40,6 +40,10 @@ const renderTemplateCategory = (props: TemplateCategoryProps) => {
     global: {
       stubs: {
         TemplateItem: true,
+        CompactDisplayItemRow: {
+          template: '<div class="compact-row">{{ name }} {{ amount }}</div>',
+          props: ['name', 'amount', 'currency', 'dense'],
+        },
       },
     },
   })
@@ -196,5 +200,20 @@ describe('TemplateCategory', () => {
     })
 
     expect(wrapper.props('readonly')).toBe(true)
+  })
+
+  it('should render compact display rows in readonly mode', () => {
+    const wrapper = renderTemplateCategory({
+      categoryId: 'category-1',
+      categoryName: 'Food',
+      categoryColor: '#FF0000',
+      items: mockItems,
+      currency: 'USD',
+      readonly: true,
+      categoryIcon: 'eva-pricetags-outline',
+    })
+
+    expect(wrapper.findAll('.compact-row')).toHaveLength(2)
+    expect(wrapper.findComponent({ name: 'TemplateItem' }).exists()).toBe(false)
   })
 })
