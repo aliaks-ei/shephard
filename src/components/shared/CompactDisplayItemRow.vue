@@ -13,12 +13,12 @@
     <q-item-section
       v-if="$slots.leading"
       avatar
-      class="compact-display-item__leading min-w-auto q-pr-sm"
+      class="min-w-auto q-pr-sm"
     >
       <slot name="leading" />
     </q-item-section>
 
-    <q-item-section class="compact-display-item__content min-w-auto">
+    <q-item-section class="compact-display-item__content min-w-0 overflow-hidden">
       <q-item-label
         class="compact-display-item__name ellipsis"
         :class="nameClass"
@@ -29,10 +29,10 @@
 
     <q-item-section
       side
-      class="compact-display-item__amount-section"
+      class="compact-display-item__amount-section q-pl-sm"
     >
       <q-item-label
-        class="compact-display-item__amount"
+        class="compact-display-item__amount text-right text-no-wrap"
         :class="amountClass"
       >
         {{ formattedAmount }}
@@ -87,10 +87,6 @@ const amountClass = computed(() => {
 </script>
 
 <style scoped lang="scss">
-.compact-display-item {
-  min-height: 46px;
-}
-
 .compact-display-item__content {
   flex: 1 1 auto;
 }
@@ -100,14 +96,10 @@ const amountClass = computed(() => {
 }
 
 .compact-display-item__amount-section {
-  flex: 0 0 auto;
   min-width: 88px;
-  padding-left: 12px;
 }
 
 .compact-display-item__amount {
-  text-align: right;
-  white-space: nowrap;
   line-height: 1.25;
 }
 
@@ -117,7 +109,7 @@ const amountClass = computed(() => {
 
 @media (min-width: 1024px) {
   .compact-display-item {
-    min-height: 48px;
+    min-height: 32px;
   }
 
   .compact-display-item__amount-section {
