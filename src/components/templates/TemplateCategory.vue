@@ -12,7 +12,16 @@
     @add-item="$emit('add-item', $event, categoryColor)"
   >
     <template #item="{ item, index, setItemRef }">
+      <CompactDisplayItemRow
+        v-if="readonly"
+        :name="item.name"
+        :amount="item.amount"
+        :currency="currency"
+        dense
+      />
+
       <TemplateItem
+        v-else
         :ref="(el) => setItemRef(el, index)"
         :model-value="item"
         :currency="currency"
@@ -29,6 +38,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import ItemCategory from 'src/components/shared/ItemCategory.vue'
+import CompactDisplayItemRow from 'src/components/shared/CompactDisplayItemRow.vue'
 import TemplateItem from './TemplateItem.vue'
 import type { CurrencyCode } from 'src/utils/currency'
 import type { TemplateItemUI } from 'src/types'

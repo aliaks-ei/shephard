@@ -24,7 +24,16 @@ vi.mock('src/queries/plans', () => ({
 vi.mock('src/queries/categories', () => ({
   useCategoriesQuery: vi.fn(() => ({
     categories: ref([]),
-    getCategoryById: vi.fn(),
+    getCategoryById: vi.fn((id: string) =>
+      id === 'cat-1'
+        ? {
+            id: 'cat-1',
+            name: 'Food',
+            color: '#ff0000',
+            icon: 'eva-pricetags-outline',
+          }
+        : null,
+    ),
     isPending: ref(false),
     categoriesMap: ref(new Map()),
     sortedCategories: ref([]),
@@ -98,6 +107,11 @@ const renderPlanItemsTrackingTab = (props: PlanItemsTrackingTabProps) => {
       ],
       stubs: {
         CategoryIcon: { template: '<div class="category-icon" />' },
+        CompactDisplayItemRow: {
+          template:
+            '<div class="compact-row" @click="$emit(\'click\')"><slot name="leading" />{{ name }} {{ amount }}</div>',
+          props: ['name', 'amount', 'currency', 'clickable', 'dense', 'strike', 'muted'],
+        },
         'q-card': { template: '<div><slot /></div>' },
         'q-card-section': { template: '<div><slot /></div>' },
         'q-linear-progress': { template: '<div class="q-linear-progress" />' },
@@ -153,7 +167,8 @@ describe('PlanItemsTrackingTab', () => {
       currency: 'USD',
     })
 
-    expect(wrapper.html().length).toBeGreaterThan(0)
+    expect(wrapper.text()).toContain('Test Item')
+    expect(wrapper.find('.compact-row').exists()).toBe(true)
   })
 
   it('should show empty state when no items', () => {
