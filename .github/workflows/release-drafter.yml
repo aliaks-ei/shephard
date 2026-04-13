@@ -23,7 +23,83 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Find existing draft release
+        id: existing_draft
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const releases = await github.paginate(github.rest.repos.listReleases, {
+              ...context.repo,
+              per_page: 100,
+            })
+
+            const draftReleases = releases
+              .filter((release) => release.draft)
+              .sort((left, right) => Date.parse(right.created_at) - Date.parse(left.created_at))
+
+            const existingDraft = draftReleases[0]
+
+            core.setOutput('release_id', existingDraft ? String(existingDraft.id) : '')
+            core.setOutput(
+              'release_ids',
+              JSON.stringify(draftReleases.map((release) => String(release.id))),
+            )
+
       - name: Update draft release
+        id: release_drafter
         uses: release-drafter/release-drafter@v6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Reconcile draft release
+        if: steps.release_drafter.outcome == 'success'
+        uses: actions/github-script@v7
+        env:
+          EXISTING_DRAFT_RELEASE_ID: ${{ steps.existing_draft.outputs.release_id }}
+          EXISTING_DRAFT_RELEASE_IDS: ${{ steps.existing_draft.outputs.release_ids }}
+          GENERATED_RELEASE_ID: ${{ steps.release_drafter.outputs.id }}
+        with:
+          script: |
+            const existingDraftReleaseId = process.env.EXISTING_DRAFT_RELEASE_ID
+            const generatedReleaseId = process.env.GENERATED_RELEASE_ID
+            const existingDraftReleaseIds = JSON.parse(process.env.EXISTING_DRAFT_RELEASE_IDS || '[]')
+
+            if (!generatedReleaseId) {
+              core.setFailed('Release Drafter did not return a release id.')
+              return
+            }
+
+            const generatedRelease = (
+              await github.rest.repos.getRelease({
+                ...context.repo,
+                release_id: Number(generatedReleaseId),
+              })
+            ).data
+
+            let releaseToKeepId = generatedRelease.id
+
+            if (existingDraftReleaseId && existingDraftReleaseId !== generatedReleaseId) {
+              await github.rest.repos.updateRelease({
+                ...context.repo,
+                release_id: Number(existingDraftReleaseId),
+                tag_name: generatedRelease.tag_name,
+                target_commitish: generatedRelease.target_commitish,
+                name: generatedRelease.name,
+                body: generatedRelease.body,
+                draft: true,
+                prerelease: generatedRelease.prerelease,
+              })
+
+              releaseToKeepId = Number(existingDraftReleaseId)
+            }
+
+            const duplicateDraftReleaseIds = [
+              ...new Set([...existingDraftReleaseIds, generatedReleaseId]),
+            ].filter((releaseId) => Number(releaseId) !== releaseToKeepId)
+
+            for (const releaseId of duplicateDraftReleaseIds) {
+              await github.rest.repos.deleteRelease({
+                ...context.repo,
+                release_id: Number(releaseId),
+              })
+            }
