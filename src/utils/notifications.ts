@@ -1,5 +1,6 @@
 import type { NotificationEntityType, NotificationType } from 'src/types/notifications'
 import type { NotificationRecord } from 'src/api/notifications'
+import { sanitizeRedirectPath } from 'src/utils/navigation'
 
 export type NotificationPayload = {
   actorName?: string
@@ -82,19 +83,18 @@ export function getNotificationSections(
 }
 
 export function getNotificationRoute(notification: NotificationRouteInput): string {
+  const fallback =
+    notification.type === 'shared_plan_removed'
+      ? '/plans'
+      : notification.type === 'shared_template_removed'
+        ? '/templates'
+        : notification.entity_type === 'plan'
+          ? `/plans/${notification.entity_id}`
+          : `/templates/${notification.entity_id}`
+
   if (notification.payload.route) {
-    return notification.payload.route
+    return sanitizeRedirectPath(notification.payload.route, fallback)
   }
 
-  if (notification.type === 'shared_plan_removed') {
-    return '/plans'
-  }
-
-  if (notification.type === 'shared_template_removed') {
-    return '/templates'
-  }
-
-  return notification.entity_type === 'plan'
-    ? `/plans/${notification.entity_id}`
-    : `/templates/${notification.entity_id}`
+  return fallback
 }

@@ -521,10 +521,6 @@ export type Database = {
         Args: { template_id: string; user_id: string }
         Returns: boolean
       }
-      check_excessive_sharing: {
-        Args: { hours_window?: number; max_shares?: number; user_id: string }
-        Returns: boolean
-      }
       cleanup_audit_logs: {
         Args: { days_to_keep?: number }
         Returns: number

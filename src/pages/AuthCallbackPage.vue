@@ -47,6 +47,7 @@ import { onMounted, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 
 import AuthLoginCard from 'src/components/auth/AuthLoginCard.vue'
+import { supabase } from 'src/lib/supabase/client'
 import { sanitizeRedirectPath } from 'src/utils/navigation'
 
 const router = useRouter()
@@ -55,10 +56,34 @@ const isLoading = ref(true)
 const error = ref<string | null>(null)
 
 onMounted(async () => {
-  await redirectToHomePage()
+  const providerError = readProviderError()
+  if (providerError) {
+    error.value = providerError
+    isLoading.value = false
+    return
+  }
 
+  // With PKCE, supabase-js auto-exchanges `?code=...` on init (detectSessionInUrl).
+  // We still assert the session actually landed before redirecting so a silent
+  // exchange failure surfaces to the user instead of looping them back in.
+  const { data, error: sessionError } = await supabase.auth.getSession()
+  if (sessionError || !data.session) {
+    error.value = 'We could not verify your sign-in. Please try again.'
+    isLoading.value = false
+    return
+  }
+
+  await redirectToHomePage()
   isLoading.value = false
 })
+
+function readProviderError(): string | null {
+  const queryError = route.query.error_description ?? route.query.error
+  if (typeof queryError === 'string' && queryError.trim()) {
+    return queryError
+  }
+  return null
+}
 
 async function redirectToHomePage(): Promise<void> {
   const redirectPath = sanitizeRedirectPath(route.query.redirectTo)

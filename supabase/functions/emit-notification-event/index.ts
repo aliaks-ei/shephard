@@ -2,10 +2,10 @@ import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from '@supabase/supabase-js'
 import webPush from 'npm:web-push@3.6.7'
 import {
+  buildCorsHeaders,
   buildNotificationCopy,
   createErrorResponse,
   createSuccessResponse,
-  corsHeaders,
   defaultNotificationPushPreferences,
   getNotificationRoute,
   isNotificationEntityType,
@@ -349,6 +349,12 @@ async function sendPushNotifications(
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = buildCorsHeaders(req.headers.get('Origin'))
+  const errorResponse = (error: string, status = 400) =>
+    createErrorResponse(error, status, corsHeaders)
+  const successResponse = (data: unknown, status = 200) =>
+    createSuccessResponse(data, status, corsHeaders)
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -356,46 +362,67 @@ Deno.serve(async (req) => {
   try {
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
-      return createErrorResponse('Missing authorization header', 401)
+      return errorResponse('Missing authorization header', 401)
     }
 
     let rawBody: unknown
     try {
       rawBody = await req.json()
     } catch {
-      return createErrorResponse('Invalid JSON in request body', 400)
+      return errorResponse('Invalid JSON in request body', 400)
     }
 
     if (!isRecord(rawBody)) {
-      return createErrorResponse('Invalid notification payload', 400)
+      return errorResponse('Invalid notification payload', 400)
     }
 
     if (
       !isNotificationType(rawBody.type) ||
       !isNotificationEntityType(rawBody.entityType) ||
       typeof rawBody.entityId !== 'string' ||
-      rawBody.entityId.length === 0
+      rawBody.entityId.length === 0 ||
+      rawBody.entityId.length > 64
     ) {
-      return createErrorResponse('Invalid notification event input', 400)
+      return errorResponse('Invalid notification event input', 400)
     }
+
+    const MAX_ENTITY_NAME_LENGTH = 200
+    const MAX_EXPENSE_NAME_LENGTH = 200
+    const MAX_TARGET_USER_IDS = 100
+    const MAX_USER_ID_LENGTH = 64
+
+    const clampString = (value: string, limit: number): string => value.trim().slice(0, limit)
 
     const input: EmitNotificationEventInput = {
       type: rawBody.type,
       entityType: rawBody.entityType,
       entityId: rawBody.entityId,
-      ...(typeof rawBody.targetUserId === 'string' ? { targetUserId: rawBody.targetUserId } : {}),
+      ...(typeof rawBody.targetUserId === 'string' &&
+      rawBody.targetUserId.length > 0 &&
+      rawBody.targetUserId.length <= MAX_USER_ID_LENGTH
+        ? { targetUserId: rawBody.targetUserId }
+        : {}),
       ...(Array.isArray(rawBody.targetUserIds)
         ? {
-            targetUserIds: rawBody.targetUserIds.filter(
-              (value): value is string => typeof value === 'string' && value.length > 0,
-            ),
+            targetUserIds: rawBody.targetUserIds
+              .filter(
+                (value): value is string =>
+                  typeof value === 'string' &&
+                  value.length > 0 &&
+                  value.length <= MAX_USER_ID_LENGTH,
+              )
+              .slice(0, MAX_TARGET_USER_IDS),
           }
         : {}),
       ...(rawBody.targetPermission === 'view' || rawBody.targetPermission === 'edit'
         ? { targetPermission: rawBody.targetPermission }
         : {}),
-      ...(typeof rawBody.entityName === 'string' ? { entityName: rawBody.entityName } : {}),
-      ...(typeof rawBody.expenseName === 'string' ? { expenseName: rawBody.expenseName } : {}),
+      ...(typeof rawBody.entityName === 'string'
+        ? { entityName: clampString(rawBody.entityName, MAX_ENTITY_NAME_LENGTH) }
+        : {}),
+      ...(typeof rawBody.expenseName === 'string'
+        ? { expenseName: clampString(rawBody.expenseName, MAX_EXPENSE_NAME_LENGTH) }
+        : {}),
     }
 
     const actor = await getAuthenticatedUser(authHeader)
@@ -410,13 +437,13 @@ Deno.serve(async (req) => {
     const actorIsOwner = entity.owner_id === actor.id
     if (!actorIsOwner) {
       if (!isCollaboratorAction(input.type) || actorShare?.permission_level !== 'edit') {
-        return createErrorResponse('You do not have access to emit this notification event', 403)
+        return errorResponse('You do not have access to emit this notification event', 403)
       }
     }
 
     const recipients = await resolveRecipients(serviceClient, input, actor.id, entity.owner_id)
     if (recipients.length === 0) {
-      return createSuccessResponse(null)
+      return successResponse(null)
     }
 
     const relevantUsers = await getUsersByIds(serviceClient, [actor.id, ...recipients])
@@ -459,13 +486,9 @@ Deno.serve(async (req) => {
 
     await sendPushNotifications(serviceClient, notificationList, payloadById, usersById)
 
-    return createSuccessResponse(null)
+    return successResponse(null)
   } catch (error) {
     console.error('Error in emit-notification-event:', error)
-    return createErrorResponse(
-      'Internal server error',
-      500,
-      error instanceof Error ? error.message : 'Unknown error',
-    )
+    return errorResponse('Internal server error', 500)
   }
 })

@@ -4,6 +4,11 @@ import type { PhotoAnalysisResult } from 'src/api/ai'
 import { useError } from './useError'
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+// HEIC is a compressed container; a ~3MB HEIC can decode to a 50-100MP bitmap
+// which blows up memory in `heic2any` and can crash the tab.  Cap HEIC input
+// more aggressively than the generic MAX_FILE_SIZE so a decompression bomb
+// cannot reach the decoder.
+const MAX_HEIC_INPUT_SIZE = 3 * 1024 * 1024
 const MAX_OPTIMIZED_DIMENSION_PX = 1600
 const TARGET_OPTIMIZED_SIZE_BYTES = 1.5 * 1024 * 1024
 const MIN_SIZE_FOR_OPTIMIZATION_BYTES = 256 * 1024
@@ -207,6 +212,15 @@ export function usePhotoExpenseAnalysis(
     }
 
     if (file.type === 'image/heic') {
+      if (file.size > MAX_HEIC_INPUT_SIZE) {
+        analysisError.value =
+          'HEIC photo is too large to convert in the browser. Please export it as JPEG and re-upload.'
+        handleError('AI.PHOTO_TOO_LARGE', new Error('HEIC above conversion cap'), {
+          size: String(file.size),
+        })
+        return
+      }
+
       try {
         file = await convertHEICtoJPEG(file)
       } catch {

@@ -1,9 +1,9 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from '@supabase/supabase-js'
 import {
+  buildCorsHeaders,
   createErrorResponse,
   createSuccessResponse,
-  corsHeaders,
   isRecord,
 } from '../_shared/notification-utils.ts'
 
@@ -23,6 +23,48 @@ const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 const vapidPublicKey = Deno.env.get('WEB_PUSH_PUBLIC_KEY')
 const vapidPrivateKey = Deno.env.get('WEB_PUSH_PRIVATE_KEY')
 
+// Upper bounds prevent abuse / billing attacks on the downstream Supabase and
+// push provider APIs.
+const MAX_ENDPOINT_LENGTH = 2048
+const MAX_KEY_LENGTH = 256
+const MAX_USER_AGENT_LENGTH = 512
+
+// Only well-known browser push services are allowed as the `endpoint` host.
+// Without this allowlist the service-role edge function would POST
+// VAPID-signed bodies to any HTTPS URL a user chooses — a useful SSRF primitive.
+const ALLOWED_PUSH_HOSTS: readonly string[] = [
+  'fcm.googleapis.com',
+  'android.googleapis.com',
+  'updates.push.services.mozilla.com',
+  'updates-autopush.stage.mozaws.net',
+]
+const ALLOWED_PUSH_HOST_SUFFIXES: readonly string[] = [
+  '.google.com',
+  '.push.apple.com',
+  '.notify.windows.com',
+  '.push.services.mozilla.com',
+]
+
+function isAllowedPushEndpoint(endpoint: string): boolean {
+  if (endpoint.length > MAX_ENDPOINT_LENGTH) {
+    return false
+  }
+  let url: URL
+  try {
+    url = new URL(endpoint)
+  } catch {
+    return false
+  }
+  if (url.protocol !== 'https:') {
+    return false
+  }
+  const host = url.hostname.toLowerCase()
+  if (ALLOWED_PUSH_HOSTS.includes(host)) {
+    return true
+  }
+  return ALLOWED_PUSH_HOST_SUFFIXES.some((suffix) => host.endsWith(suffix))
+}
+
 function createAuthedClient(authHeader: string) {
   return createClient(supabaseUrl, supabaseAnonKey, {
     global: {
@@ -38,6 +80,12 @@ function createServiceClient() {
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = buildCorsHeaders(req.headers.get('Origin'))
+  const errorResponse = (error: string, status = 400) =>
+    createErrorResponse(error, status, corsHeaders)
+  const successResponse = (data: unknown, status = 200) =>
+    createSuccessResponse(data, status, corsHeaders)
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -45,7 +93,7 @@ Deno.serve(async (req) => {
   try {
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
-      return createErrorResponse('Missing authorization header', 401)
+      return errorResponse('Missing authorization header', 401)
     }
 
     const authClient = createAuthedClient(authHeader)
@@ -55,18 +103,21 @@ Deno.serve(async (req) => {
     } = await authClient.auth.getUser()
 
     if (authError || !user) {
-      return createErrorResponse('Unauthorized', 401, authError?.message)
+      if (authError) {
+        console.error('Auth error in push-subscriptions:', authError)
+      }
+      return errorResponse('Unauthorized', 401)
     }
 
     let rawBody: unknown
     try {
       rawBody = await req.json()
     } catch {
-      return createErrorResponse('Invalid JSON in request body', 400)
+      return errorResponse('Invalid JSON in request body', 400)
     }
 
     if (!isRecord(rawBody) || typeof rawBody.action !== 'string') {
-      return createErrorResponse('Invalid push subscription payload', 400)
+      return errorResponse('Invalid push subscription payload', 400)
     }
 
     const action = rawBody.action as PushSubscriptionAction
@@ -74,17 +125,22 @@ Deno.serve(async (req) => {
 
     switch (action) {
       case 'get-config':
-        return createSuccessResponse({
+        return successResponse({
           publicKey: vapidPublicKey ?? null,
           configured: !!vapidPublicKey && !!vapidPrivateKey,
         })
 
       case 'upsert': {
         const subscription = rawBody.subscription
-        const userAgent = typeof rawBody.userAgent === 'string' ? rawBody.userAgent : null
+        const rawUserAgent = typeof rawBody.userAgent === 'string' ? rawBody.userAgent : null
+        const userAgent = rawUserAgent ? rawUserAgent.slice(0, MAX_USER_AGENT_LENGTH) : null
 
         if (!isRecord(subscription) || typeof subscription.endpoint !== 'string') {
-          return createErrorResponse('Invalid push subscription data', 400)
+          return errorResponse('Invalid push subscription data', 400)
+        }
+
+        if (!isAllowedPushEndpoint(subscription.endpoint)) {
+          return errorResponse('Invalid push subscription endpoint', 400)
         }
 
         const keys = isRecord(subscription.keys) ? subscription.keys : null
@@ -92,12 +148,15 @@ Deno.serve(async (req) => {
         const auth = typeof keys?.auth === 'string' ? keys.auth : null
 
         if (!p256dh || !auth) {
-          return createErrorResponse('Incomplete push subscription keys', 400)
+          return errorResponse('Incomplete push subscription keys', 400)
+        }
+        if (p256dh.length > MAX_KEY_LENGTH || auth.length > MAX_KEY_LENGTH) {
+          return errorResponse('Push subscription keys exceed maximum length', 400)
         }
 
         const { data: existing, error: existingError } = await serviceClient
           .from('push_subscriptions')
-          .select('id')
+          .select('id, user_id')
           .eq('endpoint', subscription.endpoint)
           .maybeSingle()
 
@@ -106,10 +165,21 @@ Deno.serve(async (req) => {
         }
 
         if (existing) {
+          // Defense-in-depth: the DB has a unique index on endpoint and a
+          // BEFORE UPDATE trigger that refuses changes to user_id, but that
+          // defense is invisible to anyone reading this function. Make the
+          // cross-user rejection explicit at the application layer.
+          if (existing.user_id !== user.id) {
+            console.warn('Rejected cross-user push subscription upsert', {
+              existingSubscriptionId: existing.id,
+              requestingUserId: user.id,
+            })
+            return errorResponse('Push subscription endpoint is not available', 409)
+          }
+
           const { error } = await serviceClient
             .from('push_subscriptions')
             .update({
-              user_id: user.id,
               p256dh,
               auth,
               user_agent: userAgent,
@@ -135,7 +205,7 @@ Deno.serve(async (req) => {
           }
         }
 
-        return createSuccessResponse(null)
+        return successResponse(null)
       }
 
       case 'revoke': {
@@ -158,18 +228,14 @@ Deno.serve(async (req) => {
           throw error
         }
 
-        return createSuccessResponse(null)
+        return successResponse(null)
       }
 
       default:
-        return createErrorResponse('Unsupported push subscription action', 400)
+        return errorResponse('Unsupported push subscription action', 400)
     }
   } catch (error) {
     console.error('Error in push-subscriptions:', error)
-    return createErrorResponse(
-      'Internal server error',
-      500,
-      error instanceof Error ? error.message : 'Unknown error',
-    )
+    return errorResponse('Internal server error', 500)
   }
 })

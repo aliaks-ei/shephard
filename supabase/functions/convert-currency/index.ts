@@ -1,4 +1,5 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
+import { buildCorsHeaders } from '../_shared/notification-utils.ts'
 
 interface ConvertCurrencyRequest {
   from: string
@@ -15,11 +16,7 @@ interface ExchangeRateAPIResponse {
 }
 
 Deno.serve(async (req) => {
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Content-Type': 'application/json',
-  }
+  const corsHeaders = buildCorsHeaders(req.headers.get('Origin'))
 
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -114,8 +111,10 @@ Deno.serve(async (req) => {
     const apiResponse = await fetch(apiUrl)
 
     if (!apiResponse.ok) {
-      const errorText = await apiResponse.text()
-      console.error('ExchangeRate-API error:', errorText)
+      // Intentionally do not log the upstream body. ExchangeRate-API error
+      // payloads can contain the account/API-key context and we already log
+      // the HTTP status above for triage.
+      console.error('ExchangeRate-API error: status', apiResponse.status)
 
       return new Response(
         JSON.stringify({
@@ -132,7 +131,7 @@ Deno.serve(async (req) => {
     const apiData: ExchangeRateAPIResponse = await apiResponse.json()
 
     if (apiData.result !== 'success') {
-      console.error('ExchangeRate-API unsuccessful result:', apiData)
+      console.error('ExchangeRate-API unsuccessful result, code:', apiData.result)
       return new Response(
         JSON.stringify({
           error: 'Currency conversion failed',
@@ -161,15 +160,9 @@ Deno.serve(async (req) => {
     )
   } catch (error) {
     console.error('Error in convert-currency:', error)
-    return new Response(
-      JSON.stringify({
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: corsHeaders,
-      },
-    )
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: corsHeaders,
+    })
   }
 })

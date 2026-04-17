@@ -6,7 +6,7 @@ import AuthCallbackPage from './AuthCallbackPage.vue'
 installQuasarPlugin()
 
 const mockRouterPush = vi.fn()
-const mockRoute = {
+const mockRoute: { query: Record<string, unknown> } = {
   query: {},
 }
 
@@ -15,6 +15,15 @@ vi.mock('vue-router', () => ({
     push: mockRouterPush,
   }),
   useRoute: () => mockRoute,
+}))
+
+const mockGetSession = vi.fn()
+vi.mock('src/lib/supabase/client', () => ({
+  supabase: {
+    auth: {
+      getSession: (...args: unknown[]) => mockGetSession(...args),
+    },
+  },
 }))
 
 function createWrapper() {
@@ -44,6 +53,10 @@ function createWrapper() {
 beforeEach(() => {
   vi.clearAllMocks()
   mockRoute.query = {}
+  mockGetSession.mockResolvedValue({
+    data: { session: { user: { id: 'user-1' } } },
+    error: null,
+  })
 })
 
 it('should mount component properly', () => {
@@ -86,4 +99,20 @@ it('should show loading state initially', () => {
 it('should display welcome header', () => {
   const wrapper = createWrapper()
   expect(wrapper.text()).toContain('Welcome to Shephard')
+})
+
+it('should surface the provider error from the query string', async () => {
+  mockRoute.query = { error_description: 'access_denied' }
+  const wrapper = createWrapper()
+  await flushPromises()
+  expect(mockRouterPush).not.toHaveBeenCalled()
+  expect(wrapper.text()).toContain('access_denied')
+})
+
+it('should surface a verification failure when session is missing', async () => {
+  mockGetSession.mockResolvedValue({ data: { session: null }, error: null })
+  const wrapper = createWrapper()
+  await flushPromises()
+  expect(mockRouterPush).not.toHaveBeenCalled()
+  expect(wrapper.text()).toContain('could not verify your sign-in')
 })
