@@ -25,26 +25,22 @@ export type CategoryTemplate = {
 }
 
 export async function getCategoriesWithStats(userId: string): Promise<CategoryWithStats[]> {
-  const { data: categories, error: categoriesError } = await supabase
-    .from('categories')
-    .select('*')
-    .order('name', { ascending: true })
+  const [categoriesResult, ownedTemplatesResult, sharedTemplatesResult] = await Promise.all([
+    supabase.from('categories').select('*').order('name', { ascending: true }),
+    supabase.from('templates').select('id, name, owner_id').match({ owner_id: userId }),
+    supabase
+      .from('template_shares')
+      .select('template_id, permission_level, templates(id, name, owner_id)')
+      .match({ shared_with_user_id: userId }),
+  ])
 
-  if (categoriesError) throw categoriesError
+  if (categoriesResult.error) throw categoriesResult.error
+  if (ownedTemplatesResult.error) throw ownedTemplatesResult.error
+  if (sharedTemplatesResult.error) throw sharedTemplatesResult.error
 
-  const { data: ownedTemplates, error: ownedError } = await supabase
-    .from('templates')
-    .select('id, name, owner_id')
-    .match({ owner_id: userId })
-
-  if (ownedError) throw ownedError
-
-  const { data: sharedTemplatesData, error: sharedError } = await supabase
-    .from('template_shares')
-    .select('template_id, permission_level, templates(id, name, owner_id)')
-    .match({ shared_with_user_id: userId })
-
-  if (sharedError) throw sharedError
+  const categories = categoriesResult.data
+  const ownedTemplates = ownedTemplatesResult.data
+  const sharedTemplatesData = sharedTemplatesResult.data
 
   const ownedTemplateIds = new Set((ownedTemplates || []).map((t) => t.id))
   const sharedTemplateIds = new Set((sharedTemplatesData || []).map((s) => s.template_id))

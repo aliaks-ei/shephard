@@ -1,9 +1,6 @@
 <template>
   <div class="fullscreen column flex-center q-pa-xl">
-    <div
-      class="column items-center text-center"
-      style="max-width: 600px"
-    >
+    <div class="error-not-found__content column items-center text-center">
       <q-icon
         name="eva-alert-triangle-outline"
         size="80px"
@@ -60,3 +57,9 @@
     </div>
   </div>
 </template>
+
+<style lang="scss" scoped>
+.error-not-found__content {
+  max-width: 600px;
+}
+</style>

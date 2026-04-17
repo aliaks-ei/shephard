@@ -47,7 +47,7 @@ const renderTemplateCard = (props: TemplateCardProps, isPrivacyModeEnabled = fal
       stubs: {
         TemplateCardMenu: {
           template: '<div data-testid="template-card-menu" />',
-          props: ['canEdit', 'permissionLevel'],
+          props: ['canEdit'],
           emits: ['edit', 'share', 'delete'],
         },
       },
@@ -70,19 +70,9 @@ describe('TemplateCard', () => {
   it('should have correct props', () => {
     const wrapper = renderTemplateCard({
       template: mockTemplate,
-      hideSharedBadge: true,
     })
 
     expect(wrapper.props('template')).toEqual(mockTemplate)
-    expect(wrapper.props('hideSharedBadge')).toBe(true)
-  })
-
-  it('should use default hideSharedBadge value', () => {
-    const wrapper = renderTemplateCard({
-      template: mockTemplate,
-    })
-
-    expect(wrapper.props('hideSharedBadge')).toBe(false)
   })
 
   it('should emit edit event when card is clicked', async () => {
@@ -170,22 +160,6 @@ describe('TemplateCard', () => {
     })
 
     expect(wrapper.props('template')).toEqual(differentTemplate)
-  })
-
-  it('should handle hideSharedBadge prop', () => {
-    const hiddenBadgeWrapper = renderTemplateCard({
-      template: mockTemplate,
-      hideSharedBadge: true,
-    })
-
-    expect(hiddenBadgeWrapper.props('hideSharedBadge')).toBe(true)
-
-    const shownBadgeWrapper = renderTemplateCard({
-      template: mockTemplate,
-      hideSharedBadge: false,
-    })
-
-    expect(shownBadgeWrapper.props('hideSharedBadge')).toBe(false)
   })
 
   it('should display real amount when privacy mode is disabled', () => {

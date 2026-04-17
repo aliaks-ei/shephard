@@ -32,6 +32,7 @@ export const queryKeys = {
   },
   notifications: {
     all: ['notifications'] as const,
+    listAll: (userId: string) => [...queryKeys.notifications.all, 'list', userId] as const,
     list: (userId: string, limit: number) =>
       [...queryKeys.notifications.all, 'list', userId, limit] as const,
     unreadCount: (userId: string) =>

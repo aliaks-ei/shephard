@@ -97,7 +97,6 @@ const emit = defineEmits<{
 
 const props = defineProps<{
   canEdit: boolean
-  permissionLevel?: string | undefined
   planStatus: 'pending' | 'active' | 'completed' | 'cancelled'
 }>()
 
@@ -107,13 +106,5 @@ const canDelete = computed(() => {
 
 const canCancel = computed(() => {
   return props.planStatus === 'active'
-})
-
-const hasActions = computed(() => {
-  return true
-})
-
-defineExpose({
-  hasActions,
 })
 </script>

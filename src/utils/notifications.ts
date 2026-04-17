@@ -1,14 +1,10 @@
-import type { NotificationEntityType, NotificationType } from 'src/types/notifications'
+import type {
+  NotificationEntityType,
+  NotificationPayload,
+  NotificationType,
+} from 'src/types/notifications'
 import type { NotificationRecord } from 'src/api/notifications'
 import { sanitizeRedirectPath } from 'src/utils/navigation'
-
-export type NotificationPayload = {
-  actorName?: string
-  entityName?: string
-  expenseName?: string
-  permissionLevel?: 'view' | 'edit'
-  route?: string
-}
 
 export type NotificationRouteInput = {
   type: NotificationType

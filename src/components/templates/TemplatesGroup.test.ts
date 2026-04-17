@@ -130,23 +130,4 @@ describe('TemplatesGroup', () => {
 
     expect(wrapper.props('chipColor')).toBe('secondary')
   })
-
-  it('should use default hideSharedBadge', () => {
-    const wrapper = renderTemplatesGroup({
-      templates: [mockTemplate],
-      title: 'My Templates',
-    })
-
-    expect(wrapper.props('hideSharedBadge')).toBe(false)
-  })
-
-  it('should use custom hideSharedBadge', () => {
-    const wrapper = renderTemplatesGroup({
-      templates: [mockTemplate],
-      title: 'My Templates',
-      hideSharedBadge: true,
-    })
-
-    expect(wrapper.props('hideSharedBadge')).toBe(true)
-  })
 })

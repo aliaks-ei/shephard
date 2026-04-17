@@ -25,7 +25,7 @@ export function useCategoryRefs<T extends BaseItemUI>(items: Ref<T[]>) {
 
   function getFirstInvalidItem(): { categoryId: string; item: T } | null {
     for (const item of items.value) {
-      if (!item.name.trim() || item.amount <= 0) {
+      if (!item.name.trim() || !item.categoryId || item.amount <= 0) {
         return { categoryId: item.categoryId, item }
       }
     }

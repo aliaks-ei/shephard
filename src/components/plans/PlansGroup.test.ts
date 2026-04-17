@@ -38,7 +38,7 @@ const renderPlansGroup = (props: PlansGroupProps) => {
         PlanCard: {
           template:
             '<div class="plan-card">\n<button class="e" @click="$emit(\'edit\', plan.id)"></button>\n<button class="s" @click="$emit(\'share\', plan.id)"></button>\n<button class="d" @click="$emit(\'delete\', plan)"></button>\n<button class="c" @click="$emit(\'cancel\', plan)"></button>\n</div>',
-          props: ['plan', 'hideSharedBadge'],
+          props: ['plan'],
         },
       },
     },
@@ -64,7 +64,6 @@ describe('PlansGroup', () => {
   it('should provide default props', () => {
     const wrapper = renderPlansGroup({ plans: [mockPlan], title: 'Plans' })
     expect(wrapper.props('chipColor')).toBe('primary')
-    expect(wrapper.props('hideSharedBadge')).toBe(false)
   })
 
   it('should allow overriding optional props', () => {
@@ -72,10 +71,8 @@ describe('PlansGroup', () => {
       plans: [mockPlan],
       title: 'Plans',
       chipColor: 'secondary',
-      hideSharedBadge: true,
     })
     expect(wrapper.props('chipColor')).toBe('secondary')
-    expect(wrapper.props('hideSharedBadge')).toBe(true)
   })
 
   it('should bubble edit/share/delete/cancel events from PlanCard', async () => {

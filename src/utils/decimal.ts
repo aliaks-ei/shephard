@@ -14,7 +14,6 @@ export function parseDecimalInput(value: string | number | null | undefined): nu
     return isNaN(value) ? null : value
   }
 
-  // Normalize comma to dot for decimal separator
   const normalizedValue = value.replace(',', '.')
   const parsedValue = parseFloat(normalizedValue)
 

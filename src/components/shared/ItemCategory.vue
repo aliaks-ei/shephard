@@ -52,7 +52,7 @@
 
         <div
           v-if="!readonly"
-          class="flex justify-end q-pt-sm"
+          class="row justify-end q-pt-sm"
         >
           <q-btn
             color="primary"
@@ -69,7 +69,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, watch, watchEffect } from 'vue'
+import { ref, computed, nextTick, watch } from 'vue'
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import type { BaseItemUI } from 'src/types'
@@ -152,9 +152,12 @@ watch(
   },
 )
 
-watchEffect(() => {
-  isExpanded.value = props.defaultExpanded
-})
+watch(
+  () => props.defaultExpanded,
+  (expanded) => {
+    isExpanded.value = expanded
+  },
+)
 
 defineExpose({
   focusLastItem,

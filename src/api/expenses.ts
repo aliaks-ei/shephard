@@ -22,10 +22,12 @@ const expenseService = new BaseAPIService<'expenses', Expense, ExpenseInsert, Ex
   entityTypeName: 'EXPENSE',
 })
 
+const EXPENSE_WITH_CATEGORY_SELECT = '*, categories(*)'
+
 export async function getExpensesByPlan(planId: string): Promise<ExpenseWithCategory[]> {
   const { data, error } = await expenseService.supabase
     .from('expenses')
-    .select('*, categories(*)')
+    .select(EXPENSE_WITH_CATEGORY_SELECT)
     .eq('plan_id', planId)
     .order('expense_date', { ascending: false })
     .order('created_at', { ascending: false })
@@ -119,7 +121,7 @@ export async function getExpensesByDateRange(
 ): Promise<ExpenseWithCategory[]> {
   const { data, error } = await expenseService.supabase
     .from('expenses')
-    .select('*, categories(*)')
+    .select(EXPENSE_WITH_CATEGORY_SELECT)
     .eq('plan_id', planId)
     .gte('expense_date', startDate)
     .lte('expense_date', endDate)
@@ -135,7 +137,7 @@ export async function getExpensesByCategory(
 ): Promise<ExpenseWithCategory[]> {
   const { data, error } = await expenseService.supabase
     .from('expenses')
-    .select('*, categories(*)')
+    .select(EXPENSE_WITH_CATEGORY_SELECT)
     .eq('plan_id', planId)
     .eq('category_id', categoryId)
     .order('expense_date', { ascending: false })

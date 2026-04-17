@@ -8,7 +8,6 @@
     <template #item-card="{ item }">
       <TemplateCard
         :template="item"
-        :hide-shared-badge="hideSharedBadge || false"
         @edit="emit('edit', $event)"
         @export="emit('export', $event)"
         @delete="emit('delete', $event)"
@@ -35,11 +34,9 @@ withDefaults(
     templates: TemplateWithPermission[]
     title: string
     chipColor?: string
-    hideSharedBadge?: boolean
   }>(),
   {
     chipColor: 'primary',
-    hideSharedBadge: false,
   },
 )
 </script>

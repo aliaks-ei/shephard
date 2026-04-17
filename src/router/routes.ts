@@ -8,9 +8,6 @@ const routes: RouteRecordRaw[] = [
       {
         path: '',
         component: () => import('pages/IndexPage.vue'),
-        meta: {
-          prefetch: ['/plans', '/templates'],
-        },
       },
       {
         path: 'settings',
@@ -21,9 +18,6 @@ const routes: RouteRecordRaw[] = [
         path: 'templates',
         component: () => import('pages/TemplatesPage.vue'),
         name: 'templates',
-        meta: {
-          prefetch: ['/templates/new'],
-        },
       },
       {
         path: 'templates/new',
@@ -34,17 +28,11 @@ const routes: RouteRecordRaw[] = [
         path: 'templates/:id',
         component: () => import('pages/TemplatePage.vue'),
         name: 'template',
-        meta: {
-          prefetch: ['/templates'],
-        },
       },
       {
         path: 'plans',
         component: () => import('pages/PlansPage.vue'),
         name: 'plans',
-        meta: {
-          prefetch: ['/plans/new'],
-        },
       },
       {
         path: 'plans/new',
@@ -55,9 +43,6 @@ const routes: RouteRecordRaw[] = [
         path: 'plans/:id',
         component: () => import('pages/PlanPage.vue'),
         name: 'plan',
-        meta: {
-          prefetch: ['/plans'],
-        },
       },
     ],
     meta: {
@@ -87,7 +72,7 @@ const routes: RouteRecordRaw[] = [
     path: '/:catchAll(.*)*',
     component: () => import('pages/ErrorNotFound.vue'),
     meta: {
-      requiresAuth: true,
+      requiresAuth: false,
     },
   },
 ]

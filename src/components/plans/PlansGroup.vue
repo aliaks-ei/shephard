@@ -8,7 +8,6 @@
     <template #item-card="{ item }">
       <PlanCard
         :plan="item"
-        :hide-shared-badge="hideSharedBadge || false"
         @edit="emit('edit', $event)"
         @export="emit('export', $event)"
         @delete="emit('delete', $event)"
@@ -37,11 +36,9 @@ withDefaults(
     plans: PlanWithPermission[]
     title: string
     chipColor?: string
-    hideSharedBadge?: boolean
   }>(),
   {
     chipColor: 'primary',
-    hideSharedBadge: false,
   },
 )
 </script>

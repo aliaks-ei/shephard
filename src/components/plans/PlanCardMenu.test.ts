@@ -43,12 +43,10 @@ describe('PlanCardMenu', () => {
   it('should have correct props interface', () => {
     const wrapper = renderPlanCardMenu({
       canEdit: false,
-      permissionLevel: 'edit',
       planStatus: 'pending',
     })
 
     expect(wrapper.props('canEdit')).toBe(false)
-    expect(wrapper.props('permissionLevel')).toBe('edit')
     expect(wrapper.props('planStatus')).toBe('pending')
   })
 
@@ -91,7 +89,6 @@ describe('PlanCardMenu', () => {
   it('should show export only when canEdit is false', () => {
     const wrapper = renderPlanCardMenu({
       canEdit: false,
-      permissionLevel: 'view',
       planStatus: 'completed',
     })
     expect(wrapper.findAll('.q-item').length).toBe(1)

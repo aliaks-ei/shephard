@@ -20,7 +20,7 @@ export function invalidateNotificationQueries(
     return
   }
 
-  queryClient.invalidateQueries({ queryKey: queryKeys.notifications.list(userId, 50) })
+  queryClient.invalidateQueries({ queryKey: queryKeys.notifications.listAll(userId) })
   queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount(userId) })
 }
 

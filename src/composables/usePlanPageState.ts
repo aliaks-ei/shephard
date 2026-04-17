@@ -404,11 +404,10 @@ export function usePlanPageState() {
   })
 
   watch(
-    form,
+    () => [form.value.name, form.value.startDate, form.value.endDate],
     () => {
       clearSaveFeedback()
     },
-    { deep: true },
   )
 
   onUnmounted(() => {

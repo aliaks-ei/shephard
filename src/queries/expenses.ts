@@ -6,23 +6,40 @@ import {
   getLastExpenseForPlan,
   createExpense,
   createExpenses,
-  updateExpense,
   deleteExpense,
   deleteExpenses,
   getExpensesByDateRange,
   getExpensesByCategory,
   type ExpenseWithCategory,
   type ExpenseInsert,
-  type ExpenseUpdate,
   type PlanExpenseSummary,
 } from 'src/api'
 import { updatePlanItemCompletion } from 'src/api/plans'
 import { useUserStore } from 'src/stores/user'
 import { queryKeys } from './query-keys'
-import { createSpecificErrorHandler, createMutationErrorHandler } from './query-error-handler'
+import {
+  createSpecificErrorHandler,
+  createMutationErrorHandler,
+  type SpecificErrorMatcher,
+} from './query-error-handler'
 
 const EXPENSES_STALE_TIME_MS = 15_000
 const EXPENSES_CACHE_TIME_MS = 5 * 60_000
+
+const EXPENSE_FK_ERROR_MATCHERS: SpecificErrorMatcher[] = [
+  {
+    check: (e) =>
+      e.message.includes('violates foreign key constraint') &&
+      e.message.includes('expenses_plan_id_fkey'),
+    key: 'EXPENSES.PLAN_NOT_FOUND',
+  },
+  {
+    check: (e) =>
+      e.message.includes('violates foreign key constraint') &&
+      e.message.includes('expenses_plan_item_id_fkey'),
+    key: 'EXPENSES.PLAN_ITEM_NOT_FOUND',
+  },
+]
 
 export function useExpensesByPlanQuery(planId: MaybeRefOrGetter<string | null>) {
   const query = useQuery({
@@ -39,8 +56,6 @@ export function useExpensesByPlanQuery(planId: MaybeRefOrGetter<string | null>) 
   const totalExpensesAmount = computed(() =>
     expenses.value.reduce((total, expense) => total + expense.amount, 0),
   )
-
-  const sortedExpenses = computed(() => expenses.value)
 
   const expensesByCategory = computed(() => {
     const grouped: Record<string, ExpenseWithCategory[]> = {}
@@ -61,7 +76,7 @@ export function useExpensesByPlanQuery(planId: MaybeRefOrGetter<string | null>) 
     ...query,
     expenses,
     totalExpensesAmount,
-    sortedExpenses,
+    sortedExpenses: expenses,
     expensesByCategory,
     getExpensesForPlanItem,
   }
@@ -127,23 +142,7 @@ export function useCreateExpenseMutation() {
         invalidateExpenseQueries(queryClient, vars.plan_id)
       }
     },
-    onError: createSpecificErrorHandler(
-      [
-        {
-          check: (e) =>
-            e.message.includes('violates foreign key constraint') &&
-            e.message.includes('expenses_plan_id_fkey'),
-          key: 'EXPENSES.PLAN_NOT_FOUND',
-        },
-        {
-          check: (e) =>
-            e.message.includes('violates foreign key constraint') &&
-            e.message.includes('expenses_plan_item_id_fkey'),
-          key: 'EXPENSES.PLAN_ITEM_NOT_FOUND',
-        },
-      ],
-      'EXPENSES.CREATE_FAILED',
-    ),
+    onError: createSpecificErrorHandler(EXPENSE_FK_ERROR_MATCHERS, 'EXPENSES.CREATE_FAILED'),
   })
 }
 
@@ -178,43 +177,7 @@ export function useCreateExpensesBatchMutation() {
         invalidateExpenseQueries(queryClient, planId)
       }
     },
-    onError: createSpecificErrorHandler(
-      [
-        {
-          check: (e) =>
-            e.message.includes('violates foreign key constraint') &&
-            e.message.includes('expenses_plan_id_fkey'),
-          key: 'EXPENSES.PLAN_NOT_FOUND',
-        },
-        {
-          check: (e) =>
-            e.message.includes('violates foreign key constraint') &&
-            e.message.includes('expenses_plan_item_id_fkey'),
-          key: 'EXPENSES.PLAN_ITEM_NOT_FOUND',
-        },
-      ],
-      'EXPENSES.CREATE_FAILED',
-    ),
-  })
-}
-
-export function useUpdateExpenseMutation() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (vars: { id: string; updates: ExpenseUpdate; planId?: string }) =>
-      updateExpense(vars.id, vars.updates),
-    onSuccess: (_data, vars) => {
-      if (vars.planId) {
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.expenses.byPlan(vars.planId),
-        })
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.expenses.summary(vars.planId),
-        })
-      }
-    },
-    onError: createMutationErrorHandler('EXPENSES.UPDATE_FAILED'),
+    onError: createSpecificErrorHandler(EXPENSE_FK_ERROR_MATCHERS, 'EXPENSES.CREATE_FAILED'),
   })
 }
 

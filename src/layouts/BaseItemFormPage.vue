@@ -29,8 +29,6 @@ interface Props {
   actionsVisible?: boolean
   showReadOnlyBadge?: boolean
   isEditMode?: boolean
-  isOwner?: boolean
-  canEdit?: boolean
   additionalBanners?: BannerConfig[]
 }
 
@@ -39,8 +37,6 @@ const props = withDefaults(defineProps<Props>(), {
   actionsVisible: true,
   showReadOnlyBadge: false,
   isEditMode: true,
-  isOwner: true,
-  canEdit: true,
 })
 
 defineEmits<{
