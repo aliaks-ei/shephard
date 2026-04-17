@@ -126,19 +126,9 @@ describe('PlanCard', () => {
   it('should have correct props', () => {
     const wrapper = renderPlanCard({
       plan: mockPlan,
-      hideSharedBadge: true,
     })
 
     expect(wrapper.props('plan')).toEqual(mockPlan)
-    expect(wrapper.props('hideSharedBadge')).toBe(true)
-  })
-
-  it('should use default hideSharedBadge value', () => {
-    const wrapper = renderPlanCard({
-      plan: mockPlan,
-    })
-
-    expect(wrapper.props('hideSharedBadge')).toBe(false)
   })
 
   it('should display plan name and total amount', () => {
@@ -297,22 +287,6 @@ describe('PlanCard', () => {
     expect(wrapper.props('plan')).toEqual(differentPlan)
     expect(wrapper.text()).toContain('Different Plan')
     expect(wrapper.text()).toContain('EUR 2000.00')
-  })
-
-  it('should handle hideSharedBadge prop correctly', () => {
-    const hiddenBadgeWrapper = renderPlanCard({
-      plan: mockPlan,
-      hideSharedBadge: true,
-    })
-
-    expect(hiddenBadgeWrapper.props('hideSharedBadge')).toBe(true)
-
-    const shownBadgeWrapper = renderPlanCard({
-      plan: mockPlan,
-      hideSharedBadge: false,
-    })
-
-    expect(shownBadgeWrapper.props('hideSharedBadge')).toBe(false)
   })
 
   it('should handle zero total amount', () => {

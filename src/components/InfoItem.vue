@@ -11,10 +11,7 @@
         />
       </q-item-section>
       <q-item-section>
-        <q-item-label
-          caption
-          class="text-caption"
-        >
+        <q-item-label caption>
           {{ label }}
         </q-item-label>
         <q-item-label class="text-primary">{{ value }}</q-item-label>

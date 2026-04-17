@@ -17,6 +17,14 @@ export const notificationEntityTypes = ['plan', 'template'] as const
 
 export type NotificationEntityType = (typeof notificationEntityTypes)[number]
 
+export type NotificationPayload = {
+  actorName?: string
+  entityName?: string
+  expenseName?: string
+  permissionLevel?: 'view' | 'edit'
+  route?: string
+}
+
 export type NotificationPushPreferences = Record<NotificationType, boolean>
 
 export type PartialNotificationPushPreferences = Partial<NotificationPushPreferences>

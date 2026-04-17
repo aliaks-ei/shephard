@@ -66,7 +66,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 const emit = defineEmits<{
   (e: 'export'): void
   (e: 'share'): void
@@ -75,14 +74,5 @@ const emit = defineEmits<{
 
 defineProps<{
   canEdit: boolean
-  permissionLevel?: string | undefined
 }>()
-
-const hasActions = computed(() => {
-  return true
-})
-
-defineExpose({
-  hasActions,
-})
 </script>

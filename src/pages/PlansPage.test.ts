@@ -59,7 +59,6 @@ const PlansGroupStub = {
       :data-title="title"
       :data-plans-count="plans ? plans.length : 0"
       :data-chip-color="chipColor"
-      :data-hide-shared-badge="hideSharedBadge"
     >
       <div v-for="plan in plans" :key="plan.id" class="plan-item">
         <button @click="$emit('edit', plan.id)" class="edit-btn">Edit</button>
@@ -70,7 +69,7 @@ const PlansGroupStub = {
       </div>
     </div>
   `,
-  props: ['title', 'plans', 'chipColor', 'hideSharedBadge'],
+  props: ['title', 'plans', 'chipColor'],
   emits: ['edit', 'export', 'delete', 'share', 'cancel'],
 }
 

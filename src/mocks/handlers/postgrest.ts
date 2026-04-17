@@ -229,6 +229,28 @@ export const postgrestHandlers = [
     return HttpResponse.json(result)
   }),
 
+  // HEAD /rest/v1/:table — count-only queries (e.g. select('id', { count: 'exact', head: true }))
+  http.head(`${SUPABASE_URL}/rest/v1/:table`, ({ params, request }) => {
+    const table = params['table'] as string
+    if (!isValidTable(table)) {
+      return new HttpResponse(null, { status: 404 })
+    }
+
+    const url = new URL(request.url)
+    const eqFilters = parseEqFilters(url)
+    const inFilters = parseInFilters(url)
+
+    let rows = getAll(table) as Record<string, unknown>[]
+    rows = applyFilters(rows, eqFilters, inFilters)
+
+    return new HttpResponse(null, {
+      status: 200,
+      headers: {
+        'Content-Range': `0-${Math.max(rows.length - 1, 0)}/${rows.length}`,
+      },
+    })
+  }),
+
   // POST /rest/v1/:table — insert records
   http.post(`${SUPABASE_URL}/rest/v1/:table`, async ({ params, request }) => {
     const table = params['table'] as string

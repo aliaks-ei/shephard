@@ -95,7 +95,7 @@
           color="primary"
         />
 
-        <router-view v-if="!userStore.isLoading" />
+        <router-view />
       </q-page>
     </q-page-container>
 

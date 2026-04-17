@@ -59,7 +59,6 @@ const TemplatesGroupStub = {
       :data-title="title"
       :data-templates-count="templates ? templates.length : 0"
       :data-chip-color="chipColor"
-      :data-hide-shared-badge="hideSharedBadge"
     >
       <div v-for="template in templates" :key="template.id" class="template-item">
         <button @click="$emit('edit', template.id)" class="edit-btn">Edit</button>
@@ -69,7 +68,7 @@ const TemplatesGroupStub = {
       </div>
     </div>
   `,
-  props: ['title', 'templates', 'chipColor', 'hideSharedBadge'],
+  props: ['title', 'templates', 'chipColor'],
   emits: ['edit', 'export', 'delete', 'share'],
 }
 

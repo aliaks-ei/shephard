@@ -11,6 +11,7 @@ export type {
 export type {
   NotificationType,
   NotificationEntityType,
+  NotificationPayload,
   NotificationPushPreferences,
   PartialNotificationPushPreferences,
 } from './notifications'

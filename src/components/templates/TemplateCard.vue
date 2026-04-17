@@ -8,7 +8,7 @@
     <q-item
       class="full-height q-pa-md"
       :clickable="!readonly"
-      @click="!readonly && emit('edit', template.id)"
+      @click="onCardClick"
     >
       <q-item-section class="justify-between">
         <div class="row items-start justify-between">
@@ -21,7 +21,6 @@
             v-if="!readonly"
             class="col-auto row items-center q-gutter-xs"
           >
-            <!-- View only indicator -->
             <q-icon
               v-if="isViewOnly"
               name="eva-lock-outline"
@@ -30,7 +29,6 @@
             >
               <q-tooltip>View only</q-tooltip>
             </q-icon>
-            <!-- Shared with me indicator -->
             <q-icon
               v-if="!isOwner"
               name="eva-people-outline"
@@ -39,19 +37,18 @@
             >
               <q-tooltip>Shared with me</q-tooltip>
             </q-icon>
-            <!-- Menu button -->
             <q-btn
-              v-if="hasMenuActions"
               flat
               round
               size="sm"
               icon="eva-more-vertical-outline"
               class="text-grey-7"
+              :aria-label="menuButtonLabel"
+              aria-haspopup="menu"
               @click.stop
             >
               <TemplateCardMenu
                 :can-edit="canEdit"
-                :permission-level="template.permission_level"
                 @export="emit('export', template.id)"
                 @share="emit('share', template.id)"
                 @delete="showDeleteDialog"
@@ -92,7 +89,6 @@
       </q-item-section>
     </q-item>
 
-    <!-- Delete Template Dialog -->
     <DeleteDialog
       v-model="isDeleteDialogOpen"
       title="Delete Template"
@@ -125,11 +121,9 @@ const emit = defineEmits<{
 const props = withDefaults(
   defineProps<{
     template: TemplateWithPermission
-    hideSharedBadge?: boolean
     readonly?: boolean
   }>(),
   {
-    hideSharedBadge: false,
     readonly: false,
   },
 )
@@ -142,7 +136,7 @@ const isDeleteDialogOpen = ref(false)
 const isOwner = computed(() => props.template.owner_id === userStore.userProfile?.id)
 const canEdit = computed(() => isOwner.value || props.template.permission_level === 'edit')
 const isViewOnly = computed(() => props.template.permission_level === 'view')
-const hasMenuActions = computed(() => true)
+const menuButtonLabel = computed(() => `Actions for ${props.template.name}`)
 
 function formatAmount(amount: number | null | undefined): string {
   const currency = props.template.currency as CurrencyCode
@@ -152,6 +146,12 @@ function formatAmount(amount: number | null | undefined): string {
   }
 
   return formatCurrency(amount, currency)
+}
+
+function onCardClick(): void {
+  if (!props.readonly) {
+    emit('edit', props.template.id)
+  }
 }
 
 function showDeleteDialog(): void {

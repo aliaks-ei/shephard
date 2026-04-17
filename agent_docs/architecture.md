@@ -27,7 +27,7 @@ Other important roots:
 - `src-pwa/`: PWA manifest and service worker files.
 - `src-capacitor/`: mobile wrapper artifacts and config, not the main source of app logic.
 - `supabase/`: local backend config and edge functions.
-- `config/` and `scripts/`: operational support such as bundle budgets.
+- `scripts/`: operational support (Codex docs automation helpers).
 
 ## Domain Model
 

@@ -39,7 +39,6 @@ export async function validateItemForm(
     }
   }
 
-  // Only check items if form validation passed
   if (!hasFormErrors) {
     const isValidForSave = options.hasValidItems && !options.hasDuplicateItems
 

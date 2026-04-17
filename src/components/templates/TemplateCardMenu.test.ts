@@ -37,11 +37,9 @@ describe('TemplateCardMenu', () => {
   it('should have correct props interface', () => {
     const wrapper = renderTemplateCardMenu({
       canEdit: true,
-      permissionLevel: 'edit',
     })
 
     expect(wrapper.props('canEdit')).toBe(true)
-    expect(wrapper.props('permissionLevel')).toBe('edit')
   })
 
   it('should emit share event when share item is clicked', async () => {
@@ -87,35 +85,6 @@ describe('TemplateCardMenu', () => {
       canEdit: false,
     })
     expect(nonOwnerWrapper.props('canEdit')).toBe(false)
-  })
-
-  it('should handle permission level prop', () => {
-    const editWrapper = renderTemplateCardMenu({
-      canEdit: false,
-      permissionLevel: 'edit',
-    })
-    expect(editWrapper.props('permissionLevel')).toBe('edit')
-
-    const viewWrapper = renderTemplateCardMenu({
-      canEdit: false,
-      permissionLevel: 'view',
-    })
-    expect(viewWrapper.props('permissionLevel')).toBe('view')
-  })
-
-  it('should handle undefined permission level', () => {
-    const wrapper = renderTemplateCardMenu({
-      canEdit: false,
-      permissionLevel: undefined,
-    })
-    expect(wrapper.props('permissionLevel')).toBeUndefined()
-  })
-
-  it('should handle missing permission level', () => {
-    const wrapper = renderTemplateCardMenu({
-      canEdit: false,
-    })
-    expect(wrapper.props('permissionLevel')).toBeUndefined()
   })
 
   it('shows export item even when canEdit is false', () => {

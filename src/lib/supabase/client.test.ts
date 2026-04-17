@@ -29,6 +29,7 @@ describe('Supabase Client', () => {
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: true,
+        flowType: 'pkce',
       },
     })
   })
@@ -92,6 +93,7 @@ describe('Supabase Client', () => {
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: true,
+        flowType: 'pkce',
       },
     })
   })

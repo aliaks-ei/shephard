@@ -5,9 +5,9 @@ import {
   isNotificationEntityType,
   isNotificationType,
   type NotificationEntityType,
+  type NotificationPayload,
   type NotificationType,
 } from 'src/types/notifications'
-import type { NotificationPayload } from 'src/utils/notifications'
 
 export type NotificationRecord = Omit<
   Tables<'notifications'>,
@@ -106,16 +106,15 @@ export async function listNotifications(limit = 50): Promise<NotificationRecord[
 }
 
 export async function countUnreadNotifications(): Promise<number> {
-  const { data, error } = await supabase
+  const { count, error } = await supabase
     .from('notifications')
-    .select('id')
+    .select('id', { count: 'exact', head: true })
     .is('deleted_at', null)
     .is('read_at', null)
-    .order('created_at', { ascending: false })
 
   if (error) throw error
 
-  return data?.length ?? 0
+  return count ?? 0
 }
 
 export async function markNotificationAsRead(notificationId: string): Promise<void> {

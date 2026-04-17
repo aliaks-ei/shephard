@@ -33,7 +33,7 @@ Keep this file compact. Read only the docs that match the task under `agent_docs
 - Use `createTestingPinia({ createSpy: vi.fn })` for Pinia-dependent tests.
 - Mock query hooks at the module boundary with `vi.mock()` and return the same reactive shape as production hooks.
 - Add coverage for rollback paths, permission branches, and visibility/guard logic when behavior changes.
-- Run the smallest relevant checks before finishing: `npm run type-check`, `npm run test:unit:ci`, `npm run lint`, `npm run build`, `npm run check:bundle-budgets`.
+- Run the smallest relevant checks before finishing: `npm run type-check`, `npm run test:unit:ci`, `npm run lint`, `npm run build`.
 
 ## Environment
 

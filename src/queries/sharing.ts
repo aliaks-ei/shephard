@@ -11,6 +11,7 @@ import {
   updatePlanSharePermission,
   searchUsersByEmail,
 } from 'src/api'
+import { useUserStore } from 'src/stores/user'
 import { createMutationErrorHandler, createSpecificErrorHandler } from './query-error-handler'
 import { queryKeys } from './query-keys'
 import type { ErrorMessageKey } from 'src/config/error-messages'
@@ -23,8 +24,8 @@ const sharingApiMap = {
     share: sharePlan,
     unshare: unsharePlan,
     updatePermission: updatePlanSharePermission,
-    queryKey: (id: string) => queryKeys.plans.sharedUsers(id),
-    listQueryKey: queryKeys.plans.all,
+    sharedUsersKey: (id: string) => queryKeys.plans.sharedUsers(id),
+    listKey: (userId: string) => queryKeys.plans.list(userId),
     errorPrefix: 'PLANS' as const,
     handleSpecificErrors: true,
   },
@@ -33,18 +34,30 @@ const sharingApiMap = {
     share: shareTemplate,
     unshare: unshareTemplate,
     updatePermission: updateTemplateSharePermission,
-    queryKey: (id: string) => queryKeys.templates.sharedUsers(id),
-    listQueryKey: queryKeys.templates.all,
+    sharedUsersKey: (id: string) => queryKeys.templates.sharedUsers(id),
+    listKey: (userId: string) => queryKeys.templates.list(userId),
     errorPrefix: 'TEMPLATES' as const,
     handleSpecificErrors: false,
   },
 } as const
 
+function invalidateSharingQueries(
+  queryClient: ReturnType<typeof useQueryClient>,
+  api: (typeof sharingApiMap)[EntityType],
+  entityId: string,
+  userId: string | undefined,
+): void {
+  queryClient.invalidateQueries({ queryKey: api.sharedUsersKey(entityId) })
+  if (userId) {
+    queryClient.invalidateQueries({ queryKey: api.listKey(userId) })
+  }
+}
+
 export function useSharedUsersQuery(entityType: EntityType, entityId: MaybeRefOrGetter<string>) {
   const api = sharingApiMap[entityType]
 
   return useQuery({
-    queryKey: computed(() => api.queryKey(toValue(entityId))),
+    queryKey: computed(() => api.sharedUsersKey(toValue(entityId))),
     queryFn: () => api.loadSharedUsers(toValue(entityId)),
     enabled: computed(() => !!toValue(entityId)),
     meta: { errorKey: `${api.errorPrefix}.LOAD_SHARED_USERS_FAILED` as ErrorMessageKey },
@@ -78,8 +91,7 @@ export function useShareEntityMutation(
     mutationFn: (vars: { entityId: string; userEmail: string; permission: 'view' | 'edit' }) =>
       api.share(vars.entityId, vars.userEmail, vars.permission, toValue(userId)!),
     onSuccess: (_data, vars) => {
-      queryClient.invalidateQueries({ queryKey: api.queryKey(vars.entityId) })
-      queryClient.invalidateQueries({ queryKey: api.listQueryKey })
+      invalidateSharingQueries(queryClient, api, vars.entityId, toValue(userId))
     },
     onError: errorHandler,
   })
@@ -87,14 +99,14 @@ export function useShareEntityMutation(
 
 export function useUnshareEntityMutation(entityType: EntityType) {
   const queryClient = useQueryClient()
+  const userStore = useUserStore()
   const api = sharingApiMap[entityType]
 
   return useMutation({
     mutationFn: (vars: { entityId: string; userId: string }) =>
       api.unshare(vars.entityId, vars.userId),
     onSuccess: (_data, vars) => {
-      queryClient.invalidateQueries({ queryKey: api.queryKey(vars.entityId) })
-      queryClient.invalidateQueries({ queryKey: api.listQueryKey })
+      invalidateSharingQueries(queryClient, api, vars.entityId, userStore.userProfile?.id)
     },
     onError: createMutationErrorHandler(`${api.errorPrefix}.UNSHARE_FAILED` as ErrorMessageKey),
   })
@@ -108,7 +120,7 @@ export function useUpdatePermissionMutation(entityType: EntityType) {
     mutationFn: (vars: { entityId: string; userId: string; permission: 'view' | 'edit' }) =>
       api.updatePermission(vars.entityId, vars.userId, vars.permission),
     onSuccess: (_data, vars) => {
-      queryClient.invalidateQueries({ queryKey: api.queryKey(vars.entityId) })
+      queryClient.invalidateQueries({ queryKey: api.sharedUsersKey(vars.entityId) })
     },
     onError: createMutationErrorHandler(
       `${api.errorPrefix}.UPDATE_PERMISSION_FAILED` as ErrorMessageKey,

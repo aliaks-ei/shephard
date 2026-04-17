@@ -8,13 +8,13 @@ export function createMutationErrorHandler(errorKey: ErrorMessageKey) {
   }
 }
 
-type ErrorCondition = {
+export type SpecificErrorMatcher = {
   check: (error: Error) => boolean
   key: ErrorMessageKey
 }
 
 export function createSpecificErrorHandler(
-  handlers: ErrorCondition[],
+  handlers: SpecificErrorMatcher[],
   defaultKey: ErrorMessageKey,
 ) {
   return (error: Error) => {

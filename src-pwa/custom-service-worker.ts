@@ -47,7 +47,6 @@ type PushSubscriptionChangeEventLike = Event & {
 
 declare const self: ServiceWorkerGlobal
 
-import { CacheableResponsePlugin } from 'workbox-cacheable-response'
 import { clientsClaim } from 'workbox-core'
 import { ExpirationPlugin } from 'workbox-expiration'
 import {
@@ -56,7 +55,7 @@ import {
   precacheAndRoute,
 } from 'workbox-precaching'
 import { NavigationRoute, registerRoute } from 'workbox-routing'
-import { CacheFirst, NetworkFirst, NetworkOnly } from 'workbox-strategies'
+import { CacheFirst, NetworkOnly } from 'workbox-strategies'
 
 type PushPayload = {
   body?: string
@@ -69,8 +68,26 @@ function isSameOrigin(url: URL): boolean {
   return url.origin === self.location.origin
 }
 
+// Must match semantics of src/utils/navigation.ts `sanitizeRedirectPath`.
+// Inlined so the service worker bundle stays self-contained and doesn't pull
+// in Vue / router / api modules.
+function sanitizeNotificationPath(value: unknown, fallback = '/'): string {
+  const candidate = Array.isArray(value) ? value[0] : value
+  if (typeof candidate !== 'string') {
+    return fallback
+  }
+  const path = candidate.trim()
+  if (!path.startsWith('/') || path.startsWith('//')) {
+    return fallback
+  }
+  if (path.includes('\n') || path.includes('\r')) {
+    return fallback
+  }
+  return path
+}
+
 type StrategyPlugin = NonNullable<
-  NonNullable<ConstructorParameters<typeof NetworkFirst>[0]>['plugins']
+  NonNullable<ConstructorParameters<typeof CacheFirst>[0]>['plugins']
 >[number]
 
 function asStrategyPlugin(plugin: unknown): StrategyPlugin {
@@ -91,25 +108,12 @@ if (process.env.PROD) {
   )
 }
 
+// Authenticated Supabase responses must never be cached by the service worker:
+// the cache key is the URL and ignores the `Authorization` header, so a second
+// user on the same browser profile could be served the first user's JSON.
+// TanStack Query's in-memory cache is the only cache for REST responses.
 registerRoute(
-  ({ url }) => /^https:\/\/.*\.supabase\.co\/rest\/v1\/.*/.test(url.href),
-  new NetworkFirst({
-    cacheName: 'supabase-api',
-    networkTimeoutSeconds: 3,
-    plugins: [
-      asStrategyPlugin(new CacheableResponsePlugin({ statuses: [0, 200] })),
-      asStrategyPlugin(
-        new ExpirationPlugin({
-          maxEntries: 50,
-          maxAgeSeconds: 60 * 5,
-        }),
-      ),
-    ],
-  }),
-)
-
-registerRoute(
-  ({ url }) => /^https:\/\/.*\.supabase\.co\/auth\/.*/.test(url.href),
+  ({ url }) => /^https:\/\/.*\.supabase\.co\/(rest|auth)\/.*/.test(url.href),
   new NetworkOnly(),
 )
 
@@ -194,7 +198,7 @@ self.addEventListener('push', (event: Event) => {
       badge: '/icons/icon-128x128.png',
       tag: payload.notificationId ?? `notification-${Date.now()}`,
       data: {
-        url: payload.url ?? '/',
+        url: sanitizeNotificationPath(payload.url, '/'),
       },
     }),
   )
@@ -202,7 +206,8 @@ self.addEventListener('push', (event: Event) => {
 
 self.addEventListener('notificationclick', (event: Event) => {
   const clickEvent = event as NotificationClickEventLike
-  const targetUrl = String((clickEvent.notification.data as { url?: string } | null)?.url ?? '/')
+  const rawUrl = (clickEvent.notification.data as { url?: string } | null)?.url
+  const targetUrl = sanitizeNotificationPath(rawUrl, '/')
 
   clickEvent.notification.close()
   clickEvent.waitUntil(

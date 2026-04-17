@@ -229,9 +229,8 @@ export class BaseAPIService<
       'search_users_for_sharing',
       { q: userEmail },
     )
-    const list = candidates || []
-    const targetUser =
-      list.find((u) => u.email.toLowerCase() === userEmail.toLowerCase()) || list[0]
+    const normalizedEmail = userEmail.trim().toLowerCase()
+    const targetUser = (candidates || []).find((u) => u.email.toLowerCase() === normalizedEmail)
 
     if (!targetUser) {
       throw new Error(`User not found: ${userEmail}`)

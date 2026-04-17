@@ -9,12 +9,14 @@ import {
   sortCategoriesDeterministically,
   type Category,
 } from '../_shared/ai-utils.ts'
+import { buildCorsHeaders } from '../_shared/notification-utils.ts'
 
 const openai = new OpenAI({
   apiKey: Deno.env.get('OPENAI_API_KEY'),
 })
 
 const OPENAI_TIMEOUT_MS = 15000
+const CURRENCY_CODE_PATTERN = /^[A-Z]{3}$/
 
 const clampUnitInterval = (value: number): number => Math.min(1, Math.max(0, value))
 
@@ -33,11 +35,7 @@ interface AnalyzePhotoRequest {
 }
 
 Deno.serve(async (req) => {
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Content-Type': 'application/json',
-  }
+  const corsHeaders = buildCorsHeaders(req.headers.get('Origin'))
 
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -68,7 +66,10 @@ Deno.serve(async (req) => {
     } = await supabaseClient.auth.getUser()
 
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized', details: authError?.message }), {
+      if (authError) {
+        console.error('Auth error in analyze-expense-photo:', authError)
+      }
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: corsHeaders,
       })
@@ -85,6 +86,20 @@ Deno.serve(async (req) => {
     }
 
     const { imageBase64, planId, currency } = requestBody as AnalyzePhotoRequest
+
+    if (typeof currency !== 'string' || !CURRENCY_CODE_PATTERN.test(currency)) {
+      return new Response(JSON.stringify({ error: 'Currency must be a 3-letter ISO 4217 code' }), {
+        status: 400,
+        headers: corsHeaders,
+      })
+    }
+
+    if (planId !== undefined && (typeof planId !== 'string' || planId.length > 64)) {
+      return new Response(JSON.stringify({ error: 'Invalid planId' }), {
+        status: 400,
+        headers: corsHeaders,
+      })
+    }
 
     if (!imageBase64) {
       return new Response(JSON.stringify({ error: 'Image data is required' }), {
@@ -166,10 +181,11 @@ Deno.serve(async (req) => {
     }
 
     if (categoriesError) {
-      return new Response(
-        JSON.stringify({ error: 'Failed to fetch categories', details: categoriesError.message }),
-        { status: 500, headers: corsHeaders },
-      )
+      console.error('Failed to fetch categories in analyze-expense-photo:', categoriesError)
+      return new Response(JSON.stringify({ error: 'Failed to fetch categories' }), {
+        status: 500,
+        headers: corsHeaders,
+      })
     }
 
     if (!categories || categories.length === 0) {

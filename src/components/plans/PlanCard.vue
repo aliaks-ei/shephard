@@ -16,7 +16,6 @@
             </h3>
           </div>
           <div class="col-auto row items-center q-gutter-xs">
-            <!-- View only indicator -->
             <q-icon
               v-if="isViewOnly"
               name="eva-lock-outline"
@@ -25,7 +24,6 @@
             >
               <q-tooltip>View only</q-tooltip>
             </q-icon>
-            <!-- Shared with me indicator -->
             <q-icon
               v-if="!isOwner"
               name="eva-people-outline"
@@ -34,9 +32,7 @@
             >
               <q-tooltip>Shared with me</q-tooltip>
             </q-icon>
-            <!-- Menu button -->
             <q-btn
-              v-if="hasMenuActions"
               flat
               round
               size="sm"
@@ -48,7 +44,6 @@
             >
               <PlanCardMenu
                 :can-edit="canEdit"
-                :permission-level="plan.permission_level"
                 :plan-status="planStatus"
                 @export="emit('export', plan.id)"
                 @share="emit('share', plan.id)"
@@ -90,7 +85,6 @@
       </q-item-section>
     </q-item>
 
-    <!-- Delete Plan Dialog -->
     <DeleteDialog
       v-model="isDeleteDialogOpen"
       title="Delete Plan"
@@ -101,7 +95,6 @@
       @confirm="confirmDelete"
     />
 
-    <!-- Cancel Plan Dialog -->
     <DeleteDialog
       v-model="isCancelDialogOpen"
       title="Cancel Plan"
@@ -139,15 +132,9 @@ const emit = defineEmits<{
   (e: 'cancel', plan: PlanWithPermission): void
 }>()
 
-const props = withDefaults(
-  defineProps<{
-    plan: PlanWithPermission
-    hideSharedBadge?: boolean
-  }>(),
-  {
-    hideSharedBadge: false,
-  },
-)
+const props = defineProps<{
+  plan: PlanWithPermission
+}>()
 
 const userStore = useUserStore()
 const preferencesStore = usePreferencesStore()
@@ -159,7 +146,6 @@ const isOwner = computed(() => props.plan.owner_id === userStore.userProfile?.id
 const canEdit = computed(() => isOwner.value || props.plan.permission_level === 'edit')
 const planStatus = computed(() => getPlanStatus(props.plan))
 const isViewOnly = computed(() => props.plan.permission_level === 'view')
-const hasMenuActions = computed(() => true)
 const menuButtonLabel = computed(() => `Actions for ${props.plan.name}`)
 
 function formatAmount(amount: number | null | undefined): string {

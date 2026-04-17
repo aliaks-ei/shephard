@@ -170,12 +170,4 @@ export async function batchUpdatePlanItems(
   return data || []
 }
 
-export async function getPlanItemsByCategory(
-  planId: string,
-  categoryId: string,
-): Promise<PlanItem[]> {
-  const allItems = await getPlanItems(planId)
-  return allItems.filter((item) => item.category_id === categoryId)
-}
-
 export { searchUsersByEmail }

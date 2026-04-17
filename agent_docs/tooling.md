@@ -21,7 +21,6 @@ Source of truth: `package.json`
 - `npm run type-check`: `vue-tsc --noEmit`
 - `npm run test:unit`: Vitest watch mode
 - `npm run test:unit:ci`: single-run Vitest
-- `npm run check:bundle-budgets`: validates chunk budgets against `config/bundle-budgets.json`
 
 Changed-file helpers also exist:
 
@@ -42,7 +41,7 @@ Run the smallest relevant checks for the change.
 - UI or state changes: `npm run test:unit:ci`
 - Type-level or composable changes: `npm run type-check`
 - Broad app behavior changes: `npm run lint` and `npm run test:unit:ci`
-- Build/config/perf changes: `npm run build` and `npm run check:bundle-budgets`
+- Build/config/perf changes: `npm run build`
 
 ## Environment
 
@@ -139,12 +138,16 @@ Edge functions currently cover:
 - expense photo analysis
 - expense categorization
 - currency conversion
+- notification event emission
+- web push subscription management
 
 Primary references:
 
 - `supabase/functions/analyze-expense-photo/index.ts`
 - `supabase/functions/categorize-expense/index.ts`
 - `supabase/functions/convert-currency/index.ts`
+- `supabase/functions/emit-notification-event/index.ts`
+- `supabase/functions/push-subscriptions/index.ts`
 - `supabase/functions/_shared/ai-utils.ts`
 
 Important nuance:
@@ -163,8 +166,9 @@ PWA-specific files:
 
 Important PWA nuance:
 
-- The app currently uses `GenerateSW` in `quasar.config.ts`.
-- `src-pwa/custom-service-worker.ts` is only relevant for `InjectManifest`, so edits there do not currently affect the shipping service worker.
+- The app currently uses `InjectManifest` in `quasar.config.ts`.
+- `src-pwa/custom-service-worker.ts` is the shipping service worker; edits there affect production PWA behavior.
+- `extendInjectManifestOptions` in `quasar.config.ts` is the extension point for tuning precache globs and other InjectManifest options.
 - Manifest behavior is split between `src-pwa/manifest.json` and runtime overrides in `quasar.config.ts`; check both when changing installability metadata.
 
 Mobile wrapper:
@@ -178,20 +182,6 @@ For Capacitor:
 - treat `src-capacitor/www` as generated output, not source of truth
 - treat root app code in `src/` as the source of truth for runtime behavior
 - assume iOS is the clearest maintained target unless you confirm Android-specific wiring locally
-
-## Performance Guardrails
-
-Bundle budgets are enforced by script, not by convention alone.
-
-- config: `config/bundle-budgets.json`
-- checker: `scripts/check-bundle-budgets.mjs`
-
-If you change chunking, large dependencies, or route-level payload size, run the budget check before finishing.
-
-Current nuance:
-
-- budget checks are available locally but are not the main CI gate today
-- build-affecting changes should usually run `npm run build` followed by `npm run check:bundle-budgets`
 
 ## Codex Docs Automation
 

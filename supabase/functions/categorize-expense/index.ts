@@ -15,12 +15,14 @@ import {
   findExactCategoryMatch,
   type CategorizePlanItem,
 } from './helpers.ts'
+import { buildCorsHeaders } from '../_shared/notification-utils.ts'
 
 const openai = new OpenAI({
   apiKey: Deno.env.get('OPENAI_API_KEY'),
 })
 
 const OPENAI_TIMEOUT_MS = 12000
+const MAX_EXPENSE_NAME_LENGTH = 128
 
 const clampUnitInterval = (value: number): number => Math.min(1, Math.max(0, value))
 
@@ -36,11 +38,7 @@ interface CategorizeRequest {
 }
 
 Deno.serve(async (req) => {
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Content-Type': 'application/json',
-  }
+  const corsHeaders = buildCorsHeaders(req.headers.get('Origin'))
 
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -71,7 +69,10 @@ Deno.serve(async (req) => {
     } = await supabaseClient.auth.getUser()
 
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized', details: authError?.message }), {
+      if (authError) {
+        console.error('Auth error in categorize-expense:', authError)
+      }
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: corsHeaders,
       })
@@ -89,10 +90,28 @@ Deno.serve(async (req) => {
 
     const { expenseName, planId } = requestBody as CategorizeRequest
 
-    if (!expenseName || expenseName.trim().length < 3) {
+    if (typeof expenseName !== 'string') {
+      return new Response(JSON.stringify({ error: 'Expense name is required' }), {
+        status: 400,
+        headers: corsHeaders,
+      })
+    }
+
+    const trimmedExpenseName = expenseName.trim()
+
+    if (trimmedExpenseName.length < 3) {
       return new Response(
         JSON.stringify({
           error: 'Expense name must be at least 3 characters',
+        }),
+        { status: 400, headers: corsHeaders },
+      )
+    }
+
+    if (trimmedExpenseName.length > MAX_EXPENSE_NAME_LENGTH) {
+      return new Response(
+        JSON.stringify({
+          error: `Expense name must be at most ${MAX_EXPENSE_NAME_LENGTH} characters`,
         }),
         { status: 400, headers: corsHeaders },
       )
@@ -140,10 +159,11 @@ Deno.serve(async (req) => {
     }
 
     if (categoriesError) {
-      return new Response(
-        JSON.stringify({ error: 'Failed to fetch categories', details: categoriesError.message }),
-        { status: 500, headers: corsHeaders },
-      )
+      console.error('Failed to fetch categories in categorize-expense:', categoriesError)
+      return new Response(JSON.stringify({ error: 'Failed to fetch categories' }), {
+        status: 500,
+        headers: corsHeaders,
+      })
     }
 
     if (!categories || categories.length === 0) {
@@ -158,7 +178,7 @@ Deno.serve(async (req) => {
     }
 
     const categoryContexts = buildCategoryContexts(categories, planItemsForCategorization)
-    const exactMatch = findExactCategoryMatch(expenseName, categoryContexts)
+    const exactMatch = findExactCategoryMatch(trimmedExpenseName, categoryContexts)
 
     if (exactMatch) {
       return new Response(
@@ -175,7 +195,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    const instructions = buildCategorizationInstructions(categoryContexts, expenseName)
+    const instructions = buildCategorizationInstructions(categoryContexts)
 
     const categorySuggestionJsonSchema = {
       type: 'object',
@@ -206,7 +226,7 @@ Deno.serve(async (req) => {
         openai.responses.create({
           model: 'gpt-5-nano',
           instructions,
-          input: expenseName.trim(),
+          input: trimmedExpenseName,
           reasoning: { effort: 'minimal' },
           max_output_tokens: 120,
           store: false,

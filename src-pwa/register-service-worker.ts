@@ -4,6 +4,7 @@ import {
   savePushSubscription,
   type BrowserPushSubscription,
 } from 'src/api/notifications'
+import { sanitizeRedirectPath } from 'src/utils/navigation'
 
 const UPDATE_CHECK_INTERVAL_MS = 5 * 60 * 1000
 
@@ -61,7 +62,7 @@ if ('serviceWorker' in navigator) {
 
     if (message.type === 'open-notification-route') {
       if (message.url && browserGlobal.location) {
-        browserGlobal.location.href = message.url
+        browserGlobal.location.href = sanitizeRedirectPath(message.url, '/')
       }
       return
     }

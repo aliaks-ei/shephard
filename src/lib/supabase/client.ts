@@ -13,5 +13,10 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
+    // PKCE prevents an auth code intercepted from the URL (e.g. via a leaked
+    // referrer or browser extension) from being redeemed without the
+    // code_verifier held by the originating tab.  It is a strict upgrade over
+    // the default implicit flow for SPA/PWA clients.
+    flowType: 'pkce',
   },
 })
