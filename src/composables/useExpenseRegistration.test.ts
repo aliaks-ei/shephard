@@ -158,12 +158,15 @@ beforeEach(() => {
 
 describe('useExpenseRegistration', () => {
   const todayExpenseDate = formatDateInput(new Date())
+  const currentYear = new Date().getFullYear()
+  const activeStartDate = `${currentYear}-01-01`
+  const activeEndDate = `${currentYear}-12-31`
 
   const mockPlan: Plan = {
     id: 'plan-1',
     name: 'Monthly Budget',
-    start_date: '2024-01-01',
-    end_date: '2024-01-31',
+    start_date: activeStartDate,
+    end_date: activeEndDate,
     status: 'active',
     total: 1000,
     currency: 'USD',
@@ -240,6 +243,36 @@ describe('useExpenseRegistration', () => {
       const { mostRecentlyUsedPlan } = useExpenseRegistration()
 
       expect(mostRecentlyUsedPlan.value?.id).toBe('plan-2')
+    })
+
+    it('ignores pending, completed, and cancelled plans', () => {
+      mockPlansForExpenses.value = [
+        { ...mockPlan, id: 'active-plan', updated_at: '2024-01-02' },
+        {
+          ...mockPlan,
+          id: 'pending-plan',
+          start_date: `${currentYear + 1}-01-01`,
+          end_date: `${currentYear + 1}-12-31`,
+          updated_at: '2024-01-05',
+        },
+        {
+          ...mockPlan,
+          id: 'completed-plan',
+          start_date: `${currentYear - 1}-01-01`,
+          end_date: `${currentYear - 1}-12-31`,
+          updated_at: '2024-01-04',
+        },
+        {
+          ...mockPlan,
+          id: 'cancelled-plan',
+          status: 'cancelled',
+          updated_at: '2024-01-03',
+        },
+      ]
+
+      const { mostRecentlyUsedPlan } = useExpenseRegistration()
+
+      expect(mostRecentlyUsedPlan.value?.id).toBe('active-plan')
     })
 
     it('returns null when no plans available', () => {

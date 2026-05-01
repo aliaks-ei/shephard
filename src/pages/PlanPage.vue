@@ -68,7 +68,7 @@
 
       <q-tab-panels
         v-model="activeTab"
-        animated
+        :animated="$q.screen.lt.md"
         :swipeable="$q.screen.lt.md"
         :transition-prev="$q.screen.lt.md ? 'slide-right' : 'fade'"
         :transition-next="$q.screen.lt.md ? 'slide-left' : 'fade'"

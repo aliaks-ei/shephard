@@ -198,7 +198,9 @@
 
     <!-- Budget Impact Display -->
     <BudgetImpactCard
-      v-if="categoryId && effectiveAmount && effectiveAmount > 0 && selectedCategoryOption"
+      v-if="
+        !loading && categoryId && effectiveAmount && effectiveAmount > 0 && selectedCategoryOption
+      "
       :category-id="categoryId"
       :amount="effectiveAmount"
       :currency="(selectedPlan?.currency as CurrencyCode) ?? null"
