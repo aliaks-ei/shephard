@@ -87,9 +87,13 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
   })
 
   const mostRecentlyUsedPlan = computed(() => {
-    if (!plansForExpenses.value.length) return null
+    const activePlansForExpenses = plansForExpenses.value.filter(
+      (plan) => getPlanStatus(plan) === 'active',
+    )
 
-    const sortedPlans = [...plansForExpenses.value].sort((a, b) => {
+    if (!activePlansForExpenses.length) return null
+
+    const sortedPlans = [...activePlansForExpenses].sort((a, b) => {
       const dateA = a.updated_at ? new Date(a.updated_at).getTime() : 0
       const dateB = b.updated_at ? new Date(b.updated_at).getTime() : 0
       return dateB - dateA

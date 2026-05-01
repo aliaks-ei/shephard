@@ -89,7 +89,7 @@
             :amount-rules="amountRules"
             :default-expense-currency="defaultExpenseCurrency"
             :readonly="!!defaultPlanId"
-            :loading="false"
+            :loading="isLoading"
             :show-auto-select-hint="didAutoSelectPlan"
             :default-category-id="defaultCategoryId ?? null"
             @plan-selected="handlePlanSelected"
@@ -112,7 +112,7 @@
             :selected-plan-items="selectedPlanItems"
             :selected-items-total="selectedItemsTotal"
             :readonly="!!defaultPlanId"
-            :loading="false"
+            :loading="isLoading"
             :show-auto-select-hint="didAutoSelectPlan"
             :is-loading-plan-items="isLoadingPlanItems"
             :selected-category-id="defaultCategoryId ?? null"
@@ -246,6 +246,17 @@ function handleRemoveItem(itemId: string) {
   removeSelectedItem(itemId, planItemSelector)
 }
 
+function applyDefaultCategory() {
+  if (!props.modelValue || !props.defaultCategoryId || !form.value.planId) {
+    return
+  }
+
+  const categoryExists = categoryOptions.value.some((c) => c.value === props.defaultCategoryId)
+  if (categoryExists) {
+    form.value.categoryId = props.defaultCategoryId
+  }
+}
+
 async function handleSubmit() {
   if (!formRef.value) return
 
@@ -279,16 +290,16 @@ watch(
   (newValue) => {
     if (newValue) {
       initialize(props.autoSelectRecentPlan || false)
-
-      if (props.defaultCategoryId && form.value.planId) {
-        const categoryExists = categoryOptions.value.some(
-          (c) => c.value === props.defaultCategoryId,
-        )
-        if (categoryExists) {
-          form.value.categoryId = props.defaultCategoryId
-        }
-      }
+      applyDefaultCategory()
     }
+  },
+  { immediate: true },
+)
+
+watch(
+  [() => props.defaultCategoryId, () => form.value.planId, categoryOptions],
+  () => {
+    applyDefaultCategory()
   },
   { immediate: true },
 )

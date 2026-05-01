@@ -251,6 +251,22 @@ it('should display budget impact card when all required information is provided'
   expect(wrapper.text()).toContain('After:')
 })
 
+it('should hide budget impact card while saving', () => {
+  const wrapper = mount(CustomEntryPanel, {
+    props: {
+      ...defaultProps,
+      planId: 'plan-1',
+      selectedPlan: mockPlan,
+      categoryId: 'cat-1',
+      categoryOptions: mockCategoryOptions,
+      amount: 25,
+      loading: true,
+    },
+  })
+
+  expect(wrapper.text()).not.toContain('Budget Impact')
+})
+
 it('should display currency selector when plan is selected', () => {
   const wrapper = mount(CustomEntryPanel, {
     props: {
