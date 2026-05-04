@@ -227,7 +227,11 @@ export class BaseAPIService<
 
     const candidates = await this.rpcRaw<{ id: string; email: string; name?: string | null }[]>(
       'search_users_for_sharing',
-      { q: userEmail },
+      {
+        entity_type: this.config.entityTypeName.toLowerCase(),
+        entity_id: entityId,
+        q: userEmail.trim(),
+      },
     )
     const normalizedEmail = userEmail.trim().toLowerCase()
     const targetUser = (candidates || []).find((u) => u.email.toLowerCase() === normalizedEmail)

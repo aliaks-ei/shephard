@@ -611,6 +611,14 @@ describe('BaseAPIService - Sharing Operations', () => {
 
     await service.shareEntity('template-1', 'shared@example.com', 'edit', 'owner-id')
 
+    expect(mockSupabase.rpc.mock.calls).toContainEqual([
+      'search_users_for_sharing',
+      {
+        entity_type: 'template',
+        entity_id: 'template-1',
+        q: 'shared@example.com',
+      },
+    ])
     expect(insertQuery.insert).toHaveBeenCalledWith({
       template_id: 'template-1',
       shared_with_user_id: 'user-2',
