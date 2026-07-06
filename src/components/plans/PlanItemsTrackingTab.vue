@@ -123,10 +123,10 @@
         <q-icon
           name="eva-checkmark-square-2-outline"
           size="64px"
-          class="text-grey-4 q-mb-md"
+          class="text-faint q-mb-md"
         />
-        <div class="text-h6 text-grey-6 q-mb-sm">No Items to Track</div>
-        <div class="text-body2 text-grey-6">This plan doesn't have any items to track yet.</div>
+        <div class="text-h6 text-muted q-mb-sm">No Items to Track</div>
+        <div class="text-body2 text-muted">This plan doesn't have any items to track yet.</div>
       </q-card-section>
 
       <!-- Items by Category -->
@@ -177,7 +177,7 @@
                   </div>
                   <div
                     v-if="!$q.screen.lt.sm"
-                    class="text-caption text-grey-6"
+                    class="text-caption"
                   >
                     completed
                   </div>
@@ -219,7 +219,6 @@
                   <q-item-label
                     header
                     class="text-caption q-py-xs q-px-sm"
-                    :class="$q.dark.isActive ? 'text-grey-5' : 'text-grey-6'"
                   >
                     For Reference
                   </q-item-label>
@@ -237,7 +236,7 @@
                       <q-icon
                         name="eva-bookmark-outline"
                         size="24px"
-                        :class="$q.dark.isActive ? 'text-grey-6' : 'text-grey-5'"
+                        class="text-faint"
                       />
                     </template>
                   </CompactDisplayItemRow>

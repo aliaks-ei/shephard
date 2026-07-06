@@ -15,7 +15,7 @@
   </q-avatar>
   <q-avatar
     v-else
-    color="grey-4"
+    class="bg-muted"
     text-color="primary"
     :size="size"
   >

@@ -8,7 +8,7 @@
     </h1>
     <p
       v-if="!$q.screen.lt.md"
-      class="q-ma-none text-grey-6 text-body1"
+      class="q-ma-none text-muted text-body1"
     >
       What would you like to do today?
     </p>

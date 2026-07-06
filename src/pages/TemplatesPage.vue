@@ -1,57 +1,63 @@
 <template>
-  <ListPageLayout
-    title="Templates"
-    description="Manage your templates and create new ones"
-    create-button-label="Create Template"
-    @create="goToNew"
+  <q-pull-to-refresh
+    :disable="$q.screen.gt.sm"
+    @refresh="onRefresh"
   >
-    <SearchAndSort
-      v-model:search-query="searchQuery"
-      v-model:sort-by="sortBy"
-      search-placeholder="Search templates..."
-      :sort-options="sortOptions"
-    />
-
-    <ListPageSkeleton v-if="areItemsLoading" />
-
-    <TemplatesGroup
-      v-else-if="hasItems"
-      title="My Templates"
-      :templates="allFilteredAndSortedItems"
-      @edit="viewItem"
-      @export="openExportDialog"
-      @delete="deleteItem"
-      @share="openShareDialog"
-    />
-
-    <EmptyState
-      v-else
-      :has-search-query="!!searchQuery"
-      :search-icon="emptyStateConfig.searchIcon"
-      :empty-icon="emptyStateConfig.emptyIcon"
-      :search-title="emptyStateConfig.searchTitle"
-      :empty-title="emptyStateConfig.emptyTitle"
-      :search-description="emptyStateConfig.searchDescription"
-      :empty-description="emptyStateConfig.emptyDescription"
-      :create-button-label="emptyStateConfig.createLabel"
-      @clear-search="clearSearch"
+    <ListPageLayout
+      title="Templates"
+      description="Manage your templates and create new ones"
+      create-button-label="Create Template"
       @create="goToNew"
-    />
+    >
+      <SearchAndSort
+        v-model:search-query="searchQuery"
+        v-model:sort-by="sortBy"
+        search-placeholder="Search templates..."
+        :sort-options="sortOptions"
+      />
 
-    <!-- Share Template Dialog -->
-    <ShareTemplateDialog
-      v-if="shareTemplateId"
-      v-model="isShareDialogOpen"
-      :template-id="shareTemplateId"
-      :owner-user-id="shareTemplateOwnerId"
-      @shared="isShareDialogOpen = false"
-    />
+      <ListPageSkeleton v-if="areItemsLoading" />
 
-    <ExportDialog
-      v-model="isExportDialogOpen"
-      @select-format="handleTemplateExport"
-    />
-  </ListPageLayout>
+      <TemplatesGroup
+        v-else-if="hasItems"
+        title="My Templates"
+        :templates="allFilteredAndSortedItems"
+        @edit="viewItem"
+        @export="openExportDialog"
+        @delete="deleteItem"
+        @share="openShareDialog"
+      />
+
+      <EmptyState
+        v-else
+        illustration="template"
+        :has-search-query="!!searchQuery"
+        :search-icon="emptyStateConfig.searchIcon"
+        :empty-icon="emptyStateConfig.emptyIcon"
+        :search-title="emptyStateConfig.searchTitle"
+        :empty-title="emptyStateConfig.emptyTitle"
+        :search-description="emptyStateConfig.searchDescription"
+        :empty-description="emptyStateConfig.emptyDescription"
+        :create-button-label="emptyStateConfig.createLabel"
+        @clear-search="clearSearch"
+        @create="goToNew"
+      />
+
+      <!-- Share Template Dialog -->
+      <ShareTemplateDialog
+        v-if="shareTemplateId"
+        v-model="isShareDialogOpen"
+        :template-id="shareTemplateId"
+        :owner-user-id="shareTemplateOwnerId"
+        @shared="isShareDialogOpen = false"
+      />
+
+      <ExportDialog
+        v-model="isExportDialogOpen"
+        @select-format="handleTemplateExport"
+      />
+    </ListPageLayout>
+  </q-pull-to-refresh>
 </template>
 
 <script setup lang="ts">
@@ -68,6 +74,8 @@ import TemplatesGroup from 'src/components/templates/TemplatesGroup.vue'
 import ShareTemplateDialog from 'src/components/templates/ShareTemplateDialog.vue'
 import ExportDialog from 'src/components/shared/ExportDialog.vue'
 import { useTemplates } from 'src/composables/useTemplates'
+import { useQueryClient } from '@tanstack/vue-query'
+import { queryKeys } from 'src/queries/query-keys'
 import { useCategoriesQuery } from 'src/queries/categories'
 import { useUserStore } from 'src/stores/user'
 import { useBanner } from 'src/composables/useBanner'
@@ -92,6 +100,15 @@ const {
   clearSearch,
 } = useTemplates()
 const { categories } = useCategoriesQuery()
+const queryClient = useQueryClient()
+
+async function onRefresh(done: () => void) {
+  try {
+    await queryClient.invalidateQueries({ queryKey: queryKeys.templates.all })
+  } finally {
+    done()
+  }
+}
 const userStore = useUserStore()
 const { showError, showSuccess } = useBanner()
 

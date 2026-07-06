@@ -37,7 +37,7 @@
         <q-icon
           name="eva-bell-off-outline"
           size="28px"
-          class="text-grey-5 q-mb-sm"
+          class="text-faint q-mb-sm"
         />
         <div class="text-subtitle2 q-mb-xs">No notifications yet</div>
         <div class="notifications-inbox__empty-copy text-muted">

@@ -35,7 +35,7 @@ const bannerClasses = computed(() => [
   'q-pa-sm',
   'q-px-md',
   'q-mb-md',
-  'bg-red-1',
-  'text-red-6',
+  'bg-destructive-soft',
+  'text-destructive-strong',
 ])
 </script>

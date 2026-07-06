@@ -38,7 +38,7 @@
 
     <!-- People with access -->
     <div class="q-mt-md">
-      <div class="text-caption text-grey-6 q-mb-xs">
+      <div class="text-caption q-mb-xs">
         People with access{{
           !isLoadingShares && visibleSharedUsers.length > 0 ? ` (${visibleSharedUsers.length})` : ''
         }}
@@ -89,7 +89,7 @@
       <!-- Empty state -->
       <div
         v-else
-        class="text-caption text-grey-6 q-py-sm"
+        class="text-caption q-py-sm"
       >
         Not shared with anyone yet
       </div>

@@ -9,7 +9,7 @@
       </div>
       <div
         v-if="description"
-        class="text-caption text-grey-6 q-mt-xs"
+        class="text-caption q-mt-xs"
       >
         {{ description }}
       </div>

@@ -1,13 +1,27 @@
 import { mount, flushPromises } from '@vue/test-utils'
 import { it, expect, vi, beforeEach } from 'vitest'
 import { ref, computed } from 'vue'
+import { Screen } from 'quasar'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 import IndexPage from './IndexPage.vue'
+import { queryKeys } from 'src/queries/query-keys'
 import { createMockPlans, createMockTemplates } from 'test/fixtures'
 
 installQuasarPlugin()
 
 const mockRouterPush = vi.fn()
+
+const mockInvalidateQueries = vi.fn().mockResolvedValue(undefined)
+
+vi.mock('@tanstack/vue-query', async () => {
+  const actual = await vi.importActual('@tanstack/vue-query')
+  return {
+    ...actual,
+    useQueryClient: vi.fn(() => ({
+      invalidateQueries: mockInvalidateQueries,
+    })),
+  }
+})
 
 vi.mock('vue-router', () => ({
   useRouter: () => ({
@@ -134,6 +148,8 @@ function createWrapper() {
         SharePlanDialog: true,
         ShareTemplateDialog: true,
         BudgetOverviewCard: true,
+        TopCategoriesCard: true,
+        RecentActivityCard: true,
         PlanListItem: true,
         TemplateListItem: true,
       },
@@ -141,8 +157,21 @@ function createWrapper() {
   })
 }
 
+function setScreenWidth(width: number) {
+  Object.defineProperty(window, 'innerWidth', {
+    configurable: true,
+    writable: true,
+    value: width,
+  })
+
+  window.dispatchEvent(new Event('resize'))
+}
+
 beforeEach(() => {
+  Screen.setDebounce(0)
+  setScreenWidth(1280)
   vi.clearAllMocks()
+  mockInvalidateQueries.mockResolvedValue(undefined)
   mockActivePlans.value = createMockPlans()
   mockTemplatesData.value = createMockTemplates()
   mockPlansIsPending.value = true
@@ -278,4 +307,104 @@ it('should hide loading state after data loads', async () => {
   dashboardSections.forEach((section) => {
     expect(section.attributes('loading')).toBe('false')
   })
+})
+
+it('should render budget hero card for the most recently updated plan after loading', async () => {
+  mockPlansIsPending.value = false
+  mockTemplatesIsPending.value = false
+
+  const plans = createMockPlans()
+  const freshestPlan = { ...plans[1]!, updated_at: '2024-02-01T00:00:00Z' }
+  plans[1] = freshestPlan
+  mockActivePlans.value = plans
+
+  const wrapper = createWrapper()
+  await flushPromises()
+
+  const hero = wrapper.findComponent({ name: 'BudgetOverviewCard' })
+  expect(hero.exists()).toBe(true)
+  expect(hero.props('plan')).toMatchObject({ id: freshestPlan.id })
+})
+
+it('should not render budget hero card while loading', () => {
+  const wrapper = createWrapper()
+
+  expect(wrapper.findComponent({ name: 'BudgetOverviewCard' }).exists()).toBe(false)
+  expect(wrapper.findAll('.q-skeleton').length).toBeGreaterThan(0)
+})
+
+it('should render top categories and recent activity cards when plans exist', async () => {
+  mockPlansIsPending.value = false
+  mockTemplatesIsPending.value = false
+
+  const wrapper = createWrapper()
+  await flushPromises()
+
+  expect(wrapper.findComponent({ name: 'TopCategoriesCard' }).exists()).toBe(true)
+  expect(wrapper.findComponent({ name: 'RecentActivityCard' }).exists()).toBe(true)
+})
+
+it('should show standalone empty plans state when not loading and no active plans', async () => {
+  mockPlansIsPending.value = false
+  mockTemplatesIsPending.value = false
+  mockActivePlans.value = []
+
+  const wrapper = createWrapper()
+  await flushPromises()
+
+  expect(wrapper.findComponent({ name: 'EmptyPlansState' }).exists()).toBe(true)
+  expect(wrapper.findComponent({ name: 'BudgetOverviewCard' }).exists()).toBe(false)
+  expect(wrapper.findComponent({ name: 'TopCategoriesCard' }).exists()).toBe(false)
+  expect(wrapper.findComponent({ name: 'RecentActivityCard' }).exists()).toBe(false)
+})
+
+it('should show compact links instead of full sections on mobile', async () => {
+  setScreenWidth(600)
+  mockPlansIsPending.value = false
+  mockTemplatesIsPending.value = false
+
+  const wrapper = createWrapper()
+  await flushPromises()
+
+  expect(wrapper.findAllComponents({ name: 'DashboardSection' })).toHaveLength(0)
+
+  const items = wrapper.findAllComponents({ name: 'QItem' })
+  const plansItem = items.find((item) => item.text().includes('Active plans'))
+  const templatesItem = items.find((item) => item.text().includes('Templates'))
+
+  expect(plansItem?.props('to')).toBe('/plans')
+  expect(templatesItem?.props('to')).toBe('/templates')
+
+  expect(plansItem?.text()).toContain(String(mockActivePlans.value.length))
+  expect(templatesItem?.text()).toContain(String(mockTemplatesData.value.length))
+})
+
+it('should not show compact links on mobile when there are no active plans', async () => {
+  setScreenWidth(600)
+  mockPlansIsPending.value = false
+  mockTemplatesIsPending.value = false
+  mockActivePlans.value = []
+
+  const wrapper = createWrapper()
+  await flushPromises()
+
+  expect(wrapper.findAllComponents({ name: 'QItem' })).toHaveLength(0)
+  expect(wrapper.findComponent({ name: 'EmptyPlansState' }).exists()).toBe(true)
+})
+
+it('should invalidate plans, templates and recent expenses queries on pull-to-refresh', async () => {
+  const wrapper = createWrapper()
+
+  const pullToRefresh = wrapper.findComponent({ name: 'QPullToRefresh' })
+  expect(pullToRefresh.exists()).toBe(true)
+
+  const done = vi.fn()
+  pullToRefresh.vm.$emit('refresh', done)
+  await vi.waitFor(() => {
+    expect(done).toHaveBeenCalledOnce()
+  })
+
+  expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: queryKeys.plans.all })
+  expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: queryKeys.templates.all })
+  expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: queryKeys.expenses.recentAll() })
 })

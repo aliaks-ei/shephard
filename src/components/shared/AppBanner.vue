@@ -71,23 +71,23 @@ let autoDismissTimer: ReturnType<typeof setTimeout> | null = null
 const variantConfig = computed(() => {
   const configs: Record<BannerVariant, { bg: string; text: string; icon: string }> = {
     success: {
-      bg: 'bg-green-1',
-      text: 'text-green-6',
+      bg: 'bg-success-soft',
+      text: 'text-success-strong',
       icon: 'eva-checkmark-circle-outline',
     },
     error: {
-      bg: 'bg-red-1',
-      text: 'text-red-6',
+      bg: 'bg-destructive-soft',
+      text: 'text-destructive-strong',
       icon: 'eva-alert-triangle-outline',
     },
     warning: {
-      bg: 'bg-orange-1',
-      text: 'text-orange-6',
+      bg: 'bg-warning-soft',
+      text: 'text-warning-strong',
       icon: 'eva-alert-triangle-outline',
     },
     info: {
-      bg: 'bg-cyan-1',
-      text: 'text-cyan-6',
+      bg: 'bg-info-soft',
+      text: 'text-info-strong',
       icon: 'eva-info-outline',
     },
   }

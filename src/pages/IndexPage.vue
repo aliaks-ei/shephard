@@ -1,157 +1,251 @@
 <template>
-  <section class="page-content-spacing">
-    <div class="row justify-center">
-      <div class="col-12 col-lg-10 col-xl-8">
-        <!-- Dashboard Header -->
-        <DashboardHeader />
+  <q-pull-to-refresh
+    :disable="$q.screen.gt.sm"
+    @refresh="onRefresh"
+  >
+    <section class="page-content-spacing">
+      <div class="row justify-center">
+        <div class="col-12 col-lg-10 col-xl-8">
+          <!-- Dashboard Header -->
+          <DashboardHeader />
 
-        <!-- Quick Actions Section (hidden on mobile) -->
-        <QuickActionsGrid
-          v-if="$q.screen.gt.sm"
-          @add-expense="openExpenseDialog"
-        />
+          <!-- Quick Actions Section (hidden on mobile) -->
+          <QuickActionsGrid
+            v-if="$q.screen.gt.sm"
+            @add-expense="openExpenseDialog"
+          />
 
-        <!-- Budget Overview Card -->
-        <BudgetOverviewCard
-          v-if="primaryPlan && !isLoading"
-          :plan="primaryPlan"
-          class="section-spacing"
-          @click="goToPlan"
-        />
+          <!-- Budget Hero Card -->
+          <BudgetOverviewCard
+            v-if="primaryPlan && !isLoading"
+            :plan="primaryPlan"
+            class="section-spacing"
+            @click="goToPlan"
+          />
 
-        <!-- Budget Overview Skeleton (shown while loading) -->
-        <q-card
-          v-else-if="isLoading"
-          :bordered="$q.dark.isActive"
-          class="shadow-1 section-spacing"
-        >
-          <q-card-section>
-            <div class="row items-center justify-between q-mb-md">
-              <q-skeleton
-                type="text"
-                width="40%"
-              />
-              <q-skeleton
-                type="QChip"
-                width="80px"
-              />
-            </div>
-            <div class="row q-col-gutter-sm q-mb-sm">
-              <div
-                v-for="n in 3"
-                :key="n"
-                class="col"
-              >
+          <!-- Budget Hero Skeleton (shown while loading) -->
+          <q-card
+            v-else-if="isLoading"
+            :bordered="$q.dark.isActive"
+            class="shadow-1 section-spacing"
+          >
+            <q-card-section>
+              <div class="row items-center justify-between q-mb-md">
                 <q-skeleton
                   type="text"
-                  width="60%"
+                  width="40%"
                 />
                 <q-skeleton
-                  type="text"
-                  width="80%"
+                  type="QChip"
+                  width="80px"
                 />
               </div>
-            </div>
-            <q-skeleton
-              type="rect"
-              height="8px"
-            />
-            <q-skeleton
-              type="text"
-              width="50%"
-              class="q-mt-xs"
-            />
-          </q-card-section>
-        </q-card>
+              <q-skeleton
+                type="text"
+                width="55%"
+                height="48px"
+              />
+              <q-skeleton
+                type="rect"
+                height="8px"
+                class="q-mt-md"
+              />
+              <q-skeleton
+                type="text"
+                width="50%"
+                class="q-mt-xs"
+              />
+            </q-card-section>
+          </q-card>
 
-        <!-- Active Plans Section -->
-        <DashboardSection
-          title="Active Plans"
-          icon="eva-calendar-outline"
-          :items="recentActivePlans"
-          :count="activePlansCount"
-          :loading="isLoading"
-          view-all-route="/plans"
-          :max-displayed="maxDisplayedItems"
-          container-class="section-spacing"
-        >
-          <template #card="{ item }">
-            <PlanCard
-              :plan="item"
-              @edit="goToPlan"
-              @share="openSharePlanDialog"
-            />
-          </template>
-          <template #list-item="{ item }">
-            <PlanListItem
-              :plan="item"
-              @click="goToPlan"
-            />
-          </template>
-          <template #empty>
-            <EmptyPlansState />
-          </template>
-        </DashboardSection>
+          <!-- Top Categories (primary plan) -->
+          <TopCategoriesCard
+            v-if="primaryPlan && !isLoading"
+            :plan="primaryPlan"
+            class="section-spacing"
+            @click="goToPlan"
+          />
 
-        <!-- Recent Templates Section -->
-        <DashboardSection
-          title="Recent Templates"
-          icon="eva-file-text-outline"
-          :items="recentTemplates"
-          :count="templatesCount"
-          :loading="isLoading"
-          view-all-route="/templates"
-          :max-displayed="maxDisplayedItems"
-          container-class="section-spacing"
-        >
-          <template #card="{ item }">
-            <TemplateCard
-              :template="item"
-              @edit="goToTemplate"
-              @share="openShareTemplateDialog"
-            />
-          </template>
-          <template #list-item="{ item }">
-            <TemplateListItem
-              :template="item"
-              @click="goToTemplate"
-            />
-          </template>
-          <template #empty>
-            <EmptyTemplatesState />
-          </template>
-        </DashboardSection>
+          <!-- Recent Activity -->
+          <RecentActivityCard
+            v-if="activePlansCount > 0"
+            class="section-spacing"
+          />
+
+          <!-- First-run: no active plans -->
+          <EmptyPlansState
+            v-if="!isLoading && activePlansCount === 0"
+            class="section-spacing"
+          />
+
+          <!-- Mobile: compact links instead of full card sections -->
+          <q-card
+            v-if="$q.screen.lt.md && activePlansCount > 0"
+            :bordered="$q.dark.isActive"
+            class="shadow-1 section-spacing"
+          >
+            <q-list separator>
+              <q-item
+                clickable
+                to="/plans"
+              >
+                <q-item-section
+                  avatar
+                  class="min-w-auto"
+                >
+                  <q-icon
+                    name="eva-calendar-outline"
+                    color="primary"
+                    size="22px"
+                  />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label class="text-weight-medium">Active plans</q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <div class="row items-center q-gutter-xs">
+                    <q-badge
+                      color="primary"
+                      rounded
+                    >
+                      {{ activePlansCount }}
+                    </q-badge>
+                    <q-icon
+                      name="eva-chevron-right-outline"
+                      size="18px"
+                    />
+                  </div>
+                </q-item-section>
+              </q-item>
+
+              <q-item
+                clickable
+                to="/templates"
+              >
+                <q-item-section
+                  avatar
+                  class="min-w-auto"
+                >
+                  <q-icon
+                    name="eva-file-text-outline"
+                    color="primary"
+                    size="22px"
+                  />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label class="text-weight-medium">Templates</q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <div class="row items-center q-gutter-xs">
+                    <q-badge
+                      color="primary"
+                      rounded
+                    >
+                      {{ templatesCount }}
+                    </q-badge>
+                    <q-icon
+                      name="eva-chevron-right-outline"
+                      size="18px"
+                    />
+                  </div>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-card>
+
+          <!-- Desktop: full Active Plans section -->
+          <DashboardSection
+            v-if="$q.screen.gt.sm && activePlansCount > 0"
+            title="Active Plans"
+            icon="eva-calendar-outline"
+            :items="recentActivePlans"
+            :count="activePlansCount"
+            :loading="isLoading"
+            view-all-route="/plans"
+            :max-displayed="maxDisplayedItems"
+            container-class="section-spacing"
+          >
+            <template #card="{ item }">
+              <PlanCard
+                :plan="item"
+                @edit="goToPlan"
+                @share="openSharePlanDialog"
+              />
+            </template>
+            <template #list-item="{ item }">
+              <PlanListItem
+                :plan="item"
+                @click="goToPlan"
+              />
+            </template>
+            <template #empty>
+              <EmptyPlansState />
+            </template>
+          </DashboardSection>
+
+          <!-- Desktop: full Recent Templates section -->
+          <DashboardSection
+            v-if="$q.screen.gt.sm"
+            title="Recent Templates"
+            icon="eva-file-text-outline"
+            :items="recentTemplates"
+            :count="templatesCount"
+            :loading="isLoading"
+            view-all-route="/templates"
+            :max-displayed="maxDisplayedItems"
+            container-class="section-spacing"
+          >
+            <template #card="{ item }">
+              <TemplateCard
+                :template="item"
+                @edit="goToTemplate"
+                @share="openShareTemplateDialog"
+              />
+            </template>
+            <template #list-item="{ item }">
+              <TemplateListItem
+                :template="item"
+                @click="goToTemplate"
+              />
+            </template>
+            <template #empty>
+              <EmptyTemplatesState />
+            </template>
+          </DashboardSection>
+        </div>
       </div>
-    </div>
 
-    <!-- Expense Registration Dialog -->
-    <ExpenseRegistrationDialog
-      v-if="hasOpenedExpenseDialog"
-      v-model="showExpenseDialog"
-      auto-select-recent-plan
-      @expense-created="onExpenseCreated"
-    />
+      <!-- Expense Registration Dialog -->
+      <ExpenseRegistrationDialog
+        v-if="hasOpenedExpenseDialog"
+        v-model="showExpenseDialog"
+        auto-select-recent-plan
+        @expense-created="onExpenseCreated"
+      />
 
-    <!-- Share Dialogs -->
-    <SharePlanDialog
-      v-if="sharePlanId"
-      v-model="showSharePlanDialog"
-      :plan-id="sharePlanId"
-      :owner-user-id="activePlans.find((p) => p.id === sharePlanId)?.owner_id"
-    />
-    <ShareTemplateDialog
-      v-if="shareTemplateId"
-      v-model="showShareTemplateDialog"
-      :template-id="shareTemplateId"
-      :owner-user-id="templates.find((t) => t.id === shareTemplateId)?.owner_id"
-    />
-  </section>
+      <!-- Share Dialogs -->
+      <SharePlanDialog
+        v-if="sharePlanId"
+        v-model="showSharePlanDialog"
+        :plan-id="sharePlanId"
+        :owner-user-id="activePlans.find((p) => p.id === sharePlanId)?.owner_id"
+      />
+      <ShareTemplateDialog
+        v-if="shareTemplateId"
+        v-model="showShareTemplateDialog"
+        :template-id="shareTemplateId"
+        :owner-user-id="templates.find((t) => t.id === shareTemplateId)?.owner_id"
+      />
+    </section>
+  </q-pull-to-refresh>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useMeta } from 'quasar'
 import { useRouter } from 'vue-router'
+import { useQueryClient } from '@tanstack/vue-query'
+import { queryKeys } from 'src/queries/query-keys'
 
 useMeta({ title: 'Home' })
 import { usePlansQuery } from 'src/queries/plans'
@@ -162,6 +256,8 @@ import DashboardHeader from 'src/components/dashboard/DashboardHeader.vue'
 import QuickActionsGrid from 'src/components/dashboard/QuickActionsGrid.vue'
 import DashboardSection from 'src/components/dashboard/DashboardSection.vue'
 import BudgetOverviewCard from 'src/components/dashboard/BudgetOverviewCard.vue'
+import TopCategoriesCard from 'src/components/dashboard/TopCategoriesCard.vue'
+import RecentActivityCard from 'src/components/dashboard/RecentActivityCard.vue'
 import PlanListItem from 'src/components/dashboard/PlanListItem.vue'
 import TemplateListItem from 'src/components/dashboard/TemplateListItem.vue'
 import EmptyPlansState from 'src/components/dashboard/EmptyPlansState.vue'
@@ -174,7 +270,20 @@ import ShareTemplateDialog from 'src/components/templates/ShareTemplateDialog.vu
 
 const router = useRouter()
 const userStore = useUserStore()
+const queryClient = useQueryClient()
 const userId = computed(() => userStore.userProfile?.id)
+
+async function onRefresh(done: () => void) {
+  try {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.plans.all }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.templates.all }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.expenses.recentAll() }),
+    ])
+  } finally {
+    done()
+  }
+}
 
 const { activePlans, isPending: isPlansLoading } = usePlansQuery(userId)
 const { templates, isPending: isTemplatesLoading, templatesCount } = useTemplatesQuery(userId)

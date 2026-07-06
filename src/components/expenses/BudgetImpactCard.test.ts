@@ -104,7 +104,7 @@ describe('BudgetImpactCard', () => {
         },
       })
 
-      expect(wrapper.text()).toContain('$20.00 over')
+      expect(wrapper.text()).toContain('−$20.00 over')
     })
 
     it('should apply correct color classes for current budget state', () => {
@@ -183,7 +183,7 @@ describe('BudgetImpactCard', () => {
         },
       })
 
-      expect(wrapper.text()).toContain('$10.00 over')
+      expect(wrapper.text()).toContain('−$10.00 over')
     })
 
     it('should display checkmark icon when within budget', () => {
@@ -310,8 +310,8 @@ describe('BudgetImpactCard', () => {
       })
 
       const card = wrapper.findComponent({ name: 'QCard' })
-      expect(card.classes()).not.toContain('bg-orange-1')
-      expect(card.classes()).not.toContain('bg-red-1')
+      expect(card.classes()).not.toContain('bg-warning-soft')
+      expect(card.classes()).not.toContain('bg-destructive-soft')
     })
 
     it('should have orange background when 90-100% of budget', () => {
@@ -326,7 +326,7 @@ describe('BudgetImpactCard', () => {
       })
 
       const card = wrapper.findComponent({ name: 'QCard' })
-      expect(card.classes()).toContain('bg-orange-1')
+      expect(card.classes()).toContain('bg-warning-soft')
     })
 
     it('should have red background when over 100% of budget', () => {
@@ -341,7 +341,7 @@ describe('BudgetImpactCard', () => {
       })
 
       const card = wrapper.findComponent({ name: 'QCard' })
-      expect(card.classes()).toContain('bg-red-1')
+      expect(card.classes()).toContain('bg-destructive-soft')
     })
 
     it('should use current budget percentage for background when no amount', () => {
@@ -362,7 +362,7 @@ describe('BudgetImpactCard', () => {
       })
 
       const card = wrapper.findComponent({ name: 'QCard' })
-      expect(card.classes()).toContain('bg-red-1')
+      expect(card.classes()).toContain('bg-destructive-soft')
     })
   })
 

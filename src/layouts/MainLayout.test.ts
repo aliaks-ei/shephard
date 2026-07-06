@@ -1,10 +1,10 @@
-import { mount, flushPromises } from '@vue/test-utils'
+import { mount, flushPromises, type VueWrapper } from '@vue/test-utils'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 import { createTestingPinia } from '@pinia/testing'
 import { vi, it, expect, beforeEach } from 'vitest'
 import type { ComponentProps } from 'vue-component-type-helpers'
 import { ref } from 'vue'
-import { Screen } from 'quasar'
+import { Screen, Notify } from 'quasar'
 import { defaultNotificationPushPreferences } from 'src/types/notifications'
 
 import MainLayout from './MainLayout.vue'
@@ -19,11 +19,22 @@ vi.mock('vue-router', () => ({
   useRoute: () => ({ fullPath: '/templates', params: {}, path: '/templates' }),
 }))
 
+const mockIsInstallable = ref(false)
+
 vi.mock('src/composables/usePwaInstall', () => ({
   usePwaInstall: () => ({
-    isInstallable: ref(false),
+    isInstallable: mockIsInstallable,
     promptInstall: vi.fn(),
     dismissInstall: vi.fn(),
+  }),
+}))
+
+const mockHasSavedExpense = ref(false)
+
+vi.mock('src/composables/useInstallPromptGate', () => ({
+  useInstallPromptGate: () => ({
+    hasSavedExpense: mockHasSavedExpense,
+    markExpenseSaved: vi.fn(),
   }),
 }))
 
@@ -123,6 +134,8 @@ beforeEach(() => {
   Screen.setDebounce(0)
   setScreenWidth(1280)
   vi.clearAllMocks()
+  mockIsInstallable.value = false
+  mockHasSavedExpense.value = false
 })
 
 it('should mount component properly', () => {
@@ -220,4 +233,55 @@ it('should open notifications in the shared mobile dialog shell', async () => {
   expect(notificationInbox.attributes('data-show-header')).toBe('false')
   expect(headerActions.exists()).toBe(true)
   expect(notificationsButton.attributes('aria-expanded')).toBe('true')
+})
+
+it('should include Activity in navigation items', () => {
+  const wrapper = renderMainLayout()
+
+  const navigationDrawer = wrapper.findComponent('[data-testid="navigation-drawer"]') as VueWrapper
+  const items = (navigationDrawer.props() as Record<'items', unknown>).items as Array<{
+    icon: string
+    label: string
+    to: string
+  }>
+
+  expect(items).toContainEqual({
+    icon: 'eva-activity-outline',
+    label: 'Activity',
+    to: '/expenses',
+  })
+  expect(items.map((item) => item.to)).toEqual(['/', '/plans', '/expenses', '/templates'])
+})
+
+it('should not prompt install while the user has not saved an expense', async () => {
+  const notifySpy = vi.spyOn(Notify, 'create').mockImplementation(() => () => {})
+
+  renderMainLayout()
+
+  mockIsInstallable.value = true
+  await flushPromises()
+
+  expect(notifySpy).not.toHaveBeenCalled()
+  notifySpy.mockRestore()
+})
+
+it('should prompt install only when installable and an expense has been saved', async () => {
+  const notifySpy = vi.spyOn(Notify, 'create').mockImplementation(() => () => {})
+
+  renderMainLayout()
+
+  mockHasSavedExpense.value = true
+  await flushPromises()
+  expect(notifySpy).not.toHaveBeenCalled()
+
+  mockIsInstallable.value = true
+  await flushPromises()
+
+  // Wrappers from earlier tests stay mounted and share the mocked refs,
+  // so assert the prompt fired rather than an exact call count.
+  expect(notifySpy).toHaveBeenCalled()
+  expect(notifySpy).toHaveBeenCalledWith(
+    expect.objectContaining({ message: 'Install Shephard for a better experience!' }),
+  )
+  notifySpy.mockRestore()
 })

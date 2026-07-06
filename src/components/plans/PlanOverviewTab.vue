@@ -26,7 +26,7 @@
 
         <div
           v-if="categoryBudgets.length === 0"
-          class="text-center text-grey-6 q-py-lg"
+          class="text-center text-muted q-py-lg"
         >
           <q-icon
             name="eva-folder-outline"

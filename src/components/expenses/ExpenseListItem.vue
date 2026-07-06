@@ -47,13 +47,13 @@
         class="items-end"
       >
         <div class="column items-end">
-          <q-item-label class="text-weight-bold text-primary">
+          <q-item-label class="text-weight-bold text-primary text-amount">
             {{ formatCurrency(expense.amount, currency) }}
           </q-item-label>
           <q-item-label
             v-if="expense.original_amount && expense.original_currency"
             caption
-            class="text-caption text-grey-6"
+            class="text-caption text-amount"
           >
             {{ formatCurrency(expense.original_amount, expense.original_currency as CurrencyCode) }}
           </q-item-label>
@@ -98,13 +98,13 @@
     >
       <div class="row items-center q-gutter-sm">
         <div class="column items-end">
-          <q-item-label class="text-weight-bold text-primary">
+          <q-item-label class="text-weight-bold text-primary text-amount">
             {{ formatCurrency(expense.amount, currency) }}
           </q-item-label>
           <q-item-label
             v-if="expense.original_amount && expense.original_currency"
             caption
-            class="text-caption text-grey-6"
+            class="text-caption text-amount"
           >
             {{ formatCurrency(expense.original_amount, expense.original_currency as CurrencyCode) }}
           </q-item-label>

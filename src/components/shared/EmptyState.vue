@@ -5,17 +5,23 @@
     class="text-center q-py-lg"
   >
     <q-card-section>
+      <BrandIllustration
+        v-if="illustration && !hasSearchQuery"
+        :name="illustration"
+        class="q-mb-sm"
+      />
       <q-icon
+        v-else
         :name="currentIcon"
         size="4rem"
-        class="text-grey-4 q-mb-md"
+        class="text-faint q-mb-md"
       />
 
-      <h3 class="text-h5 q-mb-sm q-mt-none text-grey-7">
+      <h3 class="text-h5 q-mb-sm q-mt-none">
         {{ currentTitle }}
       </h3>
 
-      <p class="text-body2 text-grey-5 q-mb-lg">
+      <p class="text-body2 text-muted q-mb-lg">
         {{ currentDescription }}
       </p>
 
@@ -46,6 +52,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import BrandIllustration from 'src/components/shared/BrandIllustration.vue'
 
 const emit = defineEmits<{
   (e: 'clearSearch'): void
@@ -55,6 +62,7 @@ const emit = defineEmits<{
 const props = withDefaults(
   defineProps<{
     hasSearchQuery: boolean
+    illustration?: 'sheep' | 'plan' | 'receipt' | 'template'
     searchIcon?: string
     emptyIcon?: string
     searchTitle?: string

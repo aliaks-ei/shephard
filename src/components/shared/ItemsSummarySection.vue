@@ -18,14 +18,14 @@
       </div>
       <div
         :class="[
-          'text-primary text-weight-bold',
+          'text-primary text-weight-bold text-amount',
           $q.screen.lt.md ? amountSizeMobile : amountSizeDesktop,
         ]"
       >
         {{ formattedAmount }}
       </div>
     </div>
-    <div class="text-body2 text-grey-6">
+    <div class="text-body2 text-muted">
       {{ description }}
     </div>
   </div>

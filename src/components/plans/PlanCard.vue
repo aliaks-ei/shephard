@@ -37,7 +37,7 @@
               round
               size="sm"
               icon="eva-more-vertical-outline"
-              class="text-grey-7"
+              class="text-muted"
               :aria-label="menuButtonLabel"
               aria-haspopup="menu"
               @click.stop
@@ -57,7 +57,7 @@
         <div class="q-mt-lg">
           <div class="row items-center justify-between">
             <div class="col">
-              <div class="text-subtitle1 text-weight-bold text-primary">
+              <div class="text-subtitle1 text-weight-bold text-primary text-amount">
                 {{ formatAmount(plan.total) }}
               </div>
             </div>
@@ -76,7 +76,7 @@
 
           <div class="row items-center">
             <div class="col">
-              <div class="text-caption text-grey-6">
+              <div class="text-caption">
                 {{ formatDateRange(plan.start_date, plan.end_date) }}
               </div>
             </div>

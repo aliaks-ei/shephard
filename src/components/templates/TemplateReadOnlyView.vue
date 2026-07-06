@@ -16,10 +16,10 @@
           <q-icon
             name="eva-grid-outline"
             size="4rem"
-            class="text-grey-4 q-mb-md"
+            class="text-faint q-mb-md"
           />
-          <div class="text-h6 q-mb-sm text-grey-6">No categories</div>
-          <div class="text-body2 text-grey-5 q-mb-lg">This template doesn't have any items yet</div>
+          <div class="text-h6 q-mb-sm text-muted">No categories</div>
+          <div class="text-body2 text-faint q-mb-lg">This template doesn't have any items yet</div>
         </div>
       </q-card-section>
     </q-card>
@@ -69,12 +69,15 @@
               <h3 class="text-h6 q-my-none">Total Amount</h3>
             </div>
             <div
-              :class="['text-primary text-weight-bold', $q.screen.lt.md ? 'text-h6' : 'text-h5']"
+              :class="[
+                'text-primary text-weight-bold text-amount',
+                $q.screen.lt.md ? 'text-h6' : 'text-h5',
+              ]"
             >
               {{ formattedTotal }}
             </div>
           </div>
-          <div class="text-body2 text-grey-6">
+          <div class="text-body2 text-muted">
             Total across {{ categoryGroups.length }}
             {{ categoryGroups.length === 1 ? 'category' : 'categories' }}
           </div>

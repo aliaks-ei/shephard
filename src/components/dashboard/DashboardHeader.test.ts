@@ -129,7 +129,7 @@ describe('DashboardHeader', () => {
     const wrapper = createWrapper()
     const subtitle = wrapper.find('p')
     expect(subtitle.classes()).toContain('q-ma-none')
-    expect(subtitle.classes()).toContain('text-grey-6')
+    expect(subtitle.classes()).toContain('text-muted')
     expect(subtitle.classes()).toContain('text-body1')
   })
 

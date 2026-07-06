@@ -25,7 +25,7 @@
           <div class="col-4">
             <div class="text-center">
               <div class="text-caption text-caption-secondary">Budget</div>
-              <div class="text-body1 text-weight-bold">
+              <div class="text-body1 text-weight-bold text-amount">
                 {{ formatCurrency(category?.plannedAmount || 0, currency) }}
               </div>
             </div>
@@ -33,7 +33,7 @@
           <div class="col-4">
             <div class="text-center">
               <div class="text-caption text-caption-secondary">Spent</div>
-              <div class="text-body1 text-weight-bold text-info">
+              <div class="text-body1 text-weight-bold text-info text-amount">
                 {{ formatCurrency(category?.actualAmount || 0, currency) }}
               </div>
             </div>
@@ -44,7 +44,7 @@
                 {{ (category?.remainingAmount || 0) >= 0 ? 'Still to pay' : 'Over' }}
               </div>
               <div
-                class="text-body1 text-weight-bold"
+                class="text-body1 text-weight-bold text-amount"
                 :class="remainingColorClass"
               >
                 {{ formatCurrency(Math.abs(category?.remainingAmount || 0), currency) }}
@@ -148,11 +148,14 @@
               </q-item-section>
 
               <q-item-section>
-                <q-item-label :class="item.is_completed ? 'text-grey-6' : 'text-weight-medium'">
+                <q-item-label :class="item.is_completed ? 'text-muted' : 'text-weight-medium'">
                   {{ item.name }}
                 </q-item-label>
                 <q-item-label caption>
-                  <span :class="item.is_completed ? 'text-grey-5' : ''">
+                  <span
+                    class="text-amount"
+                    :class="item.is_completed ? 'text-faint' : ''"
+                  >
                     {{ formatCurrency(item.amount, currency) }}
                   </span>
                 </q-item-label>
@@ -177,7 +180,7 @@
                 v-for="item in nonFixedPlanItems"
                 :key="item.id"
                 dense
-                class="text-grey-6"
+                class="text-muted"
               >
                 <q-item-section
                   class="q-pr-sm category-dialog-icon-section"
@@ -195,7 +198,7 @@
                     {{ item.name }}
                   </q-item-label>
                   <q-item-label caption>
-                    <span class="text-caption-secondary">
+                    <span class="text-caption-secondary text-amount">
                       {{ formatCurrency(item.amount, currency) }}
                     </span>
                   </q-item-label>

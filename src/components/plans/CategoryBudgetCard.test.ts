@@ -10,6 +10,10 @@ installQuasarPlugin()
 
 vi.mock('src/utils/currency', () => ({
   formatCurrency: vi.fn((amount: number, currency: string) => `${currency} ${amount.toFixed(2)}`),
+  formatCurrencyWithSign: vi.fn(
+    (amount: number, currency: string) =>
+      `${amount < 0 ? '−' : ''}${currency} ${Math.abs(amount).toFixed(2)}`,
+  ),
 }))
 
 vi.mock('src/utils/budget', () => ({

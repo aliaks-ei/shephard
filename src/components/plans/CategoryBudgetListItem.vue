@@ -31,12 +31,12 @@
         </div>
         <div class="text-right q-pl-sm flex-shrink-0">
           <span
-            class="text-weight-bold text-body2"
+            class="text-weight-bold text-body2 text-amount"
             :class="remainingAmountColor"
           >
-            {{ formatCurrency(Math.abs(category.remainingAmount), currency) }}
+            {{ formatCurrencyWithSign(category.remainingAmount, currency) }}
           </span>
-          <span class="text-caption text-grey-6 q-ml-xs">
+          <span class="text-caption q-ml-xs">
             {{ category.remainingAmount >= 0 ? 'left' : 'over' }}
           </span>
         </div>
@@ -45,13 +45,15 @@
       <!-- Middle row: Spent of Planned & Percentage -->
       <div class="row justify-between items-center text-caption q-mb-xs">
         <div class="ellipsis">
-          <span class="text-weight-medium">{{
+          <span class="text-weight-medium text-amount">{{
             formatCurrency(category.actualAmount, currency)
           }}</span>
-          <span class="text-grey-6 q-mx-xs">of</span>
-          <span class="text-grey-6">{{ formatCurrency(category.plannedAmount, currency) }}</span>
+          <span class="text-muted q-mx-xs">of</span>
+          <span class="text-muted text-amount">{{
+            formatCurrency(category.plannedAmount, currency)
+          }}</span>
         </div>
-        <div class="text-weight-medium text-grey-6 flex-shrink-0 q-pl-sm">
+        <div class="text-weight-medium text-muted flex-shrink-0 q-pl-sm">
           {{ roundedPercentage }}%
         </div>
       </div>
@@ -71,7 +73,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
-import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
+import { formatCurrency, formatCurrencyWithSign, type CurrencyCode } from 'src/utils/currency'
 import { getBudgetProgressColor, getBudgetRemainingColorClass } from 'src/utils/budget'
 import type { CategoryBudget } from 'src/types'
 

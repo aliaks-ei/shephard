@@ -35,7 +35,7 @@
         color="primary"
         size="1.5em"
       />
-      <span class="text-body2 text-grey-7">Preparing secure authentication...</span>
+      <span class="text-body2 text-muted">Preparing secure authentication...</span>
     </div>
   </div>
 </template>

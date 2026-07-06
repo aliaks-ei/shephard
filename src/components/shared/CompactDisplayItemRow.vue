@@ -32,7 +32,7 @@
       class="compact-display-item__amount-section q-pl-sm"
     >
       <q-item-label
-        class="compact-display-item__amount text-right text-no-wrap"
+        class="compact-display-item__amount text-right text-no-wrap text-amount"
         :class="amountClass"
       >
         {{ formattedAmount }}
@@ -71,18 +71,18 @@ const formattedAmount = computed(() => formatCurrency(props.amount, props.curren
 
 const nameClass = computed(() => {
   if (props.muted) {
-    return props.strike ? 'text-grey-5' : 'text-grey-6'
+    return props.strike ? 'text-faint' : 'text-muted'
   }
 
-  return props.strike ? 'text-grey-6' : 'text-weight-medium'
+  return props.strike ? 'text-muted' : 'text-weight-medium'
 })
 
 const amountClass = computed(() => {
   if (props.muted) {
-    return props.strike ? 'text-grey-5' : 'text-grey-7'
+    return props.strike ? 'text-faint' : 'text-muted'
   }
 
-  return props.strike ? 'text-grey-5' : ''
+  return props.strike ? 'text-faint' : ''
 })
 </script>
 

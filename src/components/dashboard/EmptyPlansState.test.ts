@@ -2,6 +2,7 @@ import { mount } from '@vue/test-utils'
 import { describe, it, expect } from 'vitest'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 import EmptyPlansState from './EmptyPlansState.vue'
+import BrandIllustration from 'src/components/shared/BrandIllustration.vue'
 
 installQuasarPlugin()
 
@@ -30,11 +31,12 @@ describe('EmptyPlansState', () => {
     expect(wrapper.text()).toContain('Create your first plan to start tracking expenses')
   })
 
-  it('displays the calendar icon', () => {
+  it('displays the plan illustration', () => {
     const wrapper = createWrapper()
-    const icon = wrapper.findComponent({ name: 'QIcon' })
-    expect(icon.exists()).toBe(true)
-    expect(icon.props('name')).toBe('eva-calendar-outline')
+    const illustration = wrapper.findComponent(BrandIllustration)
+    expect(illustration.exists()).toBe(true)
+    expect(illustration.props('name')).toBe('plan')
+    expect(wrapper.find('svg.brand-illustration').exists()).toBe(true)
   })
 
   it('renders a button to create plan', () => {

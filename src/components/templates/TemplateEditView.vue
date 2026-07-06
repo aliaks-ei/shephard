@@ -53,7 +53,7 @@
         :all-expanded="allExpanded"
         :has-duplicates="hasDuplicates"
         duplicate-banner-position="top"
-        duplicate-banner-class="bg-orange-1 text-orange-8"
+        duplicate-banner-class="bg-warning-soft text-warning-strong"
         show-item-count
         :bordered="false"
         :padding="false"
@@ -110,12 +110,15 @@
               <h3 class="text-h6 q-my-none">Total Amount</h3>
             </div>
             <div
-              :class="['text-primary text-weight-bold', $q.screen.lt.md ? 'text-h6' : 'text-h5']"
+              :class="[
+                'text-primary text-weight-bold text-amount',
+                $q.screen.lt.md ? 'text-h6' : 'text-h5',
+              ]"
             >
               {{ formattedTotal }}
             </div>
           </div>
-          <div class="text-caption text-grey-6">
+          <div class="text-caption">
             Total across {{ categoryGroups.length }}
             {{ categoryGroups.length === 1 ? 'category' : 'categories' }}
           </div>

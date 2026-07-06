@@ -5,6 +5,8 @@ html {
   color: $text-color;
   padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) 0
     env(safe-area-inset-left, 0px);
+  // App-level pull-to-refresh (QPullToRefresh) replaces the browser's native reload gesture
+  overscroll-behavior-y: none;
 }
 
 html:has(.body--dark) {
@@ -871,6 +873,62 @@ h6,
 
 .text-muted {
   color: hsl(var(--muted-foreground));
+}
+
+.text-faint {
+  color: hsl(var(--muted-foreground) / 0.75);
+}
+
+.bg-muted {
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+}
+
+// Money typography: tabular figures so amounts align and don't wiggle when animated
+.text-amount {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+// Display scale for hero metrics (glanceable money numbers)
+.text-display {
+  font-size: clamp(2.25rem, 8vw, 2.75rem);
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+// Soft semantic surfaces — theme-aware replacements for bg-red-1/text-red-8 etc.
+.bg-destructive-soft {
+  background: hsl(var(--destructive-soft-bg));
+}
+
+.text-destructive-strong {
+  color: hsl(var(--destructive-soft-fg));
+}
+
+.bg-warning-soft {
+  background: hsl(var(--warning-soft-bg));
+}
+
+.text-warning-strong {
+  color: hsl(var(--warning-soft-fg));
+}
+
+.bg-success-soft {
+  background: hsl(var(--success-soft-bg));
+}
+
+.text-success-strong {
+  color: hsl(var(--success-soft-fg));
+}
+
+.bg-info-soft {
+  background: hsl(var(--info-soft-bg));
+}
+
+.text-info-strong {
+  color: hsl(var(--info-soft-fg));
 }
 
 .text-caption-secondary {
