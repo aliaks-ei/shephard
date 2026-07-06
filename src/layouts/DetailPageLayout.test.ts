@@ -55,8 +55,11 @@ it('should render toolbar with back button', () => {
   const backButton = wrapper.find('button')
 
   expect(toolbar.exists()).toBe(true)
-  expect(toolbar.classes()).toContain('q-mb-lg')
-  expect(toolbar.classes()).toContain('q-px-none')
+  expect(toolbar.classes()).toContain('q-px-md')
+  expect(toolbar.classes()).toContain('q-py-sm')
+  expect(toolbar.classes()).toContain('sticky-toolbar')
+  expect(toolbar.classes()).toContain('detail-toolbar')
+  expect(toolbar.classes()).toContain('liquid-glass-surface')
   expect(backButton.exists()).toBe(true)
   expect(backButton.classes()).toContain('q-btn--flat')
   expect(backButton.classes()).toContain('q-btn--round')

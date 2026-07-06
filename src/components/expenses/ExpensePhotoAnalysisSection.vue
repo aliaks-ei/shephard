@@ -14,7 +14,7 @@
             Analyzed
           </q-chip>
         </div>
-        <div class="text-caption text-grey-7">Prefill details from a receipt</div>
+        <div class="text-caption">Prefill details from a receipt</div>
       </div>
 
       <q-btn
@@ -88,7 +88,7 @@
 
         <q-banner
           v-if="photoAnalysis.hasError.value"
-          class="bg-orange-1 text-orange-9 q-mt-sm"
+          class="bg-warning-soft text-warning-strong q-mt-sm"
           dense
         >
           <template #avatar>
@@ -100,7 +100,7 @@
           {{ photoAnalysis.errorMessage.value }}
         </q-banner>
 
-        <p class="text-caption text-grey-7 q-mt-sm q-mb-none text-center">
+        <p class="text-caption q-mt-sm q-mb-none text-center">
           Supports JPEG, PNG, WebP, HEIC • Max 5MB
         </p>
       </div>
@@ -108,7 +108,7 @@
 
     <div class="row items-center q-mt-md">
       <q-separator class="col" />
-      <span class="q-mx-md text-grey-6 text-caption text-weight-medium"> OR ENTER MANUALLY </span>
+      <span class="q-mx-md text-caption text-weight-medium"> OR ENTER MANUALLY </span>
       <q-separator class="col" />
     </div>
   </div>

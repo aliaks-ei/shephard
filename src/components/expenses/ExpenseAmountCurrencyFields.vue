@@ -50,7 +50,7 @@
   >
     <div
       v-if="isConverting"
-      class="text-caption text-grey-7"
+      class="text-caption"
     >
       <q-spinner
         size="12px"
@@ -78,9 +78,9 @@
         size="14px"
         class="q-mr-xs text-primary"
       />
-      <span class="text-grey-7">Converted amount:</span>
-      <span class="text-weight-bold q-ml-xs">{{ convertedAmountDisplay }}</span>
-      <span class="text-grey-6 q-ml-xs"> (Rate: {{ conversionResult.rate.toFixed(4) }}) </span>
+      <span class="text-muted">Converted amount:</span>
+      <span class="text-weight-bold q-ml-xs text-amount">{{ convertedAmountDisplay }}</span>
+      <span class="text-muted q-ml-xs"> (Rate: {{ conversionResult.rate.toFixed(4) }}) </span>
     </div>
   </div>
 </template>

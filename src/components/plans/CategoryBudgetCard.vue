@@ -43,7 +43,7 @@
               class="q-ml-xs flex-shrink-0"
             />
           </div>
-          <span class="text-caption text-grey-6 q-mt-none">
+          <span class="text-caption q-mt-none">
             {{ category.expenseCount }} {{ category.expenseCount === 1 ? 'expense' : 'expenses' }}
           </span>
         </div>
@@ -56,7 +56,7 @@
           size="48px"
           :thickness="0.15"
           :color="progressColor"
-          track-color="grey-4"
+          :track-color="$q.dark.isActive ? 'grey-9' : 'grey-2'"
           class="q-ml-md flex-shrink-0"
         >
           <span class="text-caption text-weight-bold">{{ Math.round(percentageUsed) }}%</span>
@@ -75,7 +75,7 @@
             size="52px"
             :thickness="0.17"
             :color="progressColor"
-            track-color="grey-4"
+            :track-color="$q.dark.isActive ? 'grey-9' : 'grey-2'"
             class="text-weight-bold q-mr-md"
           >
             <span class="text-caption text-weight-bold">{{ Math.round(percentageUsed) }}%</span>
@@ -84,8 +84,8 @@
           <!-- Details Section -->
           <div class="col">
             <div class="row justify-between text-caption">
-              <span class="text-grey-6">Spent</span>
-              <span class="text-weight-bold">
+              <span class="text-muted">Spent</span>
+              <span class="text-weight-bold text-amount">
                 {{ formatCurrency(category.actualAmount, currency) }}
               </span>
             </div>
@@ -100,12 +100,14 @@
             />
 
             <div class="row justify-between text-caption">
-              <span class="text-grey-6">Budget</span>
-              <span>{{ formatCurrency(category.plannedAmount, currency) }}</span>
+              <span class="text-muted">Budget</span>
+              <span class="text-amount">{{
+                formatCurrency(category.plannedAmount, currency)
+              }}</span>
             </div>
 
             <div class="row justify-between text-caption">
-              <span class="text-grey-6">{{
+              <span class="text-muted">{{
                 category.remainingAmount > 0
                   ? 'Still to pay'
                   : category.remainingAmount < 0
@@ -113,10 +115,10 @@
                     : 'Still to pay'
               }}</span>
               <span
-                class="text-weight-bold"
+                class="text-weight-bold text-amount"
                 :class="remainingAmountColor"
               >
-                {{ formatCurrency(Math.abs(category.remainingAmount), currency) }}
+                {{ formatCurrencyWithSign(category.remainingAmount, currency) }}
               </span>
             </div>
           </div>
@@ -129,7 +131,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
-import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
+import { formatCurrency, formatCurrencyWithSign, type CurrencyCode } from 'src/utils/currency'
 import { getBudgetProgressColor, getBudgetRemainingColorClass } from 'src/utils/budget'
 import type { CategoryBudget } from 'src/types'
 

@@ -6,7 +6,7 @@
     <!-- Divider with OR -->
     <div class="row items-center q-my-lg">
       <q-separator class="col" />
-      <span class="q-px-md text-caption text-uppercase text-grey-6">or continue with</span>
+      <span class="q-px-md text-caption text-uppercase">or continue with</span>
       <q-separator class="col" />
     </div>
 

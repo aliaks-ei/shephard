@@ -109,15 +109,10 @@
           <q-icon
             name="eva-grid-outline"
             size="3rem"
-            :class="$q.dark.isActive ? 'text-grey-5 q-mb-md' : 'text-grey-4 q-mb-md'"
+            class="text-faint q-mb-md"
           />
-          <div
-            class="text-body1 q-mb-sm"
-            :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-6'"
-          >
-            No templates use this category yet
-          </div>
-          <div class="text-body2 text-grey-5">Templates using this category will appear here</div>
+          <div class="text-body1 q-mb-sm text-muted">No templates use this category yet</div>
+          <div class="text-body2 text-faint">Templates using this category will appear here</div>
         </q-card>
       </q-card-section>
     </div>

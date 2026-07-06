@@ -6,7 +6,7 @@
     <!-- Error Banners -->
     <q-banner
       v-if="emailError"
-      class="bg-red-1 text-red-9 q-mb-md"
+      class="bg-destructive-soft text-destructive-strong q-mb-md"
       rounded
       dense
     >
@@ -21,7 +21,7 @@
 
     <q-banner
       v-if="otpError"
-      class="bg-red-1 text-red-9 q-mb-md"
+      class="bg-destructive-soft text-destructive-strong q-mb-md"
       rounded
       dense
     >

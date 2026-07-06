@@ -17,7 +17,7 @@
           >
             {{ title }}
           </h1>
-          <p class="text-body2 text-grey-6 q-mb-none gt-xs">
+          <p class="text-body2 text-muted q-mb-none gt-xs">
             {{ description }}
           </p>
         </div>

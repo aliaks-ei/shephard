@@ -22,6 +22,9 @@ export const queryKeys = {
   },
   expenses: {
     all: ['expenses'] as const,
+    recentAll: () => [...queryKeys.expenses.all, 'recent'] as const,
+    recent: (userId: string, limit: number) =>
+      [...queryKeys.expenses.recentAll(), userId, limit] as const,
     byPlan: (planId: string) => [...queryKeys.expenses.all, 'by-plan', planId] as const,
     summary: (planId: string) => [...queryKeys.expenses.all, 'summary', planId] as const,
     lastForPlan: (planId: string) => [...queryKeys.expenses.all, 'last', planId] as const,

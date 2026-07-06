@@ -122,13 +122,13 @@
               >
                 <div class="row items-center q-gutter-sm">
                   <div class="column items-end">
-                    <q-item-label class="text-weight-bold text-primary">
+                    <q-item-label class="text-weight-bold text-primary text-amount">
                       {{ formatCurrency(expense.amount, currency) }}
                     </q-item-label>
                     <q-item-label
                       v-if="expense.original_amount && expense.original_currency"
                       caption
-                      class="text-caption text-grey-6"
+                      class="text-caption text-amount"
                     >
                       {{
                         formatCurrency(
@@ -174,13 +174,13 @@
             >
               <div class="row items-center q-gutter-sm">
                 <div class="column items-end">
-                  <q-item-label class="text-weight-bold text-primary">
+                  <q-item-label class="text-weight-bold text-primary text-amount">
                     {{ formatCurrency(expense.amount, currency) }}
                   </q-item-label>
                   <q-item-label
                     v-if="expense.original_amount && expense.original_currency"
                     caption
-                    class="text-caption text-grey-6"
+                    class="text-caption text-amount"
                   >
                     {{
                       formatCurrency(
@@ -209,7 +209,7 @@
 
       <div
         v-else
-        class="text-center text-grey-6 q-py-lg"
+        class="text-center text-muted q-py-lg"
       >
         <q-icon
           name="eva-shopping-cart-outline"

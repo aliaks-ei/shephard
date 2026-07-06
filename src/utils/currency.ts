@@ -35,6 +35,19 @@ export function formatCurrency(
   return `${symbol}${formattedAmount}`
 }
 
+/**
+ * Formats an amount with an explicit sign so negative money is never
+ * communicated by color alone: -12.5 -> "−€12.50", 12.5 -> "€12.50".
+ */
+export function formatCurrencyWithSign(
+  amount: number | null | undefined,
+  currencyCode: CurrencyCode,
+): string {
+  const value = amount ?? 0
+  const formatted = formatCurrency(Math.abs(value), currencyCode)
+  return value < 0 ? `−${formatted}` : formatted
+}
+
 export function formatCurrencyPrivate(currencyCode: CurrencyCode): string {
   return `${getCurrencySymbol(currencyCode)}****`
 }

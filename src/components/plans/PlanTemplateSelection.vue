@@ -10,7 +10,7 @@
       spacing="q-mb-xs"
     />
 
-    <div class="text-body2 text-grey-6 q-mb-md">
+    <div class="text-body2 text-muted q-mb-md">
       Select a template to base your plan on. You can modify the items and amounts after selection.
     </div>
 

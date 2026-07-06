@@ -78,7 +78,9 @@
     >
       <div class="row justify-center">
         <div class="col-12 col-lg-10 col-xl-8">
-          <q-toolbar class="q-mb-lg q-px-none q-pa-md sticky-toolbar detail-toolbar toolbar-border">
+          <q-toolbar
+            class="q-mb-lg q-px-md q-py-sm sticky-toolbar detail-toolbar liquid-glass-surface"
+          >
             <q-btn
               flat
               round
@@ -244,12 +246,7 @@ const hasActions = computed(() => {
 }
 
 .detail-toolbar {
-  background: hsl(var(--card));
   color: hsl(var(--foreground));
-}
-
-.toolbar-border {
-  border-bottom: 1px solid hsl(var(--border));
 }
 
 .detail-title-basis {

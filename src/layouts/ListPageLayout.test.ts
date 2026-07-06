@@ -69,7 +69,7 @@ it('should render description with correct styling', () => {
   expect(descriptionElement.exists()).toBe(true)
   expect(descriptionElement.text()).toBe('Custom description text')
   expect(descriptionElement.classes()).toContain('text-body2')
-  expect(descriptionElement.classes()).toContain('text-grey-6')
+  expect(descriptionElement.classes()).toContain('text-muted')
   expect(descriptionElement.classes()).toContain('q-mb-none')
 })
 

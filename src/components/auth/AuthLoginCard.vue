@@ -19,7 +19,7 @@
       </q-avatar>
 
       <div class="text-h5 text-weight-medium q-mb-xs">Welcome to Shephard</div>
-      <div class="text-body2 text-grey-7">Sign in to your account to continue</div>
+      <div class="text-body2 text-muted">Sign in to your account to continue</div>
     </q-card-section>
 
     <q-card-section>

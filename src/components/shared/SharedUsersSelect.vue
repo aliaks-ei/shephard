@@ -60,19 +60,19 @@
         <q-item-section class="text-center">
           <div v-if="loading">
             <q-spinner-dots />
-            <div class="text-grey-6">Searching...</div>
+            <div class="text-muted">Searching...</div>
           </div>
           <div v-else-if="searchQuery?.trim()">
             <q-icon
               name="eva-search-outline"
               size="2rem"
-              class="text-grey-5 q-mb-sm"
+              class="text-faint q-mb-sm"
             />
-            <div class="text-grey-7">No users found for "{{ searchQuery }}"</div>
-            <div class="text-caption text-grey-5 q-mt-xs">Try a different email address</div>
+            <div class="text-muted">No users found for "{{ searchQuery }}"</div>
+            <div class="text-caption text-faint q-mt-xs">Try a different email address</div>
           </div>
           <div v-else>
-            <div class="text-grey-6">Type an email address to search</div>
+            <div class="text-muted">Type an email address to search</div>
           </div>
         </q-item-section>
       </q-item>

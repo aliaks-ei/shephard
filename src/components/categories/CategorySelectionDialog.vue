@@ -61,9 +61,9 @@
               <q-icon
                 name="eva-grid-outline"
                 size="2rem"
-                class="text-grey-4 q-mb-sm"
+                class="text-faint q-mb-sm"
               />
-              <div class="text-body2 text-grey-6">
+              <div class="text-body2 text-muted">
                 {{
                   searchQuery
                     ? 'No categories match your search'

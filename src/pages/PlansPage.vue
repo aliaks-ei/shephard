@@ -1,58 +1,78 @@
 <template>
-  <ListPageLayout
-    title="Plans"
-    description="Manage your financial plans and track your progress"
-    create-button-label="Create Plan"
-    @create="goToNew"
+  <q-pull-to-refresh
+    :disable="$q.screen.gt.sm"
+    @refresh="onRefresh"
   >
-    <SearchAndSort
-      v-model:search-query="searchQuery"
-      v-model:sort-by="sortBy"
-      search-placeholder="Search plans..."
-      :sort-options="sortOptions"
-    />
-
-    <ListPageSkeleton v-if="areItemsLoading" />
-
-    <PlansGroup
-      v-else-if="hasItems"
-      title="My Plans"
-      :plans="allFilteredAndSortedItems"
-      @edit="viewItem"
-      @export="openExportDialog"
-      @delete="handleDeletePlan"
-      @share="openShareDialog"
-      @cancel="cancelPlan"
-    />
-
-    <EmptyState
-      v-else
-      :has-search-query="!!searchQuery"
-      :search-icon="emptyStateConfig.searchIcon"
-      :empty-icon="emptyStateConfig.emptyIcon"
-      :search-title="emptyStateConfig.searchTitle"
-      :empty-title="emptyStateConfig.emptyTitle"
-      :search-description="emptyStateConfig.searchDescription"
-      :empty-description="emptyStateConfig.emptyDescription"
-      :create-button-label="emptyStateConfig.createLabel"
-      @clear-search="clearSearch"
+    <ListPageLayout
+      title="Plans"
+      description="Manage your financial plans and track your progress"
+      create-button-label="Create Plan"
       @create="goToNew"
-    />
+    >
+      <SearchAndSort
+        v-model:search-query="searchQuery"
+        v-model:sort-by="sortBy"
+        search-placeholder="Search plans..."
+        :sort-options="sortOptions"
+      />
 
-    <!-- Share Plan Dialog -->
-    <SharePlanDialog
-      v-if="sharePlanId"
-      v-model="isShareDialogOpen"
-      :plan-id="sharePlanId"
-      :owner-user-id="sharePlanOwnerId"
-      @shared="isShareDialogOpen = false"
-    />
+      <!-- Mobile: templates live under Plans since the bottom nav slot went to Activity -->
+      <q-btn
+        v-if="$q.screen.lt.md"
+        flat
+        no-caps
+        dense
+        color="primary"
+        icon="eva-file-text-outline"
+        icon-right="eva-chevron-right-outline"
+        label="Browse templates"
+        class="q-mb-sm"
+        to="/templates"
+      />
 
-    <ExportDialog
-      v-model="isExportDialogOpen"
-      @select-format="handlePlanExport"
-    />
-  </ListPageLayout>
+      <ListPageSkeleton v-if="areItemsLoading" />
+
+      <PlansGroup
+        v-else-if="hasItems"
+        title="My Plans"
+        :plans="allFilteredAndSortedItems"
+        @edit="viewItem"
+        @export="openExportDialog"
+        @delete="handleDeletePlan"
+        @share="openShareDialog"
+        @cancel="cancelPlan"
+      />
+
+      <EmptyState
+        v-else
+        illustration="plan"
+        :has-search-query="!!searchQuery"
+        :search-icon="emptyStateConfig.searchIcon"
+        :empty-icon="emptyStateConfig.emptyIcon"
+        :search-title="emptyStateConfig.searchTitle"
+        :empty-title="emptyStateConfig.emptyTitle"
+        :search-description="emptyStateConfig.searchDescription"
+        :empty-description="emptyStateConfig.emptyDescription"
+        :create-button-label="emptyStateConfig.createLabel"
+        @clear-search="clearSearch"
+        @create="goToNew"
+      />
+
+      <!-- Share Plan Dialog -->
+      <SharePlanDialog
+        v-if="sharePlanId"
+        v-model="isShareDialogOpen"
+        :plan-id="sharePlanId"
+        :owner-user-id="sharePlanOwnerId"
+        @shared="isShareDialogOpen = false"
+      />
+
+      <ExportDialog
+        v-model="isExportDialogOpen"
+        @select-format="handlePlanExport"
+      />
+    </ListPageLayout>
+  </q-pull-to-refresh>
 </template>
 
 <script setup lang="ts">
@@ -69,6 +89,8 @@ import PlansGroup from 'src/components/plans/PlansGroup.vue'
 import SharePlanDialog from 'src/components/plans/SharePlanDialog.vue'
 import ExportDialog from 'src/components/shared/ExportDialog.vue'
 import { usePlans } from 'src/composables/usePlans'
+import { useQueryClient } from '@tanstack/vue-query'
+import { queryKeys } from 'src/queries/query-keys'
 import { useCategoriesQuery } from 'src/queries/categories'
 import { useUserStore } from 'src/stores/user'
 import { useBanner } from 'src/composables/useBanner'
@@ -99,6 +121,15 @@ const {
 const { categories } = useCategoriesQuery()
 const userStore = useUserStore()
 const { showError, showSuccess } = useBanner()
+const queryClient = useQueryClient()
+
+async function onRefresh(done: () => void) {
+  try {
+    await queryClient.invalidateQueries({ queryKey: queryKeys.plans.all })
+  } finally {
+    done()
+  }
+}
 
 const isShareDialogOpen = ref(false)
 const isExportDialogOpen = ref(false)

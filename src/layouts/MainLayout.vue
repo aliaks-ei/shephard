@@ -151,6 +151,7 @@ import NotificationInboxHeaderActions from 'src/components/notifications/Notific
 import AppDialogShell from 'src/components/shared/AppDialogShell.vue'
 import { useUserStore } from 'src/stores/user'
 import { usePwaInstall } from 'src/composables/usePwaInstall'
+import { useInstallPromptGate } from 'src/composables/useInstallPromptGate'
 import { useNotifications } from 'src/composables/useNotifications'
 
 useMeta({
@@ -161,6 +162,7 @@ const userStore = useUserStore()
 const route = useRoute()
 const $q = useQuasar()
 const { isInstallable, promptInstall, dismissInstall } = usePwaInstall()
+const { hasSavedExpense } = useInstallPromptGate()
 const ExpenseRegistrationDialog = defineAsyncComponent(
   () => import('src/components/expenses/ExpenseRegistrationDialog.vue'),
 )
@@ -217,8 +219,11 @@ async function handleOpenNotification(notification: (typeof notifications.value)
   showNotificationsDialog.value = false
 }
 
-watch(isInstallable, (installable) => {
-  if (installable) {
+// Promote install only after the user has experienced value (first saved expense)
+const shouldPromptInstall = computed(() => isInstallable.value && hasSavedExpense.value)
+
+watch(shouldPromptInstall, (promptable) => {
+  if (promptable) {
     showPwaInstallNotification()
   }
 })
@@ -260,6 +265,11 @@ const navigationItems = [
     to: '/plans',
   },
   {
+    icon: 'eva-activity-outline',
+    label: 'Activity',
+    to: '/expenses',
+  },
+  {
     icon: 'eva-file-text-outline',
     label: 'Templates',
     to: '/templates',
@@ -282,9 +292,21 @@ const showMobileBottomNav = computed(() => {
 }
 
 :deep(.notifications-menu-panel) {
-  border: 1px solid hsl(var(--border));
+  border: 1px solid hsl(var(--glass-border-outer));
   border-radius: var(--radius-xl);
-  background: hsl(var(--card));
-  box-shadow: var(--shadow-lg);
+  background: hsl(var(--glass-bg-fallback));
+  box-shadow: var(--glass-shadow);
+
+  @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+    background: hsl(var(--glass-bg));
+    -webkit-backdrop-filter: saturate(var(--glass-saturation)) blur(var(--glass-blur));
+    backdrop-filter: saturate(var(--glass-saturation)) blur(var(--glass-blur));
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    background: hsl(var(--card));
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
 }
 </style>

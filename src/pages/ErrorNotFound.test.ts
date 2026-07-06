@@ -2,6 +2,7 @@ import { mount } from '@vue/test-utils'
 import { it, expect } from 'vitest'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 import ErrorNotFound from './ErrorNotFound.vue'
+import BrandIllustration from 'src/components/shared/BrandIllustration.vue'
 
 installQuasarPlugin()
 
@@ -28,12 +29,13 @@ it('should display 404 error code', () => {
 
 it('should display page not found title', () => {
   const wrapper = createWrapper()
-  expect(wrapper.text()).toContain('Page Not Found')
+  expect(wrapper.text()).toContain('This page wandered off')
 })
 
 it('should display helpful message', () => {
   const wrapper = createWrapper()
   expect(wrapper.text()).toContain("The page you're looking for doesn't exist or has been moved")
+  expect(wrapper.text()).toContain("Let's get you back to the flock:")
 })
 
 it('should render go to home button with correct attributes', () => {
@@ -66,11 +68,12 @@ it('should have fullscreen layout with proper classes', () => {
   expect(wrapper.find('.fullscreen.column.flex-center.q-pa-xl').exists()).toBe(true)
 })
 
-it('should display error icon', () => {
+it('should display brand illustration', () => {
   const wrapper = createWrapper()
-  const icon = wrapper.findComponent({ name: 'QIcon' })
-  expect(icon.exists()).toBe(true)
-  expect(icon.attributes('name')).toBe('eva-alert-triangle-outline')
+  const illustration = wrapper.findComponent(BrandIllustration)
+  expect(illustration.exists()).toBe(true)
+  expect(illustration.props('name')).toBe('sheep')
+  expect(wrapper.find('svg.brand-illustration').exists()).toBe(true)
 })
 
 it('should render all three navigation buttons', () => {

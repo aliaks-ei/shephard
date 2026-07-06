@@ -3,7 +3,7 @@
     <q-inner-loading
       :showing="isLoading"
       label="Verifying your login..."
-      label-class="text-body2 text-grey-7"
+      label-class="text-body2 text-muted"
     />
 
     <div
@@ -37,7 +37,7 @@
         color="positive"
       />
       <p class="text-subtitle1 q-mt-md text-positive">Successfully authenticated!</p>
-      <p class="text-body2 text-grey-7">Redirecting you...</p>
+      <p class="text-body2 text-muted">Redirecting you...</p>
     </div>
   </AuthLoginCard>
 </template>

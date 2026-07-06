@@ -50,7 +50,7 @@ const computedBanners = computed(() => {
   if (!props.isEditMode) {
     bannersList.push({
       type: 'readonly',
-      class: 'bg-orange-1 text-orange-8',
+      class: 'bg-warning-soft text-warning-strong',
       icon: 'eva-eye-outline',
       message: 'Read-only access. Contact the owner to edit.',
     })

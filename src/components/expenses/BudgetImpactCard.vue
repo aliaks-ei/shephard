@@ -10,7 +10,7 @@
       <!-- Empty State: No category selected -->
       <div
         v-if="!categoryId"
-        class="text-center q-py-md text-grey-6 text-body2"
+        class="text-center q-py-md text-muted text-body2"
       >
         <q-icon
           name="eva-info-outline"
@@ -34,7 +34,7 @@
           <span>{{ Math.round(currentBudgetPercentage) }}% used</span>
           <span
             v-if="currency && categoryOption"
-            class="text-weight-medium"
+            class="text-weight-medium text-amount"
           >
             {{ formatCurrency(categoryOption.actualAmount, currency) }}
             /
@@ -46,19 +46,19 @@
 
         <div class="column">
           <div class="row justify-between text-caption">
-            <span class="text-grey-7">Remaining:</span>
+            <span class="text-muted">Remaining:</span>
             <span
               v-if="categoryOption"
               :class="currentBudgetRemainingColorClass"
-              class="text-weight-bold"
+              class="text-weight-bold text-amount"
             >
-              {{ formatCurrency(Math.abs(categoryOption.remainingAmount), currency ?? 'USD') }}
+              {{ formatCurrencyWithSign(categoryOption.remainingAmount, currency ?? 'USD') }}
               {{ categoryOption.remainingAmount >= 0 ? 'left' : 'over' }}
             </span>
           </div>
         </div>
 
-        <div class="text-center q-mt-md text-grey-6 text-caption">
+        <div class="text-center q-mt-md text-caption">
           Enter an amount to see the impact on this budget
         </div>
       </div>
@@ -77,7 +77,7 @@
           <span>{{ Math.round(budgetPercentageAfter) }}% used</span>
           <span
             v-if="currency"
-            class="text-weight-medium"
+            class="text-weight-medium text-amount"
           >
             {{ formatCurrency(newSpentAmount, currency) }}
             /
@@ -89,8 +89,8 @@
 
         <div class="column">
           <div class="row justify-between text-caption">
-            <span class="text-grey-7">Current:</span>
-            <span>
+            <span class="text-muted">Current:</span>
+            <span class="text-amount">
               {{ formatCurrency(categoryOption.actualAmount, currency ?? 'USD') }}
               /
               {{ formatCurrency(categoryOption.plannedAmount, currency ?? 'USD') }}
@@ -98,22 +98,22 @@
           </div>
 
           <div class="row justify-between text-caption">
-            <span class="text-grey-7">Adding:</span>
-            <span class="text-weight-medium">
+            <span class="text-muted">Adding:</span>
+            <span class="text-weight-medium text-amount">
               +{{ formatCurrency(amount, currency ?? 'USD') }}
             </span>
           </div>
 
           <div class="row justify-between text-caption">
-            <span class="text-grey-7">After:</span>
+            <span class="text-muted">After:</span>
             <span
               :class="budgetStatusTextClass"
-              class="text-weight-bold"
+              class="text-weight-bold text-amount"
             >
               {{ formatCurrency(newSpentAmount, currency ?? 'USD') }}
               /
               {{ formatCurrency(categoryOption.plannedAmount, currency ?? 'USD') }}
-              ({{ formatCurrency(Math.abs(newRemainingAmount), currency ?? 'USD') }}
+              ({{ formatCurrencyWithSign(newRemainingAmount, currency ?? 'USD') }}
               {{ newRemainingAmount >= 0 ? 'left' : 'over' }})
               <q-icon
                 :name="budgetStatusIcon"
@@ -130,7 +130,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
+import { formatCurrency, formatCurrencyWithSign, type CurrencyCode } from 'src/utils/currency'
 import { getBudgetProgressColor, getBudgetRemainingColorClass } from 'src/utils/budget'
 
 interface CategoryOption {
@@ -202,8 +202,8 @@ const budgetImpactCardClass = computed(() => {
     props.amount && props.amount > 0 ? budgetPercentageAfter.value : currentBudgetPercentage.value
 
   if (percentage < 90) return ''
-  if (percentage < 100) return 'bg-orange-1'
+  if (percentage < 100) return 'bg-warning-soft'
   if (percentage === 100) return ''
-  return 'bg-red-1'
+  return 'bg-destructive-soft'
 })
 </script>

@@ -1,20 +1,19 @@
 <template>
   <div class="fullscreen column flex-center q-pa-xl">
     <div class="error-not-found__content column items-center text-center">
-      <q-icon
-        name="eva-alert-triangle-outline"
-        size="80px"
-        color="primary"
+      <BrandIllustration
+        name="sheep"
+        :width="220"
         class="q-mb-lg"
       />
 
       <div class="text-h1 text-weight-bold text-primary q-mb-md">404</div>
 
-      <div class="text-h5 q-mb-lg text-primary">Page Not Found</div>
+      <div class="text-h5 q-mb-lg text-primary">This page wandered off</div>
 
       <div class="text-body1 q-mb-xl">
         The page you're looking for doesn't exist or has been moved. <br />
-        Let's get you back on track with these helpful options:
+        Let's get you back to the flock:
       </div>
 
       <div class="row q-gutter-md">
@@ -57,6 +56,10 @@
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import BrandIllustration from 'src/components/shared/BrandIllustration.vue'
+</script>
 
 <style lang="scss" scoped>
 .error-not-found__content {

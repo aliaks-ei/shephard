@@ -64,7 +64,7 @@ it('renders all navigation buttons', () => {
   expect(buttons.length).toBeGreaterThanOrEqual(5)
   expect(buttons.some((btn) => btn.text().includes('Home'))).toBe(true)
   expect(buttons.some((btn) => btn.text().includes('Plans'))).toBe(true)
-  expect(buttons.some((btn) => btn.text().includes('Templates'))).toBe(true)
+  expect(buttons.some((btn) => btn.text().includes('Activity'))).toBe(true)
   expect(buttons.some((btn) => btn.text().includes('Settings'))).toBe(true)
 })
 
@@ -84,12 +84,12 @@ it('highlights plans button when on plans route', () => {
   expect(plansButton?.attributes('data-color')).toBe('primary')
 })
 
-it('highlights templates button when on templates route', () => {
-  mockRoute.fullPath = '/templates'
+it('highlights activity button when on expenses route', () => {
+  mockRoute.fullPath = '/expenses'
   const wrapper = createWrapper()
 
-  const templatesButton = wrapper.findAll('.q-btn').find((btn) => btn.text().includes('Templates'))
-  expect(templatesButton?.attributes('data-color')).toBe('primary')
+  const activityButton = wrapper.findAll('.q-btn').find((btn) => btn.text().includes('Activity'))
+  expect(activityButton?.attributes('data-color')).toBe('primary')
 })
 
 it('does not highlight home button when on subroute', () => {
@@ -119,12 +119,12 @@ it('sets correct to attributes for navigation buttons', () => {
 
   const homeButton = buttons.find((btn) => btn.text().includes('Home'))
   const plansButton = buttons.find((btn) => btn.text().includes('Plans'))
-  const templatesButton = buttons.find((btn) => btn.text().includes('Templates'))
+  const activityButton = buttons.find((btn) => btn.text().includes('Activity'))
   const settingsButton = buttons.find((btn) => btn.text().includes('Settings'))
 
   expect(homeButton?.attributes('data-to')).toBe('/')
   expect(plansButton?.attributes('data-to')).toBe('/plans')
-  expect(templatesButton?.attributes('data-to')).toBe('/templates')
+  expect(activityButton?.attributes('data-to')).toBe('/expenses')
   expect(settingsButton?.attributes('data-to')).toBe('/settings')
 })
 

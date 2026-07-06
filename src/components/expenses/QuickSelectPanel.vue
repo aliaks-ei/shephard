@@ -53,7 +53,7 @@
             class="q-mb-md"
           >
             <q-card-section class="q-pa-sm">
-              <div class="text-body2 text-grey-7 q-mb-xs">Selected Plan</div>
+              <div class="text-body2 text-muted q-mb-xs">Selected Plan</div>
               <div class="text-subtitle1 text-weight-medium">
                 {{ selectedPlan?.name }}
               </div>
@@ -67,7 +67,7 @@
             class="q-mb-md"
           >
             <q-card-section class="q-pa-sm">
-              <div class="text-body2 text-grey-7 q-mb-xs">
+              <div class="text-body2 text-muted q-mb-xs">
                 Selected Items ({{ selectedPlanItems.length }})
               </div>
               <q-list dense>

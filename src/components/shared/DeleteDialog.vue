@@ -12,7 +12,7 @@
   >
     <q-banner
       rounded
-      class="bg-red-1 text-red-8 q-mb-md"
+      class="bg-destructive-soft text-destructive-strong q-mb-md"
     >
       <template #avatar>
         <q-icon

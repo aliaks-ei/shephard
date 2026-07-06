@@ -8,6 +8,10 @@ export type ExpenseWithCategory = Expense & {
   categories: Tables<'categories'>
 }
 
+export type ExpenseWithCategoryAndPlan = ExpenseWithCategory & {
+  plans: Pick<Tables<'plans'>, 'id' | 'name' | 'currency'> | null
+}
+
 export type PlanExpenseSummary = {
   category_id: string
   planned_amount: number
@@ -31,6 +35,22 @@ export async function getExpensesByPlan(planId: string): Promise<ExpenseWithCate
     .eq('plan_id', planId)
     .order('expense_date', { ascending: false })
     .order('created_at', { ascending: false })
+
+  if (error) throw error
+  return data || []
+}
+
+export async function getRecentExpensesForUser(
+  userId: string,
+  limit = 100,
+): Promise<ExpenseWithCategoryAndPlan[]> {
+  const { data, error } = await expenseService.supabase
+    .from('expenses')
+    .select('*, categories(*), plans(id, name, currency)')
+    .eq('user_id', userId)
+    .order('expense_date', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(limit)
 
   if (error) throw error
   return data || []

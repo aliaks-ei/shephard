@@ -52,13 +52,13 @@
         />
       </div>
 
-      <!-- Templates -->
+      <!-- Activity -->
       <div class="mobile-nav-col min-w-0">
         <q-btn
-          icon="eva-file-text-outline"
-          label="Templates"
-          to="/templates"
-          :color="isActive('/templates') ? 'primary' : undefined"
+          icon="eva-activity-outline"
+          label="Activity"
+          to="/expenses"
+          :color="isActive('/expenses') ? 'primary' : undefined"
           :ripple="false"
           size="sm"
           flat
@@ -99,7 +99,7 @@ const { isActive } = useRouteActive()
 
 const activeSlot = computed(() => {
   if (isActive('/settings')) return 4
-  if (isActive('/templates')) return 3
+  if (isActive('/expenses')) return 3
   if (isActive('/plans')) return 1
   return 0
 })

@@ -2,10 +2,24 @@ import { mount } from '@vue/test-utils'
 import { it, expect, vi, beforeEach } from 'vitest'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 import { ref, computed } from 'vue'
+import { Screen } from 'quasar'
 import PlansPage from './PlansPage.vue'
 import { usePlans } from 'src/composables/usePlans'
+import { queryKeys } from 'src/queries/query-keys'
 import type { PlanWithPermission } from 'src/api'
 import { getExpensesByPlan, getPlanExpenseSummary, getPlanWithItems } from 'src/api'
+
+const mockInvalidateQueries = vi.fn().mockResolvedValue(undefined)
+
+vi.mock('@tanstack/vue-query', async () => {
+  const actual = await vi.importActual('@tanstack/vue-query')
+  return {
+    ...actual,
+    useQueryClient: vi.fn(() => ({
+      invalidateQueries: mockInvalidateQueries,
+    })),
+  }
+})
 
 vi.mock('src/api', async () => {
   const actual = await vi.importActual('src/api')
@@ -146,6 +160,7 @@ const EmptyStateStub = {
     </div>
   `,
   props: [
+    'illustration',
     'hasSearchQuery',
     'searchIcon',
     'emptyIcon',
@@ -321,8 +336,21 @@ function createWrapper(
   }
 }
 
+function setScreenWidth(width: number) {
+  Object.defineProperty(window, 'innerWidth', {
+    configurable: true,
+    writable: true,
+    value: width,
+  })
+
+  window.dispatchEvent(new Event('resize'))
+}
+
 beforeEach(() => {
+  Screen.setDebounce(0)
+  setScreenWidth(1280)
   vi.clearAllMocks()
+  mockInvalidateQueries.mockResolvedValue(undefined)
 })
 
 it('should mount component properly', () => {
@@ -425,6 +453,7 @@ it('should show empty state when no plans and not loading', () => {
 
   const emptyState = wrapper.findComponent(EmptyStateStub)
   expect(emptyState.exists()).toBe(true)
+  expect(emptyState.props('illustration')).toBe('plan')
   expect(emptyState.props('hasSearchQuery')).toBe(false)
   expect(emptyState.props('emptyTitle')).toBe('No plans yet')
   expect(emptyState.props('emptyDescription')).toBe(
@@ -675,4 +704,35 @@ it('should close share dialog when model value changes', async () => {
 
   shareDialog = wrapper.findComponent(SharePlanDialogStub)
   expect(shareDialog.attributes('data-model-value')).toBe('false')
+})
+
+it('should show browse templates link on mobile only', async () => {
+  setScreenWidth(600)
+  const { wrapper: mobileWrapper } = createWrapper()
+  await mobileWrapper.vm.$nextTick()
+
+  const mobileBrowseButton = mobileWrapper.find('[data-label="Browse templates"]')
+  expect(mobileBrowseButton.exists()).toBe(true)
+  expect(mobileBrowseButton.attributes('to')).toBe('/templates')
+
+  setScreenWidth(1280)
+  const { wrapper: desktopWrapper } = createWrapper()
+  await desktopWrapper.vm.$nextTick()
+
+  expect(desktopWrapper.find('[data-label="Browse templates"]').exists()).toBe(false)
+})
+
+it('should invalidate plans queries on pull-to-refresh', async () => {
+  const { wrapper } = createWrapper()
+
+  const pullToRefresh = wrapper.findComponent({ name: 'QPullToRefresh' })
+  expect(pullToRefresh.exists()).toBe(true)
+
+  const done = vi.fn()
+  pullToRefresh.vm.$emit('refresh', done)
+  await vi.waitFor(() => {
+    expect(done).toHaveBeenCalledOnce()
+  })
+
+  expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: queryKeys.plans.all })
 })

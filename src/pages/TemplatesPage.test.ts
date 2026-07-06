@@ -4,6 +4,7 @@ import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-v
 import { ref, computed } from 'vue'
 import TemplatesPage from './TemplatesPage.vue'
 import { useTemplates } from 'src/composables/useTemplates'
+import { queryKeys } from 'src/queries/query-keys'
 import type { TemplateWithPermission } from 'src/api'
 import { setupTestingPinia } from 'test/helpers/pinia-mocks'
 import { createMockTemplates } from 'test/fixtures'
@@ -14,6 +15,18 @@ vi.mock('src/api', async () => {
   return {
     ...actual,
     getTemplateWithItems: vi.fn(),
+  }
+})
+
+const mockInvalidateQueries = vi.fn().mockResolvedValue(undefined)
+
+vi.mock('@tanstack/vue-query', async () => {
+  const actual = await vi.importActual('@tanstack/vue-query')
+  return {
+    ...actual,
+    useQueryClient: vi.fn(() => ({
+      invalidateQueries: mockInvalidateQueries,
+    })),
   }
 })
 
@@ -145,6 +158,7 @@ const EmptyStateStub = {
     </div>
   `,
   props: [
+    'illustration',
     'hasSearchQuery',
     'searchIcon',
     'emptyIcon',
@@ -283,6 +297,7 @@ function createWrapper(
 
 beforeEach(() => {
   vi.clearAllMocks()
+  mockInvalidateQueries.mockResolvedValue(undefined)
 })
 
 it('should mount component properly', () => {
@@ -386,6 +401,7 @@ it('should show empty state when no templates and not loading', () => {
 
   const emptyState = wrapper.findComponent(EmptyStateStub)
   expect(emptyState.exists()).toBe(true)
+  expect(emptyState.props('illustration')).toBe('template')
   expect(emptyState.props('hasSearchQuery')).toBe(false)
   expect(emptyState.props('emptyTitle')).toBe('No templates yet')
   expect(emptyState.props('emptyDescription')).toBe(
@@ -608,4 +624,19 @@ it('should close share dialog when model value changes', async () => {
 
   shareDialog = wrapper.findComponent(ShareTemplateDialogStub)
   expect(shareDialog.attributes('data-model-value')).toBe('false')
+})
+
+it('should invalidate templates queries on pull-to-refresh', async () => {
+  const { wrapper } = createWrapper()
+
+  const pullToRefresh = wrapper.findComponent({ name: 'QPullToRefresh' })
+  expect(pullToRefresh.exists()).toBe(true)
+
+  const done = vi.fn()
+  pullToRefresh.vm.$emit('refresh', done)
+  await vi.waitFor(() => {
+    expect(done).toHaveBeenCalledOnce()
+  })
+
+  expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: queryKeys.templates.all })
 })

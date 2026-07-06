@@ -4,6 +4,7 @@ import {
   getExpensesByPlan,
   getPlanExpenseSummary,
   getLastExpenseForPlan,
+  getRecentExpensesForUser,
   createExpense,
   createExpenses,
   deleteExpense,
@@ -11,11 +12,13 @@ import {
   getExpensesByDateRange,
   getExpensesByCategory,
   type ExpenseWithCategory,
+  type ExpenseWithCategoryAndPlan,
   type ExpenseInsert,
   type PlanExpenseSummary,
 } from 'src/api'
 import { updatePlanItemCompletion } from 'src/api/plans'
 import { useUserStore } from 'src/stores/user'
+import { useInstallPromptGate } from 'src/composables/useInstallPromptGate'
 import { queryKeys } from './query-keys'
 import {
   createSpecificErrorHandler,
@@ -82,6 +85,24 @@ export function useExpensesByPlanQuery(planId: MaybeRefOrGetter<string | null>) 
   }
 }
 
+export function useRecentExpensesQuery(userId: MaybeRefOrGetter<string | undefined>, limit = 100) {
+  const query = useQuery({
+    queryKey: computed(() => queryKeys.expenses.recent(toValue(userId) ?? '', limit)),
+    queryFn: () => getRecentExpensesForUser(toValue(userId)!, limit),
+    enabled: computed(() => !!toValue(userId)),
+    staleTime: EXPENSES_STALE_TIME_MS,
+    gcTime: EXPENSES_CACHE_TIME_MS,
+    meta: { errorKey: 'EXPENSES.LOAD_FAILED' as const },
+  })
+
+  const expenses = computed((): ExpenseWithCategoryAndPlan[] => query.data.value ?? [])
+
+  return {
+    ...query,
+    expenses,
+  }
+}
+
 export function useExpenseSummaryQuery(planId: MaybeRefOrGetter<string | null>) {
   const query = useQuery({
     queryKey: computed(() => queryKeys.expenses.summary(toValue(planId) ?? '')),
@@ -125,11 +146,15 @@ function invalidateExpenseQueries(queryClient: ReturnType<typeof useQueryClient>
   queryClient.invalidateQueries({
     queryKey: queryKeys.plans.items(planId),
   })
+  queryClient.invalidateQueries({
+    queryKey: queryKeys.expenses.recentAll(),
+  })
 }
 
 export function useCreateExpenseMutation() {
   const queryClient = useQueryClient()
   const userStore = useUserStore()
+  const { markExpenseSaved } = useInstallPromptGate()
 
   return useMutation({
     mutationFn: (expense: ExpenseInput) => {
@@ -138,6 +163,7 @@ export function useCreateExpenseMutation() {
       return createExpense({ ...expense, user_id: userId })
     },
     onSuccess: (_data, vars) => {
+      markExpenseSaved()
       if (vars.plan_id) {
         invalidateExpenseQueries(queryClient, vars.plan_id)
       }
@@ -149,6 +175,7 @@ export function useCreateExpenseMutation() {
 export function useCreateExpensesBatchMutation() {
   const queryClient = useQueryClient()
   const userStore = useUserStore()
+  const { markExpenseSaved } = useInstallPromptGate()
 
   return useMutation({
     mutationFn: (expenses: ExpenseInput[]) => {
@@ -165,6 +192,7 @@ export function useCreateExpensesBatchMutation() {
       )
     },
     onSuccess: (_data, vars) => {
+      markExpenseSaved()
       const planIds = Array.from(
         new Set(
           vars

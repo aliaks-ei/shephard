@@ -4,7 +4,7 @@
       <div class="row items-center justify-between q-mb-md">
         <div>
           <h6 class="text-h6 q-my-none">{{ plan?.name }}</h6>
-          <div class="text-caption text-grey-6">
+          <div class="text-caption">
             {{ formatDateRange(plan?.start_date || '', plan?.end_date || '') }}
           </div>
         </div>
@@ -26,30 +26,35 @@
         :class="$q.screen.lt.md ? 'q-col-gutter-xs' : 'q-col-gutter-md'"
       >
         <div class="col">
-          <div class="text-caption text-grey-6">Planned Budget</div>
+          <div class="text-caption">Planned Budget</div>
           <div
-            class="text-weight-bold"
+            class="text-weight-bold text-amount"
             :class="$q.screen.lt.md ? 'text-subtitle2' : 'text-h6'"
           >
             {{ formatCurrency(totalBudget, currency) }}
           </div>
         </div>
         <div class="col">
-          <div class="text-caption text-grey-6">Total Spent</div>
+          <div class="text-caption">Total Spent</div>
           <div
-            class="text-weight-bold text-info"
+            class="text-weight-bold text-info text-amount"
             :class="$q.screen.lt.md ? 'text-subtitle2' : 'text-h6'"
           >
             {{ formatCurrency(totalSpent, currency) }}
           </div>
         </div>
         <div class="col">
-          <div class="text-caption text-grey-6">{{ remaining >= 0 ? 'Still to pay' : 'Over' }}</div>
+          <div class="text-caption">{{ remaining >= 0 ? 'Still to pay' : 'Over' }}</div>
           <div
-            class="text-weight-bold"
+            class="text-weight-bold text-amount"
             :class="[remainingColorClass, $q.screen.lt.md ? 'text-subtitle2' : 'text-h6']"
           >
-            {{ formatCurrency(Math.abs(remaining), currency) }}
+            <q-icon
+              v-if="remaining < 0"
+              name="eva-alert-triangle-outline"
+              size="14px"
+            />
+            {{ formatCurrencyWithSign(remaining, currency) }}
           </div>
         </div>
       </div>
@@ -61,16 +66,14 @@
         class="q-mt-sm"
       />
 
-      <div class="text-caption text-grey-6 q-mt-xs">
-        {{ Math.round(progressPercentage) }}% of budget spent
-      </div>
+      <div class="text-caption q-mt-xs">{{ Math.round(progressPercentage) }}% of budget spent</div>
     </q-card-section>
   </q-card>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
+import { formatCurrency, formatCurrencyWithSign, type CurrencyCode } from 'src/utils/currency'
 import { getStatusText, getStatusColor, getStatusIcon, formatDateRange } from 'src/utils/plans'
 import { getBudgetProgressColor, getBudgetRemainingColorClass } from 'src/utils/budget'
 import type { PlanWithItems } from 'src/api'

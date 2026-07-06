@@ -32,8 +32,8 @@
 
         <q-item-section side>
           <div class="text-right">
-            <div class="text-weight-bold text-primary">{{ formattedSubtotal }}</div>
-            <div class="text-caption text-grey-6">subtotal</div>
+            <div class="text-weight-bold text-primary text-amount">{{ formattedSubtotal }}</div>
+            <div class="text-caption">subtotal</div>
           </div>
         </q-item-section>
       </template>
