@@ -12,8 +12,12 @@ import {
 import {
   buildCategorizationInstructions,
   buildCategoryContexts,
+  extractCategorizationContext,
   findExactCategoryMatch,
+  findMemoryCategoryMatch,
+  type CategorizeMemory,
   type CategorizePlanItem,
+  type CategorizationContext,
 } from './helpers.ts'
 import { buildCorsHeaders } from '../_shared/notification-utils.ts'
 
@@ -21,8 +25,9 @@ const openai = new OpenAI({
   apiKey: Deno.env.get('OPENAI_API_KEY'),
 })
 
-const OPENAI_TIMEOUT_MS = 12000
+const OPENAI_TIMEOUT_MS = 2500
 const MAX_EXPENSE_NAME_LENGTH = 128
+const MAX_MEMORY_EXPENSES = 120
 
 const clampUnitInterval = (value: number): number => Math.min(1, Math.max(0, value))
 
@@ -32,9 +37,15 @@ const categorySuggestionSchema = z.object({
   reasoning: z.string().trim().min(1).max(200),
 })
 
-interface CategorizeRequest {
+type CategorizeRequest = {
+  deviceContext?: unknown
   expenseName: string
   planId?: string
+}
+
+type ExpenseMemoryRow = {
+  name: unknown
+  category_id: unknown
 }
 
 Deno.serve(async (req) => {
@@ -88,7 +99,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    const { expenseName, planId } = requestBody as CategorizeRequest
+    const { deviceContext, expenseName, planId } = requestBody as CategorizeRequest
 
     if (typeof expenseName !== 'string') {
       return new Response(JSON.stringify({ error: 'Expense name is required' }), {
@@ -119,15 +130,33 @@ Deno.serve(async (req) => {
 
     let categories: Category[] | undefined
     let planItemsForCategorization: CategorizePlanItem[] = []
-    let categoriesError
+    let categoriesError: unknown
+    let categorizationContext: CategorizationContext | null = null
+    let categorizationMemories: CategorizeMemory[] = []
+
+    const expenseMemoryPromise = supabaseClient
+      .from('expenses')
+      .select('name, category_id, categories(id, name)')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(MAX_MEMORY_EXPENSES)
 
     if (planId) {
-      const { data: planItems, error: itemsError } = await supabaseClient
-        .from('plan_items')
-        .select('name, category_id, categories(id, name)')
-        .eq('plan_id', planId)
+      const [
+        { data: planItems, error: itemsError },
+        { data: expenseMemoryRows, error: expenseMemoryError },
+      ] = await Promise.all([
+        supabaseClient
+          .from('plan_items')
+          .select('name, category_id, categories(id, name)')
+          .eq('plan_id', planId),
+        expenseMemoryPromise,
+      ])
 
       categoriesError = itemsError
+      if (expenseMemoryError) {
+        console.error('Failed to fetch categorization memories:', expenseMemoryError)
+      }
 
       if (planItems) {
         const categoryMap = new Map<string, Category>()
@@ -148,14 +177,38 @@ Deno.serve(async (req) => {
         })
         categories = sortCategoriesDeterministically(Array.from(categoryMap.values()))
       }
+
+      categorizationContext = extractCategorizationContext(deviceContext)
+      categorizationMemories = (expenseMemoryRows ?? [])
+        .map((memory): CategorizeMemory | null => {
+          const row = memory as ExpenseMemoryRow
+          return typeof row.name === 'string' && typeof row.category_id === 'string'
+            ? { categoryId: row.category_id, name: row.name }
+            : null
+        })
+        .filter((memory): memory is CategorizeMemory => memory !== null)
     } else {
-      const { data, error } = await supabaseClient
-        .from('categories')
-        .select('id, name')
-        .order('name')
+      const [{ data, error }, { data: expenseMemoryRows, error: expenseMemoryError }] =
+        await Promise.all([
+          supabaseClient.from('categories').select('id, name').order('name'),
+          expenseMemoryPromise,
+        ])
 
       categories = sortCategoriesDeterministically((data ?? []).filter(isCategory))
       categoriesError = error
+      if (expenseMemoryError) {
+        console.error('Failed to fetch categorization memories:', expenseMemoryError)
+      }
+
+      categorizationContext = extractCategorizationContext(deviceContext)
+      categorizationMemories = (expenseMemoryRows ?? [])
+        .map((memory): CategorizeMemory | null => {
+          const row = memory as ExpenseMemoryRow
+          return typeof row.name === 'string' && typeof row.category_id === 'string'
+            ? { categoryId: row.category_id, name: row.name }
+            : null
+        })
+        .filter((memory): memory is CategorizeMemory => memory !== null)
     }
 
     if (categoriesError) {
@@ -177,7 +230,11 @@ Deno.serve(async (req) => {
       )
     }
 
-    const categoryContexts = buildCategoryContexts(categories, planItemsForCategorization)
+    const categoryContexts = buildCategoryContexts(
+      categories,
+      planItemsForCategorization,
+      categorizationMemories,
+    )
     const exactMatch = findExactCategoryMatch(trimmedExpenseName, categoryContexts)
 
     if (exactMatch) {
@@ -195,7 +252,24 @@ Deno.serve(async (req) => {
       )
     }
 
-    const instructions = buildCategorizationInstructions(categoryContexts)
+    const memoryMatch = findMemoryCategoryMatch(trimmedExpenseName, categoryContexts)
+
+    if (memoryMatch) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: {
+            categoryId: memoryMatch.id,
+            categoryName: memoryMatch.name,
+            confidence: 0.96,
+            reasoning: 'Matched the expense name to a previous user choice.',
+          },
+        }),
+        { headers: corsHeaders },
+      )
+    }
+
+    const instructions = buildCategorizationInstructions(categoryContexts, categorizationContext)
 
     const categorySuggestionJsonSchema = {
       type: 'object',
@@ -221,6 +295,7 @@ Deno.serve(async (req) => {
     }
 
     const response = await createResponseWithRetry({
+      maxAttempts: 1,
       timeoutMs: OPENAI_TIMEOUT_MS,
       operation: () =>
         openai.responses.create({
