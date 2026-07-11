@@ -16,12 +16,31 @@ export type PhotoAnalysisResult = {
   reasoning: string
 }
 
+export type CategorizationDeviceContext = {
+  locale?: string
+  timeZone?: string
+}
+
+function getCategorizationDeviceContext(): CategorizationDeviceContext {
+  const locale = typeof navigator !== 'undefined' ? navigator.language : undefined
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
+
+  return {
+    ...(locale ? { locale } : {}),
+    ...(timeZone ? { timeZone } : {}),
+  }
+}
+
 export async function suggestExpenseCategory(
   expenseName: string,
   planId?: string,
 ): Promise<CategorySuggestion> {
   const { data, error } = await supabase.functions.invoke('categorize-expense', {
-    body: { expenseName, planId },
+    body: {
+      expenseName,
+      planId,
+      deviceContext: getCategorizationDeviceContext(),
+    },
   })
 
   if (error) {

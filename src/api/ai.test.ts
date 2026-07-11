@@ -38,7 +38,11 @@ describe('AI API', () => {
       const result = await suggestExpenseCategory('Grocery shopping', 'plan-1')
 
       expect(mockInvoke).toHaveBeenCalledWith('categorize-expense', {
-        body: { expenseName: 'Grocery shopping', planId: 'plan-1' },
+        body: expect.objectContaining({
+          deviceContext: expect.any(Object),
+          expenseName: 'Grocery shopping',
+          planId: 'plan-1',
+        }),
       })
       expect(result).toEqual(mockResponse.data)
     })
@@ -62,7 +66,11 @@ describe('AI API', () => {
       const result = await suggestExpenseCategory('Random expense')
 
       expect(mockInvoke).toHaveBeenCalledWith('categorize-expense', {
-        body: { expenseName: 'Random expense', planId: undefined },
+        body: expect.objectContaining({
+          deviceContext: expect.any(Object),
+          expenseName: 'Random expense',
+          planId: undefined,
+        }),
       })
       expect(result).toEqual(mockResponse.data)
     })
