@@ -14,6 +14,7 @@
         Log your first expense and it will show up here
       </div>
       <q-btn
+        v-if="props.canAddExpense"
         color="primary"
         label="Add Your First Expense"
         icon="eva-plus-outline"
@@ -28,6 +29,15 @@
 
 <script setup lang="ts">
 import BrandIllustration from 'src/components/shared/BrandIllustration.vue'
+
+const props = withDefaults(
+  defineProps<{
+    canAddExpense?: boolean
+  }>(),
+  {
+    canAddExpense: true,
+  },
+)
 
 const emit = defineEmits<{
   'add-expense': []

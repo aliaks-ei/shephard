@@ -4,20 +4,21 @@ import { useRoute } from 'vue-router'
 import { useUserStore } from 'src/stores/user'
 import {
   useTemplateDetailQuery,
-  useCreateTemplateMutation,
-  useUpdateTemplateMutation,
-  useCreateTemplateItemsMutation,
-  useDeleteTemplateItemsMutation,
+  useCreateTemplateWithItemsMutation,
+  useUpdateTemplateWithItemsMutation,
 } from 'src/queries/templates'
 import { toActionResult } from 'src/queries/mutation-utils'
+import { resolveDetailLoadState } from 'src/composables/useDetailPageState'
 import type { CurrencyCode, TemplateWithItems } from 'src/api'
 import type { ActionResult } from 'src/types'
 import { useNotificationEvents } from './useNotificationEvents'
+import { useNetworkStatus } from './useNetworkStatus'
 
 export function useTemplate() {
   const route = useRoute()
   const userStore = useUserStore()
   const { emitNotificationEvent } = useNotificationEvents()
+  const { isOnline } = useNetworkStatus()
 
   const isNewTemplate = computed(() => route.name === 'new-template')
   const routeTemplateId = computed(() =>
@@ -26,10 +27,8 @@ export function useTemplate() {
   const userId = computed(() => userStore.userProfile?.id)
 
   const templateDetailQuery = useTemplateDetailQuery(routeTemplateId, userId)
-  const createTemplateMutation = useCreateTemplateMutation()
-  const updateTemplateMutation = useUpdateTemplateMutation()
-  const createItemsMutation = useCreateTemplateItemsMutation()
-  const deleteItemsMutation = useDeleteTemplateItemsMutation()
+  const createTemplateWithItemsMutation = useCreateTemplateWithItemsMutation()
+  const updateTemplateWithItemsMutation = useUpdateTemplateWithItemsMutation()
 
   const currentTemplate = computed(
     () =>
@@ -39,6 +38,19 @@ export function useTemplate() {
   )
   const isTemplateLoading = computed(
     () => templateDetailQuery.isPending.value && !isNewTemplate.value,
+  )
+  const isTemplateRetrying = computed(
+    () => !isNewTemplate.value && (templateDetailQuery.isFetching?.value ?? false),
+  )
+  const detailState = computed(() =>
+    resolveDetailLoadState({
+      isNew: isNewTemplate.value,
+      isPending: templateDetailQuery.isPending.value,
+      data: currentTemplate.value,
+      isError: templateDetailQuery.isError?.value ?? false,
+      error: templateDetailQuery.error?.value,
+      isOnline: isOnline.value,
+    }),
   )
 
   const isOwner = computed(() => {
@@ -74,25 +86,16 @@ export function useTemplate() {
   ): Promise<ActionResult> {
     if (!userId.value) return { success: false }
 
-    const templateResult = await toActionResult(() =>
-      createTemplateMutation.mutateAsync({
-        name,
-        duration,
-        total,
-        currency,
-        owner_id: userId.value!,
-      }),
-    )
-
-    if (!templateResult.success || !templateResult.data) return { success: false }
-
-    const items = templateItems.map((item) => ({
-      ...item,
-      template_id: templateResult.data!.id,
-    }))
-
     return toActionResult(() =>
-      createItemsMutation.mutateAsync({ templateId: templateResult.data!.id, items }),
+      createTemplateWithItemsMutation.mutateAsync({
+        template: {
+          name,
+          duration,
+          total,
+          currency,
+        },
+        items: templateItems,
+      }),
     )
   }
 
@@ -111,47 +114,14 @@ export function useTemplate() {
     if (!routeTemplateId.value || !currentTemplate.value) return { success: false }
 
     const templateResult = await toActionResult(() =>
-      updateTemplateMutation.mutateAsync({
+      updateTemplateWithItemsMutation.mutateAsync({
         id: routeTemplateId.value!,
         updates: { name, duration, currency, total },
+        items: templateItems,
       }),
     )
 
     if (!templateResult.success || !templateResult.data) return { success: false }
-
-    const existingItemIds = currentTemplate.value.template_items.map((item) => item.id)
-    const removeResult = await toActionResult(() =>
-      deleteItemsMutation.mutateAsync({
-        templateId: templateResult.data!.id,
-        ids: existingItemIds,
-      }),
-    )
-
-    if (!removeResult.success) return { success: false }
-
-    const items = templateItems.map((item) => {
-      const { id: _id, ...itemWithoutId } = item as typeof item & { id?: string }
-      return {
-        ...itemWithoutId,
-        template_id: templateResult.data!.id,
-      }
-    })
-
-    if (items.length > 0) {
-      const result = await toActionResult(() =>
-        createItemsMutation.mutateAsync({ templateId: templateResult.data!.id, items }),
-      )
-
-      if (result.success) {
-        await emitNotificationEvent({
-          type: 'shared_template_updated',
-          entityType: 'template',
-          entityId: templateResult.data.id,
-        })
-      }
-
-      return result
-    }
 
     await emitNotificationEvent({
       type: 'shared_template_updated',
@@ -159,7 +129,7 @@ export function useTemplate() {
       entityId: templateResult.data.id,
     })
 
-    return { success: true }
+    return templateResult
   }
 
   async function loadTemplate(): Promise<TemplateWithItems | null> {
@@ -172,6 +142,8 @@ export function useTemplate() {
   return {
     currentTemplate,
     isTemplateLoading,
+    isTemplateRetrying,
+    detailState,
     isNewTemplate,
     routeTemplateId,
     isOwner,

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   isAppleMobileDevice,
+  isAppleMobileSafari,
   isNavigatorStandalone,
   isRunningStandaloneApp,
   isStandaloneDisplayMode,
@@ -60,6 +61,26 @@ describe('pwa utils', () => {
     })
 
     expect(isAppleMobileDevice()).toBe(true)
+  })
+
+  it('detects Safari on Apple mobile devices', () => {
+    Object.defineProperty(window.navigator, 'userAgent', {
+      writable: true,
+      value:
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 Version/17.4 Mobile/15E148 Safari/604.1',
+    })
+
+    expect(isAppleMobileSafari()).toBe(true)
+  })
+
+  it('does not show Safari install guidance in another iOS browser', () => {
+    Object.defineProperty(window.navigator, 'userAgent', {
+      writable: true,
+      value:
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 CriOS/123.0.0.0 Mobile/15E148 Safari/604.1',
+    })
+
+    expect(isAppleMobileSafari()).toBe(false)
   })
 
   it('detects iPadOS desktop-class user agents via MacIntel touch support', () => {

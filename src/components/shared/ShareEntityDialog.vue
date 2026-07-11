@@ -121,12 +121,12 @@ async function handleUpdateUserPermission(
 }
 
 async function handleRemoveUserAccess(entityId: string, targetUserId: string) {
+  await unshareMutation.mutateAsync({ entityId, userId: targetUserId })
   await emitNotificationEvent({
     type: props.entityType === 'plan' ? 'shared_plan_removed' : 'shared_template_removed',
     entityType: props.entityType,
     entityId,
     targetUserId,
   })
-  await unshareMutation.mutateAsync({ entityId, userId: targetUserId })
 }
 </script>

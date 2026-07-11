@@ -120,7 +120,7 @@
                         dense
                         size="sm"
                         icon="eva-checkmark-outline"
-                        class="notifications-inbox__icon-action"
+                        class="notifications-inbox__icon-action mobile-touch-target"
                         aria-label="Mark notification as read"
                         @click.stop="$emit('mark-read', notification.id)"
                       >
@@ -133,7 +133,7 @@
                         size="sm"
                         icon="eva-trash-2-outline"
                         color="negative"
-                        class="notifications-inbox__icon-action"
+                        class="notifications-inbox__icon-action mobile-touch-target"
                         aria-label="Remove notification"
                         @click.stop="$emit('remove', notification.id)"
                       >

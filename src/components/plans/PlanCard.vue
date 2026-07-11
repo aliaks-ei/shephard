@@ -37,13 +37,18 @@
               round
               size="sm"
               icon="eva-more-vertical-outline"
-              class="text-muted"
               :aria-label="menuButtonLabel"
               aria-haspopup="menu"
+              :aria-expanded="String(isActionsMenuOpen)"
+              :aria-controls="menuId"
+              class="text-muted mobile-touch-target"
               @click.stop
             >
               <PlanCardMenu
+                :id="menuId"
+                v-model="isActionsMenuOpen"
                 :can-edit="canEdit"
+                :can-share="isOwner"
                 :plan-status="planStatus"
                 @export="emit('export', plan.id)"
                 @share="emit('share', plan.id)"
@@ -141,12 +146,14 @@ const preferencesStore = usePreferencesStore()
 
 const isDeleteDialogOpen = ref(false)
 const isCancelDialogOpen = ref(false)
+const isActionsMenuOpen = ref(false)
 
 const isOwner = computed(() => props.plan.owner_id === userStore.userProfile?.id)
 const canEdit = computed(() => isOwner.value || props.plan.permission_level === 'edit')
 const planStatus = computed(() => getPlanStatus(props.plan))
 const isViewOnly = computed(() => props.plan.permission_level === 'view')
 const menuButtonLabel = computed(() => `Actions for ${props.plan.name}`)
+const menuId = computed(() => `plan-actions-${props.plan.id}`)
 
 function formatAmount(amount: number | null | undefined): string {
   const currency = props.plan.currency as CurrencyCode

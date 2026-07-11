@@ -116,7 +116,6 @@ describe('useExpenseActions', () => {
         expect(mockMutateAsync).toHaveBeenCalledWith({
           expenseId: 'expense-1',
           planId: 'plan-1',
-          planItemId: null,
         })
       }
     })
@@ -194,7 +193,6 @@ describe('useExpenseActions', () => {
       expect(mockMutateAsync).toHaveBeenCalledWith({
         expenseId: 'expense-1',
         planId: 'plan-1',
-        planItemId: null,
       })
       expect(onSuccess).toHaveBeenCalledOnce()
     })

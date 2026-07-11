@@ -29,6 +29,10 @@
           flat
           :icon="allExpanded ? 'eva-collapse-outline' : 'eva-expand-outline'"
           :label="$q.screen.lt.md ? '' : allExpanded ? 'Collapse All' : 'Expand All'"
+          :aria-label="allExpanded ? 'Collapse all categories' : 'Expand all categories'"
+          :aria-expanded="String(allExpanded)"
+          :aria-pressed="String(allExpanded)"
+          :aria-controls="categoriesContentId"
           dense
           color="primary"
           no-caps
@@ -78,6 +82,7 @@
     <!-- Category List -->
     <div
       v-else
+      :id="categoriesContentId"
       class="q-mb-lg"
     >
       <slot name="categories" />
@@ -130,6 +135,7 @@ interface Props {
   padding?: boolean
   transparent?: boolean
   showSummary?: boolean
+  contentId?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -156,4 +162,17 @@ defineEmits<{
 const isDuplicateWarningVisible = computed(
   () => props.showDuplicateWarning && props.hasDuplicates && props.hasCategories,
 )
+const categoriesContentId = computed(
+  () =>
+    props.contentId || `${props.headerTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-categories`,
+)
 </script>
+
+<style lang="scss" scoped>
+@media (max-width: 1023px) {
+  :deep(.q-btn[aria-controls]) {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+</style>

@@ -92,8 +92,9 @@ const renderAllExpensesDialog = (
         'q-card-actions': { template: '<div><slot /></div>' },
         'q-btn': {
           template:
-            '<button class="q-btn-stub" :data-icon="icon || \'\'" @click="$emit(\'click\')"><slot /></button>',
-          props: ['icon'],
+            '<button class="q-btn-stub" :data-icon="icon || \'\'" :data-loading="String(Boolean(loading))" @click="$emit(\'click\')">{{ label }}<slot /></button>',
+          props: ['icon', 'label', 'loading'],
+          emits: ['click'],
         },
         'q-scroll-area': { template: '<div class="scroll-area"><slot /></div>' },
         'q-virtual-scroll': {
@@ -104,6 +105,7 @@ const renderAllExpensesDialog = (
           template:
             '<div class="q-slide-item"><button class="slide-right-trigger" @click="$emit(\'right\', { reset: () => {} })" /><slot name="right" /><slot /></div>',
           props: ['rightColor'],
+          emits: ['right'],
         },
         'q-item': { template: '<div class="q-item"><slot /></div>' },
         'q-item-section': { template: '<div><slot /></div>' },
@@ -154,6 +156,28 @@ describe('AllExpensesDialog', () => {
     expect(wrapper.text()).toContain('USD 50.00')
   })
 
+  it('shows bounded-history load more only when another page exists', async () => {
+    const wrapper = renderAllExpensesDialog({
+      modelValue: true,
+      expenses: mockExpenses,
+      currency: 'USD',
+      canEdit: false,
+      hasMore: true,
+      isLoadingMore: true,
+    })
+
+    const loadMoreButton = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('Load more'))
+
+    expect(loadMoreButton?.attributes('data-loading')).toBe('true')
+    await loadMoreButton?.trigger('click')
+    expect(wrapper.emitted('load-more')).toEqual([[]])
+
+    await wrapper.setProps({ hasMore: false })
+    expect(wrapper.text()).not.toContain('Load more')
+  })
+
   it('should emit update:modelValue when close button clicked', async () => {
     const wrapper = renderAllExpensesDialog({
       modelValue: true,
@@ -196,7 +220,7 @@ describe('AllExpensesDialog', () => {
     expect(wrapper.text()).toContain('Delete')
   })
 
-  it('should delete immediately on mobile swipe', async () => {
+  it('should request confirmation on mobile swipe', async () => {
     const wrapper = renderAllExpensesDialog(
       {
         modelValue: true,
@@ -209,9 +233,9 @@ describe('AllExpensesDialog', () => {
 
     await wrapper.find('.slide-right-trigger').trigger('click')
 
-    expect(mockDeleteExpense).toHaveBeenCalledWith(mockExpenses[0], expect.any(Function))
-    expect(mockConfirmDeleteExpense).not.toHaveBeenCalled()
-    expect(wrapper.emitted('refresh')).toBeTruthy()
+    expect(mockConfirmDeleteExpense).toHaveBeenCalledWith(mockExpenses[0], expect.any(Function))
+    expect(mockDeleteExpense).not.toHaveBeenCalled()
+    expect(wrapper.emitted('refresh')).toBeUndefined()
   })
 
   it('should not show delete buttons when canEdit is false', () => {

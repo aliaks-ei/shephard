@@ -71,6 +71,8 @@ it('should render description with correct styling', () => {
   expect(descriptionElement.classes()).toContain('text-body2')
   expect(descriptionElement.classes()).toContain('text-muted')
   expect(descriptionElement.classes()).toContain('q-mb-none')
+  expect(descriptionElement.classes()).toContain('list-page-description')
+  expect(descriptionElement.classes()).not.toContain('gt-xs')
 })
 
 it('should render create button with correct attributes', () => {

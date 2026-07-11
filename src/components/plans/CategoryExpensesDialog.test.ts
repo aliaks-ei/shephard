@@ -21,14 +21,8 @@ vi.mock('src/utils/currency', () => ({
 }))
 
 vi.mock('src/queries/expenses', () => ({
-  useExpensesByPlanQuery: vi.fn(() => ({
-    expenses: ref([]),
-    totalExpensesAmount: ref(0),
-    sortedExpenses: ref([]),
-    expensesByCategory: ref({}),
-    getExpensesForPlanItem: vi.fn(() => []),
-    isPending: ref(false),
-    data: ref(null),
+  usePlanItemExpenseIds: vi.fn(() => ({
+    fetchExpenseIds: vi.fn().mockResolvedValue([]),
   })),
   useCreateExpenseMutation: vi.fn(() => ({
     mutateAsync: vi.fn(),
@@ -159,6 +153,7 @@ const renderCategoryExpensesDialog = (
           template:
             '<div class="q-slide-item"><button class="slide-right-trigger" @click="$emit(\'right\', { reset: () => {} })" /><slot name="right" /><slot /></div>',
           props: ['rightColor'],
+          emits: ['right'],
         },
         'q-item-section': { template: '<div><slot /></div>' },
         'q-item-label': { template: '<div><slot /></div>' },
@@ -167,8 +162,10 @@ const renderCategoryExpensesDialog = (
           props: ['modelValue', 'disable'],
         },
         'q-btn': {
-          template: '<button @click="$emit(\'click\')"><slot /></button>',
-          props: ['label', 'icon'],
+          template:
+            '<button :data-loading="String(Boolean(loading))" @click="$emit(\'click\')">{{ label }}<slot /></button>',
+          props: ['label', 'icon', 'loading'],
+          emits: ['click'],
         },
         'q-space': { template: '<div />' },
         'q-icon': { template: '<i />' },
@@ -246,6 +243,30 @@ describe('CategoryExpensesDialog', () => {
 
     expect(wrapper.text()).toContain('Groceries')
     expect(wrapper.text()).toContain('USD 150.00')
+    expect(wrapper.text()).not.toContain('No expenses yet')
+  })
+
+  it('emits load-more only while another category page exists', async () => {
+    const wrapper = renderCategoryExpensesDialog({
+      modelValue: true,
+      category: mockCategory,
+      expenses: mockExpenses,
+      currency: 'USD',
+      canEdit: false,
+      hasMoreExpenses: true,
+      isLoadingMoreExpenses: true,
+    })
+
+    const loadMoreButton = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('Load more'))
+
+    expect(loadMoreButton?.attributes('data-loading')).toBe('true')
+    await loadMoreButton?.trigger('click')
+    expect(wrapper.emitted('load-more-expenses')).toEqual([[]])
+
+    await wrapper.setProps({ hasMoreExpenses: false })
+    expect(wrapper.text()).not.toContain('Load more')
   })
 
   it('should emit update:modelValue when closed', () => {
@@ -274,7 +295,7 @@ describe('CategoryExpensesDialog', () => {
     expect(wrapper.emitted('refresh')).toBeTruthy()
   })
 
-  it('should delete immediately on mobile swipe in expenses tab', async () => {
+  it('should request confirmation on mobile swipe in expenses tab', async () => {
     const wrapper = renderCategoryExpensesDialog(
       {
         modelValue: true,
@@ -288,8 +309,8 @@ describe('CategoryExpensesDialog', () => {
 
     await wrapper.find('.slide-right-trigger').trigger('click')
 
-    expect(mockDeleteExpense).toHaveBeenCalledWith(mockExpenses[0], expect.any(Function))
-    expect(mockConfirmDeleteExpense).not.toHaveBeenCalled()
-    expect(wrapper.emitted('refresh')).toBeTruthy()
+    expect(mockConfirmDeleteExpense).toHaveBeenCalledWith(mockExpenses[0], expect.any(Function))
+    expect(mockDeleteExpense).not.toHaveBeenCalled()
+    expect(wrapper.emitted('refresh')).toBeUndefined()
   })
 })

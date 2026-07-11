@@ -1,6 +1,7 @@
 <template>
   <q-form
     ref="formRef"
+    data-pwa-update-blocker="form"
     @submit="$emit('submit')"
   >
     <PlanTemplateSelection

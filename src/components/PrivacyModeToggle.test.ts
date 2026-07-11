@@ -45,6 +45,8 @@ describe('PrivacyModeToggle', () => {
 
     const button = wrapper.find('button')
     expect(button.classes()).toContain('q-btn')
+    expect(button.attributes('aria-label')).toBe('Hide amounts')
+    expect(button.attributes('aria-pressed')).toBe('false')
   })
 
   it('should display eye-off-outline icon when privacy mode is enabled', () => {
@@ -52,6 +54,8 @@ describe('PrivacyModeToggle', () => {
 
     const button = wrapper.find('button')
     expect(button.classes()).toContain('q-btn')
+    expect(button.attributes('aria-label')).toBe('Show amounts')
+    expect(button.attributes('aria-pressed')).toBe('true')
   })
 
   it('should have tooltip component when privacy mode is disabled', () => {

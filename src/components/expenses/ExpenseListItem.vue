@@ -16,7 +16,11 @@
       </div>
     </template>
 
-    <q-item :class="itemClass">
+    <q-item
+      :class="itemClass"
+      :to="to"
+      :clickable="!!to"
+    >
       <q-item-section
         v-if="showCategory"
         class="min-w-auto"
@@ -66,6 +70,8 @@
     v-else
     v-bind="$attrs"
     :class="itemClass"
+    :to="to"
+    :clickable="!!to"
   >
     <q-item-section
       v-if="showCategory"
@@ -116,7 +122,9 @@
           size="sm"
           icon="eva-trash-2-outline"
           color="negative"
-          @click="handleConfirmDelete"
+          aria-label="Delete expense"
+          class="expense-list-item__icon-action"
+          @click.stop="handleConfirmDelete"
         >
           <q-tooltip v-if="!$q.screen.lt.md">Delete expense</q-tooltip>
         </q-btn>
@@ -126,6 +134,8 @@
 </template>
 
 <script setup lang="ts">
+import type { RouteLocationRaw } from 'vue-router'
+
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import { formatDate } from 'src/utils/date'
@@ -143,6 +153,7 @@ type ExpenseListItemProps = {
   categoryColor?: string
   categoryIcon?: string
   itemClass?: string
+  to?: RouteLocationRaw
 }
 
 const props = withDefaults(defineProps<ExpenseListItemProps>(), {
@@ -154,14 +165,21 @@ const emit = defineEmits<{
   deleted: []
 }>()
 
-const { confirmDeleteExpense, deleteExpense } = useExpenseActions()
+const { confirmDeleteExpense } = useExpenseActions()
 
 function handleSwipeDelete(details: { reset: () => void }) {
   details.reset()
-  void deleteExpense(props.expense, () => emit('deleted'))
+  confirmDeleteExpense(props.expense, () => emit('deleted'))
 }
 
 function handleConfirmDelete() {
   confirmDeleteExpense(props.expense, () => emit('deleted'))
 }
 </script>
+
+<style lang="scss" scoped>
+.expense-list-item__icon-action {
+  min-width: 44px;
+  min-height: 44px;
+}
+</style>

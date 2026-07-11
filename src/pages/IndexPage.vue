@@ -1,6 +1,6 @@
 <template>
   <q-pull-to-refresh
-    :disable="$q.screen.gt.sm"
+    :disable="!$q.screen.lt.md"
     @refresh="onRefresh"
   >
     <section class="page-content-spacing">
@@ -11,16 +11,31 @@
 
           <!-- Quick Actions Section (hidden on mobile) -->
           <QuickActionsGrid
-            v-if="$q.screen.gt.sm"
+            v-if="!$q.screen.lt.md"
+            :can-add-expense="canAddExpense"
+            :online="isOnline"
             @add-expense="openExpenseDialog"
           />
 
           <!-- Budget Hero Card -->
+          <QueryErrorState
+            v-if="plansLoadError"
+            entity-name="Plans"
+            :retrying="plansRetrying"
+            class="section-spacing"
+            @retry="retryPlans"
+          />
+
           <BudgetOverviewCard
-            v-if="primaryPlan && !isLoading"
+            v-else-if="primaryPlan && !isLoading"
             :plan="primaryPlan"
+            :overview="primaryPlanOverview"
+            :is-overview-loading="overviewLoading"
+            :has-load-error="overviewLoadError"
+            :is-retrying="overviewRetrying"
             class="section-spacing"
             @click="goToPlan"
+            @retry="retryOverview"
           />
 
           <!-- Budget Hero Skeleton (shown while loading) -->
@@ -60,29 +75,45 @@
 
           <!-- Top Categories (primary plan) -->
           <TopCategoriesCard
-            v-if="primaryPlan && !isLoading"
+            v-if="!plansLoadError && primaryPlan && !isLoading"
             :plan="primaryPlan"
+            :overview="primaryPlanOverview"
+            :has-load-error="overviewLoadError"
+            :is-retrying="overviewRetrying"
             class="section-spacing"
             @click="goToPlan"
+            @retry="retryOverview"
           />
 
           <!-- Recent Activity -->
           <RecentActivityCard
-            v-if="activePlansCount > 0"
+            v-if="!plansLoadError && activePlansCount > 0"
+            :recent-expenses="recentExpenses"
+            :is-loading="recentExpensesLoading"
+            :has-load-error="recentExpensesLoadError"
+            :is-retrying="recentExpensesRetrying"
             class="section-spacing"
+            @retry="retryRecentExpenses"
+          />
+
+          <QueryErrorState
+            v-if="$q.screen.lt.md && templatesLoadError"
+            entity-name="Templates"
+            :retrying="templatesRetrying"
+            class="section-spacing"
+            @retry="retryTemplates"
           />
 
           <!-- First-run: no active plans -->
           <EmptyPlansState
-            v-if="!isLoading && activePlansCount === 0"
+            v-if="!plansLoadError && !isLoading && activePlansCount === 0"
             class="section-spacing"
           />
 
           <!-- Mobile: compact links instead of full card sections -->
-          <q-card
-            v-if="$q.screen.lt.md && activePlansCount > 0"
-            :bordered="$q.dark.isActive"
-            class="shadow-1 section-spacing"
+          <div
+            v-if="$q.screen.lt.md && !plansLoadError && !templatesLoadError && activePlansCount > 0"
+            class="mobile-dashboard-links section-spacing"
           >
             <q-list separator>
               <q-item
@@ -101,6 +132,7 @@
                 </q-item-section>
                 <q-item-section>
                   <q-item-label class="text-weight-medium">Active plans</q-item-label>
+                  <q-item-label caption>Review budgets and progress</q-item-label>
                 </q-item-section>
                 <q-item-section side>
                   <div class="row items-center q-gutter-xs">
@@ -134,6 +166,7 @@
                 </q-item-section>
                 <q-item-section>
                   <q-item-label class="text-weight-medium">Templates</q-item-label>
+                  <q-item-label caption>Reuse saved budget setups</q-item-label>
                 </q-item-section>
                 <q-item-section side>
                   <div class="row items-center q-gutter-xs">
@@ -151,11 +184,11 @@
                 </q-item-section>
               </q-item>
             </q-list>
-          </q-card>
+          </div>
 
           <!-- Desktop: full Active Plans section -->
           <DashboardSection
-            v-if="$q.screen.gt.sm && activePlansCount > 0"
+            v-if="!$q.screen.lt.md && !plansLoadError && activePlansCount > 0"
             title="Active Plans"
             icon="eva-calendar-outline"
             :items="recentActivePlans"
@@ -175,7 +208,12 @@
             <template #list-item="{ item }">
               <PlanListItem
                 :plan="item"
+                :overview="overviewByPlanId[item.id] ?? null"
+                :is-overview-loading="overviewLoading"
+                :has-load-error="overviewLoadError"
+                :is-retrying="overviewRetrying"
                 @click="goToPlan"
+                @retry="retryOverview"
               />
             </template>
             <template #empty>
@@ -184,8 +222,16 @@
           </DashboardSection>
 
           <!-- Desktop: full Recent Templates section -->
+          <QueryErrorState
+            v-if="!$q.screen.lt.md && templatesLoadError"
+            entity-name="Templates"
+            :retrying="templatesRetrying"
+            class="section-spacing"
+            @retry="retryTemplates"
+          />
+
           <DashboardSection
-            v-if="$q.screen.gt.sm"
+            v-else-if="!$q.screen.lt.md"
             title="Recent Templates"
             icon="eva-file-text-outline"
             :items="recentTemplates"
@@ -217,7 +263,7 @@
 
       <!-- Expense Registration Dialog -->
       <ExpenseRegistrationDialog
-        v-if="hasOpenedExpenseDialog"
+        v-if="canAddExpense && hasOpenedExpenseDialog"
         v-model="showExpenseDialog"
         auto-select-recent-plan
         @expense-created="onExpenseCreated"
@@ -241,17 +287,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useMeta } from 'quasar'
 import { useRouter } from 'vue-router'
-import { useQueryClient } from '@tanstack/vue-query'
-import { queryKeys } from 'src/queries/query-keys'
 
 useMeta({ title: 'Home' })
-import { usePlansQuery } from 'src/queries/plans'
-import { useTemplatesQuery } from 'src/queries/templates'
 import { useUserStore } from 'src/stores/user'
-import { useSortedRecentItems } from 'src/composables/useSortedRecentItems'
+import { useDashboardOverview } from 'src/composables/useDashboardOverview'
 import DashboardHeader from 'src/components/dashboard/DashboardHeader.vue'
 import QuickActionsGrid from 'src/components/dashboard/QuickActionsGrid.vue'
 import DashboardSection from 'src/components/dashboard/DashboardSection.vue'
@@ -262,6 +304,7 @@ import PlanListItem from 'src/components/dashboard/PlanListItem.vue'
 import TemplateListItem from 'src/components/dashboard/TemplateListItem.vue'
 import EmptyPlansState from 'src/components/dashboard/EmptyPlansState.vue'
 import EmptyTemplatesState from 'src/components/dashboard/EmptyTemplatesState.vue'
+import QueryErrorState from 'src/components/shared/QueryErrorState.vue'
 import PlanCard from 'src/components/plans/PlanCard.vue'
 import TemplateCard from 'src/components/templates/TemplateCard.vue'
 import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
@@ -270,23 +313,45 @@ import ShareTemplateDialog from 'src/components/templates/ShareTemplateDialog.vu
 
 const router = useRouter()
 const userStore = useUserStore()
-const queryClient = useQueryClient()
-const userId = computed(() => userStore.userProfile?.id)
+const {
+  activePlans,
+  templates,
+  primaryPlan,
+  primaryPlanOverview,
+  overviewByPlanId,
+  recentActivePlans,
+  recentTemplates,
+  recentExpenses,
+  activePlansCount,
+  templatesCount,
+  canAddExpense,
+  isOnline,
+  isLoading,
+  plansLoadError,
+  templatesLoadError,
+  overviewLoadError,
+  recentExpensesLoadError,
+  plansRetrying,
+  templatesRetrying,
+  overviewRetrying,
+  overviewLoading,
+  recentExpensesLoading,
+  recentExpensesRetrying,
+  retryPlans,
+  retryTemplates,
+  retryOverview,
+  retryRecentExpenses,
+  refreshDashboard,
+  maxDisplayedItems,
+} = useDashboardOverview()
 
 async function onRefresh(done: () => void) {
   try {
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: queryKeys.plans.all }),
-      queryClient.invalidateQueries({ queryKey: queryKeys.templates.all }),
-      queryClient.invalidateQueries({ queryKey: queryKeys.expenses.recentAll() }),
-    ])
+    await refreshDashboard()
   } finally {
     done()
   }
 }
-
-const { activePlans, isPending: isPlansLoading } = usePlansQuery(userId)
-const { templates, isPending: isTemplatesLoading, templatesCount } = useTemplatesQuery(userId)
 
 const hasOpenedExpenseDialog = ref(false)
 const showExpenseDialog = ref(false)
@@ -294,26 +359,9 @@ const showSharePlanDialog = ref(false)
 const sharePlanId = ref<string | null>(null)
 const showShareTemplateDialog = ref(false)
 const shareTemplateId = ref<string | null>(null)
-const maxDisplayedItems = 3
-
-const isLoading = computed(() => isPlansLoading.value || isTemplatesLoading.value)
-
-const activePlansCount = computed(() => activePlans.value.length)
-
-const primaryPlan = computed(() => {
-  if (activePlans.value.length === 0) return null
-  return [...activePlans.value].sort(
-    (a, b) =>
-      new Date(b.updated_at || b.created_at).getTime() -
-      new Date(a.updated_at || a.created_at).getTime(),
-  )[0]
-})
-
-const recentActivePlans = useSortedRecentItems(activePlans, maxDisplayedItems)
-
-const recentTemplates = useSortedRecentItems(templates, maxDisplayedItems)
-
 function openExpenseDialog() {
+  if (!isOnline.value || !canAddExpense.value) return
+
   hasOpenedExpenseDialog.value = true
   showExpenseDialog.value = true
 }
@@ -331,12 +379,29 @@ function goToTemplate(templateId: string) {
 }
 
 function openSharePlanDialog(planId: string) {
+  const plan = activePlans.value.find((item) => item.id === planId)
+  if (!plan || plan.owner_id !== userStore.userProfile?.id) return
+
   sharePlanId.value = planId
   showSharePlanDialog.value = true
 }
 
 function openShareTemplateDialog(templateId: string) {
+  const template = templates.value.find((item) => item.id === templateId)
+  if (!template || template.owner_id !== userStore.userProfile?.id) return
+
   shareTemplateId.value = templateId
   showShareTemplateDialog.value = true
 }
 </script>
+
+<style lang="scss" scoped>
+.mobile-dashboard-links {
+  border-block: 1px solid hsl(var(--border));
+}
+
+.mobile-dashboard-links :deep(.q-item) {
+  min-height: 56px;
+  padding-inline: 4px;
+}
+</style>

@@ -12,7 +12,6 @@ import { useEditablePage } from 'src/composables/useEditablePage'
 import { useCategoryRefs } from 'src/composables/useCategoryRefs'
 import { usePlanActions, type PlanSaveState } from 'src/composables/usePlanActions'
 import { validateItemForm } from 'src/composables/useItemFormValidation'
-import { usePlanOverview } from 'src/composables/usePlanOverview'
 import { usePlanExport } from 'src/composables/usePlanExport'
 import { calculateEndDate } from 'src/utils/plans'
 import { formatDateInput } from 'src/utils/date'
@@ -25,6 +24,7 @@ import {
 import type { PlanItemUI } from 'src/types'
 import { useNotificationEvents } from 'src/composables/useNotificationEvents'
 import type { ExportFormat } from 'src/utils/export'
+import { useNetworkStatus } from 'src/composables/useNetworkStatus'
 
 const SAVE_SUCCESS_RESET_MS = 4000
 
@@ -32,24 +32,36 @@ export function usePlanPageState() {
   const router = useRouter()
   const userStore = useUserStore()
   const { emitRemovalNotification } = useNotificationEvents()
+  const { isOnline } = useNetworkStatus()
   const userId = computed(() => userStore.userProfile?.id)
   const { categories } = useCategoriesQuery()
-  const { templates, isPending: isTemplatesLoading } = useTemplatesQuery(userId)
   const deletePlanMutation = useDeletePlanMutation()
 
   const {
     currentPlan,
     isPlanLoading,
+    isPlanRetrying = computed(() => false),
+    detailState: planDetailState,
     isNewPlan,
     isOwner,
     isEditMode,
     canEditPlanData,
+    canAddExpenses,
     planCurrency,
     createNewPlanWithItems,
     updateExistingPlanWithItems,
     loadPlan,
     cancelCurrentPlan,
   } = usePlan()
+  const templateQueryUserId = computed(() => (isNewPlan.value ? userId.value : undefined))
+  const { templates, isPending: isTemplatesLoading } = useTemplatesQuery(templateQueryUserId)
+  const detailState = computed(
+    () =>
+      planDetailState?.value ??
+      (isPlanLoading.value
+        ? ({ status: 'loading' } as const)
+        : ({ status: 'ready', data: currentPlan.value } as const)),
+  )
 
   const {
     planItems,
@@ -80,15 +92,9 @@ export function usePlanPageState() {
   )
 
   const { openDialog, closeDialog, getDialogState } = useEditablePage()
-  const { categoryBudgets, sortedExpenses } = usePlanOverview(
-    computed(() => currentPlan.value?.id ?? null),
-    computed(() => currentPlan.value),
-  )
   const { exportPlan } = usePlanExport(
     computed(() => currentPlan.value),
     categories,
-    categoryBudgets,
-    sortedExpenses,
   )
 
   const { lastAddedCategoryId, setCategoryRef, scrollToFirstInvalidField, resetLastAddedCategory } =
@@ -149,14 +155,20 @@ export function usePlanPageState() {
     isOwner,
     isEditMode,
     canEditPlanData,
+    canAddExpenses,
     currentPlan,
     currentTab: activeTab,
     saveState,
+    isOnline,
     handlers: {
       onSave: () => {
         void handleSavePlan()
       },
-      onShare: () => openDialog('share'),
+      onShare: () => {
+        if (isOwner.value) {
+          openDialog('share')
+        }
+      },
       onCancel: () => {
         showCancelDialog.value = true
       },
@@ -180,6 +192,7 @@ export function usePlanPageState() {
       selectedTemplateOption.value = null
       return
     }
+    if (!isOnline.value) return
 
     const template = userId.value ? await getTemplateWithItems(templateId, userId.value) : null
 
@@ -223,6 +236,8 @@ export function usePlanPageState() {
   }
 
   async function handleSavePlan(): Promise<void> {
+    if (!isOnline.value) return
+
     resetLastAddedCategory()
     clearTemplateError()
 
@@ -289,6 +304,8 @@ export function usePlanPageState() {
   }
 
   async function cancelPlan(): Promise<void> {
+    if (!isOnline.value) return
+
     const result = await cancelCurrentPlan()
 
     if (result.success) {
@@ -298,7 +315,7 @@ export function usePlanPageState() {
   }
 
   async function deletePlan(): Promise<void> {
-    if (!currentPlan.value) return
+    if (!isOnline.value || !currentPlan.value) return
 
     await emitRemovalNotification('plan', currentPlan.value.id, currentPlan.value.name, () =>
       getPlanSharedUsers(currentPlan.value!.id),
@@ -326,8 +343,8 @@ export function usePlanPageState() {
     templateErrorMessage.value = ''
   }
 
-  function handlePlanExport(format: ExportFormat): void {
-    const didExport = exportPlan(format)
+  async function handlePlanExport(format: ExportFormat): Promise<void> {
+    const didExport = await exportPlan(format)
 
     if (didExport) {
       closeDialog('export')
@@ -361,18 +378,24 @@ export function usePlanPageState() {
   }
 
   function openExpenseRegistration(): void {
+    if (!isOnline.value || !canAddExpenses.value) return
+
     hasOpenedExpenseDialog.value = true
     selectedCategory.value = null
     showExpenseDialog.value = true
   }
 
   function openExpenseRegistrationFromCategory(categoryId?: string): void {
+    if (!isOnline.value || !canAddExpenses.value) return
+
     hasOpenedExpenseDialog.value = true
     selectedCategory.value = categoryId ? { categoryId } : null
     showExpenseDialog.value = true
   }
 
   function openExpenseRegistrationFromItem(categoryId?: string, itemId?: string): void {
+    if (!isOnline.value || !canAddExpenses.value) return
+
     hasOpenedExpenseDialog.value = true
     selectedCategory.value = categoryId ? { categoryId, ...(itemId && { itemId }) } : null
     showExpenseDialog.value = true
@@ -385,6 +408,10 @@ export function usePlanPageState() {
         syncFormFromPlan(plan)
       }
     }
+  }
+
+  async function retryPlanLoad(): Promise<void> {
+    await refreshPlanData()
   }
 
   function syncFormFromPlan(plan: PlanWithItems): void {
@@ -417,9 +444,12 @@ export function usePlanPageState() {
   return {
     currentPlan,
     isPlanLoading,
+    isPlanRetrying,
+    detailState,
     isNewPlan,
     isOwner,
     isEditMode,
+    canAddExpenses,
     planCurrency,
     categories,
     isTemplatesLoading,
@@ -463,6 +493,7 @@ export function usePlanPageState() {
     cancelPlan,
     deletePlan,
     refreshPlanData,
+    retryPlanLoad,
     openExpenseRegistrationFromCategory,
     openExpenseRegistrationFromItem,
   }

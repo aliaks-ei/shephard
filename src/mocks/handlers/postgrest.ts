@@ -69,6 +69,63 @@ function applyFilters<T extends Record<string, unknown>>(
   })
 }
 
+function toOrderString(value: unknown): string {
+  if (value === null) return 'null'
+  if (value === undefined) return 'undefined'
+  if (typeof value === 'string') return value
+  if (
+    typeof value === 'number' ||
+    typeof value === 'bigint' ||
+    typeof value === 'boolean' ||
+    typeof value === 'symbol'
+  ) {
+    return value.toString()
+  }
+  if (value instanceof Date) return value.toString()
+  if (Array.isArray(value)) return value.map(toOrderString).join(',')
+  if (typeof value === 'function') return Function.prototype.toString.call(value)
+  return Object.prototype.toString.call(value)
+}
+
+function applyOrder<T extends Record<string, unknown>>(rows: T[], order: string | null): T[] {
+  if (!order) return rows
+
+  const clauses = order.split(',').flatMap((clause) => {
+    const [column, direction] = clause.split('.')
+    if (!column) return []
+    return [{ column, ascending: direction !== 'desc' }]
+  })
+
+  if (clauses.length === 0) return rows
+
+  return [...rows].sort((a, b) => {
+    for (const clause of clauses) {
+      const aValue = a[clause.column]
+      const bValue = b[clause.column]
+      if (aValue === bValue) continue
+      if (aValue === null || aValue === undefined) return clause.ascending ? -1 : 1
+      if (bValue === null || bValue === undefined) return clause.ascending ? 1 : -1
+
+      const comparison =
+        typeof aValue === 'number' && typeof bValue === 'number'
+          ? aValue - bValue
+          : toOrderString(aValue).localeCompare(toOrderString(bValue))
+      if (comparison !== 0) {
+        return clause.ascending ? comparison : -comparison
+      }
+    }
+
+    return 0
+  })
+}
+
+function applyPagination<T>(rows: T[], url: URL): T[] {
+  const offset = Math.max(0, Number.parseInt(url.searchParams.get('offset') ?? '0', 10) || 0)
+  const requestedLimit = Number.parseInt(url.searchParams.get('limit') ?? '', 10)
+  const limit = Number.isFinite(requestedLimit) ? Math.max(0, requestedLimit) : rows.length
+  return rows.slice(offset, offset + limit)
+}
+
 // Parse embedded resources from a PostgREST select string.
 // Examples:
 //   "*,template_shares!left(id)"  -> [{ name: "template_shares", columns: "id" }]
@@ -215,6 +272,8 @@ export const postgrestHandlers = [
 
     let rows = getAll(table) as Record<string, unknown>[]
     rows = applyFilters(rows, eqFilters, inFilters)
+    rows = applyOrder(rows, url.searchParams.get('order'))
+    rows = applyPagination(rows, url)
     const result = applySelect(rows, select, table)
 
     const prefer = request.headers.get('Prefer') ?? ''

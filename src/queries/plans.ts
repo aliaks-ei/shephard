@@ -4,7 +4,9 @@ import {
   getPlans,
   getPlanWithItems,
   createPlan,
+  createPlanWithItems,
   updatePlan,
+  updatePlanWithItems,
   deletePlan,
   createPlanItems,
   deletePlanItems,
@@ -12,8 +14,12 @@ import {
   getPlanItems,
   type PlanInsert,
   type PlanUpdate,
+  type PlanTransactionInsert,
+  type PlanTransactionUpdate,
   type PlanWithPermission,
   type PlanItemInsert,
+  type PlanItemTransactionInput,
+  getEntityLoadErrorKind,
 } from 'src/api'
 import { updatePlanItemCompletion, updatePlanItemsCompletion } from 'src/api/plans'
 import { useUserStore } from 'src/stores/user'
@@ -32,7 +38,7 @@ export function usePlansQuery(userId: MaybeRefOrGetter<string | undefined>) {
     enabled: computed(() => !!toValue(userId)),
     staleTime: LIST_STALE_TIME_MS,
     gcTime: QUERY_CACHE_TIME_MS,
-    meta: { errorKey: 'PLANS.LOAD_FAILED' as const },
+    meta: { errorKey: 'PLANS.LOAD_FAILED' as const, handledInline: true },
   })
 
   const plans = computed((): PlanWithPermission[] => query.data.value ?? [])
@@ -66,7 +72,11 @@ export function usePlanDetailQuery(
     enabled: computed(() => !!toValue(planId) && !!toValue(userId)),
     staleTime: DETAIL_STALE_TIME_MS,
     gcTime: QUERY_CACHE_TIME_MS,
-    meta: { errorKey: 'PLANS.LOAD_PLAN_FAILED' as const },
+    retry: (failureCount, error) => {
+      const kind = getEntityLoadErrorKind(error)
+      return kind !== 'not-found' && kind !== 'access-denied' && failureCount < 1
+    },
+    meta: { errorKey: 'PLANS.LOAD_PLAN_FAILED' as const, handledInline: true },
   })
 }
 
@@ -89,6 +99,12 @@ function invalidatePlanQueries(queryClient: ReturnType<typeof useQueryClient>, p
   if (planId) {
     queryClient.invalidateQueries({ queryKey: queryKeys.plans.detail(planId, userId) })
     queryClient.invalidateQueries({ queryKey: queryKeys.plans.items(planId) })
+    queryClient.invalidateQueries({ queryKey: queryKeys.expenses.byPlan(planId) })
+    queryClient.invalidateQueries({ queryKey: queryKeys.expenses.summary(planId) })
+    queryClient.invalidateQueries({ queryKey: queryKeys.expenses.overviewSnapshotsAll() })
+    queryClient.invalidateQueries({ queryKey: queryKeys.expenses.dateRanges(planId) })
+    queryClient.invalidateQueries({ queryKey: queryKeys.expenses.categories(planId) })
+    queryClient.invalidateQueries({ queryKey: queryKeys.expenses.recentAll() })
   }
 }
 
@@ -112,6 +128,27 @@ export function useCreatePlanMutation() {
   })
 }
 
+export function useCreatePlanWithItemsMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (vars: { plan: PlanTransactionInsert; items: PlanItemTransactionInput[] }) =>
+      createPlanWithItems(vars.plan, vars.items),
+    onSuccess: (plan) => {
+      invalidatePlanQueries(queryClient, plan.id)
+    },
+    onError: createSpecificErrorHandler(
+      [
+        {
+          check: (e) => e.name === 'DUPLICATE_PLAN_NAME',
+          key: 'PLANS.DUPLICATE_NAME',
+        },
+      ],
+      'PLANS.CREATE_FAILED',
+    ),
+  })
+}
+
 export function useUpdatePlanMutation() {
   const queryClient = useQueryClient()
 
@@ -119,6 +156,30 @@ export function useUpdatePlanMutation() {
     mutationFn: (vars: { id: string; updates: PlanUpdate }) => updatePlan(vars.id, vars.updates),
     onSuccess: (_data, vars) => {
       invalidatePlanQueries(queryClient, vars.id)
+    },
+    onError: createSpecificErrorHandler(
+      [
+        {
+          check: (e) => e.name === 'DUPLICATE_PLAN_NAME',
+          key: 'PLANS.DUPLICATE_NAME',
+        },
+      ],
+      'PLANS.UPDATE_FAILED',
+    ),
+  })
+}
+
+export function useUpdatePlanWithItemsMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (vars: {
+      id: string
+      updates: PlanTransactionUpdate
+      items: PlanItemTransactionInput[]
+    }) => updatePlanWithItems(vars.id, vars.updates, vars.items),
+    onSuccess: (plan) => {
+      invalidatePlanQueries(queryClient, plan.id)
     },
     onError: createSpecificErrorHandler(
       [

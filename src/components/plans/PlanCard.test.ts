@@ -3,7 +3,6 @@ import { createTestingPinia } from '@pinia/testing'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { ComponentProps } from 'vue-component-type-helpers'
-import { ref } from 'vue'
 
 import PlanCard from './PlanCard.vue'
 import type { PlanWithPermission } from 'src/api'
@@ -55,7 +54,7 @@ const renderPlanCard = (
   isPrivacyModeEnabled = false,
 ) => {
   vi.mocked(useUserStore).mockReturnValue({
-    userProfile: ref(userProfile),
+    userProfile,
   } as unknown as ReturnType<typeof useUserStore>)
 
   return mount(PlanCard, {
@@ -78,7 +77,12 @@ const renderPlanCard = (
         }),
       ],
       stubs: {
-        PlanCardMenu: { template: '<div class="plan-card-menu" />' },
+        PlanCardMenu: {
+          name: 'PlanCardMenu',
+          template: '<div class="plan-card-menu" />',
+          props: ['modelValue', 'id', 'canEdit', 'canShare', 'planStatus'],
+          emits: ['update:modelValue'],
+        },
         'q-dialog': {
           template: '<div v-if="modelValue"><slot /></div>',
           props: ['modelValue', 'persistent'],
@@ -213,7 +217,7 @@ describe('PlanCard', () => {
     expect(wrapper.emitted('cancel')?.[0]).toEqual([mockPlan])
   })
 
-  it('should render PlanCardMenu component for owner', () => {
+  it('should render PlanCardMenu component for owner', async () => {
     const wrapper = renderPlanCard(
       {
         plan: mockPlan,
@@ -221,8 +225,26 @@ describe('PlanCard', () => {
       { id: 'user-1' },
     )
 
-    const html = wrapper.html()
-    expect(html.length).toBeGreaterThan(0)
+    await wrapper.find('button[aria-label="Actions for Test Plan"]').trigger('click')
+
+    const menu = wrapper.findComponent({ name: 'PlanCardMenu' })
+    expect(menu.exists()).toBe(true)
+    expect(menu.props('canShare')).toBe(true)
+  })
+
+  it('should not allow a collaborator to share from the card menu', async () => {
+    const wrapper = renderPlanCard(
+      {
+        plan: { ...mockPlan, owner_id: 'owner-2', permission_level: 'edit' },
+      },
+      { id: 'user-1' },
+    )
+
+    await wrapper.find('button[aria-label="Actions for Test Plan"]').trigger('click')
+
+    const menu = wrapper.findComponent({ name: 'PlanCardMenu' })
+    expect(menu.exists()).toBe(true)
+    expect(menu.props('canShare')).toBe(false)
   })
 
   it('should handle menu events properly', () => {
@@ -258,6 +280,9 @@ describe('PlanCard', () => {
 
     const actionsButton = wrapper.find('button[aria-label="Actions for Test Plan"]')
     expect(actionsButton.exists()).toBe(true)
+    expect(actionsButton.attributes('aria-haspopup')).toBe('menu')
+    expect(actionsButton.attributes('aria-expanded')).toBe('false')
+    expect(actionsButton.attributes('aria-controls')).toBe(`plan-actions-${mockPlan.id}`)
   })
 
   it('should handle plan that is not shared', () => {

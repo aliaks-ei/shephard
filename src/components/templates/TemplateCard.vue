@@ -42,13 +42,18 @@
               round
               size="sm"
               icon="eva-more-vertical-outline"
-              class="text-muted"
               :aria-label="menuButtonLabel"
               aria-haspopup="menu"
+              :aria-expanded="String(isActionsMenuOpen)"
+              :aria-controls="menuId"
+              class="text-muted mobile-touch-target"
               @click.stop
             >
               <TemplateCardMenu
+                :id="menuId"
+                v-model="isActionsMenuOpen"
                 :can-edit="canEdit"
+                :can-share="isOwner"
                 @export="emit('export', template.id)"
                 @share="emit('share', template.id)"
                 @delete="showDeleteDialog"
@@ -132,11 +137,13 @@ const userStore = useUserStore()
 const preferencesStore = usePreferencesStore()
 
 const isDeleteDialogOpen = ref(false)
+const isActionsMenuOpen = ref(false)
 
 const isOwner = computed(() => props.template.owner_id === userStore.userProfile?.id)
 const canEdit = computed(() => isOwner.value || props.template.permission_level === 'edit')
 const isViewOnly = computed(() => props.template.permission_level === 'view')
 const menuButtonLabel = computed(() => `Actions for ${props.template.name}`)
+const menuId = computed(() => `template-actions-${props.template.id}`)
 
 function formatAmount(amount: number | null | undefined): string {
   const currency = props.template.currency as CurrencyCode

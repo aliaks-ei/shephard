@@ -1,5 +1,6 @@
 <template>
   <q-form
+    data-pwa-update-blocker="form"
     novalidate
     @submit.prevent="handleSubmit"
   >
@@ -223,7 +224,7 @@ async function handleEmailSubmit() {
   emailError.value = null
 
   try {
-    await userStore.auth.signInWithOtp(email.value)
+    await userStore.auth.signInWithOtp(email.value, sanitizeRedirectPath(route.query.redirectTo))
 
     if (userStore.auth.emailError) {
       emailError.value = userStore.auth.emailError
@@ -269,7 +270,7 @@ async function handleResendCode() {
   otpError.value = null
 
   try {
-    await userStore.auth.signInWithOtp(email.value)
+    await userStore.auth.signInWithOtp(email.value, sanitizeRedirectPath(route.query.redirectTo))
 
     if (userStore.auth.emailError) {
       otpError.value = userStore.auth.emailError

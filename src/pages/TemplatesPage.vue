@@ -1,12 +1,13 @@
 <template>
   <q-pull-to-refresh
-    :disable="$q.screen.gt.sm"
+    :disable="!$q.screen.lt.md"
     @refresh="onRefresh"
   >
     <ListPageLayout
       title="Templates"
       description="Manage your templates and create new ones"
       create-button-label="Create Template"
+      :create-button-disabled="isOffline"
       @create="goToNew"
     >
       <SearchAndSort
@@ -17,6 +18,13 @@
       />
 
       <ListPageSkeleton v-if="areItemsLoading" />
+
+      <QueryErrorState
+        v-else-if="hasLoadError"
+        entity-name="Templates"
+        :retrying="isRetrying"
+        @retry="retryItems"
+      />
 
       <TemplatesGroup
         v-else-if="hasItems"
@@ -70,6 +78,7 @@ useMeta({ title: 'Templates' })
 import SearchAndSort from 'src/components/shared/SearchAndSort.vue'
 import ListPageSkeleton from 'src/components/shared/ListPageSkeleton.vue'
 import EmptyState from 'src/components/shared/EmptyState.vue'
+import QueryErrorState from 'src/components/shared/QueryErrorState.vue'
 import TemplatesGroup from 'src/components/templates/TemplatesGroup.vue'
 import ShareTemplateDialog from 'src/components/templates/ShareTemplateDialog.vue'
 import ExportDialog from 'src/components/shared/ExportDialog.vue'
@@ -80,6 +89,7 @@ import { useCategoriesQuery } from 'src/queries/categories'
 import { useUserStore } from 'src/stores/user'
 import { useBanner } from 'src/composables/useBanner'
 import { getTemplateWithItems } from 'src/api'
+import { useNetworkStatus } from 'src/composables/useNetworkStatus'
 import {
   createTemplateExportDownload,
   downloadExportFile,
@@ -90,6 +100,8 @@ const {
   searchQuery,
   sortBy,
   areItemsLoading,
+  hasLoadError,
+  isRetrying,
   allFilteredAndSortedItems,
   hasItems,
   sortOptions,
@@ -98,9 +110,11 @@ const {
   viewItem,
   deleteItem,
   clearSearch,
+  retryItems,
 } = useTemplates()
 const { categories } = useCategoriesQuery()
 const queryClient = useQueryClient()
+const { isOffline } = useNetworkStatus()
 
 async function onRefresh(done: () => void) {
   try {
@@ -122,6 +136,9 @@ const shareTemplateOwnerId = computed(() => {
 })
 
 function openShareDialog(templateId: string): void {
+  const template = allFilteredAndSortedItems.value.find((item) => item.id === templateId)
+  if (!template || template.owner_id !== userStore.userProfile?.id) return
+
   shareTemplateId.value = templateId
   isShareDialogOpen.value = true
 }

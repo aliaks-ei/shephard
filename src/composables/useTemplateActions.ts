@@ -11,11 +11,14 @@ export type TemplateActionHandlers = {
 
 export type TemplateActionsContext = {
   isNewTemplate: Ref<boolean> | ComputedRef<boolean>
+  isOwner: Ref<boolean> | ComputedRef<boolean>
   isEditMode: Ref<boolean> | ComputedRef<boolean>
+  isOnline?: Ref<boolean> | ComputedRef<boolean>
   handlers: TemplateActionHandlers
 }
 
 export function useTemplateActions(context: TemplateActionsContext) {
+  const writeDisabled = computed(() => context.isOnline?.value === false)
   const actionBarActions = computed<ActionBarAction[]>(() => [
     {
       key: 'add-category',
@@ -33,6 +36,7 @@ export function useTemplateActions(context: TemplateActionsContext) {
       color: context.isNewTemplate.value ? 'primary' : 'positive',
       priority: 'primary',
       visible: context.isEditMode.value,
+      disabled: writeDisabled.value,
       handler: context.handlers.onSave,
     },
     {
@@ -50,7 +54,8 @@ export function useTemplateActions(context: TemplateActionsContext) {
       label: 'Share',
       color: 'info',
       priority: 'secondary',
-      visible: !context.isNewTemplate.value && context.isEditMode.value,
+      visible: !context.isNewTemplate.value && context.isEditMode.value && context.isOwner.value,
+      disabled: writeDisabled.value,
       handler: context.handlers.onShare,
     },
     {
@@ -60,6 +65,7 @@ export function useTemplateActions(context: TemplateActionsContext) {
       color: 'negative',
       priority: 'secondary',
       visible: !context.isNewTemplate.value && context.isEditMode.value,
+      disabled: writeDisabled.value,
       handler: context.handlers.onDelete,
     },
   ])

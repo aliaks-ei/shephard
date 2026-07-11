@@ -1,12 +1,13 @@
 <template>
   <q-pull-to-refresh
-    :disable="$q.screen.gt.sm"
+    :disable="!$q.screen.lt.md"
     @refresh="onRefresh"
   >
     <ListPageLayout
       title="Plans"
       description="Manage your financial plans and track your progress"
       create-button-label="Create Plan"
+      :create-button-disabled="isOffline"
       @create="goToNew"
     >
       <SearchAndSort
@@ -16,21 +17,14 @@
         :sort-options="sortOptions"
       />
 
-      <!-- Mobile: templates live under Plans since the bottom nav slot went to Activity -->
-      <q-btn
-        v-if="$q.screen.lt.md"
-        flat
-        no-caps
-        dense
-        color="primary"
-        icon="eva-file-text-outline"
-        icon-right="eva-chevron-right-outline"
-        label="Browse templates"
-        class="q-mb-sm"
-        to="/templates"
-      />
-
       <ListPageSkeleton v-if="areItemsLoading" />
+
+      <QueryErrorState
+        v-else-if="hasLoadError"
+        entity-name="Plans"
+        :retrying="isRetrying"
+        @retry="retryItems"
+      />
 
       <PlansGroup
         v-else-if="hasItems"
@@ -85,6 +79,7 @@ useMeta({ title: 'Plans' })
 import SearchAndSort from 'src/components/shared/SearchAndSort.vue'
 import ListPageSkeleton from 'src/components/shared/ListPageSkeleton.vue'
 import EmptyState from 'src/components/shared/EmptyState.vue'
+import QueryErrorState from 'src/components/shared/QueryErrorState.vue'
 import PlansGroup from 'src/components/plans/PlansGroup.vue'
 import SharePlanDialog from 'src/components/plans/SharePlanDialog.vue'
 import ExportDialog from 'src/components/shared/ExportDialog.vue'
@@ -95,7 +90,7 @@ import { useCategoriesQuery } from 'src/queries/categories'
 import { useUserStore } from 'src/stores/user'
 import { useBanner } from 'src/composables/useBanner'
 import {
-  getExpensesByPlan,
+  getAllExpensesByPlanForExport,
   getPlanExpenseSummary,
   getPlanWithItems,
   type PlanWithPermission,
@@ -103,11 +98,14 @@ import {
 } from 'src/api'
 import { createPlanExportDownload, downloadExportFile, type ExportFormat } from 'src/utils/export'
 import type { CategoryBudget } from 'src/types'
+import { useNetworkStatus } from 'src/composables/useNetworkStatus'
 
 const {
   searchQuery,
   sortBy,
   areItemsLoading,
+  hasLoadError,
+  isRetrying,
   allFilteredAndSortedItems,
   hasItems,
   sortOptions,
@@ -116,12 +114,14 @@ const {
   viewItem,
   deleteItem,
   clearSearch,
+  retryItems,
   cancelPlan,
 } = usePlans()
 const { categories } = useCategoriesQuery()
 const userStore = useUserStore()
 const { showError, showSuccess } = useBanner()
 const queryClient = useQueryClient()
+const { isOffline } = useNetworkStatus()
 
 async function onRefresh(done: () => void) {
   try {
@@ -165,6 +165,9 @@ function handleDeletePlan(plan: PlanWithPermission): void {
 }
 
 function openShareDialog(planId: string): void {
+  const plan = allFilteredAndSortedItems.value.find((item) => item.id === planId)
+  if (!plan || plan.owner_id !== userStore.userProfile?.id) return
+
   sharePlanId.value = planId
   isShareDialogOpen.value = true
 }
@@ -183,7 +186,7 @@ async function handlePlanExport(format: ExportFormat): Promise<void> {
   try {
     const [plan, expenses, summary] = await Promise.all([
       getPlanWithItems(exportPlanId.value, userStore.userProfile.id),
-      getExpensesByPlan(exportPlanId.value),
+      getAllExpensesByPlanForExport(exportPlanId.value),
       getPlanExpenseSummary(exportPlanId.value),
     ])
 

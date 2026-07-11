@@ -165,6 +165,52 @@ it('should call confirmDeleteExpense when desktop delete button is clicked', asy
   await deleteBtn?.trigger('click')
 
   expect(confirmDeleteExpenseMock).toHaveBeenCalledWith(mockExpense, expect.any(Function))
+  expect(deleteBtn?.attributes('aria-label')).toBe('Delete expense')
+})
+
+it('should make the expense row navigate when a source route is provided', () => {
+  const to = { name: 'plan', params: { id: 'plan-1' } }
+  const wrapper = mount(ExpenseListItem, {
+    props: {
+      ...defaultProps,
+      to,
+    },
+  })
+
+  const item = wrapper.findComponent({ name: 'QItem' })
+  expect(item.props('clickable')).toBe(true)
+  expect(item.props('to')).toEqual(to)
+})
+
+it('should call confirmDeleteExpense when mobile swipe delete is triggered', async () => {
+  const reset = vi.fn()
+  const wrapper = mount(ExpenseListItem, {
+    props: defaultProps,
+    global: {
+      mocks: {
+        $q: {
+          screen: {
+            lt: { md: true },
+          },
+        },
+      },
+      stubs: {
+        QSlideItem: {
+          template:
+            '<div class="q-slide-item"><button class="swipe-delete" @click="$emit(\'right\', { reset })" /><slot /></div>',
+          setup() {
+            return { reset }
+          },
+        },
+      },
+    },
+  })
+
+  await wrapper.find('.swipe-delete').trigger('click')
+
+  expect(reset).toHaveBeenCalledOnce()
+  expect(confirmDeleteExpenseMock).toHaveBeenCalledWith(mockExpense, expect.any(Function))
+  expect(deleteExpenseMock).not.toHaveBeenCalled()
 })
 
 it('should apply itemClass prop', () => {

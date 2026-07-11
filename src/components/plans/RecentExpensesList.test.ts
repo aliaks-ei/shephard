@@ -120,6 +120,7 @@ describe('RecentExpensesList', () => {
       expenses: [],
       currency: 'USD',
       isLoading: false,
+      canAddExpenses: true,
     })
     expect(wrapper.exists()).toBe(true)
   })
@@ -209,12 +210,24 @@ describe('RecentExpensesList', () => {
       expenses: [],
       currency: 'USD',
       isLoading: false,
+      canAddExpenses: true,
     })
 
     const button = wrapper.find('button')
     await button.trigger('click')
 
     expect(wrapper.emitted('add-expense')).toBeTruthy()
+  })
+
+  it('should hide the empty-state add action when the plan cannot accept expenses', () => {
+    const wrapper = renderRecentExpensesList({
+      expenses: [],
+      currency: 'USD',
+      isLoading: false,
+      canAddExpenses: false,
+    })
+
+    expect(wrapper.find('button').exists()).toBe(false)
   })
 
   it('should show delete button when canEdit is true', () => {
@@ -244,7 +257,7 @@ describe('RecentExpensesList', () => {
     expect(wrapper.text()).toContain('Delete')
   })
 
-  it('should delete immediately on mobile swipe', async () => {
+  it('should request confirmation on mobile swipe', async () => {
     const wrapper = renderRecentExpensesList(
       {
         expenses: mockExpenses,
@@ -257,9 +270,9 @@ describe('RecentExpensesList', () => {
 
     await wrapper.find('.slide-right-trigger').trigger('click')
 
-    expect(mockDeleteExpense).toHaveBeenCalledWith(mockExpenses[0], expect.any(Function))
-    expect(mockConfirmDeleteExpense).not.toHaveBeenCalled()
-    expect(wrapper.emitted('refresh')).toBeTruthy()
+    expect(mockConfirmDeleteExpense).toHaveBeenCalledWith(mockExpenses[0], expect.any(Function))
+    expect(mockDeleteExpense).not.toHaveBeenCalled()
+    expect(wrapper.emitted('refresh')).toBeUndefined()
   })
 
   it('should not show delete button when canEdit is false', () => {

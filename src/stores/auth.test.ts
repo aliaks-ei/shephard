@@ -188,15 +188,30 @@ describe('Auth Store', () => {
 
       vi.mocked(authApi.sendOtpToEmail).mockResolvedValue(mockResult)
 
-      const result = await authStore.signInWithOtp(mockEmail)
+      const result = await authStore.signInWithOtp(mockEmail, '/plans/plan-1')
 
       expect(authApi.sendOtpToEmail).toHaveBeenCalledWith(
         mockEmail,
-        `${window.location.origin}/auth/callback`,
+        `${window.location.origin}/auth/callback?redirectTo=%2Fplans%2Fplan-1`,
       )
       expect(authStore.isEmailSent).toBe(true)
       expect(authStore.emailError).toBeNull()
       expect(result).toEqual(mockResult)
+    })
+
+    it('should replace an unsafe OTP redirect with home', async () => {
+      vi.mocked(authApi.sendOtpToEmail).mockResolvedValue({
+        user: null,
+        session: null,
+        messageId: 'test-message-id',
+      })
+
+      await authStore.signInWithOtp('test@example.com', 'https://evil.example.com/phish')
+
+      expect(authApi.sendOtpToEmail).toHaveBeenCalledWith(
+        'test@example.com',
+        `${window.location.origin}/auth/callback?redirectTo=%2F`,
+      )
     })
 
     it('should handle OTP send error', async () => {

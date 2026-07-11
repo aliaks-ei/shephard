@@ -16,7 +16,7 @@
         Let's get you back to the flock:
       </div>
 
-      <div class="row q-gutter-md">
+      <div class="error-not-found__actions row q-gutter-md">
         <q-btn
           color="primary"
           unelevated
@@ -64,5 +64,18 @@ import BrandIllustration from 'src/components/shared/BrandIllustration.vue'
 <style lang="scss" scoped>
 .error-not-found__content {
   max-width: 600px;
+}
+
+@media (max-width: 599px) {
+  .error-not-found__actions {
+    width: 100%;
+    flex-direction: column;
+
+    :deep(.q-btn) {
+      width: 100%;
+      min-height: 44px;
+      margin-left: 0;
+    }
+  }
 }
 </style>

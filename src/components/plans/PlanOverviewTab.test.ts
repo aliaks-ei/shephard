@@ -14,21 +14,29 @@ vi.mock('src/composables/usePlanOverview', () => ({
   usePlanOverview: vi.fn(() => ({
     categoryBudgets: ref([]),
     recentExpenses: ref([]),
+    historyExpenses: ref([]),
+    categoryExpenses: ref([]),
+    historyQuery: {
+      isPending: ref(false),
+      isError: ref(false),
+      isFetching: ref(false),
+      isFetchingNextPage: ref(false),
+      hasNextPage: ref(false),
+      fetchNextPage: vi.fn(),
+      refetch: vi.fn(),
+    },
+    categoryHistoryQuery: {
+      isPending: ref(false),
+      isError: ref(false),
+      isFetching: ref(false),
+      isFetchingNextPage: ref(false),
+      hasNextPage: ref(false),
+      fetchNextPage: vi.fn(),
+      refetch: vi.fn(),
+    },
     totalBudget: ref(0),
     totalSpent: ref(0),
     remainingBudget: ref(0),
-  })),
-}))
-
-vi.mock('src/queries/expenses', () => ({
-  useExpensesByPlanQuery: vi.fn(() => ({
-    expenses: ref([]),
-    totalExpensesAmount: ref(0),
-    sortedExpenses: ref([]),
-    expensesByCategory: ref({}),
-    getExpensesForPlanItem: vi.fn(() => []),
-    isPending: ref(false),
-    data: ref(null),
   })),
 }))
 
@@ -84,6 +92,7 @@ describe('PlanOverviewTab', () => {
       plan: mockPlan,
       isOwner: true,
       isEditMode: true,
+      canAddExpenses: true,
     })
     expect(wrapper.exists()).toBe(true)
   })
@@ -93,6 +102,7 @@ describe('PlanOverviewTab', () => {
       plan: mockPlan,
       isOwner: true,
       isEditMode: true,
+      canAddExpenses: true,
     })
 
     const summaryCard = wrapper.find('.plan-summary-card')
@@ -104,6 +114,7 @@ describe('PlanOverviewTab', () => {
       plan: mockPlan,
       isOwner: true,
       isEditMode: true,
+      canAddExpenses: true,
     })
 
     const list = wrapper.find('.recent-expenses-list')
@@ -115,6 +126,7 @@ describe('PlanOverviewTab', () => {
       plan: mockPlan,
       isOwner: true,
       isEditMode: true,
+      canAddExpenses: true,
     })
 
     wrapper.vm.$emit('refresh')
@@ -126,6 +138,7 @@ describe('PlanOverviewTab', () => {
       plan: mockPlan,
       isOwner: true,
       isEditMode: true,
+      canAddExpenses: true,
     })
 
     wrapper.vm.$emit('open-expense-dialog', 'category-1')

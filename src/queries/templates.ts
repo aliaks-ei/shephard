@@ -4,14 +4,20 @@ import {
   getTemplates,
   getTemplateWithItems,
   createTemplate,
+  createTemplateWithItems,
   updateTemplate,
+  updateTemplateWithItems,
   deleteTemplate,
   createTemplateItems,
   deleteTemplateItems,
   type TemplateInsert,
   type TemplateUpdate,
+  type TemplateTransactionInsert,
+  type TemplateTransactionUpdate,
   type TemplateWithPermission,
   type TemplateItemInsert,
+  type TemplateItemTransactionInput,
+  getEntityLoadErrorKind,
 } from 'src/api'
 import { useUserStore } from 'src/stores/user'
 import { queryKeys } from './query-keys'
@@ -35,7 +41,7 @@ export function useTemplatesQuery(userId: MaybeRefOrGetter<string | undefined>) 
     queryKey: computed(() => queryKeys.templates.list(toValue(userId) ?? '')),
     queryFn: () => getTemplates(toValue(userId)!),
     enabled: computed(() => !!toValue(userId)),
-    meta: { errorKey: 'TEMPLATES.LOAD_FAILED' as const },
+    meta: { errorKey: 'TEMPLATES.LOAD_FAILED' as const, handledInline: true },
   })
 
   const templates = computed((): TemplateWithPermission[] => query.data.value ?? [])
@@ -66,7 +72,11 @@ export function useTemplateDetailQuery(
     ),
     queryFn: () => getTemplateWithItems(toValue(templateId)!, toValue(userId)!),
     enabled: computed(() => !!toValue(templateId) && !!toValue(userId)),
-    meta: { errorKey: 'TEMPLATES.LOAD_TEMPLATE_FAILED' as const },
+    retry: (failureCount, error) => {
+      const kind = getEntityLoadErrorKind(error)
+      return kind !== 'not-found' && kind !== 'access-denied' && failureCount < 1
+    },
+    meta: { errorKey: 'TEMPLATES.LOAD_TEMPLATE_FAILED' as const, handledInline: true },
   })
 }
 
@@ -90,6 +100,29 @@ export function useCreateTemplateMutation() {
   })
 }
 
+export function useCreateTemplateWithItemsMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (vars: {
+      template: TemplateTransactionInsert
+      items: TemplateItemTransactionInput[]
+    }) => createTemplateWithItems(vars.template, vars.items),
+    onSuccess: (template) => {
+      invalidateTemplateQueries(queryClient, template.id)
+    },
+    onError: createSpecificErrorHandler(
+      [
+        {
+          check: (e) => e.name === 'DUPLICATE_TEMPLATE_NAME',
+          key: 'TEMPLATES.DUPLICATE_NAME',
+        },
+      ],
+      'TEMPLATES.CREATE_FAILED',
+    ),
+  })
+}
+
 export function useUpdateTemplateMutation() {
   const queryClient = useQueryClient()
 
@@ -98,6 +131,30 @@ export function useUpdateTemplateMutation() {
       updateTemplate(vars.id, vars.updates),
     onSuccess: (_data, vars) => {
       invalidateTemplateQueries(queryClient, vars.id)
+    },
+    onError: createSpecificErrorHandler(
+      [
+        {
+          check: (e) => e.name === 'DUPLICATE_TEMPLATE_NAME',
+          key: 'TEMPLATES.DUPLICATE_NAME',
+        },
+      ],
+      'TEMPLATES.UPDATE_FAILED',
+    ),
+  })
+}
+
+export function useUpdateTemplateWithItemsMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (vars: {
+      id: string
+      updates: TemplateTransactionUpdate
+      items: TemplateItemTransactionInput[]
+    }) => updateTemplateWithItems(vars.id, vars.updates, vars.items),
+    onSuccess: (template) => {
+      invalidateTemplateQueries(queryClient, template.id)
     },
     onError: createSpecificErrorHandler(
       [

@@ -1,8 +1,11 @@
 import { useError } from 'src/composables/useError'
+import { isOfflineActionError } from 'src/composables/useNetworkStatus'
 import type { ErrorMessageKey } from 'src/config/error-messages'
 
 export function createMutationErrorHandler(errorKey: ErrorMessageKey) {
   return (error: Error) => {
+    if (isOfflineActionError(error)) return
+
     const { handleError } = useError()
     handleError(errorKey, error)
   }
@@ -18,6 +21,8 @@ export function createSpecificErrorHandler(
   defaultKey: ErrorMessageKey,
 ) {
   return (error: Error) => {
+    if (isOfflineActionError(error)) return
+
     const { handleError } = useError()
 
     for (const handler of handlers) {

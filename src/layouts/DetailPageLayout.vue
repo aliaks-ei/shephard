@@ -11,12 +11,27 @@
           round
           size="sm"
           icon="eva-arrow-back-outline"
+          aria-label="Go back"
+          class="detail-back-button"
           @click="emit('back')"
         />
 
         <q-toolbar-title>
           <div class="row items-center no-wrap text-body1">
             {{ pageTitle }}
+            <q-badge
+              v-if="showReadOnlyBadge && effectiveLoadState === 'ready'"
+              color="orange"
+              text-color="white"
+              class="q-ml-sm"
+              outline
+            >
+              <q-icon
+                name="eva-eye-outline"
+                class="q-mr-xs"
+              />
+              view only
+            </q-badge>
           </div>
         </q-toolbar-title>
       </q-toolbar>
@@ -24,11 +39,11 @@
       <BannerContainer />
 
       <PageBanners
-        v-if="!isLoading"
+        v-if="effectiveLoadState === 'ready'"
         :banners="banners || []"
       />
 
-      <div v-if="isLoading">
+      <div v-if="effectiveLoadState === 'loading'">
         <!-- Tabs placeholder -->
         <div class="row q-mb-md">
           <q-skeleton
@@ -66,6 +81,18 @@
         />
       </div>
 
+      <QueryErrorState
+        v-else-if="effectiveLoadState !== 'ready'"
+        :kind="terminalLoadState"
+        :entity-name="entityName ?? 'Item'"
+        :show-retry="effectiveLoadState === 'error'"
+        :retrying="retrying ?? false"
+        show-back
+        :back-label="`Back to ${entityNamePlural ?? 'items'}`"
+        @retry="emit('retry')"
+        @back="emit('back')"
+      />
+
       <div v-else>
         <slot />
       </div>
@@ -85,6 +112,8 @@
               flat
               round
               icon="eva-arrow-back-outline"
+              aria-label="Go back"
+              class="detail-back-button"
               @click="emit('back')"
             />
 
@@ -92,7 +121,7 @@
               <div class="row items-center no-wrap">
                 {{ pageTitle }}
                 <q-badge
-                  v-if="showReadOnlyBadge && !isLoading"
+                  v-if="showReadOnlyBadge && effectiveLoadState === 'ready'"
                   color="orange"
                   text-color="white"
                   class="q-ml-sm"
@@ -112,7 +141,7 @@
             <!-- Desktop Actions -->
             <ActionBar
               :actions="actions || []"
-              :visible="actionsVisible !== false"
+              :visible="actionsVisible !== false && effectiveLoadState === 'ready'"
               @action-clicked="emit('action-clicked', $event)"
             />
           </q-toolbar>
@@ -120,11 +149,11 @@
           <BannerContainer />
 
           <PageBanners
-            v-if="!isLoading"
+            v-if="effectiveLoadState === 'ready'"
             :banners="banners || []"
           />
 
-          <div v-if="isLoading">
+          <div v-if="effectiveLoadState === 'loading'">
             <!-- Tabs placeholder -->
             <div class="row q-mb-md">
               <q-skeleton
@@ -162,6 +191,18 @@
             />
           </div>
 
+          <QueryErrorState
+            v-else-if="effectiveLoadState !== 'ready'"
+            :kind="terminalLoadState"
+            :entity-name="entityName ?? 'Item'"
+            :show-retry="effectiveLoadState === 'error'"
+            :retrying="retrying ?? false"
+            show-back
+            :back-label="`Back to ${entityNamePlural ?? 'items'}`"
+            @retry="emit('retry')"
+            @back="emit('back')"
+          />
+
           <div v-else>
             <slot />
           </div>
@@ -175,7 +216,7 @@
     <DetailMobileActionBar
       v-if="isMobile"
       :actions="actions || []"
-      :visible="actionsVisible !== false"
+      :visible="actionsVisible !== false && effectiveLoadState === 'ready'"
       @action-clicked="emit('action-clicked', $event)"
     />
   </div>
@@ -188,7 +229,9 @@ import PageBanners from 'src/components/shared/PageBanners.vue'
 import BannerContainer from 'src/components/shared/BannerContainer.vue'
 import ActionBar from 'src/components/shared/ActionBar.vue'
 import DetailMobileActionBar from 'src/components/shared/DetailMobileActionBar.vue'
+import QueryErrorState from 'src/components/shared/QueryErrorState.vue'
 import type { ActionBarAction } from 'src/components/shared/ActionBar.vue'
+import type { QueryErrorStateKind } from 'src/components/shared/QueryErrorState.vue'
 
 export interface BannerConfig {
   type: string
@@ -197,8 +240,11 @@ export interface BannerConfig {
   message: string
 }
 
+type DetailPageLoadState = 'loading' | 'ready' | 'not-found' | 'denied' | 'error'
+
 const emit = defineEmits<{
   (e: 'back'): void
+  (e: 'retry'): void
   (e: 'action-clicked', key: string): void
 }>()
 
@@ -207,21 +253,37 @@ const props = withDefaults(
     pageTitle: string
     banners?: BannerConfig[]
     isLoading?: boolean
+    loadState?: DetailPageLoadState
+    retrying?: boolean
+    entityName?: string
+    entityNamePlural?: string
     actions?: ActionBarAction[]
     actionsVisible?: boolean
     showReadOnlyBadge?: boolean
   }>(),
   {
     actionsVisible: true,
+    entityName: 'Item',
+    entityNamePlural: 'items',
+    isLoading: false,
+    retrying: false,
   },
 )
 
 const $q = useQuasar()
 
 const isMobile = computed(() => $q.screen.lt.md)
+const effectiveLoadState = computed(
+  () => props.loadState ?? (props.isLoading ? 'loading' : 'ready'),
+)
+const terminalLoadState = computed<QueryErrorStateKind>(() => {
+  if (effectiveLoadState.value === 'not-found') return 'not-found'
+  if (effectiveLoadState.value === 'denied') return 'denied'
+  return 'error'
+})
 
 const hasActions = computed(() => {
-  if (props.actionsVisible === false) {
+  if (props.actionsVisible === false || effectiveLoadState.value !== 'ready') {
     return false
   }
 
@@ -251,5 +313,10 @@ const hasActions = computed(() => {
 
 .detail-title-basis {
   flex-basis: 30%;
+}
+
+.detail-back-button {
+  min-width: 44px;
+  min-height: 44px;
 }
 </style>

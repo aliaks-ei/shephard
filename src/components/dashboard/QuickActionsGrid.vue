@@ -24,6 +24,10 @@
             clickable
             class="q-py-sm q-px-md"
             :to="action.to"
+            :disable="
+              (action.requiresExpensePlan && !props.canAddExpense) ||
+              (action.requiresOnline && !props.online)
+            "
             @click="action.action ? action.action() : undefined"
           >
             <q-item-section>
@@ -44,36 +48,59 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+
+const props = withDefaults(
+  defineProps<{
+    canAddExpense?: boolean
+    online?: boolean
+  }>(),
+  {
+    canAddExpense: true,
+    online: true,
+  },
+)
+
 const emit = defineEmits<{
   'add-expense': []
 }>()
 
-interface QuickAction {
+type QuickAction = {
   label: string
   icon: string
   color: string
   to?: string
   action?: () => void
+  requiresExpensePlan?: boolean
+  requiresOnline?: boolean
 }
 
-const quickActions: QuickAction[] = [
+const quickActions = computed<QuickAction[]>(() => [
   {
     label: 'Add Expense',
     icon: 'eva-plus-circle-outline',
     color: 'positive',
-    action: () => emit('add-expense'),
+    requiresExpensePlan: true,
+    requiresOnline: true,
+    action: () => {
+      if (props.canAddExpense) {
+        emit('add-expense')
+      }
+    },
   },
   {
     label: 'New Plan',
     icon: 'eva-calendar-outline',
     color: 'primary',
     to: '/plans/new',
+    requiresOnline: true,
   },
   {
     label: 'New Template',
     icon: 'eva-file-text-outline',
     color: 'primary',
     to: '/templates/new',
+    requiresOnline: true,
   },
   {
     label: 'Settings',
@@ -81,5 +108,5 @@ const quickActions: QuickAction[] = [
     color: 'warning',
     to: '/settings',
   },
-]
+])
 </script>

@@ -2,6 +2,7 @@
   <div class="floating-nav liquid-glass-surface q-mx-sm q-mb-none">
     <div class="mobile-nav-row items-center">
       <div
+        v-if="activeSlot !== null"
         class="mobile-nav-highlight liquid-glass-animated no-pointer-events"
         :style="highlightStyle"
       />
@@ -48,6 +49,8 @@
           :ripple="false"
           size="md"
           class="mobile-nav-add-btn glass-fab-btn liquid-glass-animated"
+          :disable="!props.canAddExpense"
+          aria-label="Add expense"
           @click="emit('open-expense-dialog')"
         />
       </div>
@@ -69,13 +72,13 @@
         />
       </div>
 
-      <!-- Settings -->
+      <!-- Templates -->
       <div class="mobile-nav-col min-w-0">
         <q-btn
-          icon="eva-settings-2-outline"
-          label="Settings"
-          to="/settings"
-          :color="isActive('/settings') ? 'primary' : undefined"
+          icon="eva-file-text-outline"
+          label="Templates"
+          to="/templates"
+          :color="isActive('/templates') ? 'primary' : undefined"
           :ripple="false"
           size="sm"
           flat
@@ -93,20 +96,30 @@
 import { computed } from 'vue'
 import { useRouteActive } from 'src/composables/useRouteActive'
 
+const props = withDefaults(
+  defineProps<{
+    canAddExpense?: boolean
+  }>(),
+  {
+    canAddExpense: true,
+  },
+)
+
 const emit = defineEmits<{ 'open-expense-dialog': [] }>()
 
 const { isActive } = useRouteActive()
 
 const activeSlot = computed(() => {
-  if (isActive('/settings')) return 4
+  if (isActive('/templates')) return 4
   if (isActive('/expenses')) return 3
   if (isActive('/plans')) return 1
-  return 0
+  if (isActive('/')) return 0
+  return null
 })
 
 const highlightStyle = computed(() => {
   return {
-    '--mobile-nav-active-slot': activeSlot.value,
+    '--mobile-nav-active-slot': activeSlot.value ?? 0,
   }
 })
 </script>
@@ -149,16 +162,20 @@ const highlightStyle = computed(() => {
     background-color 0.2s ease,
     box-shadow 0.2s ease,
     color 0.2s ease;
+  min-height: 44px;
 }
 
 .mobile-nav-add-btn {
   position: relative;
   z-index: 2;
+  min-width: 44px;
+  min-height: 44px;
 }
 
-.mobile-nav-action :deep(.q-focus-helper),
-.mobile-nav-add-btn :deep(.q-focus-helper) {
-  display: none;
+.mobile-nav-action:focus-visible,
+.mobile-nav-add-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px hsl(var(--glass-focus-ring));
 }
 
 @media (hover: hover) and (pointer: fine) {

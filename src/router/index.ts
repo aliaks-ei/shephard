@@ -8,10 +8,11 @@ import {
 } from 'vue-router'
 import routes from './routes'
 import { authGuard } from 'src/router/guards/auth'
-
-type DocumentWithViewTransition = Document & {
-  startViewTransition?: (callback: () => Promise<void>) => unknown
-}
+import {
+  prepareRouteViewTransition,
+  type PendingRouteViewTransition,
+  type ViewTransitionDocument,
+} from 'src/utils/view-transition'
 
 export default defineRouter(function (/* { store, ssrContext } */) {
   const createHistory = process.env.SERVER
@@ -36,36 +37,31 @@ export default defineRouter(function (/* { store, ssrContext } */) {
   // Same-document View Transitions between routes (progressive enhancement):
   // hold navigation until the browser snapshots the old view, release the
   // new-view snapshot once Vue has rendered the target route.
-  let finishViewTransition: (() => void) | undefined
+  let pendingViewTransition: PendingRouteViewTransition | null = null
 
   Router.beforeResolve((to, from) => {
     if (to.fullPath === from.fullPath) return
 
-    const doc = typeof document !== 'undefined' ? (document as DocumentWithViewTransition) : null
-    const startViewTransition = doc?.startViewTransition?.bind(doc)
-    if (!startViewTransition) return
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const doc = typeof document !== 'undefined' ? (document as ViewTransitionDocument) : null
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-    return new Promise<void>((resolve) => {
-      startViewTransition(() => {
-        resolve()
-        return new Promise<void>((finish) => {
-          finishViewTransition = finish
-        })
-      })
-    })
+    pendingViewTransition = prepareRouteViewTransition(doc, prefersReducedMotion)
+    return pendingViewTransition?.navigationReady
   })
 
   Router.afterEach(() => {
     void nextTick(() => {
-      finishViewTransition?.()
-      finishViewTransition = undefined
+      pendingViewTransition?.finish()
+      pendingViewTransition = null
     })
   })
 
   Router.onError(() => {
-    finishViewTransition?.()
-    finishViewTransition = undefined
+    pendingViewTransition?.finish()
+    pendingViewTransition = null
   })
 
   return Router

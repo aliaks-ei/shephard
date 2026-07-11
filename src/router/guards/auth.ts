@@ -17,7 +17,7 @@ export async function authGuard(
     return
   }
 
-  if (!to.meta.requiresAuth && userStore.isAuthenticated) {
+  if (!to.meta.requiresAuth && userStore.isAuthenticated && to.meta.allowAuthenticated !== true) {
     next({ path: '/' })
     return
   }

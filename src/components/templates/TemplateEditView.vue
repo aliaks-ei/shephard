@@ -1,6 +1,7 @@
 <template>
   <q-form
     ref="formRef"
+    data-pwa-update-blocker="form"
     @submit="handleSubmit"
   >
     <TemplateBasicInfoSection

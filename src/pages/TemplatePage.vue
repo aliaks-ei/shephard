@@ -2,11 +2,16 @@
   <BaseItemFormPage
     :page-title="pageTitle"
     :is-loading="isTemplateLoading"
+    :load-state="detailState.status"
+    :retrying="isTemplateRetrying"
+    entity-name="Template"
+    entity-name-plural="templates"
     :actions="actionBarActions"
     :actions-visible="actionsVisible"
     :is-edit-mode="isEditMode"
     :show-read-only-badge="!isEditMode"
     @back="goBack"
+    @retry="retryTemplateLoad"
   >
     <TemplateEditView
       v-if="isEditMode"
@@ -52,7 +57,7 @@
       />
 
       <ShareTemplateDialog
-        v-if="routeTemplateId"
+        v-if="routeTemplateId && isOwner"
         v-model="isShareDialogOpen"
         :template-id="routeTemplateId"
         :owner-user-id="currentTemplate?.owner_id"
@@ -93,8 +98,11 @@ import { useTemplatePageState } from 'src/composables/useTemplatePageState'
 const {
   currentTemplate,
   isTemplateLoading,
+  isTemplateRetrying,
+  detailState,
   isNewTemplate,
   routeTemplateId,
+  isOwner,
   isEditMode,
   templateCurrency,
   categories,
@@ -129,6 +137,7 @@ const {
   goBack,
   onTemplateShared,
   deleteTemplate,
+  retryTemplateLoad,
 } = useTemplatePageState()
 
 useMeta(() => ({

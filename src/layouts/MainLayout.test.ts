@@ -3,7 +3,7 @@ import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-v
 import { createTestingPinia } from '@pinia/testing'
 import { vi, it, expect, beforeEach } from 'vitest'
 import type { ComponentProps } from 'vue-component-type-helpers'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { Screen, Notify } from 'quasar'
 import { defaultNotificationPushPreferences } from 'src/types/notifications'
 
@@ -20,9 +20,11 @@ vi.mock('vue-router', () => ({
 }))
 
 const mockIsInstallable = ref(false)
+const mockIsIosInstallGuidanceAvailable = ref(false)
 
 vi.mock('src/composables/usePwaInstall', () => ({
   usePwaInstall: () => ({
+    isIosInstallGuidanceAvailable: mockIsIosInstallGuidanceAvailable,
     isInstallable: mockIsInstallable,
     promptInstall: vi.fn(),
     dismissInstall: vi.fn(),
@@ -30,11 +32,37 @@ vi.mock('src/composables/usePwaInstall', () => ({
 }))
 
 const mockHasSavedExpense = ref(false)
+const mockHasShownInstallPromptThisSession = ref(false)
+const mockCanShowInstallPrompt = computed(
+  () => mockHasSavedExpense.value && !mockHasShownInstallPromptThisSession.value,
+)
+const mockMarkInstallPromptShown = vi.fn(() => {
+  mockHasShownInstallPromptThisSession.value = true
+})
+const mockPlansForExpenses = ref([{ id: 'plan-1' }])
+const mockIsOnline = ref(true)
+
+vi.mock('src/composables/useNetworkStatus', () => ({
+  useNetworkStatus: () => ({
+    isOnline: mockIsOnline,
+    isOffline: ref(!mockIsOnline.value),
+  }),
+  startNetworkMonitoring: () => vi.fn(),
+}))
 
 vi.mock('src/composables/useInstallPromptGate', () => ({
   useInstallPromptGate: () => ({
+    canShowInstallPrompt: mockCanShowInstallPrompt,
     hasSavedExpense: mockHasSavedExpense,
+    hasShownInstallPromptThisSession: mockHasShownInstallPromptThisSession,
     markExpenseSaved: vi.fn(),
+    markInstallPromptShown: mockMarkInstallPromptShown,
+  }),
+}))
+
+vi.mock('src/queries/plans', () => ({
+  usePlansQuery: () => ({
+    plansForExpenses: mockPlansForExpenses,
   }),
 }))
 
@@ -63,12 +91,12 @@ function setScreenWidth(width: number) {
   window.dispatchEvent(new Event('resize'))
 }
 
-const renderMainLayout = (props: MainLayoutProps = {}) => {
+const renderMainLayout = (props: MainLayoutProps = {}, authLoading = false) => {
   const pinia = createTestingPinia({
     createSpy: vi.fn,
     initialState: {
       auth: {
-        isLoading: false,
+        isLoading: authLoading,
         isAuthenticated: true,
         user: {
           id: 'user-1',
@@ -135,12 +163,24 @@ beforeEach(() => {
   setScreenWidth(1280)
   vi.clearAllMocks()
   mockIsInstallable.value = false
+  mockIsIosInstallGuidanceAvailable.value = false
   mockHasSavedExpense.value = false
+  mockHasShownInstallPromptThisSession.value = false
+  mockPlansForExpenses.value = [{ id: 'plan-1' }]
+  mockIsOnline.value = true
 })
 
 it('should mount component properly', () => {
   const wrapper = renderMainLayout()
   expect(wrapper.exists()).toBe(true)
+})
+
+it('should show the persistent offline banner when disconnected', () => {
+  mockIsOnline.value = false
+  const wrapper = renderMainLayout()
+
+  expect(wrapper.text()).toContain('You are offline')
+  expect(wrapper.text()).toContain('changes require a connection')
 })
 
 it('should render header with toolbar', () => {
@@ -159,6 +199,7 @@ it('should expose menu popup semantics for notifications on desktop', () => {
 
   expect(notificationsButton.attributes('aria-haspopup')).toBe('menu')
   expect(notificationsButton.attributes('aria-expanded')).toBe('false')
+  expect(notificationsButton.attributes('aria-controls')).toBe('notifications-menu')
 })
 
 it('should render Shephard title button with correct attributes', () => {
@@ -178,6 +219,15 @@ it('should render router-view in page container', () => {
 
   expect(page.exists()).toBe(true)
   expect(routerView.exists()).toBe(true)
+})
+
+it('should show a non-blocking content skeleton while the profile is loading', () => {
+  const wrapper = renderMainLayout({}, true)
+
+  expect(wrapper.find('.profile-bootstrap-skeleton').exists()).toBe(true)
+  expect(wrapper.find('.q-inner-loading').exists()).toBe(false)
+  expect(wrapper.findComponent({ name: 'router-view' }).exists()).toBe(false)
+  expect(wrapper.find('header').exists()).toBe(true)
 })
 
 it('should render QDrawer with NavigationDrawer', () => {
@@ -211,6 +261,17 @@ it('should load expense dialog only after the mobile expense action is triggered
   expect(wrapper.find('[data-testid="expense-dialog"]').exists()).toBe(true)
 })
 
+it('should not load expense dialog when no plan accepts expenses', async () => {
+  mockPlansForExpenses.value = []
+  setScreenWidth(600)
+
+  const wrapper = renderMainLayout()
+  await wrapper.find('[data-testid="mobile-bottom-navigation"]').trigger('click')
+  await flushPromises()
+
+  expect(wrapper.find('[data-testid="expense-dialog"]').exists()).toBe(false)
+})
+
 it('should open notifications in the shared mobile dialog shell', async () => {
   setScreenWidth(600)
 
@@ -219,6 +280,7 @@ it('should open notifications in the shared mobile dialog shell', async () => {
 
   expect(notificationsButton.attributes('aria-haspopup')).toBe('dialog')
   expect(notificationsButton.attributes('aria-expanded')).toBe('false')
+  expect(notificationsButton.attributes('aria-controls')).toBe('notifications-dialog')
   expect(wrapper.find('[data-testid="app-dialog-shell"]').exists()).toBe(false)
 
   await notificationsButton.trigger('click')
@@ -283,5 +345,30 @@ it('should prompt install only when installable and an expense has been saved', 
   expect(notifySpy).toHaveBeenCalledWith(
     expect.objectContaining({ message: 'Install Shephard for a better experience!' }),
   )
+  expect(mockMarkInstallPromptShown).toHaveBeenCalled()
+  notifySpy.mockRestore()
+})
+
+it('shows relevant iOS Add to Home Screen guidance only once per session', async () => {
+  const notifySpy = vi.spyOn(Notify, 'create').mockImplementation(() => () => {})
+
+  mockHasSavedExpense.value = true
+  renderMainLayout()
+
+  mockIsIosInstallGuidanceAvailable.value = true
+  await flushPromises()
+
+  expect(notifySpy).toHaveBeenCalledWith(
+    expect.objectContaining({
+      message: 'Install Shephard: tap Share, then Add to Home Screen.',
+    }),
+  )
+  expect(mockMarkInstallPromptShown).toHaveBeenCalledTimes(1)
+
+  mockIsIosInstallGuidanceAvailable.value = false
+  mockIsIosInstallGuidanceAvailable.value = true
+  await flushPromises()
+
+  expect(mockMarkInstallPromptShown).toHaveBeenCalledTimes(1)
   notifySpy.mockRestore()
 })

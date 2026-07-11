@@ -1,11 +1,13 @@
 <template>
   <q-card
-    class="budget-hero-card cursor-pointer"
-    role="button"
-    tabindex="0"
-    :aria-label="`Open plan ${plan.name}`"
-    @click="emit('click', plan.id)"
-    @keyup.enter="emit('click', plan.id)"
+    class="budget-hero-card"
+    :class="{ 'cursor-pointer': !hasLoadError }"
+    :role="hasLoadError ? undefined : 'button'"
+    :tabindex="hasLoadError ? -1 : 0"
+    :aria-label="hasLoadError ? undefined : `Open plan ${plan.name}`"
+    @click="openPlan"
+    @keyup.enter="openPlan"
+    @keyup.space.prevent="openPlan"
   >
     <q-card-section>
       <!-- Loading state -->
@@ -41,6 +43,18 @@
           dark
         />
       </template>
+
+      <div
+        v-else-if="hasLoadError"
+        @click.stop
+      >
+        <QueryErrorState
+          compact
+          entity-name="Budget overview"
+          :retrying="isRetrying ?? false"
+          @retry="retry"
+        />
+      </div>
 
       <!-- Loaded state -->
       <template v-else>
@@ -94,10 +108,8 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { usePlanDetailQuery } from 'src/queries/plans'
-import { useUserStore } from 'src/stores/user'
 import { usePreferencesStore } from 'src/stores/preferences'
-import { usePlanOverview } from 'src/composables/usePlanOverview'
+import QueryErrorState from 'src/components/shared/QueryErrorState.vue'
 import { useCountUp } from 'src/composables/useCountUp'
 import { getStatusText, getDaysRemaining } from 'src/utils/plans'
 import {
@@ -107,28 +119,26 @@ import {
   type CurrencyCode,
 } from 'src/utils/currency'
 import type { PlanWithPermission } from 'src/api'
+import type { DashboardPlanOverview } from 'src/composables/useDashboardOverview'
 
 const emit = defineEmits<{
   click: [planId: string]
+  retry: []
 }>()
 
 const props = defineProps<{
   plan: PlanWithPermission
+  overview: DashboardPlanOverview | null
+  isOverviewLoading?: boolean
+  hasLoadError?: boolean
+  isRetrying?: boolean
 }>()
 
-const userStore = useUserStore()
-const userId = computed(() => userStore.userProfile?.id)
 const preferencesStore = usePreferencesStore()
 
-const planId = computed(() => props.plan.id)
-const planDetailQuery = usePlanDetailQuery(planId, userId)
-const planWithItems = computed(() => planDetailQuery.data.value ?? null)
-const isOverviewLoading = computed(() => planDetailQuery.isPending.value)
-
-const { totalBudget, totalSpent, remainingBudget } = usePlanOverview(
-  computed(() => props.plan.id),
-  planWithItems,
-)
+const totalBudget = computed(() => props.overview?.totalBudget ?? props.plan.total ?? 0)
+const totalSpent = computed(() => props.overview?.totalSpent ?? 0)
+const remainingBudget = computed(() => props.overview?.remainingBudget ?? totalBudget.value)
 
 const daysRemaining = computed(() => getDaysRemaining(props.plan))
 
@@ -158,6 +168,16 @@ const heroAmount = computed(() => {
   return formatCurrencyWithSign(animatedRemaining.value, currency)
 })
 
+function openPlan(): void {
+  if (!props.hasLoadError) {
+    emit('click', props.plan.id)
+  }
+}
+
+function retry(): void {
+  emit('retry')
+}
+
 function formatAmount(amount: number | null | undefined): string {
   const currency = props.plan.currency as CurrencyCode
 
@@ -178,6 +198,13 @@ function formatAmount(amount: number | null | undefined): string {
     radial-gradient(120% 140% at 85% -20%, hsl(var(--hero-glow)) 0%, transparent 55%),
     linear-gradient(135deg, hsl(var(--hero-gradient-from)) 0%, hsl(var(--hero-gradient-to)) 100%);
   box-shadow: var(--shadow-md);
+}
+
+.budget-hero-card:focus-visible {
+  outline: none;
+  box-shadow:
+    var(--shadow-md),
+    0 0 0 3px hsl(var(--ring) / 0.5);
 }
 
 .budget-hero-card__plan-name {

@@ -63,6 +63,8 @@
         dense
         icon="eva-trash-2-outline"
         color="negative"
+        aria-label="Remove item"
+        class="mobile-touch-target"
         @click="emit('remove')"
       >
         <q-tooltip v-if="!$q.screen.lt.md">Remove item</q-tooltip>

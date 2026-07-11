@@ -1,6 +1,7 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import type { ActionResult } from 'src/types'
+import { useNetworkStatus } from './useNetworkStatus'
 
 type SortOption = {
   label: string
@@ -18,17 +19,31 @@ type ListPageConfig<T> = {
   deleteFn: (item: T) => Promise<ActionResult>
 }
 
+type ListQueryState = {
+  isError: () => boolean
+  isFetching: () => boolean
+  retry: () => Promise<unknown>
+}
+
 export function useListPage<T extends { id: string; name: string }>(
   config: ListPageConfig<T>,
   getAllItems: () => T[],
   isLoading: () => boolean,
+  queryState?: ListQueryState,
 ) {
   const router = useRouter()
+  const { isOffline } = useNetworkStatus()
 
   const searchQuery = ref('')
   const sortBy = ref(config.defaultSort)
 
-  const areItemsLoading = computed(() => isLoading() && getAllItems().length === 0)
+  const areItemsLoading = computed(
+    () => isLoading() && getAllItems().length === 0 && !isOffline.value,
+  )
+  const hasLoadError = computed(
+    () => ((queryState?.isError() ?? false) || isOffline.value) && getAllItems().length === 0,
+  )
+  const isRetrying = computed(() => queryState?.isFetching() ?? false)
 
   const allFilteredAndSortedItems = computed(() => {
     return config.filterAndSortFn(getAllItems(), searchQuery.value, sortBy.value)
@@ -50,6 +65,10 @@ export function useListPage<T extends { id: string; name: string }>(
 
   function clearSearch(): void {
     searchQuery.value = ''
+  }
+
+  async function retryItems(): Promise<void> {
+    await queryState?.retry()
   }
 
   const emptyStateConfig = computed(() => ({
@@ -74,6 +93,8 @@ export function useListPage<T extends { id: string; name: string }>(
     searchQuery,
     sortBy,
     areItemsLoading,
+    hasLoadError,
+    isRetrying,
     hasItems,
     allFilteredAndSortedItems,
     emptyStateConfig,
@@ -81,6 +102,7 @@ export function useListPage<T extends { id: string; name: string }>(
     viewItem,
     deleteItem,
     clearSearch,
+    retryItems,
     sortOptions: config.sortOptions,
   }
 }

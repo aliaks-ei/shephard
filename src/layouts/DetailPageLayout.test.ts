@@ -2,6 +2,7 @@ import { mount } from '@vue/test-utils'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 import { vi, it, expect, beforeEach } from 'vitest'
 import type { ComponentProps } from 'vue-component-type-helpers'
+import { Screen } from 'quasar'
 
 import DetailPageLayout from './DetailPageLayout.vue'
 
@@ -27,7 +28,18 @@ const renderDetailPageLayout = (props: Partial<DetailPageLayoutProps> = {}) => {
   })
 }
 
+function setScreenWidth(width: number) {
+  Object.defineProperty(window, 'innerWidth', {
+    configurable: true,
+    writable: true,
+    value: width,
+  })
+  window.dispatchEvent(new Event('resize'))
+}
+
 beforeEach(() => {
+  Screen.setDebounce(0)
+  setScreenWidth(1280)
   vi.clearAllMocks()
 })
 
@@ -63,6 +75,8 @@ it('should render toolbar with back button', () => {
   expect(backButton.exists()).toBe(true)
   expect(backButton.classes()).toContain('q-btn--flat')
   expect(backButton.classes()).toContain('q-btn--round')
+  expect(backButton.attributes('aria-label')).toBe('Go back')
+  expect(backButton.classes()).toContain('detail-back-button')
 })
 
 it('should emit back event when back button is clicked', async () => {
@@ -366,6 +380,17 @@ it('should render read-only badge when showReadOnlyBadge is true on desktop', ()
   expect(badge.text()).toContain('view only')
 })
 
+it('should render read-only badge when showReadOnlyBadge is true on mobile', () => {
+  setScreenWidth(600)
+  const wrapper = renderDetailPageLayout({
+    showReadOnlyBadge: true,
+  })
+
+  const badge = wrapper.find('.q-badge')
+  expect(badge.exists()).toBe(true)
+  expect(badge.text()).toContain('view only')
+})
+
 it('should not render read-only badge when showReadOnlyBadge is false', () => {
   const wrapper = renderDetailPageLayout({
     showReadOnlyBadge: false,
@@ -373,4 +398,42 @@ it('should not render read-only badge when showReadOnlyBadge is false', () => {
 
   const badge = wrapper.find('.q-badge')
   expect(badge.exists()).toBe(false)
+})
+
+it('should render a terminal not-found state instead of the content slot', () => {
+  const wrapper = mount(DetailPageLayout, {
+    props: {
+      pageTitle: 'Plan',
+      loadState: 'not-found',
+      entityName: 'Plan',
+      entityNamePlural: 'plans',
+    },
+    slots: {
+      default: '<div data-testid="main-content">Plan content</div>',
+    },
+    global: {
+      stubs: {
+        PageBanners: true,
+        ActionBar: true,
+        BannerContainer: true,
+        DetailMobileActionBar: true,
+      },
+    },
+  })
+
+  expect(wrapper.text()).toContain('Plan not found')
+  expect(wrapper.find('[data-testid="main-content"]').exists()).toBe(false)
+})
+
+it('should emit retry from the inline load error state', async () => {
+  const wrapper = renderDetailPageLayout({
+    loadState: 'error',
+    entityName: 'Plan',
+    entityNamePlural: 'plans',
+  })
+
+  const retryButton = wrapper.findAll('button').find((button) => button.text() === 'Retry')
+  await retryButton?.trigger('click')
+
+  expect(wrapper.emitted('retry')).toHaveLength(1)
 })

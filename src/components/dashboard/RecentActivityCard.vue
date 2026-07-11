@@ -1,8 +1,8 @@
 <template>
   <q-card
-    v-if="isLoading || recentExpenses.length > 0"
+    v-if="isLoading || hasLoadError || recentExpenses.length > 0"
     :bordered="$q.dark.isActive"
-    class="shadow-1"
+    class="shadow-1 dashboard-mobile-section"
   >
     <q-card-section class="q-pb-none">
       <div class="row items-center justify-between">
@@ -45,6 +45,14 @@
       </div>
     </q-card-section>
 
+    <QueryErrorState
+      v-else-if="hasLoadError"
+      compact
+      entity-name="Recent activity"
+      :retrying="isRetrying ?? false"
+      @retry="retry"
+    />
+
     <q-list
       v-else
       separator
@@ -86,30 +94,32 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
-import { useRecentExpensesQuery } from 'src/queries/expenses'
-import { useUserStore } from 'src/stores/user'
+import QueryErrorState from 'src/components/shared/QueryErrorState.vue'
 import { usePreferencesStore } from 'src/stores/preferences'
 import { formatCurrency, formatCurrencyPrivate, type CurrencyCode } from 'src/utils/currency'
 import { formatDate } from 'src/utils/date'
 import type { ExpenseWithCategoryAndPlan } from 'src/api'
 
-const MAX_ITEMS = 4
+defineProps<{
+  recentExpenses: ExpenseWithCategoryAndPlan[]
+  isLoading?: boolean
+  hasLoadError?: boolean
+  isRetrying?: boolean
+}>()
 
+const emit = defineEmits<{
+  retry: []
+}>()
 const $q = useQuasar()
 const router = useRouter()
-const userStore = useUserStore()
 const preferencesStore = usePreferencesStore()
 
-const userId = computed(() => userStore.userProfile?.id)
-
-const { expenses, isPending } = useRecentExpensesQuery(userId, 20)
-
-const isLoading = computed(() => isPending.value)
-const recentExpenses = computed(() => expenses.value.slice(0, MAX_ITEMS))
+function retry(): void {
+  emit('retry')
+}
 
 function expenseCurrency(expense: ExpenseWithCategoryAndPlan): CurrencyCode {
   return (expense.plans?.currency ?? preferencesStore.currency) as CurrencyCode

@@ -7,7 +7,7 @@ import PlansPage from './PlansPage.vue'
 import { usePlans } from 'src/composables/usePlans'
 import { queryKeys } from 'src/queries/query-keys'
 import type { PlanWithPermission } from 'src/api'
-import { getExpensesByPlan, getPlanExpenseSummary, getPlanWithItems } from 'src/api'
+import { getAllExpensesByPlanForExport, getPlanExpenseSummary, getPlanWithItems } from 'src/api'
 
 const mockInvalidateQueries = vi.fn().mockResolvedValue(undefined)
 
@@ -26,7 +26,7 @@ vi.mock('src/api', async () => {
   return {
     ...actual,
     getPlanWithItems: vi.fn(),
-    getExpensesByPlan: vi.fn(),
+    getAllExpensesByPlanForExport: vi.fn(),
     getPlanExpenseSummary: vi.fn(),
   }
 })
@@ -229,6 +229,7 @@ function createWrapper(
     hasPlans?: boolean
     searchQuery?: string
     sortBy?: string
+    hasLoadError?: boolean
   } = {},
 ) {
   const {
@@ -238,12 +239,15 @@ function createWrapper(
     hasPlans = false,
     searchQuery = '',
     sortBy = 'created_at',
+    hasLoadError = false,
   } = options
 
   const mockUsePlansReturn = {
     searchQuery: ref(searchQuery),
     sortBy: ref(sortBy),
     areItemsLoading: computed(() => isLoading),
+    hasLoadError: computed(() => hasLoadError),
+    isRetrying: computed(() => false),
     filteredAndSortedOwnedItems: computed(() => ownedPlans),
     filteredAndSortedSharedItems: computed(() => sharedPlans),
     allFilteredAndSortedItems: computed(() => [...ownedPlans, ...sharedPlans]),
@@ -267,6 +271,7 @@ function createWrapper(
     viewItem: vi.fn(),
     deleteItem: vi.fn(),
     clearSearch: vi.fn(),
+    retryItems: vi.fn(),
     cancelPlan: vi.fn(),
   }
 
@@ -288,7 +293,7 @@ function createWrapper(
       : {}),
     plan_items: [],
   })
-  vi.mocked(getExpensesByPlan).mockResolvedValue([])
+  vi.mocked(getAllExpensesByPlanForExport).mockResolvedValue([])
   vi.mocked(getPlanExpenseSummary).mockResolvedValue([])
 
   const wrapper = mount(PlansPage, {
@@ -409,6 +414,13 @@ it('should show loading skeleton when plans are loading', () => {
 
   const plansGroups = wrapper.findAll('.plans-group-mock')
   expect(plansGroups.length).toBe(0)
+})
+
+it('should show a retry state instead of the business empty state when loading fails', () => {
+  const { wrapper } = createWrapper({ hasLoadError: true })
+
+  expect(wrapper.text()).toContain('Could not load plans')
+  expect(wrapper.findComponent(EmptyStateStub).exists()).toBe(false)
 })
 
 it('should show owned plans group when owned plans exist', () => {
@@ -706,20 +718,12 @@ it('should close share dialog when model value changes', async () => {
   expect(shareDialog.attributes('data-model-value')).toBe('false')
 })
 
-it('should show browse templates link on mobile only', async () => {
+it('should not duplicate the primary Templates destination in plan content', async () => {
   setScreenWidth(600)
   const { wrapper: mobileWrapper } = createWrapper()
   await mobileWrapper.vm.$nextTick()
 
-  const mobileBrowseButton = mobileWrapper.find('[data-label="Browse templates"]')
-  expect(mobileBrowseButton.exists()).toBe(true)
-  expect(mobileBrowseButton.attributes('to')).toBe('/templates')
-
-  setScreenWidth(1280)
-  const { wrapper: desktopWrapper } = createWrapper()
-  await desktopWrapper.vm.$nextTick()
-
-  expect(desktopWrapper.find('[data-label="Browse templates"]').exists()).toBe(false)
+  expect(mobileWrapper.find('[data-label="Browse templates"]').exists()).toBe(false)
 })
 
 it('should invalidate plans queries on pull-to-refresh', async () => {

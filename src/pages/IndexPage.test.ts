@@ -34,22 +34,28 @@ vi.mock('src/composables/useSortedRecentItems', () => ({
 }))
 
 const mockActivePlans = ref(createMockPlans())
+const mockPlansForExpenses = ref(createMockPlans())
 const mockPlansIsPending = ref(true)
+const mockPlansIsError = ref(false)
 
 vi.mock('src/queries/plans', () => ({
   usePlansQuery: vi.fn(() => ({
     plans: ref([]),
-    plansForExpenses: ref([]),
+    plansForExpenses: mockPlansForExpenses,
     activePlans: mockActivePlans,
     ownedPlans: ref([]),
     sharedPlans: ref([]),
     isPending: mockPlansIsPending,
+    isError: mockPlansIsError,
+    isFetching: ref(false),
+    refetch: vi.fn(),
     data: ref(null),
   })),
 }))
 
 const mockTemplatesData = ref(createMockTemplates())
 const mockTemplatesIsPending = ref(true)
+const mockTemplatesIsError = ref(false)
 
 vi.mock('src/queries/templates', () => ({
   useTemplatesQuery: vi.fn(() => ({
@@ -57,6 +63,9 @@ vi.mock('src/queries/templates', () => ({
     ownedTemplates: ref([]),
     sharedTemplates: ref([]),
     isPending: mockTemplatesIsPending,
+    isError: mockTemplatesIsError,
+    isFetching: ref(false),
+    refetch: vi.fn(),
     templatesCount: computed(() => mockTemplatesData.value.length),
     data: ref(null),
   })),
@@ -82,10 +91,20 @@ vi.mock('src/queries/categories', () => ({
 }))
 
 vi.mock('src/queries/expenses', () => ({
-  useExpenseSummaryQuery: vi.fn(() => ({
-    expenseSummary: ref([]),
+  usePlanOverviewSnapshotsQuery: vi.fn(() => ({
+    snapshots: ref([]),
     isPending: ref(false),
+    isError: ref(false),
+    isFetching: ref(false),
+    refetch: vi.fn(),
     data: ref(null),
+  })),
+  useRecentExpensesInfiniteQuery: vi.fn(() => ({
+    expenses: ref([]),
+    isPending: ref(false),
+    isError: ref(false),
+    isFetching: ref(false),
+    refetch: vi.fn(),
   })),
   useCreateExpenseMutation: vi.fn(() => ({
     mutateAsync: vi.fn(),
@@ -173,9 +192,12 @@ beforeEach(() => {
   vi.clearAllMocks()
   mockInvalidateQueries.mockResolvedValue(undefined)
   mockActivePlans.value = createMockPlans()
+  mockPlansForExpenses.value = createMockPlans()
   mockTemplatesData.value = createMockTemplates()
   mockPlansIsPending.value = true
   mockTemplatesIsPending.value = true
+  mockPlansIsError.value = false
+  mockTemplatesIsError.value = false
 })
 
 it('should mount component properly', () => {
@@ -204,6 +226,17 @@ it('should open expense dialog when quick action is triggered', async () => {
 
   const expenseDialog = wrapper.findComponent({ name: 'ExpenseRegistrationDialog' })
   expect(expenseDialog.attributes('modelvalue')).toBe('true')
+})
+
+it('should not open expense dialog without an eligible plan', async () => {
+  mockPlansForExpenses.value = []
+  const wrapper = createWrapper()
+  const quickActionsGrid = wrapper.findComponent({ name: 'QuickActionsGrid' })
+
+  await quickActionsGrid.vm.$emit('add-expense')
+  await wrapper.vm.$nextTick()
+
+  expect(wrapper.findComponent({ name: 'ExpenseRegistrationDialog' }).exists()).toBe(false)
 })
 
 it('should close expense dialog when expense is created', async () => {
@@ -358,6 +391,19 @@ it('should show standalone empty plans state when not loading and no active plan
   expect(wrapper.findComponent({ name: 'RecentActivityCard' }).exists()).toBe(false)
 })
 
+it('should show a retry state instead of the empty plans state when plans fail to load', async () => {
+  mockPlansIsPending.value = false
+  mockTemplatesIsPending.value = false
+  mockPlansIsError.value = true
+  mockActivePlans.value = []
+
+  const wrapper = createWrapper()
+  await flushPromises()
+
+  expect(wrapper.text()).toContain('Could not load plans')
+  expect(wrapper.findComponent({ name: 'EmptyPlansState' }).exists()).toBe(false)
+})
+
 it('should show compact links instead of full sections on mobile', async () => {
   setScreenWidth(600)
   mockPlansIsPending.value = false
@@ -377,6 +423,9 @@ it('should show compact links instead of full sections on mobile', async () => {
 
   expect(plansItem?.text()).toContain(String(mockActivePlans.value.length))
   expect(templatesItem?.text()).toContain(String(mockTemplatesData.value.length))
+  expect(plansItem?.text()).toContain('Review budgets and progress')
+  expect(templatesItem?.text()).toContain('Reuse saved budget setups')
+  expect(wrapper.find('.mobile-dashboard-links').exists()).toBe(true)
 })
 
 it('should not show compact links on mobile when there are no active plans', async () => {

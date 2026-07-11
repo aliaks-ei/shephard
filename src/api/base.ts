@@ -29,6 +29,38 @@ export interface EntityWithPermission {
   [key: string]: unknown
 }
 
+export type EntityLoadErrorKind = 'not-found' | 'access-denied' | 'transient'
+
+export class EntityLoadError extends Error {
+  readonly kind: EntityLoadErrorKind
+  readonly entityType: string
+  readonly entityId: string
+  readonly originalError?: unknown
+
+  constructor(
+    kind: EntityLoadErrorKind,
+    entityType: string,
+    entityId: string,
+    message: string,
+    originalError?: unknown,
+  ) {
+    super(message)
+    this.name = 'ENTITY_LOAD_ERROR'
+    this.kind = kind
+    this.entityType = entityType
+    this.entityId = entityId
+    this.originalError = originalError
+  }
+}
+
+export function isEntityLoadError(error: unknown): error is EntityLoadError {
+  return error instanceof EntityLoadError
+}
+
+export function getEntityLoadErrorKind(error: unknown): EntityLoadErrorKind | null {
+  return isEntityLoadError(error) ? error.kind : null
+}
+
 export class BaseAPIService<
   TName extends MainTableName,
   TEntity extends Tables<TName>,
@@ -159,15 +191,45 @@ export class BaseAPIService<
     entityId: string,
     userId: string,
     itemsRelation: string,
-  ): Promise<(TWithItems & { permission_level?: string }) | null> {
-    const { data: entity, error } = await supabase
-      .from(this.config.tableName)
-      .select(`*, ${itemsRelation} (*)`)
-      .match({ id: entityId })
-      .maybeSingle()
+  ): Promise<TWithItems & { permission_level?: string }> {
+    let entity: unknown
+    let loadError: unknown
 
-    if (error) throw error
-    if (!entity) return null
+    try {
+      const response = await supabase
+        .from(this.config.tableName)
+        .select(`*, ${itemsRelation} (*)`)
+        .match({ id: entityId })
+        .maybeSingle()
+      entity = response.data
+      loadError = response.error
+    } catch (error) {
+      throw new EntityLoadError(
+        'transient',
+        this.config.entityTypeName.toLowerCase(),
+        entityId,
+        `Failed to load ${this.config.entityTypeName.toLowerCase()}`,
+        error,
+      )
+    }
+
+    if (loadError) {
+      throw new EntityLoadError(
+        'transient',
+        this.config.entityTypeName.toLowerCase(),
+        entityId,
+        `Failed to load ${this.config.entityTypeName.toLowerCase()}`,
+        loadError,
+      )
+    }
+    if (!entity) {
+      throw new EntityLoadError(
+        'not-found',
+        this.config.entityTypeName.toLowerCase(),
+        entityId,
+        `${this.config.entityTypeName.toLowerCase()} not found`,
+      )
+    }
 
     const ownedBy = (entity as unknown as { owner_id?: string }).owner_id
     if (ownedBy === userId) {
@@ -180,17 +242,45 @@ export class BaseAPIService<
     const shareTable = this.config.shareTableName
     const foreignKeyColumn =
       this.config.shareTableForeignKeyColumn || `${this.config.tableName.slice(0, -1)}_id`
-    const { data: share, error: shareError } = await supabase
-      .from(shareTable)
-      .select('permission_level')
-      .eq(foreignKeyColumn as never, entityId as never)
-      .eq('shared_with_user_id' as never, userId as never)
-      .maybeSingle()
+    let share: unknown
+    let shareError: unknown
 
-    if (shareError) throw shareError
+    try {
+      const response = await supabase
+        .from(shareTable)
+        .select('permission_level')
+        .eq(foreignKeyColumn as never, entityId as never)
+        .eq('shared_with_user_id' as never, userId as never)
+        .maybeSingle()
+      share = response.data
+      shareError = response.error
+    } catch (error) {
+      throw new EntityLoadError(
+        'transient',
+        this.config.entityTypeName.toLowerCase(),
+        entityId,
+        `Failed to verify ${this.config.entityTypeName.toLowerCase()} access`,
+        error,
+      )
+    }
+
+    if (shareError) {
+      throw new EntityLoadError(
+        'transient',
+        this.config.entityTypeName.toLowerCase(),
+        entityId,
+        `Failed to verify ${this.config.entityTypeName.toLowerCase()} access`,
+        shareError,
+      )
+    }
 
     if (!share) {
-      throw new Error(`${this.config.entityTypeName.toLowerCase()} not found or access denied`)
+      throw new EntityLoadError(
+        'access-denied',
+        this.config.entityTypeName.toLowerCase(),
+        entityId,
+        `${this.config.entityTypeName.toLowerCase()} access denied`,
+      )
     }
 
     return {

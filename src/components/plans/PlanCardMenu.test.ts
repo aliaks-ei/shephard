@@ -35,6 +35,7 @@ describe('PlanCardMenu', () => {
   it('should mount component properly', () => {
     const wrapper = renderPlanCardMenu({
       canEdit: true,
+      canShare: true,
       planStatus: 'active',
     })
     expect(wrapper.exists()).toBe(true)
@@ -43,6 +44,7 @@ describe('PlanCardMenu', () => {
   it('should have correct props interface', () => {
     const wrapper = renderPlanCardMenu({
       canEdit: false,
+      canShare: false,
       planStatus: 'pending',
     })
 
@@ -51,7 +53,7 @@ describe('PlanCardMenu', () => {
   })
 
   it('should emit share when share item clicked', async () => {
-    const wrapper = renderPlanCardMenu({ canEdit: true, planStatus: 'active' })
+    const wrapper = renderPlanCardMenu({ canEdit: true, canShare: true, planStatus: 'active' })
     const items = wrapper.findAll('.q-item')
     expect(items.length).toBeGreaterThan(0)
     await items[1]?.trigger('click')
@@ -59,7 +61,7 @@ describe('PlanCardMenu', () => {
   })
 
   it('should emit export when export item clicked', async () => {
-    const wrapper = renderPlanCardMenu({ canEdit: true, planStatus: 'active' })
+    const wrapper = renderPlanCardMenu({ canEdit: true, canShare: true, planStatus: 'active' })
     const items = wrapper.findAll('.q-item')
     expect(items.length).toBe(3)
     await items[0]?.trigger('click')
@@ -67,7 +69,7 @@ describe('PlanCardMenu', () => {
   })
 
   it('should show export, share and cancel for owner with active plan', async () => {
-    const wrapper = renderPlanCardMenu({ canEdit: true, planStatus: 'active' })
+    const wrapper = renderPlanCardMenu({ canEdit: true, canShare: true, planStatus: 'active' })
     const items = wrapper.findAll('.q-item')
     expect(items.length).toBe(3)
     await items[1]?.trigger('click')
@@ -77,7 +79,7 @@ describe('PlanCardMenu', () => {
   })
 
   it('should show export, share and delete for owner with pending plan', async () => {
-    const wrapper = renderPlanCardMenu({ canEdit: true, planStatus: 'pending' })
+    const wrapper = renderPlanCardMenu({ canEdit: true, canShare: true, planStatus: 'pending' })
     const items = wrapper.findAll('.q-item')
     expect(items.length).toBe(3)
     await items[1]?.trigger('click')
@@ -89,18 +91,34 @@ describe('PlanCardMenu', () => {
   it('should show export only when canEdit is false', () => {
     const wrapper = renderPlanCardMenu({
       canEdit: false,
+      canShare: false,
       planStatus: 'completed',
     })
     expect(wrapper.findAll('.q-item').length).toBe(1)
   })
 
   it('should allow delete when plan is cancelled', async () => {
-    const wrapper = renderPlanCardMenu({ canEdit: true, planStatus: 'cancelled' })
+    const wrapper = renderPlanCardMenu({
+      canEdit: true,
+      canShare: true,
+      planStatus: 'cancelled',
+    })
     const items = wrapper.findAll('.q-item')
     expect(items.length).toBe(3)
     await items[1]?.trigger('click')
     expect(wrapper.emitted('share')).toBeTruthy()
     await items[2]?.trigger('click')
     expect(wrapper.emitted('delete')).toBeTruthy()
+  })
+
+  it('hides share while retaining edit actions for a collaborator', () => {
+    const wrapper = renderPlanCardMenu({
+      canEdit: true,
+      canShare: false,
+      planStatus: 'active',
+    })
+
+    expect(wrapper.text()).not.toContain('Share Plan')
+    expect(wrapper.text()).toContain('Cancel Plan')
   })
 })

@@ -1,8 +1,8 @@
-import { ref, onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { useStorage } from '@vueuse/core'
-import { isRunningStandaloneApp } from 'src/utils/pwa'
+import { isAppleMobileSafari, isRunningStandaloneApp } from 'src/utils/pwa'
 
-interface BeforeInstallPromptEvent extends Event {
+type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>
 }
@@ -12,6 +12,7 @@ const DISMISS_DURATION_DAYS = 30
 
 export function usePwaInstall() {
   const deferredPrompt = ref<BeforeInstallPromptEvent | null>(null)
+  const isIosInstallGuidanceAvailable = ref(false)
   const isInstallable = ref(false)
   const isInstalled = ref(false)
   const dismissedTimestamp = useStorage<number | null>(PWA_INSTALL_DISMISSED_KEY, null)
@@ -65,6 +66,10 @@ export function usePwaInstall() {
       deferredPrompt.value = null
       isInstallable.value = false
 
+      if (choiceResult.outcome === 'dismissed') {
+        dismissedTimestamp.value = Date.now()
+      }
+
       return choiceResult.outcome
     } catch (error) {
       console.error('Error showing install prompt:', error)
@@ -74,12 +79,14 @@ export function usePwaInstall() {
 
   function dismissInstall() {
     dismissedTimestamp.value = Date.now()
+    isIosInstallGuidanceAvailable.value = false
     isInstallable.value = false
     deferredPrompt.value = null
   }
 
   function handleAppInstalled() {
     isInstalled.value = true
+    isIosInstallGuidanceAvailable.value = false
     isInstallable.value = false
     deferredPrompt.value = null
   }
@@ -89,6 +96,7 @@ export function usePwaInstall() {
 
     if (isInstalled.value) return
 
+    isIosInstallGuidanceAvailable.value = isAppleMobileSafari() && !isDismissed()
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
     window.addEventListener('appinstalled', handleAppInstalled)
   })
@@ -99,6 +107,7 @@ export function usePwaInstall() {
   })
 
   return {
+    isIosInstallGuidanceAvailable,
     isInstallable,
     isInstalled,
     promptInstall,

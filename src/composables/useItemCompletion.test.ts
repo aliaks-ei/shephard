@@ -3,15 +3,15 @@ import { ref } from 'vue'
 import { useItemCompletion } from './useItemCompletion'
 import type { PlanItem } from 'src/api/plans'
 
-const mockGetExpensesForPlanItem = vi.fn()
+const mockFetchExpenseIds = vi.fn()
 const mockCreateExpenseMutateAsync = vi.fn()
 const mockDeleteExpensesBatchMutateAsync = vi.fn()
 const mockCompletionMutateAsync = vi.fn()
 const mockShowError = vi.fn()
 
 vi.mock('src/queries/expenses', () => ({
-  useExpensesByPlanQuery: vi.fn(() => ({
-    getExpensesForPlanItem: mockGetExpensesForPlanItem,
+  usePlanItemExpenseIds: vi.fn(() => ({
+    fetchExpenseIds: mockFetchExpenseIds,
   })),
   useCreateExpenseMutation: vi.fn(() => ({
     mutateAsync: mockCreateExpenseMutateAsync,
@@ -51,10 +51,11 @@ describe('useItemCompletion', () => {
     mockCreateExpenseMutateAsync.mockResolvedValue(undefined)
     mockDeleteExpensesBatchMutateAsync.mockResolvedValue(undefined)
     mockCompletionMutateAsync.mockResolvedValue(undefined)
+    mockFetchExpenseIds.mockResolvedValue([])
   })
 
   it('updates completion first and then deletes related expenses when unchecking', async () => {
-    mockGetExpensesForPlanItem.mockReturnValue([{ id: 'exp-1' }, { id: 'exp-2' }])
+    mockFetchExpenseIds.mockResolvedValue(['exp-1', 'exp-2'])
 
     const planId = ref('plan-1')
     const { toggleItemCompletion } = useItemCompletion(planId)
@@ -74,7 +75,7 @@ describe('useItemCompletion', () => {
   })
 
   it('still marks item incomplete when unchecking item with no linked expenses', async () => {
-    mockGetExpensesForPlanItem.mockReturnValue([])
+    mockFetchExpenseIds.mockResolvedValue([])
 
     const { toggleItemCompletion } = useItemCompletion(ref('plan-1'))
 
@@ -126,7 +127,7 @@ describe('useItemCompletion', () => {
   })
 
   it('rolls completion back if delete fails while unchecking', async () => {
-    mockGetExpensesForPlanItem.mockReturnValue([{ id: 'exp-1' }])
+    mockFetchExpenseIds.mockResolvedValue(['exp-1'])
     mockDeleteExpensesBatchMutateAsync.mockRejectedValueOnce(new Error('delete failed'))
 
     const { toggleItemCompletion } = useItemCompletion(ref('plan-1'))

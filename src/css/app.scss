@@ -970,6 +970,22 @@ h6,
   min-width: auto;
 }
 
+.mobile-touch-target {
+  @media (max-width: 1023px) {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+.dashboard-mobile-section {
+  @media (max-width: 1023px) {
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+    box-shadow: none !important;
+  }
+}
+
 .menu-list {
   min-width: 160px;
 }

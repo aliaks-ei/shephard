@@ -189,6 +189,16 @@ it('renders Settings link in user menu', () => {
   expect(wrapper.text()).toContain('Settings')
 })
 
+it('exposes account menu disclosure semantics', () => {
+  const wrapper = createWrapper()
+  const accountButton = wrapper.find('.q-btn')
+
+  expect(accountButton.attributes('aria-label')).toBe('Open account menu')
+  expect(accountButton.attributes('aria-haspopup')).toBe('menu')
+  expect(accountButton.attributes('aria-expanded')).toBe('false')
+  expect(accountButton.attributes('aria-controls')).toBe('account-menu')
+})
+
 it('renders Sign Out option in user menu', () => {
   const wrapper = createWrapper()
 

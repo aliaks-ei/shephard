@@ -1,5 +1,5 @@
 import { it, expect, vi, afterEach } from 'vitest'
-import { ref } from 'vue'
+import { nextTick, ref } from 'vue'
 import { mount } from '@vue/test-utils'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 import ExpenseRegistrationDialog from './ExpenseRegistrationDialog.vue'
@@ -7,6 +7,7 @@ import ExpenseRegistrationDialog from './ExpenseRegistrationDialog.vue'
 installQuasarPlugin()
 
 const mountedWrappers: ReturnType<typeof mount>[] = []
+const currentModeMock = ref<'custom-entry' | 'quick-select'>('custom-entry')
 
 function mountExpenseRegistrationDialog(
   ...args: Parameters<typeof mount<typeof ExpenseRegistrationDialog>>
@@ -21,6 +22,7 @@ afterEach(() => {
     wrapper.unmount()
   }
   mountedWrappers.length = 0
+  currentModeMock.value = 'custom-entry'
 })
 
 const initializeMock = vi.fn()
@@ -81,7 +83,7 @@ vi.mock('src/composables/useExpenseRegistration', () => ({
     isLoading: ref(false),
     isLoadingPlanItems: ref(false),
     didAutoSelectPlan: ref(false),
-    currentMode: ref('custom-entry'),
+    currentMode: currentModeMock,
     quickSelectPhase: ref('selection'),
     planItems: ref([]),
     selectedPlanItems: ref([]),
@@ -130,6 +132,44 @@ it('should mount component properly', () => {
   })
 
   expect(wrapper.exists()).toBe(true)
+})
+
+it('mounts only the active expense mode panel', async () => {
+  const wrapper = mountExpenseRegistrationDialog(ExpenseRegistrationDialog, {
+    props: defaultProps,
+    global: {
+      stubs: {
+        AppDialogShell: {
+          template: '<div><slot /><slot name="footer" /></div>',
+        },
+        QTabPanels: {
+          template: '<div><slot /></div>',
+          props: ['modelValue'],
+        },
+        QTabPanel: {
+          template: '<div><slot /></div>',
+          props: ['name'],
+        },
+        CustomEntryPanel: {
+          name: 'CustomEntryPanel',
+          template: '<div data-testid="custom-entry-panel" />',
+        },
+        QuickSelectPanel: {
+          name: 'QuickSelectPanel',
+          template: '<div data-testid="quick-select-panel" />',
+        },
+      },
+    },
+  })
+
+  expect(wrapper.find('[data-testid="custom-entry-panel"]').exists()).toBe(true)
+  expect(wrapper.find('[data-testid="quick-select-panel"]').exists()).toBe(false)
+
+  currentModeMock.value = 'quick-select'
+  await nextTick()
+
+  expect(wrapper.find('[data-testid="custom-entry-panel"]').exists()).toBe(false)
+  expect(wrapper.find('[data-testid="quick-select-panel"]').exists()).toBe(true)
 })
 
 it('should display dialog when modelValue is true', () => {

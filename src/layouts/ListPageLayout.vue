@@ -17,7 +17,7 @@
           >
             {{ title }}
           </h1>
-          <p class="text-body2 text-muted q-mb-none gt-xs">
+          <p class="list-page-description text-body2 text-muted q-mb-none">
             {{ description }}
           </p>
         </div>
@@ -31,6 +31,7 @@
             unelevated
             no-caps
             dense
+            :disable="createButtonDisabled"
             @click="emit('create')"
           />
         </div>
@@ -59,9 +60,20 @@ withDefaults(
     description: string
     createButtonLabel?: string
     showCreateButton?: boolean
+    createButtonDisabled?: boolean
   }>(),
   {
     showCreateButton: true,
+    createButtonDisabled: false,
   },
 )
 </script>
+
+<style lang="scss" scoped>
+.list-page-description {
+  @media (max-width: 1023px) {
+    max-width: 42ch;
+    line-height: 1.3;
+  }
+}
+</style>

@@ -56,9 +56,6 @@ vi.mock('src/queries/categories', () => ({
 }))
 
 const mockExpenseSummary = ref<unknown[]>([])
-const mockExpensesByCategory = ref<
-  Record<string, Array<{ amount: number; plan_item_id: string | null }>>
->({})
 const mockCreateExpenseMutateAsync = vi.fn().mockResolvedValue({
   id: 'expense-1',
   name: 'Test Expense',
@@ -68,12 +65,6 @@ const mockDeleteExpenseMutateAsync = vi.fn().mockResolvedValue(undefined)
 const mockDeleteExpensesBatchMutateAsync = vi.fn().mockResolvedValue(undefined)
 
 vi.mock('src/queries/expenses', () => ({
-  useExpensesByPlanQuery: vi.fn(() => ({
-    expensesByCategory: mockExpensesByCategory,
-    totalExpensesAmount: ref(0),
-    sortedExpenses: ref([]),
-    expenses: ref([]),
-  })),
   useExpenseSummaryQuery: vi.fn(() => ({
     expenseSummary: mockExpenseSummary,
     isPending: ref(false),
@@ -142,7 +133,6 @@ beforeEach(() => {
   mockPlans.value = []
   mockCategories.value = []
   mockExpenseSummary.value = []
-  mockExpensesByCategory.value = {}
   mockPlanItemsData.value = []
   mockLastExpenseData.value = null
   mockCompletionMutateAsync.mockResolvedValue(undefined)
@@ -349,13 +339,10 @@ describe('useExpenseRegistration', () => {
           category_id: 'cat-1',
           planned_amount: 300,
           actual_amount: 100,
-          remaining_amount: 200,
+          remaining_amount: 300,
           expense_count: 1,
         },
       ]
-      mockExpensesByCategory.value = {
-        'cat-1': [{ amount: 100, plan_item_id: 'item-fixed' }],
-      }
 
       const { form, onPlanSelected, categoryOptions } = useExpenseRegistration()
       form.value.planId = 'plan-1'
@@ -572,6 +559,30 @@ describe('useExpenseRegistration', () => {
         expenseId: 'expense-123',
         planId: 'plan-1',
       })
+      expect(onSuccess).not.toHaveBeenCalled()
+    })
+
+    it('keeps the original save failed when best-effort rollback also fails', async () => {
+      mockPlans.value = [mockPlan]
+      mockCreateExpenseMutateAsync.mockResolvedValueOnce({ id: 'expense-123' })
+      mockCompletionMutateAsync.mockRejectedValueOnce(new Error('completion failed'))
+      mockDeleteExpenseMutateAsync.mockRejectedValueOnce(new Error('rollback failed'))
+
+      const onSuccess = vi.fn()
+      const { handleCustomEntrySubmit, form } = useExpenseRegistration()
+      form.value.planId = 'plan-1'
+      form.value.categoryId = 'cat-1'
+      form.value.name = 'Test Expense'
+      form.value.amount = 50
+      form.value.planItemId = 'item-1'
+
+      await handleCustomEntrySubmit(true, onSuccess)
+
+      expect(mockDeleteExpenseMutateAsync).toHaveBeenCalledWith({
+        expenseId: 'expense-123',
+        planId: 'plan-1',
+      })
+      expect(mockShowError).toHaveBeenCalledWith('Failed to register expense. Please try again.')
       expect(onSuccess).not.toHaveBeenCalled()
     })
 
