@@ -37,8 +37,11 @@ describe('QuickActionsGrid', () => {
     mockScreen.lt.sm = false
   })
 
-  const createWrapper = () => {
+  const createWrapper = (canAddExpense = true) => {
     return mount(QuickActionsGrid, {
+      props: {
+        canAddExpense,
+      },
       global: {
         stubs: {
           QCard: false,
@@ -91,6 +94,15 @@ describe('QuickActionsGrid', () => {
     const items = wrapper.findAllComponents({ name: 'QItem' })
     await items[0]?.trigger('click')
     expect(wrapper.emitted('add-expense')).toBeTruthy()
+  })
+
+  it('disables Add Expense when no plan accepts expenses', async () => {
+    const wrapper = createWrapper(false)
+    const items = wrapper.findAllComponents({ name: 'QItem' })
+
+    expect(items[0]?.props('disable')).toBe(true)
+    await items[0]?.trigger('click')
+    expect(wrapper.emitted('add-expense')).toBeUndefined()
   })
 
   it('navigates to /plans/new when New Plan is clicked', () => {

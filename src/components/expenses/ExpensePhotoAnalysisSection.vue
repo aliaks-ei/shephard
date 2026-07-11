@@ -24,12 +24,16 @@
         dense
         no-caps
         color="primary"
+        aria-controls="receipt-photo-panel"
+        :aria-expanded="String(shouldShowPanel)"
+        class="receipt-photo-section__toggle"
         @click="toggleExpanded"
       />
     </div>
 
     <q-slide-transition>
       <div
+        id="receipt-photo-panel"
         v-show="shouldShowPanel"
         class="receipt-photo-section__panel q-pt-sm"
       >
@@ -198,3 +202,9 @@ defineExpose({
   reset,
 })
 </script>
+
+<style lang="scss" scoped>
+.receipt-photo-section__toggle {
+  min-height: 44px;
+}
+</style>

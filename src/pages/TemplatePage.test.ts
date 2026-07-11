@@ -96,7 +96,14 @@ vi.mock('src/queries/sharing', () => ({
 }))
 
 const mockUseTemplate = {
+  currentTemplate: ref<TemplateWithItems | null>(null),
   isTemplateLoading: ref(false),
+  isTemplateRetrying: ref(false),
+  detailState: ref<
+    | { status: 'loading' }
+    | { status: 'ready'; data: TemplateWithItems | null }
+    | { status: 'error'; error: unknown }
+  >({ status: 'ready', data: null }),
   isNewTemplate: ref(false),
   routeTemplateId: ref('template-1'),
   isOwner: ref(true),
@@ -233,6 +240,9 @@ function createWrapper(
 
   mockUseTemplate.isNewTemplate.value = isNewTemplate
   mockUseTemplate.isTemplateLoading.value = isLoading
+  mockUseTemplate.detailState.value = isLoading
+    ? { status: 'loading' }
+    : { status: 'ready', data: mockUseTemplate.currentTemplate.value }
   mockUseTemplate.isReadOnlyMode.value = isReadOnlyMode
   mockUseTemplate.isOwner.value = isOwner
   mockUseTemplate.isEditMode.value = !isReadOnlyMode
@@ -401,6 +411,8 @@ beforeEach(() => {
   mockRoute.params = { id: 'template-1' }
 
   mockUseTemplate.loadTemplate.mockResolvedValue(mockTemplate)
+  mockUseTemplate.currentTemplate.value = mockTemplate
+  mockUseTemplate.detailState.value = { status: 'ready', data: mockTemplate }
   mockUseTemplate.createNewTemplateWithItems.mockResolvedValue(true)
   mockUseTemplate.updateExistingTemplateWithItems.mockResolvedValue(true)
 })
@@ -548,11 +560,11 @@ describe('TemplatePage', () => {
     expect(shareButton.exists()).toBe(true)
   })
 
-  it('should show share button for existing template with edit permission', () => {
+  it('should not show share button for existing template with edit permission', () => {
     const { wrapper } = createWrapper({ isOwner: false })
 
     const shareButton = wrapper.find('[data-label="Share"]')
-    expect(shareButton.exists()).toBe(true)
+    expect(shareButton.exists()).toBe(false)
   })
 
   it('should not show share button for new template', () => {

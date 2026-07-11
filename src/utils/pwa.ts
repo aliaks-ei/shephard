@@ -37,3 +37,12 @@ export function isAppleMobileDevice(): boolean {
 
   return /iPad|iPhone|iPod/.test(userAgent) || (platform === 'MacIntel' && maxTouchPoints > 1)
 }
+
+export function isAppleMobileSafari(): boolean {
+  if (!isAppleMobileDevice()) {
+    return false
+  }
+
+  const userAgent = getNavigatorUserAgent()
+  return /Safari/.test(userAgent) && !/(CriOS|EdgiOS|FxiOS|OPiOS|DuckDuckGo)/.test(userAgent)
+}

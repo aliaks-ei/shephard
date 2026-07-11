@@ -4,7 +4,7 @@
     :title="category?.categoryName || 'Category'"
     body-class="q-pa-none"
     :body-scrollable="false"
-    :primary-action-label="canEdit ? 'Add Expense' : undefined"
+    :primary-action-label="canAddExpenses ? 'Add Expense' : undefined"
     @update:model-value="emit('update:modelValue', $event)"
     @primary="openExpenseDialog"
   >
@@ -101,11 +101,11 @@
           :ripple="false"
         >
           <q-badge
-            v-if="expenses.length > 0"
+            v-if="(category?.expenseCount || 0) > 0"
             color="primary"
             class="category-dialog-badge"
           >
-            {{ expenses.length }}
+            {{ category?.expenseCount }}
           </q-badge>
         </q-tab>
       </q-tabs>
@@ -121,7 +121,7 @@
       >
         <!-- Items to Track Panel -->
         <q-tab-panel
-          v-if="hasAnyPlanItems"
+          v-if="hasAnyPlanItems && activeTab === 'items'"
           name="items"
           class="q-pa-none"
         >
@@ -210,12 +210,28 @@
 
         <!-- Expenses Panel -->
         <q-tab-panel
+          v-if="activeTab === 'expenses'"
           name="expenses"
           class="q-pa-none"
         >
           <!-- Expenses List -->
+          <div
+            v-if="isLoadingExpenses"
+            class="row justify-center q-pa-lg"
+          >
+            <q-spinner color="primary" />
+          </div>
+
+          <QueryErrorState
+            v-else-if="hasExpensesLoadError"
+            compact
+            entity-name="Category expenses"
+            :retrying="isRetryingExpenses ?? false"
+            @retry="emit('retry-expenses')"
+          />
+
           <q-virtual-scroll
-            v-if="expenses.length > 0"
+            v-else-if="expenses.length > 0"
             :items="expenses"
             :virtual-scroll-item-size="$q.screen.lt.md ? 96 : 84"
             class="category-expenses-virtual-list"
@@ -232,9 +248,23 @@
             </template>
           </q-virtual-scroll>
 
+          <div
+            v-if="!isLoadingExpenses && !hasExpensesLoadError && hasMoreExpenses"
+            class="row justify-center q-py-md"
+          >
+            <q-btn
+              flat
+              no-caps
+              color="primary"
+              label="Load more"
+              :loading="isLoadingMoreExpenses"
+              @click="emit('load-more-expenses')"
+            />
+          </div>
+
           <!-- Empty State -->
           <div
-            v-else
+            v-if="!isLoadingExpenses && !hasExpensesLoadError && expenses.length === 0"
             class="text-center q-py-xl text-caption-secondary"
           >
             <q-icon
@@ -258,7 +288,7 @@
         @click="$emit('update:modelValue', false)"
       />
       <q-btn
-        v-if="canEdit"
+        v-if="canAddExpenses"
         label="Add Expense"
         color="primary"
         unelevated
@@ -282,6 +312,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import AppDialogShell from 'src/components/shared/AppDialogShell.vue'
+import QueryErrorState from 'src/components/shared/QueryErrorState.vue'
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 import ExpenseListItem from 'src/components/expenses/ExpenseListItem.vue'
@@ -303,20 +334,34 @@ type CategoryData = {
   expenseCount: number
 }
 
-const props = defineProps<{
-  modelValue: boolean
-  category: CategoryData | null
-  expenses: ExpenseWithCategory[]
-  currency: CurrencyCode
-  canEdit: boolean
-  planId?: string
-  planItems?: PlanItem[]
-}>()
+const props = withDefaults(
+  defineProps<{
+    modelValue: boolean
+    category: CategoryData | null
+    expenses: ExpenseWithCategory[]
+    currency: CurrencyCode
+    canEdit: boolean
+    canAddExpenses?: boolean
+    planId?: string
+    planItems?: PlanItem[]
+    isLoadingExpenses?: boolean
+    isLoadingMoreExpenses?: boolean
+    hasMoreExpenses?: boolean
+    hasExpensesLoadError?: boolean
+    isRetryingExpenses?: boolean
+  }>(),
+  {
+    canAddExpenses: false,
+  },
+)
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
   'add-expense': []
   refresh: []
+  'load-more-expenses': []
+  'expenses-tab-activated': []
+  'retry-expenses': []
 }>()
 
 const planIdRef = computed(() => props.planId ?? null)
@@ -341,6 +386,8 @@ const remainingColorClass = computed(() => {
 })
 
 function openExpenseDialog() {
+  if (!props.canAddExpenses) return
+
   hasOpenedExpenseDialog.value = true
   showExpenseDialog.value = true
 }
@@ -362,6 +409,16 @@ watch(
       activeTab.value = 'items'
     } else {
       activeTab.value = 'expenses'
+    }
+  },
+  { immediate: true },
+)
+
+watch(
+  activeTab,
+  (tab) => {
+    if (tab === 'expenses') {
+      emit('expenses-tab-activated')
     }
   },
   { immediate: true },

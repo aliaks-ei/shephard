@@ -1,12 +1,14 @@
 <template>
   <q-pull-to-refresh
-    :disable="$q.screen.gt.sm"
+    :disable="!$q.screen.lt.md"
     @refresh="onRefresh"
   >
     <ListPageLayout
       title="Activity"
       description="Your spending across all plans"
       create-button-label="Add Expense"
+      :show-create-button="hasExpensePlan"
+      :create-button-disabled="isOffline"
       @create="openExpenseDialog"
     >
       <SearchAndSort
@@ -25,6 +27,7 @@
           v-for="category in availableCategories"
           :key="category.id"
           clickable
+          :aria-pressed="String(selectedCategoryId === category.id)"
           :class="{ 'category-filter-chip--active': selectedCategoryId === category.id }"
           class="category-filter-chip"
           @click="toggleCategory(category.id)"
@@ -40,7 +43,7 @@
 
       <!-- Loading skeleton -->
       <q-card
-        v-if="isPending"
+        v-if="isPending && !isOffline"
         :bordered="$q.dark.isActive"
         class="shadow-1"
       >
@@ -73,7 +76,14 @@
         </q-card-section>
       </q-card>
 
-      <!-- Day-grouped expense list -->
+      <QueryErrorState
+        v-else-if="hasLoadError"
+        entity-name="Activity"
+        :retrying="isRetrying"
+        @retry="retryActivity"
+      />
+
+      <!-- Incrementally loaded day-grouped expense list -->
       <template v-else-if="dayGroups.length > 0">
         <div
           v-for="group in dayGroups"
@@ -101,9 +111,24 @@
                 :category-name="expense.plans?.name || ''"
                 :category-color="expense.categories?.color || '#666'"
                 :category-icon="expense.categories?.icon || 'eva-folder-outline'"
+                :to="sourcePlanRoute(expense)"
               />
             </q-list>
           </q-card>
+        </div>
+
+        <div
+          v-if="hasNextPage"
+          class="row justify-center q-mt-md"
+        >
+          <q-btn
+            flat
+            no-caps
+            color="primary"
+            label="Load more activity"
+            :loading="isFetchingNextPage"
+            @click="void fetchNextPage()"
+          />
         </div>
       </template>
 
@@ -115,6 +140,7 @@
         search-title="No matching expenses"
         search-description="Try a different search or clear the filters."
         create-button-label="Add Expense"
+        :show-create-button="canAddExpense"
         @clear-search="clearFilters"
         @create="openExpenseDialog"
       />
@@ -122,12 +148,13 @@
       <!-- Empty: no expenses at all -->
       <EmptyExpensesState
         v-else
+        :can-add-expense="canAddExpense"
         @add-expense="openExpenseDialog"
       />
 
       <!-- Expense Registration Dialog -->
       <ExpenseRegistrationDialog
-        v-if="hasOpenedExpenseDialog"
+        v-if="canAddExpense && hasOpenedExpenseDialog"
         v-model="showExpenseDialog"
         auto-select-recent-plan
         @expense-created="showExpenseDialog = false"
@@ -139,33 +166,71 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useMeta, useQuasar } from 'quasar'
+import { refDebounced } from '@vueuse/core'
+import type { RouteLocationRaw } from 'vue-router'
 
 import ListPageLayout from 'src/layouts/ListPageLayout.vue'
 import SearchAndSort from 'src/components/shared/SearchAndSort.vue'
 import EmptyState from 'src/components/shared/EmptyState.vue'
+import QueryErrorState from 'src/components/shared/QueryErrorState.vue'
 import EmptyExpensesState from 'src/components/expenses/EmptyExpensesState.vue'
 import ExpenseListItem from 'src/components/expenses/ExpenseListItem.vue'
 import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 import { useQueryClient } from '@tanstack/vue-query'
-import { useRecentExpensesQuery } from 'src/queries/expenses'
+import { useRecentExpensesInfiniteQuery } from 'src/queries/expenses'
+import { usePlansQuery } from 'src/queries/plans'
+import { useCategoriesQuery } from 'src/queries/categories'
 import { queryKeys } from 'src/queries/query-keys'
 import { useUserStore } from 'src/stores/user'
 import { usePreferencesStore } from 'src/stores/preferences'
 import { formatCurrency, formatCurrencyPrivate, type CurrencyCode } from 'src/utils/currency'
 import { formatDateRelative } from 'src/utils/date'
-import type { ExpenseWithCategoryAndPlan } from 'src/api'
+import type { ExpenseSort, ExpenseWithCategoryAndPlan } from 'src/api'
+import { useNetworkStatus } from 'src/composables/useNetworkStatus'
 
 useMeta({ title: 'Activity' })
-
-const RECENT_EXPENSES_LIMIT = 200
 
 const $q = useQuasar()
 const userStore = useUserStore()
 const preferencesStore = usePreferencesStore()
 
 const userId = computed(() => userStore.userProfile?.id)
-const { expenses, isPending } = useRecentExpensesQuery(userId, RECENT_EXPENSES_LIMIT)
+const searchQuery = ref('')
+const debouncedSearchQuery = refDebounced(searchQuery, 300)
+const sortBy = ref('date-desc')
+const expenseSort = computed<ExpenseSort>(() => {
+  switch (sortBy.value) {
+    case 'date-desc':
+    case 'date-asc':
+    case 'amount-desc':
+    case 'amount-asc':
+      return sortBy.value
+    default:
+      return 'date-desc'
+  }
+})
+const selectedCategoryId = ref<string | null>(null)
+const expenseFilters = computed(() => ({
+  search: debouncedSearchQuery.value,
+  categoryId: selectedCategoryId.value,
+  sortBy: expenseSort.value,
+}))
+const expensesQuery = useRecentExpensesInfiniteQuery(userId, expenseFilters)
+const { expenses, isPending, hasNextPage, isFetchingNextPage, fetchNextPage } = expensesQuery
+const { plansForExpenses } = usePlansQuery(userId)
+const { categories } = useCategoriesQuery()
+const { isOnline, isOffline } = useNetworkStatus()
+const hasExpensePlan = computed(() => plansForExpenses.value.length > 0)
+const canAddExpense = computed(() => isOnline.value && hasExpensePlan.value)
 const queryClient = useQueryClient()
+const hasLoadError = computed(
+  () => ((expensesQuery.isError?.value ?? false) || isOffline.value) && expenses.value.length === 0,
+)
+const isRetrying = computed(() => expensesQuery.isFetching?.value ?? false)
+
+async function retryActivity(): Promise<void> {
+  await expensesQuery.refetch?.()
+}
 
 async function onRefresh(done: () => void) {
   try {
@@ -174,10 +239,6 @@ async function onRefresh(done: () => void) {
     done()
   }
 }
-
-const searchQuery = ref('')
-const sortBy = ref('date-desc')
-const selectedCategoryId = ref<string | null>(null)
 
 const sortOptions = [
   { label: 'Newest first', value: 'date-desc' },
@@ -190,22 +251,14 @@ const hasOpenedExpenseDialog = ref(false)
 const showExpenseDialog = ref(false)
 
 function openExpenseDialog() {
+  if (!isOnline.value || !canAddExpense.value) return
+
   hasOpenedExpenseDialog.value = true
   showExpenseDialog.value = true
 }
 
 const availableCategories = computed(() => {
-  const seen = new Map<string, { id: string; name: string; icon: string | null }>()
-  expenses.value.forEach((expense) => {
-    if (expense.categories && !seen.has(expense.categories.id)) {
-      seen.set(expense.categories.id, {
-        id: expense.categories.id,
-        name: expense.categories.name,
-        icon: expense.categories.icon,
-      })
-    }
-  })
-  return Array.from(seen.values()).sort((a, b) => a.name.localeCompare(b.name))
+  return [...categories.value].sort((a, b) => a.name.localeCompare(b.name))
 })
 
 function toggleCategory(categoryId: string) {
@@ -219,41 +272,6 @@ function clearFilters() {
   selectedCategoryId.value = null
 }
 
-const filteredExpenses = computed(() => {
-  let result = expenses.value
-
-  if (selectedCategoryId.value) {
-    result = result.filter((expense) => expense.category_id === selectedCategoryId.value)
-  }
-
-  const query = searchQuery.value.trim().toLowerCase()
-  if (query) {
-    result = result.filter(
-      (expense) =>
-        expense.name.toLowerCase().includes(query) ||
-        expense.categories?.name.toLowerCase().includes(query) ||
-        expense.plans?.name.toLowerCase().includes(query),
-    )
-  }
-
-  const sorted = [...result]
-  switch (sortBy.value) {
-    case 'date-asc':
-      sorted.sort((a, b) => a.expense_date.localeCompare(b.expense_date))
-      break
-    case 'amount-desc':
-      sorted.sort((a, b) => b.amount - a.amount)
-      break
-    case 'amount-asc':
-      sorted.sort((a, b) => a.amount - b.amount)
-      break
-    default:
-      sorted.sort((a, b) => b.expense_date.localeCompare(a.expense_date))
-  }
-
-  return sorted
-})
-
 type DayGroup = {
   date: string
   label: string
@@ -264,7 +282,7 @@ type DayGroup = {
 const isDateSort = computed(() => sortBy.value === 'date-desc' || sortBy.value === 'date-asc')
 
 const dayGroups = computed((): DayGroup[] => {
-  if (filteredExpenses.value.length === 0) return []
+  if (expenses.value.length === 0) return []
 
   // Amount sorts render as a single flat group
   if (!isDateSort.value) {
@@ -272,14 +290,14 @@ const dayGroups = computed((): DayGroup[] => {
       {
         date: 'all',
         label: 'All expenses',
-        totalLabel: groupTotalLabel(filteredExpenses.value),
-        expenses: filteredExpenses.value,
+        totalLabel: groupTotalLabel(expenses.value),
+        expenses: expenses.value,
       },
     ]
   }
 
   const groups = new Map<string, ExpenseWithCategoryAndPlan[]>()
-  filteredExpenses.value.forEach((expense) => {
+  expenses.value.forEach((expense) => {
     const day = expense.expense_date.slice(0, 10)
     const group = groups.get(day)
     if (group) {
@@ -299,6 +317,15 @@ const dayGroups = computed((): DayGroup[] => {
 
 function expenseCurrency(expense: ExpenseWithCategoryAndPlan): CurrencyCode {
   return (expense.plans?.currency ?? preferencesStore.currency) as CurrencyCode
+}
+
+function sourcePlanRoute(expense: ExpenseWithCategoryAndPlan): RouteLocationRaw {
+  const planId = expense.plans?.id ?? expense.plan_id
+
+  return {
+    name: 'plan',
+    params: { id: planId },
+  }
 }
 
 function groupTotalLabel(groupExpenses: ExpenseWithCategoryAndPlan[]): string {
@@ -335,6 +362,7 @@ function groupTotalLabel(groupExpenses: ExpenseWithCategoryAndPlan[]): string {
 
 .category-filter-chip {
   flex: 0 0 auto;
+  min-height: 44px;
   background: hsl(var(--muted));
   color: hsl(var(--muted-foreground));
 }

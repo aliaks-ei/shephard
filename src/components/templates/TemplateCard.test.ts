@@ -46,9 +46,10 @@ const renderTemplateCard = (props: TemplateCardProps, isPrivacyModeEnabled = fal
       plugins: [pinia],
       stubs: {
         TemplateCardMenu: {
+          name: 'TemplateCardMenu',
           template: '<div data-testid="template-card-menu" />',
-          props: ['canEdit'],
-          emits: ['edit', 'share', 'delete'],
+          props: ['modelValue', 'id', 'canEdit', 'canShare'],
+          emits: ['update:modelValue', 'edit', 'share', 'delete'],
         },
       },
     },
@@ -101,6 +102,22 @@ describe('TemplateCard', () => {
     wrapper.vm.$emit('share', mockTemplate.id)
     expect(wrapper.emitted('share')).toBeTruthy()
     expect(wrapper.emitted('share')?.[0]).toEqual([mockTemplate.id])
+  })
+
+  it('should not allow a collaborator to share from the card menu', async () => {
+    const wrapper = renderTemplateCard({
+      template: {
+        ...mockTemplate,
+        owner_id: 'owner-2',
+        permission_level: 'edit',
+      },
+    })
+
+    await wrapper.find('button[aria-label="Actions for Test Template"]').trigger('click')
+
+    const menu = wrapper.findComponent({ name: 'TemplateCardMenu' })
+    expect(menu.exists()).toBe(true)
+    expect(menu.props('canShare')).toBe(false)
   })
 
   it('should emit export event when menu emits export', () => {
@@ -195,6 +212,10 @@ describe('TemplateCard', () => {
       template: { ...mockTemplate, owner_id: 'user-2', permission_level: 'view' },
     })
 
-    expect(wrapper.find('.q-btn').exists()).toBe(true)
+    const actionsButton = wrapper.find('button[aria-label="Actions for Test Template"]')
+    expect(actionsButton.exists()).toBe(true)
+    expect(actionsButton.attributes('aria-haspopup')).toBe('menu')
+    expect(actionsButton.attributes('aria-expanded')).toBe('false')
+    expect(actionsButton.attributes('aria-controls')).toBe(`template-actions-${mockTemplate.id}`)
   })
 })

@@ -9,7 +9,8 @@ import { useNotificationEvents } from './useNotificationEvents'
 export function usePlans() {
   const userStore = useUserStore()
   const userId = computed(() => userStore.userProfile?.id)
-  const { plans, isPending } = usePlansQuery(userId)
+  const plansQuery = usePlansQuery(userId)
+  const { plans, isPending } = plansQuery
   const deletePlanMutation = useDeletePlanMutation()
   const updatePlanMutation = useUpdatePlanMutation()
   const { emitNotificationEvent, emitRemovalNotification } = useNotificationEvents()
@@ -59,6 +60,13 @@ export function usePlans() {
       },
       () => plans.value,
       () => isPending.value && plans.value.length === 0,
+      {
+        isError: () => plansQuery.isError?.value ?? false,
+        isFetching: () => plansQuery.isFetching?.value ?? false,
+        retry: async () => {
+          await plansQuery.refetch?.()
+        },
+      },
     ),
     cancelPlan,
   }

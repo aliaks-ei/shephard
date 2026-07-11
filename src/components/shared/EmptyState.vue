@@ -37,6 +37,7 @@
         />
 
         <q-btn
+          v-if="showCreateButton"
           color="primary"
           icon="eva-plus-outline"
           :label="createButtonLabel"
@@ -70,6 +71,7 @@ const props = withDefaults(
     searchDescription?: string
     emptyDescription?: string
     createButtonLabel?: string
+    showCreateButton?: boolean
   }>(),
   {
     searchIcon: 'eva-search-outline',
@@ -79,6 +81,7 @@ const props = withDefaults(
     searchDescription: 'Try adjusting your search terms or create a new item',
     emptyDescription: 'Create your first item to get started',
     createButtonLabel: 'Create Item',
+    showCreateButton: true,
   },
 )
 

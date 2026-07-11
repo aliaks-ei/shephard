@@ -48,6 +48,16 @@
         width="60px"
         class="q-mt-xs"
       />
+      <q-btn
+        v-else-if="hasLoadError"
+        flat
+        dense
+        no-caps
+        color="negative"
+        label="Retry"
+        :loading="isRetrying"
+        @click.stop="retry"
+      />
       <div
         v-else
         class="text-caption text-grey-6"
@@ -66,31 +76,31 @@ import { formatDateRange } from 'src/utils/plans'
 import { useUserStore } from 'src/stores/user'
 import { usePreferencesStore } from 'src/stores/preferences'
 import type { PlanWithPermission } from 'src/api'
-import { usePlanDetailQuery } from 'src/queries/plans'
-import { usePlanOverview } from 'src/composables/usePlanOverview'
 import { getBudgetRemainingColorClass } from 'src/utils/budget'
+import type { DashboardPlanOverview } from 'src/composables/useDashboardOverview'
 
 const emit = defineEmits<{
   click: [planId: string]
+  retry: []
 }>()
 
 const props = defineProps<{
   plan: PlanWithPermission
+  overview: DashboardPlanOverview | null
+  isOverviewLoading?: boolean
+  hasLoadError?: boolean
+  isRetrying?: boolean
 }>()
 
 const userStore = useUserStore()
-const userId = computed(() => userStore.userProfile?.id)
 const preferencesStore = usePreferencesStore()
 
 const isOwner = computed(() => props.plan.owner_id === userStore.userProfile?.id)
 const isViewOnly = computed(() => props.plan.permission_level === 'view')
 
-const planId = computed(() => props.plan.id)
-const planDetailQuery = usePlanDetailQuery(planId, userId)
-const planWithItems = computed(() => planDetailQuery.data.value ?? null)
-const isOverviewLoading = computed(() => planDetailQuery.isPending.value)
-
-const { totalBudget, totalSpent, remainingBudget } = usePlanOverview(planId, planWithItems)
+const totalBudget = computed(() => props.overview?.totalBudget ?? props.plan.total ?? 0)
+const totalSpent = computed(() => props.overview?.totalSpent ?? 0)
+const remainingBudget = computed(() => props.overview?.remainingBudget ?? totalBudget.value)
 
 const progressPercentage = computed(() => {
   if (totalBudget.value === 0) return 0
@@ -107,5 +117,9 @@ function formatAmount(amount: number | null | undefined): string {
   }
 
   return formatCurrency(amount, currency)
+}
+
+function retry(): void {
+  emit('retry')
 }
 </script>

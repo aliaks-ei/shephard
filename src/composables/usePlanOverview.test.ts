@@ -8,18 +8,16 @@ type Category = Tables<'categories'>
 
 const {
   mockPlans,
-  mockExpenses,
-  mockTotalExpensesAmount,
-  mockSortedExpenses,
-  mockExpensesByCategory,
+  mockRecentExpenses,
+  mockHistoryExpenses,
+  mockCategoryExpenses,
   mockExpenseSummary,
   mockCategories,
 } = vi.hoisted(() => ({
   mockPlans: { value: [] as PlanWithItems[] },
-  mockExpenses: { value: [] as ExpenseWithCategory[] },
-  mockTotalExpensesAmount: { value: 0 },
-  mockSortedExpenses: { value: [] as ExpenseWithCategory[] },
-  mockExpensesByCategory: { value: {} as Record<string, ExpenseWithCategory[]> },
+  mockRecentExpenses: { value: [] as ExpenseWithCategory[] },
+  mockHistoryExpenses: { value: [] as ExpenseWithCategory[] },
+  mockCategoryExpenses: { value: [] as ExpenseWithCategory[] },
   mockExpenseSummary: { value: [] as PlanExpenseSummary[] },
   mockCategories: { value: [] as Category[] },
 }))
@@ -29,14 +27,17 @@ vi.mock('src/queries/plans', () => ({
 }))
 
 vi.mock('src/queries/expenses', () => ({
-  useExpensesByPlanQuery: () => ({
-    expenses: mockExpenses,
-    totalExpensesAmount: mockTotalExpensesAmount,
-    sortedExpenses: mockSortedExpenses,
-    expensesByCategory: mockExpensesByCategory,
+  useRecentPlanExpensesQuery: () => ({
+    expenses: mockRecentExpenses,
   }),
   useExpenseSummaryQuery: () => ({
     expenseSummary: mockExpenseSummary,
+  }),
+  usePlanExpensesInfiniteQuery: () => ({
+    expenses: mockHistoryExpenses,
+  }),
+  useCategoryExpensesInfiniteQuery: () => ({
+    expenses: mockCategoryExpenses,
   }),
 }))
 
@@ -55,10 +56,9 @@ vi.mock('src/stores/user', () => ({
 
 beforeEach(() => {
   mockPlans.value = []
-  mockExpenses.value = []
-  mockTotalExpensesAmount.value = 0
-  mockSortedExpenses.value = []
-  mockExpensesByCategory.value = {}
+  mockRecentExpenses.value = []
+  mockHistoryExpenses.value = []
+  mockCategoryExpenses.value = []
   mockExpenseSummary.value = []
   mockCategories.value = []
 })
@@ -198,8 +198,16 @@ describe('usePlanOverview', () => {
   })
 
   describe('totalSpent', () => {
-    it('returns total expenses amount from store', () => {
-      mockTotalExpensesAmount.value = 350
+    it('sums total expenses from the aggregate summary', () => {
+      mockExpenseSummary.value = [
+        {
+          category_id: 'cat-1',
+          planned_amount: 500,
+          actual_amount: 350,
+          remaining_amount: 150,
+          expense_count: 2,
+        },
+      ]
 
       const { totalSpent } = usePlanOverview('plan-1', ref(mockPlanWithItems))
 
@@ -209,8 +217,6 @@ describe('usePlanOverview', () => {
 
   describe('remainingBudget', () => {
     it('calculates remaining budget correctly with only fixed items', () => {
-      mockTotalExpensesAmount.value = 350
-
       mockExpenseSummary.value = [
         {
           category_id: 'cat-1',
@@ -235,8 +241,6 @@ describe('usePlanOverview', () => {
     })
 
     it('calculates remaining budget correctly with fixed and non-fixed items', () => {
-      mockTotalExpensesAmount.value = 120
-
       const planWithMixedItems: PlanWithItems = {
         ...mockPlanWithItems,
         plan_items: [
@@ -301,8 +305,6 @@ describe('usePlanOverview', () => {
     })
 
     it('calculates remaining budget correctly when expenses exceed non-fixed items', () => {
-      mockTotalExpensesAmount.value = 300
-
       const planWithMixedItems: PlanWithItems = {
         ...mockPlanWithItems,
         plan_items: [
@@ -356,8 +358,6 @@ describe('usePlanOverview', () => {
     })
 
     it('excludes completed fixed items from calculation', () => {
-      mockTotalExpensesAmount.value = 0
-
       const planWithCompletedItems: PlanWithItems = {
         ...mockPlanWithItems,
         plan_items: [
@@ -444,22 +444,10 @@ describe('usePlanOverview', () => {
           category_id: 'cat-1',
           planned_amount: 300,
           actual_amount: 100,
-          remaining_amount: 200,
+          remaining_amount: 300,
           expense_count: 1,
         },
       ]
-      mockExpensesByCategory.value = {
-        'cat-1': [
-          {
-            ...testExpenses[0]!,
-            id: 'expense-fixed-linked',
-            amount: 100,
-            category_id: 'cat-1',
-            plan_item_id: 'item-fixed',
-            categories: testCategories[0]!,
-          },
-        ],
-      }
       mockCategories.value = [testCategories[0]!]
 
       const { remainingBudget } = usePlanOverview('plan-1', ref(planWithMixedItems))
@@ -482,7 +470,7 @@ describe('usePlanOverview', () => {
           category_id: 'cat-2',
           planned_amount: 300,
           actual_amount: 100,
-          remaining_amount: 200,
+          remaining_amount: 300,
           expense_count: 1,
         },
       ]
@@ -564,7 +552,7 @@ describe('usePlanOverview', () => {
 
   describe('recentExpenses', () => {
     it('returns up to 10 most recent expenses', () => {
-      mockSortedExpenses.value = testExpenses
+      mockRecentExpenses.value = testExpenses
 
       const { recentExpenses } = usePlanOverview('plan-1', ref(mockPlanWithItems))
 
@@ -573,11 +561,11 @@ describe('usePlanOverview', () => {
     })
 
     it('limits to 10 expenses', () => {
-      const manyExpenses = Array.from({ length: 15 }, (_, i) => ({
+      const manyExpenses = Array.from({ length: 10 }, (_, i) => ({
         ...testExpenses[0]!,
         id: `expense-${i}`,
       }))
-      mockSortedExpenses.value = manyExpenses
+      mockRecentExpenses.value = manyExpenses
 
       const { recentExpenses } = usePlanOverview('plan-1', ref(mockPlanWithItems))
 
@@ -585,23 +573,27 @@ describe('usePlanOverview', () => {
     })
   })
 
-  describe('expensesByCategory', () => {
-    it('returns expenses grouped by category from store', () => {
-      const groupedExpenses = {
-        'cat-1': [testExpenses[0]!],
-      }
-      mockExpensesByCategory.value = groupedExpenses
+  describe('bounded history', () => {
+    it('exposes paginated history results without deriving them from recent expenses', () => {
+      mockHistoryExpenses.value = testExpenses
 
-      const { expensesByCategory } = usePlanOverview('plan-1', ref(mockPlanWithItems))
+      const { historyExpenses } = usePlanOverview('plan-1', ref(mockPlanWithItems))
 
-      expect(expensesByCategory.value).toEqual(groupedExpenses)
+      expect(historyExpenses.value).toEqual(testExpenses)
     })
   })
 
   describe('planHealth', () => {
     it('returns healthy status when utilization is below 80%', () => {
-      mockTotalExpensesAmount.value = 400
-      mockExpenseSummary.value = []
+      mockExpenseSummary.value = [
+        {
+          category_id: 'cat-1',
+          planned_amount: 500,
+          actual_amount: 400,
+          remaining_amount: 500,
+          expense_count: 1,
+        },
+      ]
       mockCategories.value = testCategories
 
       const { planHealth } = usePlanOverview('plan-1', ref(mockPlanWithItems))
@@ -611,8 +603,15 @@ describe('usePlanOverview', () => {
     })
 
     it('returns warning status when utilization is between 80% and 100%', () => {
-      mockTotalExpensesAmount.value = 700
-      mockExpenseSummary.value = []
+      mockExpenseSummary.value = [
+        {
+          category_id: 'cat-1',
+          planned_amount: 500,
+          actual_amount: 700,
+          remaining_amount: 500,
+          expense_count: 1,
+        },
+      ]
       mockCategories.value = testCategories
 
       const { planHealth } = usePlanOverview('plan-1', ref(mockPlanWithItems))
@@ -622,8 +621,15 @@ describe('usePlanOverview', () => {
     })
 
     it('returns critical status when utilization exceeds 100%', () => {
-      mockTotalExpensesAmount.value = 900
-      mockExpenseSummary.value = []
+      mockExpenseSummary.value = [
+        {
+          category_id: 'cat-1',
+          planned_amount: 500,
+          actual_amount: 900,
+          remaining_amount: 500,
+          expense_count: 1,
+        },
+      ]
       mockCategories.value = testCategories
 
       const { planHealth } = usePlanOverview('plan-1', ref(mockPlanWithItems))
@@ -633,7 +639,6 @@ describe('usePlanOverview', () => {
     })
 
     it('counts overBudget and nearLimit categories', () => {
-      mockTotalExpensesAmount.value = 300
       mockExpenseSummary.value = [
         {
           category_id: 'cat-1',

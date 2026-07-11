@@ -70,6 +70,9 @@ const routes: RouteRecordRaw[] = [
         path: 'callback',
         component: () => import('pages/AuthCallbackPage.vue'),
         name: 'auth-callback',
+        meta: {
+          allowAuthenticated: true,
+        },
       },
     ],
   },

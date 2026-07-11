@@ -2,14 +2,20 @@ import { vi, beforeEach, it, expect, describe } from 'vitest'
 import type { PostgrestError } from '@supabase/supabase-js'
 import { supabase } from 'src/lib/supabase/client'
 import {
-  getExpensesByPlan,
+  getAllExpensesByPlanForExport,
+  getExpensesByPlanPage,
+  getExpensesByCategoryPage,
+  getRecentExpensesForPlan,
+  getRecentExpensesPageForUser,
+  getExpenseIdsForPlanItem,
+  getPlanOverviewSnapshots,
   getLastExpenseForPlan,
   createExpense,
   updateExpense,
   deleteExpense,
+  deleteExpenses,
   getPlanExpenseSummary,
   getExpensesByDateRange,
-  getExpensesByCategory,
   type Expense,
   type ExpenseWithCategory,
   type ExpenseInsert,
@@ -65,6 +71,7 @@ vi.mock('src/lib/supabase/client', () => ({
       match: vi.fn().mockReturnThis(),
       order: vi.fn().mockReturnThis(),
       limit: vi.fn().mockReturnThis(),
+      range: vi.fn(),
       single: vi.fn(),
       maybeSingle: vi.fn(),
     })),
@@ -78,7 +85,7 @@ beforeEach(() => {
   vi.clearAllMocks()
 })
 
-describe('getExpensesByPlan', () => {
+describe('getAllExpensesByPlanForExport', () => {
   it('should return expenses with categories for a plan', async () => {
     const expenses = [mockExpenseWithCategory]
 
@@ -93,7 +100,7 @@ describe('getExpensesByPlan', () => {
 
     mockSupabase.from.mockImplementation(mockFrom)
 
-    const result = await getExpensesByPlan('plan-1')
+    const result = await getAllExpensesByPlanForExport('plan-1')
 
     expect(mockFrom).toHaveBeenCalledWith('expenses')
     expect(mockSelect).toHaveBeenCalledWith('*, categories(*)')
@@ -115,7 +122,7 @@ describe('getExpensesByPlan', () => {
 
     mockSupabase.from.mockImplementation(mockFrom)
 
-    const result = await getExpensesByPlan('plan-1')
+    const result = await getAllExpensesByPlanForExport('plan-1')
 
     expect(result).toEqual([])
   })
@@ -133,7 +140,130 @@ describe('getExpensesByPlan', () => {
 
     mockSupabase.from.mockImplementation(mockFrom)
 
-    await expect(getExpensesByPlan('plan-1')).rejects.toThrow('Failed to fetch expenses')
+    await expect(getAllExpensesByPlanForExport('plan-1')).rejects.toThrow(
+      'Failed to fetch expenses',
+    )
+  })
+})
+
+describe('bounded expense reads', () => {
+  it('ranges plan history instead of downloading the full plan', async () => {
+    const range = vi.fn().mockResolvedValue({
+      data: [mockExpenseWithCategory],
+      error: null,
+    })
+    const order3 = vi.fn().mockReturnValue({ range })
+    const order2 = vi.fn().mockReturnValue({ order: order3 })
+    const order1 = vi.fn().mockReturnValue({ order: order2 })
+    const eq = vi.fn().mockReturnValue({ order: order1 })
+    mockSupabase.from.mockReturnValue({
+      select: vi.fn().mockReturnValue({ eq }),
+    } as never)
+
+    const result = await getExpensesByPlanPage('plan-1', { offset: 40, limit: 40 })
+
+    expect(range).toHaveBeenCalledWith(40, 79)
+    expect(result).toEqual([mockExpenseWithCategory])
+  })
+
+  it('loads dashboard plan aggregates through one RPC', async () => {
+    mockSupabase.rpc.mockResolvedValue({
+      data: [],
+      error: null,
+    } as never)
+
+    await getPlanOverviewSnapshots(['plan-1', 'plan-2'])
+
+    expect(mockSupabase.rpc.mock.calls).toContainEqual([
+      'get_plan_overview_snapshots',
+      {
+        p_plan_ids: ['plan-1', 'plan-2'],
+      },
+    ])
+  })
+
+  it('limits recent plan history explicitly', async () => {
+    const limit = vi.fn().mockResolvedValue({
+      data: [mockExpenseWithCategory],
+      error: null,
+    })
+    const order3 = vi.fn().mockReturnValue({ limit })
+    const order2 = vi.fn().mockReturnValue({ order: order3 })
+    const order1 = vi.fn().mockReturnValue({ order: order2 })
+    const eq = vi.fn().mockReturnValue({ order: order1 })
+    mockSupabase.from.mockReturnValue({
+      select: vi.fn().mockReturnValue({ eq }),
+    } as never)
+
+    await getRecentExpensesForPlan('plan-1', 10)
+
+    expect(limit).toHaveBeenCalledWith(10)
+  })
+
+  it('ranges category history and caps oversized pages', async () => {
+    const range = vi.fn().mockResolvedValue({
+      data: [mockExpenseWithCategory],
+      error: null,
+    })
+    const order3 = vi.fn().mockReturnValue({ range })
+    const order2 = vi.fn().mockReturnValue({ order: order3 })
+    const order1 = vi.fn().mockReturnValue({ order: order2 })
+    const categoryEq = vi.fn().mockReturnValue({ order: order1 })
+    const planEq = vi.fn().mockReturnValue({ eq: categoryEq })
+    mockSupabase.from.mockReturnValue({
+      select: vi.fn().mockReturnValue({ eq: planEq }),
+    } as never)
+
+    await getExpensesByCategoryPage('plan-1', 'category-1', {
+      offset: 0,
+      limit: 1_000,
+    })
+
+    expect(range).toHaveBeenCalledWith(0, 99)
+  })
+
+  it('passes search and sort through the shared user activity RPC', async () => {
+    mockSupabase.rpc.mockResolvedValue({
+      data: [],
+      error: null,
+    } as never)
+
+    await getRecentExpensesPageForUser('user-1', {
+      offset: 40,
+      limit: 40,
+      search: ' groceries ',
+      categoryId: 'category-1',
+      sortBy: 'amount-desc',
+    })
+
+    expect(mockSupabase.rpc.mock.calls).toContainEqual([
+      'get_recent_expenses_page',
+      {
+        p_user_id: 'user-1',
+        p_limit: 40,
+        p_offset: 40,
+        p_search: 'groceries',
+        p_category_id: 'category-1',
+        p_sort_by: 'amount-desc',
+      },
+    ])
+  })
+
+  it('selects only IDs for plan-item reconciliation', async () => {
+    const itemEq = vi.fn().mockResolvedValue({
+      data: [{ id: 'expense-1' }],
+      error: null,
+    })
+    const planEq = vi.fn().mockReturnValue({ eq: itemEq })
+    mockSupabase.from.mockReturnValue({
+      select: vi.fn().mockReturnValue({ eq: planEq }),
+    } as never)
+
+    const ids = await getExpenseIdsForPlanItem('plan-1', 'item-1')
+
+    expect(ids).toEqual(['expense-1'])
+    expect(planEq).toHaveBeenCalledWith('plan_id', 'plan-1')
+    expect(itemEq).toHaveBeenCalledWith('plan_item_id', 'item-1')
   })
 })
 
@@ -303,33 +433,35 @@ describe('updateExpense', () => {
 })
 
 describe('deleteExpense', () => {
-  it('should delete an expense successfully', async () => {
-    const mockMatch = vi.fn().mockResolvedValue({
-      data: null,
-      error: null,
-    })
-    const mockDelete = vi.fn().mockReturnValue({ match: mockMatch })
-    const mockFrom = vi.fn().mockReturnValue({ delete: mockDelete })
-
-    mockSupabase.from.mockImplementation(mockFrom)
+  it('deletes an expense and reconciles its plan item atomically', async () => {
+    mockSupabase.rpc.mockResolvedValue({ data: 1, error: null })
 
     await deleteExpense('expense-1')
 
-    expect(mockFrom).toHaveBeenCalledWith('expenses')
-    expect(mockDelete).toHaveBeenCalledWith()
-    expect(mockMatch).toHaveBeenCalledWith({ id: 'expense-1' })
+    expect(mockSupabase.rpc.mock.calls).toContainEqual([
+      'delete_expenses_and_reconcile',
+      {
+        p_expense_ids: ['expense-1'],
+      },
+    ])
+  })
+
+  it('deletes an expense batch in the same reconciliation transaction', async () => {
+    mockSupabase.rpc.mockResolvedValue({ data: 2, error: null })
+
+    await deleteExpenses(['expense-1', 'expense-2'])
+
+    expect(mockSupabase.rpc.mock.calls).toContainEqual([
+      'delete_expenses_and_reconcile',
+      {
+        p_expense_ids: ['expense-1', 'expense-2'],
+      },
+    ])
   })
 
   it('should throw error when deletion fails', async () => {
     const mockError = createPostgrestError('Failed to delete expense')
-    const mockMatch = vi.fn().mockResolvedValue({
-      data: null,
-      error: mockError,
-    })
-    const mockDelete = vi.fn().mockReturnValue({ match: mockMatch })
-    const mockFrom = vi.fn().mockReturnValue({ delete: mockDelete })
-
-    mockSupabase.from.mockImplementation(mockFrom)
+    mockSupabase.rpc.mockResolvedValue({ data: null, error: mockError })
 
     await expect(deleteExpense('expense-1')).rejects.toThrow('Failed to delete expense')
   })
@@ -444,67 +576,6 @@ describe('getExpensesByDateRange', () => {
 
     await expect(getExpensesByDateRange('plan-1', '2023-01-01', '2023-01-31')).rejects.toThrow(
       'Failed to fetch expenses by date range',
-    )
-  })
-})
-
-describe('getExpensesByCategory', () => {
-  it('should return expenses for a specific category', async () => {
-    const expenses = [mockExpenseWithCategory]
-
-    const mockOrder = vi.fn().mockResolvedValue({
-      data: expenses,
-      error: null,
-    })
-    const mockEq2 = vi.fn().mockReturnValue({ order: mockOrder })
-    const mockEq1 = vi.fn().mockReturnValue({ eq: mockEq2 })
-    const mockSelect = vi.fn().mockReturnValue({ eq: mockEq1 })
-    const mockFrom = vi.fn().mockReturnValue({ select: mockSelect })
-
-    mockSupabase.from.mockImplementation(mockFrom)
-
-    const result = await getExpensesByCategory('plan-1', 'category-1')
-
-    expect(mockFrom).toHaveBeenCalledWith('expenses')
-    expect(mockSelect).toHaveBeenCalledWith('*, categories(*)')
-    expect(mockEq1).toHaveBeenCalledWith('plan_id', 'plan-1')
-    expect(mockEq2).toHaveBeenCalledWith('category_id', 'category-1')
-    expect(mockOrder).toHaveBeenCalledWith('expense_date', { ascending: false })
-    expect(result).toEqual(expenses)
-  })
-
-  it('should return empty array when no expenses for category', async () => {
-    const mockOrder = vi.fn().mockResolvedValue({
-      data: [],
-      error: null,
-    })
-    const mockEq2 = vi.fn().mockReturnValue({ order: mockOrder })
-    const mockEq1 = vi.fn().mockReturnValue({ eq: mockEq2 })
-    const mockSelect = vi.fn().mockReturnValue({ eq: mockEq1 })
-    const mockFrom = vi.fn().mockReturnValue({ select: mockSelect })
-
-    mockSupabase.from.mockImplementation(mockFrom)
-
-    const result = await getExpensesByCategory('plan-1', 'category-1')
-
-    expect(result).toEqual([])
-  })
-
-  it('should throw error when query fails', async () => {
-    const mockError = createPostgrestError('Failed to fetch expenses by category')
-    const mockOrder = vi.fn().mockResolvedValue({
-      data: null,
-      error: mockError,
-    })
-    const mockEq2 = vi.fn().mockReturnValue({ order: mockOrder })
-    const mockEq1 = vi.fn().mockReturnValue({ eq: mockEq2 })
-    const mockSelect = vi.fn().mockReturnValue({ eq: mockEq1 })
-    const mockFrom = vi.fn().mockReturnValue({ select: mockSelect })
-
-    mockSupabase.from.mockImplementation(mockFrom)
-
-    await expect(getExpensesByCategory('plan-1', 'category-1')).rejects.toThrow(
-      'Failed to fetch expenses by category',
     )
   })
 })

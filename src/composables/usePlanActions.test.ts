@@ -48,6 +48,7 @@ describe('usePlanActions', () => {
     isOwner: ref(true),
     isEditMode: ref(true),
     canEditPlanData: ref(true),
+    canAddExpenses: ref(true),
     currentPlan: ref(createMockPlan('active')),
     currentTab: ref('edit'),
     saveState: ref<PlanSaveState>('idle'),
@@ -101,7 +102,7 @@ describe('usePlanActions', () => {
       expect(saveAction?.loading).toBe(false)
     })
 
-    it('shows Share button when not new plan and user can edit', () => {
+    it('shows Share button for an owner editing an existing plan', () => {
       const context = createContext({
         isNewPlan: ref(false),
         isEditMode: ref(true),
@@ -110,6 +111,18 @@ describe('usePlanActions', () => {
 
       const shareAction = actionBarActions.value.find((a) => a.key === 'share')
       expect(shareAction?.visible).toBe(true)
+    })
+
+    it('hides Share button for a collaborator with edit access', () => {
+      const context = createContext({
+        isNewPlan: ref(false),
+        isOwner: ref(false),
+        isEditMode: ref(true),
+      })
+      const { actionBarActions } = usePlanActions(context)
+
+      const shareAction = actionBarActions.value.find((a) => a.key === 'share')
+      expect(shareAction?.visible).toBe(false)
     })
 
     it('shows Export button for existing plan', () => {
@@ -196,7 +209,7 @@ describe('usePlanActions', () => {
   })
 
   describe('overview tab actions', () => {
-    it('shows Add Expense button when in edit mode', () => {
+    it('shows Add Expense button when the plan accepts expenses', () => {
       const context = createContext({
         currentTab: ref('overview'),
         isEditMode: ref(true),
@@ -206,6 +219,17 @@ describe('usePlanActions', () => {
 
       const addExpenseAction = actionBarActions.value.find((a) => a.key === 'add-expense')
       expect(addExpenseAction?.visible).toBe(true)
+    })
+
+    it('hides Add Expense button when the plan does not accept expenses', () => {
+      const context = createContext({
+        currentTab: ref('overview'),
+        canAddExpenses: ref(false),
+      })
+      const { actionBarActions } = usePlanActions(context)
+
+      const addExpenseAction = actionBarActions.value.find((a) => a.key === 'add-expense')
+      expect(addExpenseAction?.visible).toBe(false)
     })
 
     it('shows Edit button when in edit mode and can edit plan data', () => {

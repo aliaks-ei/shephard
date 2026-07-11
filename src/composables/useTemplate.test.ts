@@ -41,23 +41,21 @@ vi.mock('vue-router', () => ({
   useRoute: () => mockRoute.value,
 }))
 
+const mockEmitNotificationEvent = vi.hoisted(() => vi.fn())
+
 vi.mock('src/composables/useNotificationEvents', () => ({
   useNotificationEvents: () => ({
-    emitNotificationEvent: vi.fn().mockResolvedValue(true),
+    emitNotificationEvent: mockEmitNotificationEvent,
   }),
 }))
 
 const {
-  mockCreateTemplateMutation,
-  mockUpdateTemplateMutation,
-  mockCreateItemsMutation,
-  mockDeleteItemsMutation,
+  mockCreateTemplateWithItemsMutation,
+  mockUpdateTemplateWithItemsMutation,
   mockTemplateDetailQuery,
 } = vi.hoisted(() => ({
-  mockCreateTemplateMutation: { mutateAsync: vi.fn() },
-  mockUpdateTemplateMutation: { mutateAsync: vi.fn() },
-  mockCreateItemsMutation: { mutateAsync: vi.fn() },
-  mockDeleteItemsMutation: { mutateAsync: vi.fn() },
+  mockCreateTemplateWithItemsMutation: { mutateAsync: vi.fn() },
+  mockUpdateTemplateWithItemsMutation: { mutateAsync: vi.fn() },
   mockTemplateDetailQuery: {
     data: { value: null as unknown },
     refetch: vi.fn(),
@@ -67,10 +65,8 @@ const {
 
 vi.mock('src/queries/templates', () => ({
   useTemplateDetailQuery: () => mockTemplateDetailQuery,
-  useCreateTemplateMutation: () => mockCreateTemplateMutation,
-  useUpdateTemplateMutation: () => mockUpdateTemplateMutation,
-  useCreateTemplateItemsMutation: () => mockCreateItemsMutation,
-  useDeleteTemplateItemsMutation: () => mockDeleteItemsMutation,
+  useCreateTemplateWithItemsMutation: () => mockCreateTemplateWithItemsMutation,
+  useUpdateTemplateWithItemsMutation: () => mockUpdateTemplateWithItemsMutation,
 }))
 
 beforeEach(() => {
@@ -80,10 +76,9 @@ beforeEach(() => {
     params: { id: 'template-123' },
   }
 
-  mockCreateTemplateMutation.mutateAsync.mockReset()
-  mockUpdateTemplateMutation.mutateAsync.mockReset()
-  mockCreateItemsMutation.mutateAsync.mockReset()
-  mockDeleteItemsMutation.mutateAsync.mockReset()
+  mockCreateTemplateWithItemsMutation.mutateAsync.mockReset()
+  mockUpdateTemplateWithItemsMutation.mutateAsync.mockReset()
+  mockEmitNotificationEvent.mockReset().mockResolvedValue(true)
   mockTemplateDetailQuery.refetch.mockReset()
   mockTemplateDetailQuery.data.value = null
 })
@@ -380,7 +375,7 @@ describe('template currency', () => {
 })
 
 describe('createNewTemplateWithItems', () => {
-  it('creates template and items successfully', async () => {
+  it('creates the template and items in one mutation', async () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
@@ -390,8 +385,10 @@ describe('createNewTemplateWithItems', () => {
       { name: 'Item 2', category_id: 'cat-2', amount: 200, is_fixed_payment: true },
     ]
 
-    mockCreateTemplateMutation.mutateAsync.mockResolvedValue(mockTemplate)
-    mockCreateItemsMutation.mutateAsync.mockResolvedValue([])
+    mockCreateTemplateWithItemsMutation.mutateAsync.mockResolvedValue({
+      ...mockTemplate,
+      template_items: mockItems,
+    })
 
     const { createNewTemplateWithItems } = useTemplate()
 
@@ -404,29 +401,25 @@ describe('createNewTemplateWithItems', () => {
     )
 
     expect(result.success).toBe(true)
-    expect(mockCreateTemplateMutation.mutateAsync).toHaveBeenCalledWith({
-      name: 'Test Template',
-      duration: 'monthly',
-      currency: 'EUR',
-      total: 300,
-      owner_id: 'user-123',
-    })
-    expect(mockCreateItemsMutation.mutateAsync).toHaveBeenCalledWith({
-      templateId: 'new-template-id',
+    expect(mockCreateTemplateWithItemsMutation.mutateAsync).toHaveBeenCalledWith({
+      template: {
+        name: 'Test Template',
+        duration: 'monthly',
+        currency: 'EUR',
+        total: 300,
+      },
       items: [
         {
           name: 'Item 1',
           category_id: 'cat-1',
           amount: 100,
           is_fixed_payment: true,
-          template_id: 'new-template-id',
         },
         {
           name: 'Item 2',
           category_id: 'cat-2',
           amount: 200,
           is_fixed_payment: true,
-          template_id: 'new-template-id',
         },
       ],
     })
@@ -436,14 +429,13 @@ describe('createNewTemplateWithItems', () => {
     const userStore = useUserStore()
     vi.mocked(userStore).userProfile = createMockUserProfile('user-123')
 
-    mockCreateTemplateMutation.mutateAsync.mockRejectedValue(new Error('fail'))
+    mockCreateTemplateWithItemsMutation.mutateAsync.mockRejectedValue(new Error('fail'))
 
     const { createNewTemplateWithItems } = useTemplate()
 
     const result = await createNewTemplateWithItems('Test Template', 'monthly', 'EUR', 300, [])
 
     expect(result.success).toBe(false)
-    expect(mockCreateItemsMutation.mutateAsync).not.toHaveBeenCalled()
   })
 
   it('handles template creation with no items', async () => {
@@ -452,16 +444,23 @@ describe('createNewTemplateWithItems', () => {
 
     const mockTemplate = { id: 'new-template-id', name: 'Test Template' }
 
-    mockCreateTemplateMutation.mutateAsync.mockResolvedValue(mockTemplate)
-    mockCreateItemsMutation.mutateAsync.mockResolvedValue([])
+    mockCreateTemplateWithItemsMutation.mutateAsync.mockResolvedValue({
+      ...mockTemplate,
+      template_items: [],
+    })
 
     const { createNewTemplateWithItems } = useTemplate()
 
     const result = await createNewTemplateWithItems('Test Template', 'monthly', 'EUR', 0, [])
 
     expect(result.success).toBe(true)
-    expect(mockCreateItemsMutation.mutateAsync).toHaveBeenCalledWith({
-      templateId: 'new-template-id',
+    expect(mockCreateTemplateWithItemsMutation.mutateAsync).toHaveBeenCalledWith({
+      template: {
+        name: 'Test Template',
+        duration: 'monthly',
+        currency: 'EUR',
+        total: 0,
+      },
       items: [],
     })
   })
@@ -492,10 +491,12 @@ describe('updateExistingTemplateWithItems', () => {
       template_items: existingItems,
     } as TemplateWithItems
 
-    const mockTemplate = { id: 'template-123', name: 'Updated Template' }
-    mockUpdateTemplateMutation.mutateAsync.mockResolvedValue(mockTemplate)
-    mockDeleteItemsMutation.mutateAsync.mockResolvedValue(undefined)
-    mockCreateItemsMutation.mutateAsync.mockResolvedValue([])
+    const mockTemplate = {
+      id: 'template-123',
+      name: 'Updated Template',
+      template_items: newItems,
+    }
+    mockUpdateTemplateWithItemsMutation.mutateAsync.mockResolvedValue(mockTemplate)
 
     const { updateExistingTemplateWithItems } = useTemplate()
 
@@ -508,7 +509,7 @@ describe('updateExistingTemplateWithItems', () => {
     )
 
     expect(result.success).toBe(true)
-    expect(mockUpdateTemplateMutation.mutateAsync).toHaveBeenCalledWith({
+    expect(mockUpdateTemplateWithItemsMutation.mutateAsync).toHaveBeenCalledWith({
       id: 'template-123',
       updates: {
         name: 'Updated Template',
@@ -516,29 +517,12 @@ describe('updateExistingTemplateWithItems', () => {
         currency: 'EUR',
         total: 400,
       },
+      items: newItems,
     })
-    expect(mockDeleteItemsMutation.mutateAsync).toHaveBeenCalledWith({
-      templateId: 'template-123',
-      ids: ['item-1', 'item-2'],
-    })
-    expect(mockCreateItemsMutation.mutateAsync).toHaveBeenCalledWith({
-      templateId: 'template-123',
-      items: [
-        {
-          name: 'New Item 1',
-          category_id: 'cat-1',
-          amount: 150,
-          is_fixed_payment: true,
-          template_id: 'template-123',
-        },
-        {
-          name: 'New Item 2',
-          category_id: 'cat-2',
-          amount: 250,
-          is_fixed_payment: true,
-          template_id: 'template-123',
-        },
-      ],
+    expect(mockEmitNotificationEvent).toHaveBeenCalledWith({
+      type: 'shared_template_updated',
+      entityType: 'template',
+      entityId: 'template-123',
     })
   })
 
@@ -550,6 +534,7 @@ describe('updateExistingTemplateWithItems', () => {
     const result = await updateExistingTemplateWithItems('Test', 'monthly', 'EUR', 100, [])
 
     expect(result.success).toBe(false)
+    expect(mockEmitNotificationEvent).not.toHaveBeenCalled()
   })
 
   it('returns false when no current template', async () => {
@@ -562,6 +547,7 @@ describe('updateExistingTemplateWithItems', () => {
     const result = await updateExistingTemplateWithItems('Test', 'monthly', 'EUR', 100, [])
 
     expect(result.success).toBe(false)
+    expect(mockEmitNotificationEvent).not.toHaveBeenCalled()
   })
 
   it('returns false when template update fails', async () => {
@@ -581,7 +567,7 @@ describe('updateExistingTemplateWithItems', () => {
 
     const { updateExistingTemplateWithItems } = useTemplate()
 
-    mockUpdateTemplateMutation.mutateAsync.mockRejectedValue(new Error('fail'))
+    mockUpdateTemplateWithItemsMutation.mutateAsync.mockRejectedValue(new Error('fail'))
 
     const result = await updateExistingTemplateWithItems('Test', 'monthly', 'EUR', 100, [])
 
@@ -605,20 +591,24 @@ describe('updateExistingTemplateWithItems', () => {
       template_items: existingItems,
     } as TemplateWithItems
 
-    const mockTemplate = { id: 'template-123', name: 'Updated Template' }
-    mockUpdateTemplateMutation.mutateAsync.mockResolvedValue(mockTemplate)
-    mockDeleteItemsMutation.mutateAsync.mockResolvedValue(undefined)
+    const mockTemplate = { id: 'template-123', name: 'Updated Template', template_items: [] }
+    mockUpdateTemplateWithItemsMutation.mutateAsync.mockResolvedValue(mockTemplate)
 
     const { updateExistingTemplateWithItems } = useTemplate()
 
     const result = await updateExistingTemplateWithItems('Updated Template', 'weekly', 'EUR', 0, [])
 
     expect(result.success).toBe(true)
-    expect(mockDeleteItemsMutation.mutateAsync).toHaveBeenCalledWith({
-      templateId: 'template-123',
-      ids: ['item-1'],
+    expect(mockUpdateTemplateWithItemsMutation.mutateAsync).toHaveBeenCalledWith({
+      id: 'template-123',
+      updates: {
+        name: 'Updated Template',
+        duration: 'weekly',
+        currency: 'EUR',
+        total: 0,
+      },
+      items: [],
     })
-    expect(mockCreateItemsMutation.mutateAsync).not.toHaveBeenCalled()
   })
 })
 
@@ -803,8 +793,10 @@ describe('integration scenarios', () => {
       { name: 'Rent', category_id: 'housing-cat', amount: 1200, is_fixed_payment: true },
     ]
 
-    mockCreateTemplateMutation.mutateAsync.mockResolvedValue(mockTemplate)
-    mockCreateItemsMutation.mutateAsync.mockResolvedValue([])
+    mockCreateTemplateWithItemsMutation.mutateAsync.mockResolvedValue({
+      ...mockTemplate,
+      template_items: templateItems,
+    })
 
     const { isNewTemplate, templateCurrency, createNewTemplateWithItems } = useTemplate()
 
@@ -820,31 +812,14 @@ describe('integration scenarios', () => {
     )
 
     expect(result.success).toBe(true)
-    expect(mockCreateTemplateMutation.mutateAsync).toHaveBeenCalledWith({
-      name: 'My Budget',
-      duration: 'monthly',
-      currency: 'EUR',
-      total: 1600,
-      owner_id: 'user-123',
-    })
-    expect(mockCreateItemsMutation.mutateAsync).toHaveBeenCalledWith({
-      templateId: 'new-template-id',
-      items: [
-        {
-          name: 'Groceries',
-          category_id: 'food-cat',
-          amount: 400,
-          is_fixed_payment: true,
-          template_id: 'new-template-id',
-        },
-        {
-          name: 'Rent',
-          category_id: 'housing-cat',
-          amount: 1200,
-          is_fixed_payment: true,
-          template_id: 'new-template-id',
-        },
-      ],
+    expect(mockCreateTemplateWithItemsMutation.mutateAsync).toHaveBeenCalledWith({
+      template: {
+        name: 'My Budget',
+        duration: 'monthly',
+        currency: 'EUR',
+        total: 1600,
+      },
+      items: templateItems,
     })
   })
 
@@ -869,18 +844,20 @@ describe('integration scenarios', () => {
       ],
     } as TemplateWithItems
 
-    const updatedTemplate = { id: 'template-456', name: 'New Budget' }
     const newItems = [
       { name: 'Updated Groceries', category_id: 'food-cat', amount: 500, is_fixed_payment: true },
     ]
+    const updatedTemplate = {
+      id: 'template-456',
+      name: 'New Budget',
+      template_items: newItems,
+    }
 
     mockTemplateDetailQuery.refetch.mockImplementation(() => {
       mockTemplateDetailQuery.data.value = existingTemplate
       return Promise.resolve({ data: existingTemplate })
     })
-    mockUpdateTemplateMutation.mutateAsync.mockResolvedValue(updatedTemplate)
-    mockDeleteItemsMutation.mutateAsync.mockResolvedValue(undefined)
-    mockCreateItemsMutation.mutateAsync.mockResolvedValue([])
+    mockUpdateTemplateWithItemsMutation.mutateAsync.mockResolvedValue(updatedTemplate)
 
     const {
       isNewTemplate,
@@ -908,7 +885,7 @@ describe('integration scenarios', () => {
     )
 
     expect(updateResult.success).toBe(true)
-    expect(mockUpdateTemplateMutation.mutateAsync).toHaveBeenCalledWith({
+    expect(mockUpdateTemplateWithItemsMutation.mutateAsync).toHaveBeenCalledWith({
       id: 'template-456',
       updates: {
         name: 'New Budget',
@@ -916,22 +893,7 @@ describe('integration scenarios', () => {
         currency: 'EUR',
         total: 500,
       },
-    })
-    expect(mockDeleteItemsMutation.mutateAsync).toHaveBeenCalledWith({
-      templateId: 'template-456',
-      ids: ['item-1', 'item-2'],
-    })
-    expect(mockCreateItemsMutation.mutateAsync).toHaveBeenCalledWith({
-      templateId: 'template-456',
-      items: [
-        {
-          name: 'Updated Groceries',
-          category_id: 'food-cat',
-          amount: 500,
-          is_fixed_payment: true,
-          template_id: 'template-456',
-        },
-      ],
+      items: newItems,
     })
   })
 

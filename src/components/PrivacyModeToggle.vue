@@ -4,9 +4,12 @@
     flat
     :dense="$q.screen.lt.md"
     :icon="icon"
+    :aria-label="tooltipText"
+    :aria-pressed="String(preferencesStore.isPrivacyModeEnabled)"
+    class="privacy-mode-toggle"
     @click="handleToggle"
   >
-    <q-tooltip v-if="$q.screen.gt.sm">{{ tooltipText }}</q-tooltip>
+    <q-tooltip v-if="!$q.screen.lt.md">{{ tooltipText }}</q-tooltip>
   </q-btn>
 </template>
 
@@ -28,3 +31,10 @@ function handleToggle() {
   void preferencesStore.togglePrivacyMode()
 }
 </script>
+
+<style lang="scss" scoped>
+.privacy-mode-toggle {
+  min-width: 44px;
+  min-height: 44px;
+}
+</style>

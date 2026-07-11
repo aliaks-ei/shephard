@@ -23,15 +23,25 @@ export const queryKeys = {
   expenses: {
     all: ['expenses'] as const,
     recentAll: () => [...queryKeys.expenses.all, 'recent'] as const,
-    recent: (userId: string, limit: number) =>
-      [...queryKeys.expenses.recentAll(), userId, limit] as const,
+    recent: (userId: string, search: string, categoryId: string, sortBy: string) =>
+      [...queryKeys.expenses.recentAll(), userId, search, categoryId, sortBy] as const,
     byPlan: (planId: string) => [...queryKeys.expenses.all, 'by-plan', planId] as const,
+    exportByPlan: (planId: string) => [...queryKeys.expenses.byPlan(planId), 'export'] as const,
+    recentByPlan: (planId: string, limit: number) =>
+      [...queryKeys.expenses.byPlan(planId), 'recent', limit] as const,
+    byPlanItem: (planId: string, planItemId: string) =>
+      [...queryKeys.expenses.byPlan(planId), 'item', planItemId] as const,
     summary: (planId: string) => [...queryKeys.expenses.all, 'summary', planId] as const,
+    overviewSnapshotsAll: () => [...queryKeys.expenses.all, 'overview-snapshots'] as const,
+    overviewSnapshots: (planIds: string[]) =>
+      [...queryKeys.expenses.overviewSnapshotsAll(), ...planIds] as const,
     lastForPlan: (planId: string) => [...queryKeys.expenses.all, 'last', planId] as const,
+    dateRanges: (planId: string) => [...queryKeys.expenses.all, 'date-range', planId] as const,
     byDateRange: (planId: string, start: string, end: string) =>
-      [...queryKeys.expenses.all, 'date-range', planId, start, end] as const,
+      [...queryKeys.expenses.dateRanges(planId), start, end] as const,
+    categories: (planId: string) => [...queryKeys.expenses.all, 'by-category', planId] as const,
     byCategory: (planId: string, categoryId: string) =>
-      [...queryKeys.expenses.all, 'by-category', planId, categoryId] as const,
+      [...queryKeys.expenses.categories(planId), categoryId] as const,
   },
   notifications: {
     all: ['notifications'] as const,

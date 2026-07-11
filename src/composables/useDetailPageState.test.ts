@@ -1,6 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import { ref } from 'vue'
-import { useDetailPageState, type DetailPageConfig } from './useDetailPageState'
+import {
+  resolveDetailLoadState,
+  useDetailPageState,
+  type DetailPageConfig,
+} from './useDetailPageState'
+import { EntityLoadError } from 'src/api'
 
 const baseConfig: DetailPageConfig = {
   entityName: 'Plan',
@@ -37,5 +42,63 @@ describe('titles', () => {
 
     isNew.value = true
     expect(pageTitle.value).toBe('Create Plan')
+  })
+})
+
+describe('detail load state', () => {
+  it('returns ready for create pages without an entity', () => {
+    expect(
+      resolveDetailLoadState({
+        isNew: true,
+        isPending: false,
+        data: null,
+        isError: false,
+        error: null,
+      }),
+    ).toEqual({ status: 'ready', data: null })
+  })
+
+  it.each([
+    ['not-found', 'not-found'],
+    ['access-denied', 'denied'],
+  ] as const)('maps %s entity errors to %s', (kind, status) => {
+    const error = new EntityLoadError(kind, 'plan', 'plan-1', 'Failed')
+
+    expect(
+      resolveDetailLoadState({
+        isNew: false,
+        isPending: false,
+        data: null,
+        isError: true,
+        error,
+      }),
+    ).toEqual({ status })
+  })
+
+  it('keeps unknown failures as retryable errors', () => {
+    const error = new Error('Network failed')
+
+    expect(
+      resolveDetailLoadState({
+        isNew: false,
+        isPending: false,
+        data: null,
+        isError: true,
+        error,
+      }),
+    ).toEqual({ status: 'error', error })
+  })
+
+  it('exposes an error state instead of indefinite loading while offline', () => {
+    const state = resolveDetailLoadState({
+      isNew: false,
+      isPending: true,
+      data: null,
+      isError: false,
+      error: null,
+      isOnline: false,
+    })
+
+    expect(state.status).toBe('error')
   })
 })

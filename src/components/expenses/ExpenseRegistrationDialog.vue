@@ -36,6 +36,7 @@
 
     <q-form
       ref="formRef"
+      data-pwa-update-blocker="form"
       class="column no-wrap flex-fill-min-h-0"
       @submit="handleSubmit"
     >
@@ -72,6 +73,7 @@
       >
         <!-- Custom Entry Mode -->
         <q-tab-panel
+          v-if="currentMode === 'custom-entry'"
           name="custom-entry"
           class="q-pa-none"
         >
@@ -98,6 +100,7 @@
 
         <!-- Quick Select Items Mode -->
         <q-tab-panel
+          v-if="currentMode === 'quick-select'"
           name="quick-select"
           class="q-pa-none"
         >
@@ -257,6 +260,12 @@ function applyDefaultCategory() {
   }
 }
 
+const hasDefaultCategoryOption = computed(() =>
+  props.defaultCategoryId
+    ? categoryOptions.value.some((category) => category.value === props.defaultCategoryId)
+    : false,
+)
+
 async function handleSubmit() {
   if (!formRef.value) return
 
@@ -297,7 +306,7 @@ watch(
 )
 
 watch(
-  [() => props.defaultCategoryId, () => form.value.planId, categoryOptions],
+  [() => props.defaultCategoryId, () => form.value.planId, hasDefaultCategoryOption],
   () => {
     applyDefaultCategory()
   },

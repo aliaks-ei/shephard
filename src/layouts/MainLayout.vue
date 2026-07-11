@@ -21,7 +21,8 @@
           aria-label="Notifications"
           :aria-haspopup="notificationsPopupType"
           :aria-expanded="String(notificationsPopupExpanded)"
-          class="q-mr-sm"
+          :aria-controls="notificationsPopupId"
+          class="q-mr-sm mobile-touch-target"
           @click="handleNotificationsButtonClick"
         >
           <q-badge
@@ -35,6 +36,7 @@
 
           <q-menu
             v-if="showNotificationsDesktopMenu"
+            id="notifications-menu"
             v-model="showNotificationsMenu"
             anchor="bottom right"
             self="top right"
@@ -54,6 +56,17 @@
             />
           </q-menu>
         </q-btn>
+
+        <q-btn
+          v-if="$q.screen.lt.md"
+          flat
+          round
+          dense
+          icon="eva-settings-2-outline"
+          aria-label="Settings"
+          to="/settings"
+          class="q-mr-sm mobile-touch-target"
+        />
 
         <PrivacyModeToggle
           v-if="$q.screen.lt.md"
@@ -81,32 +94,78 @@
       v-if="showMobileBottomNav"
       class="bg-transparent safe-area-bottom-toolbar--glass"
     >
-      <MobileBottomNavigation @open-expense-dialog="openExpenseDialog" />
+      <MobileBottomNavigation
+        :can-add-expense="canAddExpense"
+        @open-expense-dialog="openExpenseDialog"
+      />
     </q-footer>
 
     <q-page-container>
       <q-page
-        :class="$q.screen.gt.sm ? 'shadow-1' : ''"
+        :class="!$q.screen.lt.md ? 'shadow-1' : ''"
         padding
       >
-        <q-inner-loading
-          :showing="userStore.isLoading"
-          label="Setting up your profile..."
-          color="primary"
-        />
+        <q-banner
+          v-if="isOffline"
+          dense
+          rounded
+          role="status"
+          class="offline-banner bg-warning-soft text-warning-strong q-mb-md"
+        >
+          <template #avatar>
+            <q-icon name="eva-wifi-off-outline" />
+          </template>
+          You are offline. Financial data may be out of date, and changes require a connection.
+        </q-banner>
 
-        <router-view />
+        <div
+          v-if="userStore.isLoading"
+          class="profile-bootstrap-skeleton page-content-spacing"
+          role="status"
+          aria-label="Setting up your profile"
+        >
+          <div class="row items-center q-mb-lg">
+            <q-skeleton
+              type="QAvatar"
+              size="44px"
+              class="q-mr-md"
+            />
+            <div class="col">
+              <q-skeleton
+                type="text"
+                width="38%"
+              />
+              <q-skeleton
+                type="text"
+                width="58%"
+              />
+            </div>
+          </div>
+          <q-skeleton
+            type="rect"
+            height="144px"
+            class="rounded-borders q-mb-md"
+          />
+          <q-skeleton
+            type="rect"
+            height="96px"
+            class="rounded-borders"
+          />
+        </div>
+
+        <router-view v-else />
       </q-page>
     </q-page-container>
 
     <!-- Dialogs -->
     <ExpenseRegistrationDialog
-      v-if="hasOpenedExpenseDialog"
+      v-if="canAddExpense && hasOpenedExpenseDialog"
       v-model="showExpenseDialog"
       auto-select-recent-plan
     />
 
     <AppDialogShell
+      id="notifications-dialog"
       v-model="showNotificationsDialog"
       title="Notifications"
       body-class="q-pa-none"
@@ -139,9 +198,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { useQuasar, useMeta, Notify } from 'quasar'
+import { Notify, useQuasar } from 'quasar'
 
 import PrivacyModeToggle from 'src/components/PrivacyModeToggle.vue'
 import NavigationDrawer from 'src/components/NavigationDrawer.vue'
@@ -153,16 +212,19 @@ import { useUserStore } from 'src/stores/user'
 import { usePwaInstall } from 'src/composables/usePwaInstall'
 import { useInstallPromptGate } from 'src/composables/useInstallPromptGate'
 import { useNotifications } from 'src/composables/useNotifications'
-
-useMeta({
-  titleTemplate: (title) => `${title} | Shephard`,
-})
+import { usePlansQuery } from 'src/queries/plans'
+import { startNetworkMonitoring, useNetworkStatus } from 'src/composables/useNetworkStatus'
 
 const userStore = useUserStore()
+const userId = computed(() => userStore.userProfile?.id)
+const { plansForExpenses } = usePlansQuery(userId)
+const { isOnline, isOffline } = useNetworkStatus()
+const canAddExpense = computed(() => isOnline.value && plansForExpenses.value.length > 0)
 const route = useRoute()
 const $q = useQuasar()
-const { isInstallable, promptInstall, dismissInstall } = usePwaInstall()
-const { hasSavedExpense } = useInstallPromptGate()
+const { isInstallable, isIosInstallGuidanceAvailable, promptInstall, dismissInstall } =
+  usePwaInstall()
+const { canShowInstallPrompt, markInstallPromptShown } = useInstallPromptGate()
 const ExpenseRegistrationDialog = defineAsyncComponent(
   () => import('src/components/expenses/ExpenseRegistrationDialog.vue'),
 )
@@ -171,6 +233,15 @@ const hasOpenedExpenseDialog = ref(false)
 const showExpenseDialog = ref(false)
 const showNotificationsMenu = ref(false)
 const showNotificationsDialog = ref(false)
+let stopNetworkMonitoring: (() => void) | null = null
+
+onMounted(() => {
+  stopNetworkMonitoring = startNetworkMonitoring()
+})
+
+onUnmounted(() => {
+  stopNetworkMonitoring?.()
+})
 
 const {
   notifications,
@@ -184,6 +255,8 @@ const {
 } = useNotifications()
 
 function openExpenseDialog() {
+  if (!isOnline.value || !canAddExpense.value) return
+
   hasOpenedExpenseDialog.value = true
   showExpenseDialog.value = true
 }
@@ -200,6 +273,9 @@ const notificationsPopupExpanded = computed(() => {
   return showNotificationsDesktopMenu.value
     ? showNotificationsMenu.value
     : showNotificationsDialog.value
+})
+const notificationsPopupId = computed(() => {
+  return showNotificationsDesktopMenu.value ? 'notifications-menu' : 'notifications-dialog'
 })
 
 const notificationsMenuStyle = {
@@ -220,7 +296,9 @@ async function handleOpenNotification(notification: (typeof notifications.value)
 }
 
 // Promote install only after the user has experienced value (first saved expense)
-const shouldPromptInstall = computed(() => isInstallable.value && hasSavedExpense.value)
+const shouldPromptInstall = computed(
+  () => canShowInstallPrompt.value && (isInstallable.value || isIosInstallGuidanceAvailable.value),
+)
 
 watch(shouldPromptInstall, (promptable) => {
   if (promptable) {
@@ -229,6 +307,25 @@ watch(shouldPromptInstall, (promptable) => {
 })
 
 function showPwaInstallNotification() {
+  markInstallPromptShown()
+
+  if (isIosInstallGuidanceAvailable.value) {
+    Notify.create({
+      message: 'Install Shephard: tap Share, then Add to Home Screen.',
+      type: 'info',
+      icon: 'eva-smartphone-outline',
+      timeout: 0,
+      actions: [
+        {
+          label: 'Not now',
+          color: 'white',
+          handler: dismissInstall,
+        },
+      ],
+    })
+    return
+  }
+
   Notify.create({
     message: 'Install Shephard for a better experience!',
     type: 'info',
@@ -289,6 +386,11 @@ const showMobileBottomNav = computed(() => {
 .navigation-drawer-bg {
   background-color: hsl(var(--card));
   border-right: 1px solid hsl(var(--border));
+}
+
+.profile-bootstrap-skeleton {
+  max-width: 960px;
+  margin-inline: auto;
 }
 
 :deep(.notifications-menu-panel) {

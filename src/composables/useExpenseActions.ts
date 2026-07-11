@@ -12,7 +12,6 @@ export function useExpenseActions() {
     await deleteExpenseMutation.mutateAsync({
       expenseId: expense.id,
       planId: expense.plan_id,
-      planItemId: expense.plan_item_id,
     })
     onSuccess?.()
   }

@@ -9,7 +9,8 @@ import { useNotificationEvents } from './useNotificationEvents'
 export function useTemplates() {
   const userStore = useUserStore()
   const userId = computed(() => userStore.userProfile?.id)
-  const { templates, isPending } = useTemplatesQuery(userId)
+  const templatesQuery = useTemplatesQuery(userId)
+  const { templates, isPending } = templatesQuery
   const deleteTemplateMutation = useDeleteTemplateMutation()
   const { emitRemovalNotification } = useNotificationEvents()
 
@@ -44,5 +45,12 @@ export function useTemplates() {
     },
     () => templates.value,
     () => isPending.value && templates.value.length === 0,
+    {
+      isError: () => templatesQuery.isError?.value ?? false,
+      isFetching: () => templatesQuery.isFetching?.value ?? false,
+      retry: async () => {
+        await templatesQuery.refetch?.()
+      },
+    },
   )
 }

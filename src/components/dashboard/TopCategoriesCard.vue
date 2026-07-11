@@ -1,10 +1,18 @@
 <template>
   <q-card
-    v-if="topCategories.length > 0"
+    v-if="hasLoadError || topCategories.length > 0"
     :bordered="$q.dark.isActive"
-    class="shadow-1"
+    class="shadow-1 dashboard-mobile-section"
   >
-    <q-card-section>
+    <QueryErrorState
+      v-if="hasLoadError"
+      compact
+      entity-name="Top categories"
+      :retrying="isRetrying ?? false"
+      @retry="retry"
+    />
+
+    <q-card-section v-else>
       <div class="row items-center justify-between q-mb-sm">
         <h2 class="text-subtitle1 text-weight-medium q-my-none">Top categories</h2>
       </div>
@@ -53,35 +61,32 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useQuasar } from 'quasar'
-import { usePlanDetailQuery } from 'src/queries/plans'
-import { useUserStore } from 'src/stores/user'
 import { usePreferencesStore } from 'src/stores/preferences'
-import { usePlanOverview } from 'src/composables/usePlanOverview'
+import QueryErrorState from 'src/components/shared/QueryErrorState.vue'
 import { formatCurrency, formatCurrencyPrivate, type CurrencyCode } from 'src/utils/currency'
 import type { PlanWithPermission } from 'src/api'
 import type { CategoryBudget } from 'src/types'
+import type { DashboardPlanOverview } from 'src/composables/useDashboardOverview'
 
 const emit = defineEmits<{
   click: [planId: string]
+  retry: []
 }>()
 
 const props = defineProps<{
   plan: PlanWithPermission
+  overview: DashboardPlanOverview | null
+  hasLoadError?: boolean
+  isRetrying?: boolean
 }>()
 
 const $q = useQuasar()
-const userStore = useUserStore()
-const userId = computed(() => userStore.userProfile?.id)
 const preferencesStore = usePreferencesStore()
 
-const planId = computed(() => props.plan.id)
-const planDetailQuery = usePlanDetailQuery(planId, userId)
-const planWithItems = computed(() => planDetailQuery.data.value ?? null)
-
-const { categoryBudgets } = usePlanOverview(planId, planWithItems)
-
 const topCategories = computed(() =>
-  [...categoryBudgets.value].sort((a, b) => b.actualAmount - a.actualAmount).slice(0, 3),
+  [...(props.overview?.categoryBudgets ?? [])]
+    .sort((a, b) => b.actualAmount - a.actualAmount)
+    .slice(0, 3),
 )
 
 // Category accents intentionally avoid the over/under-budget green/orange/red semantics
@@ -104,6 +109,10 @@ function formatAmount(amount: number | null | undefined): string {
   }
 
   return formatCurrency(amount, currency)
+}
+
+function retry(): void {
+  emit('retry')
 }
 </script>
 

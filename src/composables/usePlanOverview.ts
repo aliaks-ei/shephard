@@ -1,18 +1,35 @@
 import { computed, toValue, type MaybeRefOrGetter } from 'vue'
-import { useExpensesByPlanQuery, useExpenseSummaryQuery } from 'src/queries/expenses'
+import {
+  useCategoryExpensesInfiniteQuery,
+  useExpenseSummaryQuery,
+  usePlanExpensesInfiniteQuery,
+  useRecentPlanExpensesQuery,
+} from 'src/queries/expenses'
 import { useCategoriesQuery } from 'src/queries/categories'
-import { calculateStillToPay } from 'src/utils/budget-calculations'
-import type { ExpenseWithCategory, PlanWithItems } from 'src/api'
+import type { PlanWithItems } from 'src/api'
 import type { CategoryBudget } from 'src/types'
+
+type PlanOverviewOptions = {
+  historyEnabled?: MaybeRefOrGetter<boolean>
+  categoryId?: MaybeRefOrGetter<string | null>
+  categoryHistoryEnabled?: MaybeRefOrGetter<boolean>
+}
 
 export function usePlanOverview(
   planId: MaybeRefOrGetter<string | null>,
   planArg: MaybeRefOrGetter<PlanWithItems | null>,
+  options: PlanOverviewOptions = {},
 ) {
   const resolvedPlanId = computed(() => toValue(planId))
-  const { totalExpensesAmount, sortedExpenses, expensesByCategory } =
-    useExpensesByPlanQuery(resolvedPlanId)
-  const { expenseSummary } = useExpenseSummaryQuery(resolvedPlanId)
+  const summaryQuery = useExpenseSummaryQuery(resolvedPlanId)
+  const { expenseSummary } = summaryQuery
+  const recentExpensesQuery = useRecentPlanExpensesQuery(resolvedPlanId)
+  const historyQuery = usePlanExpensesInfiniteQuery(resolvedPlanId, options.historyEnabled ?? false)
+  const categoryHistoryQuery = useCategoryExpensesInfiniteQuery(
+    resolvedPlanId,
+    options.categoryId ?? null,
+    options.categoryHistoryEnabled ?? false,
+  )
   const { categories } = useCategoriesQuery()
 
   const currentPlanWithItems = computed<PlanWithItems | null>(() => {
@@ -31,7 +48,7 @@ export function usePlanOverview(
   })
 
   const totalSpent = computed(() => {
-    return totalExpensesAmount.value
+    return expenseSummary.value.reduce((sum, item) => sum + item.actual_amount, 0)
   })
 
   const categoryBudgets = computed((): CategoryBudget[] => {
@@ -56,13 +73,6 @@ export function usePlanOverview(
 
         const plannedAmount = totalAmountsByCategory.get(item.category_id) || item.planned_amount
 
-        const calculatedRemaining = calculateStillToPay(
-          item.category_id,
-          plan?.plan_items || [],
-          item.actual_amount,
-          expensesByCategory.value[item.category_id],
-        )
-
         return {
           categoryId: item.category_id,
           categoryName: category.name,
@@ -70,7 +80,7 @@ export function usePlanOverview(
           categoryIcon: category.icon || 'eva-folder-outline',
           plannedAmount,
           actualAmount: item.actual_amount,
-          remainingAmount: calculatedRemaining,
+          remainingAmount: item.remaining_amount,
           expenseCount: item.expense_count,
         }
       })
@@ -86,9 +96,7 @@ export function usePlanOverview(
     return categoryBudgets.value.reduce((sum, category) => sum + category.remainingAmount, 0)
   })
 
-  const recentExpenses = computed((): ExpenseWithCategory[] => {
-    return sortedExpenses.value.slice(0, 10)
-  })
+  const recentExpenses = recentExpensesQuery.expenses
 
   const planHealth = computed(() => {
     const budgetUtilization =
@@ -126,8 +134,12 @@ export function usePlanOverview(
     remainingBudget,
     categoryBudgets,
     recentExpenses,
-    sortedExpenses,
-    expensesByCategory,
+    historyExpenses: historyQuery.expenses,
+    categoryExpenses: categoryHistoryQuery.expenses,
+    historyQuery,
+    categoryHistoryQuery,
+    recentExpensesQuery,
+    summaryQuery,
     planHealth,
   }
 }

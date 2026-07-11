@@ -100,6 +100,8 @@
                       dense
                       size="sm"
                       color="grey-7"
+                      :aria-label="`Remove ${item.name}`"
+                      class="mobile-touch-target"
                       @click="handleRemoveItem(item.id)"
                     />
                   </q-item-section>

@@ -21,8 +21,8 @@ vi.mock('src/stores/auth', () => ({
   useAuthStore: vi.fn(),
 }))
 
-const getTo = (path: string, requiresAuth: boolean) => ({
-  meta: { requiresAuth },
+const getTo = (path: string, requiresAuth: boolean, allowAuthenticated = false) => ({
+  meta: { requiresAuth, allowAuthenticated },
   fullPath: path,
   path,
   hash: '',
@@ -82,15 +82,26 @@ describe('authGuard', () => {
     expect(mockNext).toHaveBeenCalledWith()
   })
 
-  it('should proceed if route does not require auth and user is authenticated', async () => {
+  it('should redirect an authenticated user away from a normal public route', async () => {
     mockUserStore.isAuthenticated = true
 
-    const to: RouteLocationNormalized = getTo('/public', false)
+    const to: RouteLocationNormalized = getTo('/auth', false)
     const from: RouteLocationNormalized = {} as RouteLocationNormalized
 
     await authGuard(to, from, mockNext)
 
     expect(mockNext).toHaveBeenCalledWith({ path: '/' })
+  })
+
+  it('should allow an authenticated user to complete the auth callback route', async () => {
+    mockUserStore.isAuthenticated = true
+
+    const to: RouteLocationNormalized = getTo('/auth/callback?redirectTo=/plans', false, true)
+    const from: RouteLocationNormalized = {} as RouteLocationNormalized
+
+    await authGuard(to, from, mockNext)
+
+    expect(mockNext).toHaveBeenCalledWith()
   })
 
   it('should proceed if route does not require auth and user is not authenticated', async () => {

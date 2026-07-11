@@ -30,6 +30,7 @@ describe('TemplateCardMenu', () => {
   it('should mount component properly', () => {
     const wrapper = renderTemplateCardMenu({
       canEdit: true,
+      canShare: true,
     })
     expect(wrapper.exists()).toBe(true)
   })
@@ -37,6 +38,7 @@ describe('TemplateCardMenu', () => {
   it('should have correct props interface', () => {
     const wrapper = renderTemplateCardMenu({
       canEdit: true,
+      canShare: true,
     })
 
     expect(wrapper.props('canEdit')).toBe(true)
@@ -45,6 +47,7 @@ describe('TemplateCardMenu', () => {
   it('should emit share event when share item is clicked', async () => {
     const wrapper = renderTemplateCardMenu({
       canEdit: true,
+      canShare: true,
     })
 
     const items = wrapper.findAll('.q-item')
@@ -56,6 +59,7 @@ describe('TemplateCardMenu', () => {
   it('should emit export event when export item is clicked', async () => {
     const wrapper = renderTemplateCardMenu({
       canEdit: true,
+      canShare: true,
     })
 
     const items = wrapper.findAll('.q-item')
@@ -67,6 +71,7 @@ describe('TemplateCardMenu', () => {
   it('should emit delete event when delete item is clicked', async () => {
     const wrapper = renderTemplateCardMenu({
       canEdit: true,
+      canShare: true,
     })
 
     const items = wrapper.findAll('.q-item')
@@ -78,11 +83,13 @@ describe('TemplateCardMenu', () => {
   it('should handle owner prop correctly', () => {
     const ownerWrapper = renderTemplateCardMenu({
       canEdit: true,
+      canShare: true,
     })
     expect(ownerWrapper.props('canEdit')).toBe(true)
 
     const nonOwnerWrapper = renderTemplateCardMenu({
       canEdit: false,
+      canShare: false,
     })
     expect(nonOwnerWrapper.props('canEdit')).toBe(false)
   })
@@ -90,8 +97,19 @@ describe('TemplateCardMenu', () => {
   it('shows export item even when canEdit is false', () => {
     const wrapper = renderTemplateCardMenu({
       canEdit: false,
+      canShare: false,
     })
 
     expect(wrapper.findAll('.q-item').length).toBe(1)
+  })
+
+  it('hides share while retaining delete for a collaborator with edit access', () => {
+    const wrapper = renderTemplateCardMenu({
+      canEdit: true,
+      canShare: false,
+    })
+
+    expect(wrapper.text()).not.toContain('Share Template')
+    expect(wrapper.text()).toContain('Delete Template')
   })
 })

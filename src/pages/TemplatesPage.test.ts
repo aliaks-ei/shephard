@@ -194,6 +194,7 @@ function createWrapper(
     hasTemplates?: boolean
     searchQuery?: string
     sortBy?: string
+    hasLoadError?: boolean
   } = {},
 ) {
   const {
@@ -203,12 +204,15 @@ function createWrapper(
     hasTemplates = false,
     searchQuery = '',
     sortBy = 'name',
+    hasLoadError = false,
   } = options
 
   const mockTemplatesReturn = {
     searchQuery: ref(searchQuery),
     sortBy: ref(sortBy),
     areItemsLoading: computed(() => isLoading),
+    hasLoadError: computed(() => hasLoadError),
+    isRetrying: computed(() => false),
     filteredAndSortedOwnedItems: computed(() => ownedTemplates),
     filteredAndSortedSharedItems: computed(() => sharedTemplates),
     allFilteredAndSortedItems: computed(() => [...ownedTemplates, ...sharedTemplates]),
@@ -232,6 +236,7 @@ function createWrapper(
     viewItem: vi.fn(),
     deleteItem: vi.fn(),
     clearSearch: vi.fn(),
+    retryItems: vi.fn(),
   }
 
   vi.mocked(useTemplates).mockReturnValue(mockTemplatesReturn)
@@ -357,6 +362,13 @@ it('should show loading skeleton when templates are loading', () => {
 
   const templateGroups = wrapper.findAll('.templates-group-mock')
   expect(templateGroups.length).toBe(0)
+})
+
+it('should show a retry state instead of the business empty state when loading fails', () => {
+  const { wrapper } = createWrapper({ hasLoadError: true })
+
+  expect(wrapper.text()).toContain('Could not load templates')
+  expect(wrapper.findComponent(EmptyStateStub).exists()).toBe(false)
 })
 
 it('should show owned templates group when owned templates exist', () => {

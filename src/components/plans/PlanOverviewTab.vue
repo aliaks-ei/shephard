@@ -40,6 +40,7 @@
           <div v-if="$q.screen.lt.md">
             <q-card :bordered="$q.dark.isActive">
               <q-list
+                id="mobile-category-budgets"
                 separator
                 class="plan-overview-mobile-budget-list"
               >
@@ -63,6 +64,9 @@
                 no-caps
                 color="primary"
                 :label="mobileCategoriesToggleLabel"
+                aria-controls="mobile-category-budgets"
+                :aria-expanded="String(showAllMobileCategories)"
+                class="mobile-categories-toggle"
                 @click="toggleMobileCategoryVisibility"
               />
             </div>
@@ -94,6 +98,7 @@
       :currency="planCurrency"
       :is-loading="false"
       :can-edit="isEditMode"
+      :can-add-expenses="canAddExpenses"
       @add-expense="$emit('open-expense-dialog')"
       @view-all="openAllExpensesDialog"
       @refresh="$emit('refresh')"
@@ -101,25 +106,43 @@
 
     <!-- Category Expenses Modal -->
     <CategoryExpensesDialog
+      v-if="showCategoryModal"
       v-model="showCategoryModal"
       :category="selectedCategory"
       :expenses="categoryExpenses"
       :currency="planCurrency"
       :can-edit="isEditMode"
+      :can-add-expenses="canAddExpenses"
       :plan-id="planId"
       :plan-items="categoryPlanItems"
+      :is-loading-expenses="categoryHistoryQuery.isPending.value"
+      :is-loading-more-expenses="categoryHistoryQuery.isFetchingNextPage.value"
+      :has-more-expenses="categoryHistoryQuery.hasNextPage.value"
+      :has-expenses-load-error="categoryHistoryQuery.isError.value && categoryExpenses.length === 0"
+      :is-retrying-expenses="categoryHistoryQuery.isFetching.value"
       @add-expense="emitOpenExpenseDialog"
       @refresh="$emit('refresh')"
+      @load-more-expenses="void categoryHistoryQuery.fetchNextPage()"
+      @expenses-tab-activated="categoryHistoryEnabled = true"
+      @retry-expenses="void categoryHistoryQuery.refetch()"
     />
 
     <!-- All Expenses Modal -->
     <AllExpensesDialog
+      v-if="showAllExpensesModal"
       v-model="showAllExpensesModal"
-      :expenses="sortedExpenses"
+      :expenses="historyExpenses"
       :currency="planCurrency"
       :can-edit="isEditMode"
       :plan-id="planId"
+      :is-loading="historyQuery.isPending.value"
+      :is-loading-more="historyQuery.isFetchingNextPage.value"
+      :has-more="historyQuery.hasNextPage.value"
+      :has-load-error="historyQuery.isError.value && historyExpenses.length === 0"
+      :is-retrying="historyQuery.isFetching.value"
       @refresh="$emit('refresh')"
+      @load-more="void historyQuery.fetchNextPage()"
+      @retry="void historyQuery.refetch()"
     />
   </div>
 </template>
@@ -141,6 +164,7 @@ const props = defineProps<{
   plan: (PlanWithItems & { permission_level?: string }) | null
   isOwner: boolean
   isEditMode: boolean
+  canAddExpenses: boolean
 }>()
 
 const emit = defineEmits<{
@@ -154,6 +178,7 @@ const planIdRef = computed(() => props.plan?.id ?? null)
 const showCategoryModal = ref(false)
 const showAllExpensesModal = ref(false)
 const showAllMobileCategories = ref(false)
+const categoryHistoryEnabled = ref(false)
 const selectedCategory = ref<CategoryBudget | null>(null)
 const mobileInitialCategoryCount = 5
 
@@ -162,17 +187,26 @@ const planCurrency = computed((): CurrencyCode => {
 })
 
 const planId = computed(() => props.plan?.id || '')
+const selectedCategoryId = computed(() => selectedCategory.value?.categoryId ?? null)
 
 const {
   categoryBudgets,
   recentExpenses,
-  sortedExpenses,
+  historyExpenses,
+  categoryExpenses,
+  historyQuery,
+  categoryHistoryQuery,
   totalBudget,
   totalSpent,
   remainingBudget,
 } = usePlanOverview(
   planIdRef,
   computed(() => props.plan),
+  {
+    historyEnabled: showAllExpensesModal,
+    categoryId: selectedCategoryId,
+    categoryHistoryEnabled,
+  },
 )
 
 const mobileCategoryBudgets = computed(() => {
@@ -195,11 +229,6 @@ const mobileCategoriesToggleLabel = computed(() => {
   return `View all (${hiddenMobileCategoriesCount.value})`
 })
 
-const categoryExpenses = computed(() => {
-  if (!selectedCategory.value) return []
-  return sortedExpenses.value.filter((e) => e.category_id === selectedCategory.value?.categoryId)
-})
-
 const categoryPlanItems = computed(() => {
   if (!selectedCategory.value || !props.plan?.plan_items) return []
   return props.plan.plan_items.filter(
@@ -209,6 +238,9 @@ const categoryPlanItems = computed(() => {
 
 function openCategoryModal(category: CategoryBudget) {
   selectedCategory.value = category
+  categoryHistoryEnabled.value = !props.plan?.plan_items.some(
+    (item) => item.category_id === category.categoryId,
+  )
   showCategoryModal.value = true
 }
 
@@ -225,20 +257,16 @@ function toggleMobileCategoryVisibility() {
   showAllMobileCategories.value = !showAllMobileCategories.value
 }
 
-watch(
-  categoryBudgets,
-  (newBudgets) => {
-    if (selectedCategory.value) {
-      const updatedCategory = newBudgets.find(
-        (budget) => budget.categoryId === selectedCategory.value?.categoryId,
-      )
-      if (updatedCategory) {
-        selectedCategory.value = updatedCategory
-      }
+watch(categoryBudgets, (newBudgets) => {
+  if (selectedCategory.value) {
+    const updatedCategory = newBudgets.find(
+      (budget) => budget.categoryId === selectedCategory.value?.categoryId,
+    )
+    if (updatedCategory) {
+      selectedCategory.value = updatedCategory
     }
-  },
-  { deep: true },
-)
+  }
+})
 
 watch(hasHiddenMobileCategories, (hasHiddenCategories) => {
   if (!hasHiddenCategories) {
@@ -246,3 +274,9 @@ watch(hasHiddenMobileCategories, (hasHiddenCategories) => {
   }
 })
 </script>
+
+<style lang="scss" scoped>
+.mobile-categories-toggle {
+  min-height: 44px;
+}
+</style>

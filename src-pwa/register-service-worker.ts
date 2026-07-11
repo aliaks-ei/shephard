@@ -7,6 +7,7 @@ import {
 import { sanitizeRedirectPath } from 'src/utils/navigation'
 
 const UPDATE_CHECK_INTERVAL_MS = 5 * 60 * 1000
+const UPDATE_AVAILABLE_EVENT = 'shephard:pwa-update-available'
 
 type BrowserDocument = {
   addEventListener: (event: 'visibilitychange', handler: () => void) => void
@@ -15,11 +16,12 @@ type BrowserDocument = {
 
 type BrowserLocation = {
   href: string
-  reload: () => void
 }
 
 type BrowserLikeGlobal = typeof globalThis & {
+  __shephardPendingServiceWorkerUpdate?: ServiceWorkerRegistration
   document?: BrowserDocument
+  dispatchEvent?: (event: Event) => boolean
   location?: BrowserLocation
 }
 
@@ -42,6 +44,15 @@ function checkForUpdates(registration?: ServiceWorkerRegistration): void {
   }
 
   void registration.update()
+}
+
+function announceUpdate(registration: ServiceWorkerRegistration): void {
+  browserGlobal.__shephardPendingServiceWorkerUpdate = registration
+  browserGlobal.dispatchEvent?.(
+    new CustomEvent(UPDATE_AVAILABLE_EVENT, {
+      detail: { registration },
+    }),
+  )
 }
 
 function isServiceWorkerMessage(data: unknown): data is ServiceWorkerMessage {
@@ -97,6 +108,9 @@ register(process.env.SERVICE_WORKER_FILE, {
   registered(registration) {
     // console.log('Service worker has been registered.')
 
+    if (registration?.waiting) {
+      announceUpdate(registration)
+    }
     checkForUpdates(registration)
 
     browserGlobal.setInterval(() => {
@@ -119,9 +133,7 @@ register(process.env.SERVICE_WORKER_FILE, {
   },
 
   updated(registration) {
-    // Force activate latest version right away for standalone iOS PWAs
-    checkForUpdates(registration)
-    browserGlobal.location?.reload()
+    announceUpdate(registration)
   },
 
   offline() {

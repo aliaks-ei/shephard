@@ -35,6 +35,10 @@ type PushEventLike = Event & {
   waitUntil: (promise: Promise<unknown>) => void
 }
 
+type MessageEventLike = Event & {
+  data: unknown
+}
+
 type NotificationClickEventLike = Event & {
   notification: Notification
   waitUntil: (promise: Promise<unknown>) => void
@@ -68,6 +72,13 @@ function isSameOrigin(url: URL): boolean {
   return url.origin === self.location.origin
 }
 
+function isSupabaseApiUrl(url: URL): boolean {
+  return (
+    url.hostname.endsWith('.supabase.co') &&
+    /^\/(auth|functions|rest|storage)\/v1(?:\/|$)/.test(url.pathname)
+  )
+}
+
 // Must match semantics of src/utils/navigation.ts `sanitizeRedirectPath`.
 // Inlined so the service worker bundle stays self-contained and doesn't pull
 // in Vue / router / api modules.
@@ -94,11 +105,21 @@ function asStrategyPlugin(plugin: unknown): StrategyPlugin {
   return plugin as StrategyPlugin
 }
 
-void self.skipWaiting()
 clientsClaim()
 
 precacheAndRoute(self.__WB_MANIFEST)
 cleanupOutdatedCaches()
+
+self.addEventListener('message', (event: MessageEventLike) => {
+  if (
+    typeof event.data === 'object' &&
+    event.data !== null &&
+    'type' in event.data &&
+    event.data.type === 'skip-waiting'
+  ) {
+    void self.skipWaiting()
+  }
+})
 
 if (process.env.PROD) {
   registerRoute(
@@ -111,9 +132,9 @@ if (process.env.PROD) {
 // Authenticated Supabase responses must never be cached by the service worker:
 // the cache key is the URL and ignores the `Authorization` header, so a second
 // user on the same browser profile could be served the first user's JSON.
-// TanStack Query's in-memory cache is the only cache for REST responses.
+// TanStack Query's in-memory cache is the only cache for Supabase API responses.
 registerRoute(
-  ({ url }) => /^https:\/\/.*\.supabase\.co\/(rest|auth)\/.*/.test(url.href),
+  ({ request, url }) => request.headers.has('authorization') || isSupabaseApiUrl(url),
   new NetworkOnly(),
 )
 

@@ -10,7 +10,7 @@
     >
       <!-- Status Icon: Desktop - Top Right -->
       <q-icon
-        v-if="$q.screen.gt.sm && statusIcon"
+        v-if="!$q.screen.lt.md && statusIcon"
         :name="statusIcon.icon"
         :color="statusIcon.color"
         size="20px"
@@ -68,7 +68,7 @@
         <div class="row items-start">
           <!-- Circular Progress: Right side on desktop -->
           <q-circular-progress
-            v-if="$q.screen.gt.sm"
+            v-if="!$q.screen.lt.md"
             show-value
             :value="Math.min(percentageUsed, 999)"
             :max="100"

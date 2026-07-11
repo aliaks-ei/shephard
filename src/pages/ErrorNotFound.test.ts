@@ -82,6 +82,11 @@ it('should render all three navigation buttons', () => {
   expect(buttons).toHaveLength(3)
 })
 
+it('should group actions for narrow-screen stacking', () => {
+  const wrapper = createWrapper()
+  expect(wrapper.find('.error-not-found__actions').exists()).toBe(true)
+})
+
 it('should have proper accessibility labels', () => {
   const wrapper = createWrapper()
   const buttons = wrapper.findAllComponents({ name: 'QBtn' })

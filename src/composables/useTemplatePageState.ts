@@ -14,24 +14,36 @@ import { useTemplateExport } from 'src/composables/useTemplateExport'
 import { getTemplateSharedUsers, type Category, type CurrencyCode } from 'src/api'
 import { useNotificationEvents } from 'src/composables/useNotificationEvents'
 import type { ExportFormat } from 'src/utils/export'
+import { useNetworkStatus } from 'src/composables/useNetworkStatus'
 
 export function useTemplatePageState() {
   const router = useRouter()
   const { categories } = useCategoriesQuery()
   const deleteTemplateMutation = useDeleteTemplateMutation()
   const { emitRemovalNotification } = useNotificationEvents()
+  const { isOnline } = useNetworkStatus()
 
   const {
     currentTemplate,
     isTemplateLoading,
+    isTemplateRetrying = computed(() => false),
+    detailState: templateDetailState,
     isNewTemplate,
     routeTemplateId,
+    isOwner,
     isEditMode,
     templateCurrency,
     createNewTemplateWithItems,
     updateExistingTemplateWithItems,
     loadTemplate,
   } = useTemplate()
+  const detailState = computed(
+    () =>
+      templateDetailState?.value ??
+      (isTemplateLoading.value
+        ? ({ status: 'loading' } as const)
+        : ({ status: 'ready', data: currentTemplate.value } as const)),
+  )
 
   const {
     templateItems,
@@ -101,13 +113,19 @@ export function useTemplatePageState() {
 
   const { actionBarActions, actionsVisible } = useTemplateActions({
     isNewTemplate,
+    isOwner,
     isEditMode,
+    isOnline,
     handlers: {
       onAddCategory: () => openDialog('category'),
       onSave: () => {
         void saveTemplate()
       },
-      onShare: () => openDialog('share'),
+      onShare: () => {
+        if (isOwner.value) {
+          openDialog('share')
+        }
+      },
       onDelete: () => {
         showDeleteDialog.value = true
       },
@@ -160,6 +178,8 @@ export function useTemplatePageState() {
   }
 
   async function saveTemplate(): Promise<void> {
+    if (!isOnline.value) return
+
     resetLastAddedCategory()
     clearNameError()
 
@@ -224,7 +244,7 @@ export function useTemplatePageState() {
   }
 
   async function deleteTemplate(): Promise<void> {
-    if (!routeTemplateId.value) return
+    if (!isOnline.value || !routeTemplateId.value) return
 
     await emitRemovalNotification(
       'template',
@@ -249,8 +269,11 @@ export function useTemplatePageState() {
   return {
     currentTemplate,
     isTemplateLoading,
+    isTemplateRetrying,
+    detailState,
     isNewTemplate,
     routeTemplateId,
+    isOwner,
     isEditMode,
     templateCurrency,
     categories,
@@ -285,5 +308,6 @@ export function useTemplatePageState() {
     goBack,
     onTemplateShared,
     deleteTemplate,
+    retryTemplateLoad: loadCurrentTemplate,
   }
 }

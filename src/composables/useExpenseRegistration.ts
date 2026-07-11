@@ -8,7 +8,6 @@ import {
 import { useCategoriesQuery } from 'src/queries/categories'
 import {
   useExpenseSummaryQuery,
-  useExpensesByPlanQuery,
   useCreateExpenseMutation,
   useCreateExpensesBatchMutation,
   useDeleteExpenseMutation,
@@ -19,7 +18,6 @@ import { useUserStore } from 'src/stores/user'
 import { useBanner } from 'src/composables/useBanner'
 import { useNotificationEvents } from 'src/composables/useNotificationEvents'
 import { getPlanStatus } from 'src/utils/plans'
-import { calculateStillToPay } from 'src/utils/budget-calculations'
 import { convertCurrency } from 'src/api/currency'
 import { parseDecimalInput } from 'src/utils/decimal'
 import { formatDateInput } from 'src/utils/date'
@@ -52,17 +50,19 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
   const rollbackDeleteExpenseMutation = useDeleteExpenseMutation()
   const rollbackDeleteExpensesMutation = useDeleteExpensesBatchMutation()
 
+  const currentMode = ref<ExpenseMode>('custom-entry')
   const activeSummaryPlanId = ref<string | null>(null)
+  const quickSelectPlanId = computed(() =>
+    currentMode.value === 'quick-select' ? activeSummaryPlanId.value : null,
+  )
   const { expenseSummary } = useExpenseSummaryQuery(activeSummaryPlanId)
-  const { expensesByCategory } = useExpensesByPlanQuery(activeSummaryPlanId)
-  const planItemsQuery = usePlanItemsQuery(activeSummaryPlanId)
+  const planItemsQuery = usePlanItemsQuery(quickSelectPlanId)
   const lastExpenseQuery = useLastExpenseForPlanQuery(activeSummaryPlanId)
   const completionMutation = useUpdatePlanItemCompletionMutation()
   const batchCompletionMutation = useUpdatePlanItemsCompletionMutation()
 
   const isLoading = ref(false)
   const didAutoSelectPlan = ref(false)
-  const currentMode = ref<ExpenseMode>('custom-entry')
   const quickSelectPhase = ref<QuickSelectPhase>('selection')
 
   const allPlanItems = computed(() => planItemsQuery.data.value ?? [])
@@ -147,15 +147,6 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
         const plannedAmount = categoryData?.planned_amount || 0
         const actualAmount = categoryData?.actual_amount || 0
 
-        const categoryExpenses = expensesByCategory.value[category.id]
-
-        const remainingAmount = calculateStillToPay(
-          category.id,
-          allPlanItems.value,
-          actualAmount,
-          categoryExpenses,
-        )
-
         return {
           label: category.name,
           value: category.id,
@@ -163,7 +154,7 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
           icon: category.icon,
           plannedAmount,
           actualAmount,
-          remainingAmount,
+          remainingAmount: categoryData?.remaining_amount || 0,
         }
       })
   })

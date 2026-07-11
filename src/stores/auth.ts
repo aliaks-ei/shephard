@@ -12,6 +12,7 @@ import {
   onAuthStateChange,
 } from 'src/api/auth'
 import { usePreferencesStore } from './preferences'
+import { sanitizeRedirectPath } from 'src/utils/navigation'
 import type { Session } from 'src/api/auth'
 import type { User } from 'src/api/user'
 import type { GoogleSignInResponse } from 'src/types'
@@ -77,12 +78,17 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function signInWithOtp(email: string) {
+  async function signInWithOtp(email: string, redirectTo?: unknown) {
     try {
       isEmailSent.value = false
       emailError.value = null
 
-      const data = await sendOtpToEmail(email, `${window.location.origin}/auth/callback`)
+      const callbackUrl = new URL('/auth/callback', window.location.origin)
+      if (redirectTo !== undefined) {
+        callbackUrl.searchParams.set('redirectTo', sanitizeRedirectPath(redirectTo))
+      }
+
+      const data = await sendOtpToEmail(email, callbackUrl.toString())
 
       isEmailSent.value = true
 

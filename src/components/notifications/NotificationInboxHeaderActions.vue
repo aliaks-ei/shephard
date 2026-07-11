@@ -19,9 +19,14 @@
       size="sm"
       icon="eva-more-horizontal-outline"
       aria-label="Notification actions"
+      aria-haspopup="menu"
+      :aria-expanded="String(showActionsMenu)"
+      aria-controls="notification-actions-menu"
       class="notifications-header-actions__icon-btn text-muted"
     >
       <q-menu
+        id="notification-actions-menu"
+        v-model="showActionsMenu"
         auto-close
         anchor="bottom right"
         self="top right"
@@ -70,6 +75,8 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
+
 defineProps<{
   hasNotifications: boolean
   unreadCount: number
@@ -79,13 +86,15 @@ defineEmits<{
   'mark-all-read': []
   'clear-all': []
 }>()
+
+const showActionsMenu = ref(false)
 </script>
 
 <style scoped lang="scss">
 .notifications-header-actions__icon-btn {
-  width: 28px;
-  min-width: 28px;
-  height: 28px;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
 }
 
 .notifications-header-actions__menu {

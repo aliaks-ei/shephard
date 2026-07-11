@@ -1,16 +1,15 @@
-import { computed, type MaybeRefOrGetter, toValue } from 'vue'
+import { type MaybeRefOrGetter, toValue } from 'vue'
 import {
   useCreateExpenseMutation,
   useDeleteExpensesBatchMutation,
-  useExpensesByPlanQuery,
+  usePlanItemExpenseIds,
 } from 'src/queries/expenses'
 import { useUpdatePlanItemCompletionMutation } from 'src/queries/plans'
 import { useBanner } from 'src/composables/useBanner'
 import type { PlanItem } from 'src/api/plans'
 
 export function useItemCompletion(planId: MaybeRefOrGetter<string | null>) {
-  const resolvedPlanId = computed(() => toValue(planId))
-  const { getExpensesForPlanItem } = useExpensesByPlanQuery(resolvedPlanId)
+  const { fetchExpenseIds } = usePlanItemExpenseIds()
   const createExpenseMutation = useCreateExpenseMutation()
   const deleteExpensesBatchMutation = useDeleteExpensesBatchMutation()
   const completionMutation = useUpdatePlanItemCompletionMutation()
@@ -67,12 +66,12 @@ export function useItemCompletion(planId: MaybeRefOrGetter<string | null>) {
           planId: currentPlanId,
         })
 
-        const expensesToDelete = getExpensesForPlanItem(item.id)
+        const expenseIdsToDelete = await fetchExpenseIds(currentPlanId, item.id)
 
-        if (expensesToDelete.length > 0) {
+        if (expenseIdsToDelete.length > 0) {
           try {
             await deleteExpensesBatchMutation.mutateAsync({
-              expenseIds: expensesToDelete.map((expense) => expense.id),
+              expenseIds: expenseIdsToDelete,
               planId: currentPlanId,
             })
           } catch (error) {

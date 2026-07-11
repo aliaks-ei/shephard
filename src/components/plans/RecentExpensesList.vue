@@ -197,6 +197,8 @@
                   size="sm"
                   icon="eva-trash-2-outline"
                   color="negative"
+                  aria-label="Delete expense"
+                  class="mobile-touch-target"
                   @click="confirmDeleteExpense(expense, () => emit('refresh'))"
                 >
                   <q-tooltip v-if="!$q.screen.lt.md">Delete expense</q-tooltip>
@@ -218,6 +220,7 @@
         />
         <div class="q-mb-md">No expenses registered yet</div>
         <q-btn
+          v-if="canAddExpenses"
           color="primary"
           label="Add First Expense"
           dense
@@ -243,6 +246,7 @@ const props = defineProps<{
   currency: CurrencyCode
   isLoading: boolean
   canEdit?: boolean
+  canAddExpenses?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -252,7 +256,7 @@ const emit = defineEmits<{
 }>()
 
 const { getCategoryName, getCategoryColor, getCategoryIcon } = useCategoryHelpers()
-const { confirmDeleteExpense, deleteExpense } = useExpenseActions()
+const { confirmDeleteExpense } = useExpenseActions()
 
 const displayedExpenses = computed(() => {
   return props.expenses.slice(0, 5)
@@ -260,6 +264,6 @@ const displayedExpenses = computed(() => {
 
 function handleSwipeDelete(expense: ExpenseWithCategory, details: { reset: () => void }) {
   details.reset()
-  void deleteExpense(expense, () => emit('refresh'))
+  confirmDeleteExpense(expense, () => emit('refresh'))
 }
 </script>

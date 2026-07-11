@@ -20,13 +20,16 @@ export type PlanActionsContext = {
   isOwner: Ref<boolean> | ComputedRef<boolean>
   isEditMode: Ref<boolean> | ComputedRef<boolean>
   canEditPlanData: Ref<boolean> | ComputedRef<boolean>
+  canAddExpenses: Ref<boolean> | ComputedRef<boolean>
   currentPlan: Ref<PlanWithItems | null> | ComputedRef<PlanWithItems | null>
   currentTab: Ref<string>
   saveState: Ref<PlanSaveState> | ComputedRef<PlanSaveState>
+  isOnline?: Ref<boolean> | ComputedRef<boolean>
   handlers: PlanActionHandlers
 }
 
 export function usePlanActions(context: PlanActionsContext) {
+  const writeDisabled = computed(() => context.isOnline?.value === false)
   const planStatus = computed(() => {
     if (!context.currentPlan.value) {
       return null
@@ -68,7 +71,8 @@ export function usePlanActions(context: PlanActionsContext) {
       label: 'Share',
       color: 'info',
       priority: 'secondary',
-      visible: !context.isNewPlan.value && context.isEditMode.value,
+      visible: !context.isNewPlan.value && context.isEditMode.value && context.isOwner.value,
+      disabled: writeDisabled.value,
       handler: context.handlers.onShare,
     },
     {
@@ -78,6 +82,7 @@ export function usePlanActions(context: PlanActionsContext) {
       color: 'negative',
       priority: 'secondary',
       visible: canShowCancel.value,
+      disabled: writeDisabled.value,
       handler: context.handlers.onCancel,
     },
     {
@@ -87,6 +92,7 @@ export function usePlanActions(context: PlanActionsContext) {
       color: 'negative',
       priority: 'secondary',
       visible: canShowDelete.value,
+      disabled: writeDisabled.value,
       handler: context.handlers.onDelete,
     },
   ])
@@ -119,6 +125,7 @@ export function usePlanActions(context: PlanActionsContext) {
       color: context.isNewPlan.value ? 'primary' : 'positive',
       priority: 'primary',
       loading: context.saveState.value === 'saving',
+      disabled: writeDisabled.value,
       handler: context.handlers.onSave,
     },
     ...sharedSecondaryActions.value,
@@ -131,7 +138,8 @@ export function usePlanActions(context: PlanActionsContext) {
       label: 'Add Expense',
       color: 'primary',
       priority: 'primary',
-      visible: context.isEditMode.value,
+      visible: context.canAddExpenses.value,
+      disabled: writeDisabled.value,
       handler: context.handlers.onAddExpense,
     },
     {

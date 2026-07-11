@@ -360,7 +360,7 @@ describe('BaseAPIService - Entity with Items Operations', () => {
     expect(result).toEqual(entityWithItems)
   })
 
-  it('getEntityWithItems should return null when entity not found', async () => {
+  it('getEntityWithItems should throw a typed not-found error when entity is missing', async () => {
     const mockQuery = {
       select: vi.fn().mockReturnThis(),
       match: vi.fn().mockReturnThis(),
@@ -368,9 +368,14 @@ describe('BaseAPIService - Entity with Items Operations', () => {
     }
     mockFrom.mockReturnValue(mockQuery as never)
 
-    const result = await service.getEntityWithItems('nonexistent-id', 'user-1', 'template_items')
-
-    expect(result).toBeNull()
+    await expect(
+      service.getEntityWithItems('nonexistent-id', 'user-1', 'template_items'),
+    ).rejects.toMatchObject({
+      name: 'ENTITY_LOAD_ERROR',
+      kind: 'not-found',
+      entityType: 'template',
+      entityId: 'nonexistent-id',
+    })
   })
 
   it('getEntityWithItems should return entity with permission for shared user', async () => {
@@ -418,7 +423,7 @@ describe('BaseAPIService - Entity with Items Operations', () => {
     ).rejects.toThrow('Sharing is not supported for this entity')
   })
 
-  it('getEntityWithItems should throw access denied error when entity not shared with user', async () => {
+  it('getEntityWithItems should throw a typed access-denied error when not shared', async () => {
     const entityWithItems = { ...mockEntity, owner_id: 'other-user' }
 
     const entityQuery = {
@@ -437,7 +442,12 @@ describe('BaseAPIService - Entity with Items Operations', () => {
 
     await expect(
       service.getEntityWithItems('template-1', 'user-1', 'template_items'),
-    ).rejects.toThrow('template not found or access denied')
+    ).rejects.toMatchObject({
+      name: 'ENTITY_LOAD_ERROR',
+      kind: 'access-denied',
+      entityType: 'template',
+      entityId: 'template-1',
+    })
   })
 
   it('getEntityWithItems should throw error when share query fails', async () => {

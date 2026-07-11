@@ -2,14 +2,19 @@
   <BaseItemFormPage
     :page-title="pageTitle"
     :is-loading="isPlanLoading"
+    :load-state="detailState.status"
+    :retrying="isPlanRetrying"
+    entity-name="Plan"
+    entity-name-plural="plans"
     :actions="actionBarActions"
     :actions-visible="actionsVisible"
     :is-edit-mode="isEditMode"
     :show-read-only-badge="!isEditMode"
     @back="goBack"
+    @retry="retryPlanLoad"
   >
     <PlanFormSection
-      v-if="isNewPlan"
+      v-if="isNewPlan && detailState.status === 'ready'"
       ref="formSectionRef"
       v-model:form="form"
       :selected-template="selectedTemplate"
@@ -34,7 +39,7 @@
       @add-item="handleAddItem"
     />
 
-    <div v-else-if="!isNewPlan">
+    <div v-else-if="!isNewPlan && detailState.status === 'ready'">
       <div class="row q-mb-md">
         <q-tabs
           v-model="activeTab"
@@ -75,6 +80,7 @@
         class="bg-transparent"
       >
         <q-tab-panel
+          v-if="activeTab === 'overview'"
           class="q-pa-none q-pa-md-sm"
           name="overview"
         >
@@ -82,6 +88,7 @@
             :plan="currentPlan"
             :is-owner="isOwner"
             :is-edit-mode="isEditMode"
+            :can-add-expenses="canAddExpenses"
             @refresh="refreshPlanData"
             @open-expense-dialog="openExpenseRegistrationFromCategory"
             @view-items="activeTab = 'items'"
@@ -89,7 +96,7 @@
         </q-tab-panel>
 
         <q-tab-panel
-          v-if="isEditMode"
+          v-if="isEditMode && activeTab === 'items'"
           class="q-pa-none q-pa-md-sm"
           name="items"
         >
@@ -103,7 +110,7 @@
         </q-tab-panel>
 
         <q-tab-panel
-          v-if="isEditMode"
+          v-if="isEditMode && activeTab === 'edit'"
           class="q-pa-none q-pa-md-sm"
           name="edit"
         >
@@ -132,7 +139,7 @@
     <template #dialogs>
       <!-- Dialogs -->
       <SharePlanDialog
-        v-if="currentPlan"
+        v-if="currentPlan && isOwner"
         v-model="isShareDialogOpen"
         :plan-id="currentPlan.id"
         :owner-user-id="currentPlan.owner_id"
@@ -167,7 +174,7 @@
       />
 
       <ExpenseRegistrationDialog
-        v-if="currentPlan && !isNewPlan && hasOpenedExpenseDialog"
+        v-if="currentPlan && !isNewPlan && canAddExpenses && hasOpenedExpenseDialog"
         v-model="showExpenseDialog"
         :default-plan-id="currentPlan.id"
         :default-category-id="selectedCategory?.categoryId || null"
@@ -195,9 +202,12 @@ const $q = useQuasar()
 const {
   currentPlan,
   isPlanLoading,
+  isPlanRetrying,
+  detailState,
   isNewPlan,
   isOwner,
   isEditMode,
+  canAddExpenses,
   planCurrency,
   categories,
   isTemplatesLoading,
@@ -240,6 +250,7 @@ const {
   cancelPlan,
   deletePlan,
   refreshPlanData,
+  retryPlanLoad,
   openExpenseRegistrationFromCategory,
   openExpenseRegistrationFromItem,
 } = usePlanPageState()

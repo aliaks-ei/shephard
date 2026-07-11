@@ -1,6 +1,7 @@
 <template>
   <q-dialog
     :model-value="modelValue"
+    data-pwa-update-blocker="dialog"
     :persistent="persistentDesktop && !isMobile"
     :position="isMobile ? 'bottom' : 'standard'"
     :transition-show="isMobile ? 'slide-up' : 'scale'"
@@ -38,6 +39,7 @@
               dense
               size="sm"
               aria-label="Close dialog"
+              class="mobile-touch-target"
               @click="closeDialog"
             />
           </div>

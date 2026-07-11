@@ -5,7 +5,9 @@ import { isDuplicateNameError, createDuplicateNameError } from 'src/utils/databa
 import {
   getTemplates,
   createTemplate,
+  createTemplateWithItems,
   updateTemplate,
+  updateTemplateWithItems,
   deleteTemplate,
   getTemplateWithItems,
   getTemplateSharedUsers,
@@ -265,6 +267,110 @@ describe('createTemplate', () => {
   })
 })
 
+describe('atomic template transactions', () => {
+  it('creates a template and its items through one RPC', async () => {
+    const createdTemplate = {
+      ...mockTemplate,
+      template_items: [mockTemplateItem],
+    }
+    mockSupabase.rpc.mockResolvedValueOnce({ data: createdTemplate, error: null })
+
+    const result = await createTemplateWithItems(
+      {
+        name: 'New Template',
+        duration: 'monthly',
+      },
+      [
+        {
+          name: 'Rent',
+          category_id: 'category-1',
+          amount: 500,
+          is_fixed_payment: true,
+        },
+      ],
+    )
+
+    expect(mockSupabase.rpc.mock.calls).toContainEqual([
+      'create_template_with_items',
+      {
+        p_template: {
+          name: 'New Template',
+          duration: 'monthly',
+        },
+        p_items: [
+          {
+            name: 'Rent',
+            category_id: 'category-1',
+            amount: 500,
+            is_fixed_payment: true,
+          },
+        ],
+      },
+    ])
+    expect(result).toEqual(createdTemplate)
+  })
+
+  it('omits template item IDs to preserve replace-all semantics', async () => {
+    mockSupabase.rpc.mockResolvedValueOnce({
+      data: { ...mockTemplate, template_items: [] },
+      error: null,
+    })
+
+    await updateTemplateWithItems('template-1', { name: 'Updated Template' }, [
+      {
+        id: 'old-item-id',
+        name: 'Rent',
+        category_id: 'category-1',
+        amount: 600,
+        is_fixed_payment: true,
+      },
+    ])
+
+    expect(mockSupabase.rpc.mock.calls).toContainEqual([
+      'update_template_with_items',
+      {
+        p_template_id: 'template-1',
+        p_template: { name: 'Updated Template' },
+        p_items: [
+          {
+            name: 'Rent',
+            category_id: 'category-1',
+            amount: 600,
+            is_fixed_payment: true,
+          },
+        ],
+      },
+    ])
+  })
+
+  it('translates duplicate-name failures from the atomic RPC', async () => {
+    const rpcError = createPostgrestError(
+      'duplicate key value violates unique constraint "unique_template_name_per_user"',
+    )
+    const duplicateError = new Error('DUPLICATE_TEMPLATE_NAME')
+    mockIsDuplicateNameError.mockReturnValue(true)
+    mockCreateDuplicateNameError.mockReturnValue(duplicateError)
+    mockSupabase.rpc.mockResolvedValueOnce({ data: null, error: rpcError })
+
+    await expect(
+      createTemplateWithItems({ name: 'Duplicate', duration: 'monthly' }, []),
+    ).rejects.toEqual(duplicateError)
+
+    expect(mockIsDuplicateNameError).toHaveBeenCalledWith(rpcError, 'unique_template_name_per_user')
+    expect(mockCreateDuplicateNameError).toHaveBeenCalledWith('TEMPLATE')
+  })
+
+  it('preserves non-duplicate failures from the atomic RPC', async () => {
+    const rpcError = createPostgrestError('permission denied', '42501')
+    mockIsDuplicateNameError.mockReturnValue(false)
+    mockSupabase.rpc.mockResolvedValueOnce({ data: null, error: rpcError })
+
+    await expect(
+      updateTemplateWithItems('template-1', { name: 'Updated Template' }, []),
+    ).rejects.toBe(rpcError)
+  })
+})
+
 describe('updateTemplate', () => {
   it('should update template successfully', async () => {
     const updates: TemplateUpdate = {
@@ -412,7 +518,7 @@ describe('getTemplateWithItems', () => {
     })
   })
 
-  it('should return null when template not found', async () => {
+  it('should throw a typed not-found error when template does not exist', async () => {
     const mockQuery = {
       select: vi.fn().mockReturnThis(),
       match: vi.fn().mockReturnThis(),
@@ -424,9 +530,12 @@ describe('getTemplateWithItems', () => {
 
     mockFrom.mockReturnValue(mockQuery)
 
-    const result = await getTemplateWithItems('template-1', 'user-1')
-
-    expect(result).toBeNull()
+    await expect(getTemplateWithItems('template-1', 'user-1')).rejects.toMatchObject({
+      name: 'ENTITY_LOAD_ERROR',
+      kind: 'not-found',
+      entityType: 'template',
+      entityId: 'template-1',
+    })
   })
 
   it('should throw error when template not shared with user', async () => {
@@ -458,9 +567,11 @@ describe('getTemplateWithItems', () => {
 
     mockFrom.mockReturnValueOnce(mockTemplateQuery).mockReturnValueOnce(mockShareQuery)
 
-    await expect(getTemplateWithItems('template-1', 'user-1')).rejects.toThrow(
-      'template not found or access denied',
-    )
+    await expect(getTemplateWithItems('template-1', 'user-1')).rejects.toMatchObject({
+      name: 'ENTITY_LOAD_ERROR',
+      kind: 'access-denied',
+      entityType: 'template',
+    })
   })
 })
 

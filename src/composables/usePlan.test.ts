@@ -25,31 +25,28 @@ vi.mock('vue-router', () => ({
   useRoute: () => mockRoute,
 }))
 
+const mockEmitNotificationEvent = vi.hoisted(() => vi.fn())
+
 vi.mock('src/composables/useNotificationEvents', () => ({
   useNotificationEvents: () => ({
-    emitNotificationEvent: vi.fn().mockResolvedValue(true),
+    emitNotificationEvent: mockEmitNotificationEvent,
   }),
 }))
 
 vi.mock('src/utils/plans', () => ({
   canEditPlan: vi.fn((plan: unknown) => Boolean(plan)),
+  canAddExpensesToPlan: vi.fn(() => true),
 }))
 
 const {
-  mockCreatePlanMutation,
+  mockCreatePlanWithItemsMutation,
   mockUpdatePlanMutation,
-  mockDeletePlanMutation,
-  mockSavePlanItemsMutation,
-  mockUpdatePlanItemsMutation,
-  mockDeletePlanItemsMutation,
+  mockUpdatePlanWithItemsMutation,
   mockPlanDetailQuery,
 } = vi.hoisted(() => ({
-  mockCreatePlanMutation: { mutateAsync: vi.fn() },
+  mockCreatePlanWithItemsMutation: { mutateAsync: vi.fn() },
   mockUpdatePlanMutation: { mutateAsync: vi.fn() },
-  mockDeletePlanMutation: { mutateAsync: vi.fn() },
-  mockSavePlanItemsMutation: { mutateAsync: vi.fn() },
-  mockUpdatePlanItemsMutation: { mutateAsync: vi.fn() },
-  mockDeletePlanItemsMutation: { mutateAsync: vi.fn() },
+  mockUpdatePlanWithItemsMutation: { mutateAsync: vi.fn() },
   mockPlanDetailQuery: { data: { value: null }, refetch: vi.fn(), isPending: { value: false } } as {
     data: { value: unknown }
     refetch: ReturnType<typeof vi.fn>
@@ -59,12 +56,9 @@ const {
 
 vi.mock('src/queries/plans', () => ({
   usePlanDetailQuery: () => mockPlanDetailQuery,
-  useCreatePlanMutation: () => mockCreatePlanMutation,
+  useCreatePlanWithItemsMutation: () => mockCreatePlanWithItemsMutation,
   useUpdatePlanMutation: () => mockUpdatePlanMutation,
-  useDeletePlanMutation: () => mockDeletePlanMutation,
-  useSavePlanItemsMutation: () => mockSavePlanItemsMutation,
-  useUpdatePlanItemsMutation: () => mockUpdatePlanItemsMutation,
-  useDeletePlanItemsMutation: () => mockDeletePlanItemsMutation,
+  useUpdatePlanWithItemsMutation: () => mockUpdatePlanWithItemsMutation,
 }))
 
 let pinia: TestingPinia
@@ -88,12 +82,10 @@ beforeEach(() => {
   setActivePinia(pinia)
   mockRouteValue.value = { name: 'plan-overview', params: { id: 'plan-123' } }
 
-  mockCreatePlanMutation.mutateAsync.mockReset()
+  mockCreatePlanWithItemsMutation.mutateAsync.mockReset()
   mockUpdatePlanMutation.mutateAsync.mockReset()
-  mockDeletePlanMutation.mutateAsync.mockReset()
-  mockSavePlanItemsMutation.mutateAsync.mockReset()
-  mockUpdatePlanItemsMutation.mutateAsync.mockReset()
-  mockDeletePlanItemsMutation.mutateAsync.mockReset()
+  mockUpdatePlanWithItemsMutation.mutateAsync.mockReset()
+  mockEmitNotificationEvent.mockReset().mockResolvedValue(true)
   mockPlanDetailQuery.refetch.mockReset()
   mockPlanDetailQuery.data = ref(null)
   mockPlanDetailQuery.isPending = ref(false)
@@ -188,19 +180,15 @@ describe('computed state', () => {
 })
 
 describe('CRUD flows', () => {
-  it('createNewPlanWithItems creates plan and saves items', async () => {
+  it('createNewPlanWithItems saves the plan and items atomically', async () => {
     const userStore = useUserStore()
     // @ts-expect-error - test state
     userStore.userProfile = mockUser('u1')
     // @ts-expect-error - test state
     userStore.preferences = { currency: 'USD' }
 
-    const createdPlan = { id: 'np' }
-    mockCreatePlanMutation.mutateAsync.mockResolvedValue(createdPlan)
-    mockSavePlanItemsMutation.mutateAsync.mockResolvedValue([])
-    mockPlanDetailQuery.refetch.mockResolvedValue({
-      data: { id: 'np', plan_items: [{ name: 'A' }] },
-    })
+    const createdPlan = { id: 'np', plan_items: [{ name: 'A' }] }
+    mockCreatePlanWithItemsMutation.mutateAsync.mockResolvedValue(createdPlan)
 
     const { createNewPlanWithItems } = usePlan()
     const result = await createNewPlanWithItems('tpl', 'Name', '2024-01-01', '2024-01-31', 100, [
@@ -208,19 +196,17 @@ describe('CRUD flows', () => {
     ])
 
     expect(result.success).toBe(true)
-    expect(mockCreatePlanMutation.mutateAsync).toHaveBeenCalledWith({
-      template_id: 'tpl',
-      name: 'Name',
-      start_date: '2024-01-01',
-      end_date: '2024-01-31',
-      total: 100,
-      owner_id: 'u1',
-      currency: 'USD',
-      status: 'active',
-    })
-    expect(mockSavePlanItemsMutation.mutateAsync).toHaveBeenCalledWith({
-      planId: 'np',
-      items: [{ name: 'A', category_id: 'c', amount: 1, is_fixed_payment: true, plan_id: 'np' }],
+    expect(mockCreatePlanWithItemsMutation.mutateAsync).toHaveBeenCalledWith({
+      plan: {
+        template_id: 'tpl',
+        name: 'Name',
+        start_date: '2024-01-01',
+        end_date: '2024-01-31',
+        total: 100,
+        currency: 'USD',
+        status: 'active',
+      },
+      items: [{ name: 'A', category_id: 'c', amount: 1, is_fixed_payment: true }],
     })
   })
 
@@ -231,14 +217,14 @@ describe('CRUD flows', () => {
     // @ts-expect-error - test state
     userStore.preferences = { currency: 'USD' }
 
-    mockCreatePlanMutation.mutateAsync.mockRejectedValue(new Error('fail'))
+    mockCreatePlanWithItemsMutation.mutateAsync.mockRejectedValue(new Error('fail'))
 
     const { createNewPlanWithItems } = usePlan()
     const result = await createNewPlanWithItems('tpl', 'Name', 's', 'e', 0, [])
     expect(result.success).toBe(false)
   })
 
-  it('updateExistingPlanWithItems updates, removes old items and saves new ones', async () => {
+  it('updateExistingPlanWithItems saves the plan and replacement item set atomically', async () => {
     mockRouteValue.value = { name: 'plan-overview', params: { id: 'plan-123' } }
 
     mockPlanDetailQuery.data.value = {
@@ -270,19 +256,14 @@ describe('CRUD flows', () => {
 
     const p = usePlan()
 
-    const updatedPlan = { id: 'plan-123' }
-    mockUpdatePlanMutation.mutateAsync.mockResolvedValue(updatedPlan)
-    mockDeletePlanItemsMutation.mutateAsync.mockResolvedValue(undefined)
-    mockSavePlanItemsMutation.mutateAsync.mockResolvedValue([])
-    mockPlanDetailQuery.refetch.mockResolvedValue({
-      data: { id: 'plan-123', plan_items: [{ name: 'A' }] },
-    })
+    const updatedPlan = { id: 'plan-123', plan_items: [{ name: 'A' }] }
+    mockUpdatePlanWithItemsMutation.mutateAsync.mockResolvedValue(updatedPlan)
 
     const result = await p.updateExistingPlanWithItems('N', 's2', 'e2', 2, [
       { name: 'A', category_id: 'c', amount: 2, is_fixed_payment: true },
     ])
     expect(result.success).toBe(true)
-    expect(mockUpdatePlanMutation.mutateAsync).toHaveBeenCalledWith({
+    expect(mockUpdatePlanWithItemsMutation.mutateAsync).toHaveBeenCalledWith({
       id: 'plan-123',
       updates: {
         name: 'N',
@@ -290,17 +271,27 @@ describe('CRUD flows', () => {
         end_date: 'e2',
         total: 2,
       },
+      items: [{ name: 'A', category_id: 'c', amount: 2, is_fixed_payment: true }],
     })
-    expect(mockDeletePlanItemsMutation.mutateAsync).toHaveBeenCalledWith({
-      planId: 'plan-123',
-      itemIds: ['i1'],
+    expect(mockEmitNotificationEvent).toHaveBeenCalledWith({
+      type: 'shared_plan_updated',
+      entityType: 'plan',
+      entityId: 'plan-123',
     })
-    expect(mockSavePlanItemsMutation.mutateAsync).toHaveBeenCalledWith({
-      planId: 'plan-123',
-      items: [
-        { name: 'A', category_id: 'c', amount: 2, is_fixed_payment: true, plan_id: 'plan-123' },
-      ],
-    })
+  })
+
+  it('does not notify when the atomic plan update fails', async () => {
+    mockPlanDetailQuery.data.value = {
+      id: 'plan-123',
+      owner_id: 'u',
+      plan_items: [],
+    }
+    mockUpdatePlanWithItemsMutation.mutateAsync.mockRejectedValue(new Error('fail'))
+
+    const result = await usePlan().updateExistingPlanWithItems('N', 's', 'e', 10, [])
+
+    expect(result.success).toBe(false)
+    expect(mockEmitNotificationEvent).not.toHaveBeenCalled()
   })
 
   it('updateExistingPlanWithItems returns false when route id missing or no current plan', async () => {

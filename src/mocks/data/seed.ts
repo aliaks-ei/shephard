@@ -1,5 +1,4 @@
 import type { Tables } from 'src/lib/supabase/types'
-import type { PlanExpenseSummary } from 'src/api/expenses'
 import type { TemplateSharedUser } from 'src/api/templates'
 import type { PlanSharedUser } from 'src/api/plans'
 import { defaultNotificationPushPreferences } from 'src/types/notifications'
@@ -1159,36 +1158,6 @@ export const pushSubscriptions: Tables<'push_subscriptions'>[] = [
 ]
 
 // ── RPC response data ──
-
-export function getPlanExpenseSummaryData(planId: string): PlanExpenseSummary[] {
-  const planExpenses = expenses.filter((e) => e.plan_id === planId)
-  const items = planItems.filter((i) => i.plan_id === planId)
-
-  const summaryMap = new Map<string, PlanExpenseSummary>()
-
-  for (const item of items) {
-    const existing = summaryMap.get(item.category_id)
-    const planned = (existing?.planned_amount ?? 0) + item.amount
-    summaryMap.set(item.category_id, {
-      category_id: item.category_id,
-      planned_amount: planned,
-      actual_amount: 0,
-      remaining_amount: planned,
-      expense_count: 0,
-    })
-  }
-
-  for (const exp of planExpenses) {
-    const existing = summaryMap.get(exp.category_id)
-    if (existing) {
-      existing.actual_amount += exp.amount
-      existing.remaining_amount = existing.planned_amount - existing.actual_amount
-      existing.expense_count += 1
-    }
-  }
-
-  return Array.from(summaryMap.values())
-}
 
 export function getPlanItemsWithTrackingData(
   planId: string,

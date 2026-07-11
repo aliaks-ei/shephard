@@ -297,14 +297,6 @@ export default defineConfig((ctx) => {
       workboxMode: 'InjectManifest', // 'GenerateSW' or 'InjectManifest'
       // swFilename: 'sw.js',
       // manifestFilename: 'manifest.json',
-      extendManifestJson(json) {
-        // PWA optimizations for better caching
-        json.start_url = '/'
-        json.display = 'standalone'
-        json.orientation = 'portrait-primary'
-        json.categories = ['finance', 'productivity']
-        json.lang = 'en'
-      },
       // useCredentialsForManifestTag: true,
       // injectPwaMetaTags: false,
       // extendPWACustomSWConf (esbuildConf) {},

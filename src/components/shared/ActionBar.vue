@@ -10,7 +10,7 @@
       :key="action.key"
       :label="action.label"
       :loading="action.loading"
-      :disabled="action.loading"
+      :disabled="action.loading || action.disabled"
       :color="action.color === 'negative' ? 'negative' : 'primary'"
       unelevated
       dense
@@ -27,8 +27,14 @@
       dense
       icon="eva-more-vertical-outline"
       color="grey-8"
+      aria-label="More actions"
+      aria-haspopup="menu"
+      :aria-expanded="String(showDesktopOverflow)"
+      aria-controls="desktop-overflow-actions"
     >
       <q-menu
+        id="desktop-overflow-actions"
+        v-model="showDesktopOverflow"
         auto-close
         anchor="bottom right"
         self="top right"
@@ -42,6 +48,7 @@
             v-for="action in overflowActions"
             :key="action.key"
             clickable
+            :disable="action.disabled"
             @click="handleActionClick(action)"
           >
             <!-- Icons are kept here because they help scanning dropdown lists -->
@@ -86,14 +93,14 @@
               :icon="action.icon"
               :loading="action.loading"
               :label="action.label"
-              :disabled="action.loading"
+              :disabled="action.loading || action.disabled"
               round
               size="sm"
               flat
               stack
               dense
               no-caps
-              class="full-width"
+              class="full-width mobile-touch-target"
               @click="handleActionClick(action)"
             />
           </div>
@@ -112,9 +119,14 @@
               stack
               dense
               no-caps
-              class="full-width"
+              class="full-width mobile-touch-target"
+              aria-haspopup="menu"
+              :aria-expanded="String(showMobileOverflow)"
+              aria-controls="mobile-overflow-actions"
             >
               <q-menu
+                id="mobile-overflow-actions"
+                v-model="showMobileOverflow"
                 auto-close
                 anchor="top right"
                 self="bottom right"
@@ -129,6 +141,7 @@
                     v-for="action in overflowActions"
                     :key="action.key"
                     clickable
+                    :disable="action.disabled"
                     @click="handleActionClick(action)"
                   >
                     <q-item-section
@@ -158,7 +171,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useQuasar } from 'quasar'
 
 export interface ActionBarAction {
@@ -167,6 +180,7 @@ export interface ActionBarAction {
   label: string
   color: string
   loading?: boolean
+  disabled?: boolean
   visible?: boolean
   priority?: 'primary' | 'secondary'
   handler: () => void | Promise<void>
@@ -182,6 +196,8 @@ const props = defineProps<{
 }>()
 
 const $q = useQuasar()
+const showDesktopOverflow = ref(false)
+const showMobileOverflow = ref(false)
 
 const isMobile = computed(() => $q.screen.lt.md)
 
@@ -205,6 +221,8 @@ const overflowActions = computed(() => {
 })
 
 async function handleActionClick(action: ActionBarAction): Promise<void> {
+  if (action.disabled) return
+
   emit('action-clicked', action.key)
   await action.handler()
 }

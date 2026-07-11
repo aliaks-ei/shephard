@@ -218,6 +218,137 @@ describe('plans API', () => {
     })
   })
 
+  describe('atomic plan transactions', () => {
+    it('creates a plan and its items through one RPC', async () => {
+      const createdPlan = {
+        ...mockPlan,
+        plan_items: [],
+      }
+      mockSupabase.rpc.mockResolvedValueOnce({ data: createdPlan, error: null })
+
+      const result = await plansApi.createPlanWithItems(
+        {
+          name: 'New Plan',
+          start_date: '2024-01-01',
+          end_date: '2024-01-31',
+          template_id: 'template-123',
+          status: 'active',
+        },
+        [
+          {
+            id: 'client-only-id',
+            name: 'Rent',
+            category_id: 'category-1',
+            amount: 500,
+            is_fixed_payment: true,
+          },
+        ],
+      )
+
+      expect(mockSupabase.rpc.mock.calls).toContainEqual([
+        'create_plan_with_items',
+        {
+          p_plan: {
+            name: 'New Plan',
+            start_date: '2024-01-01',
+            end_date: '2024-01-31',
+            template_id: 'template-123',
+            status: 'active',
+          },
+          p_items: [
+            {
+              name: 'Rent',
+              category_id: 'category-1',
+              amount: 500,
+              is_fixed_payment: true,
+            },
+          ],
+        },
+      ])
+      expect(result).toEqual(createdPlan)
+    })
+
+    it('keeps existing plan item IDs in the atomic update payload', async () => {
+      const updatedPlan = {
+        ...mockPlan,
+        name: 'Updated Plan',
+        plan_items: [],
+      }
+      mockSupabase.rpc.mockResolvedValueOnce({ data: updatedPlan, error: null })
+
+      await plansApi.updatePlanWithItems(mockPlanId, { name: 'Updated Plan' }, [
+        {
+          id: 'item-1',
+          name: 'Rent',
+          category_id: 'category-1',
+          amount: 600,
+          is_fixed_payment: true,
+        },
+      ])
+
+      expect(mockSupabase.rpc.mock.calls).toContainEqual([
+        'update_plan_with_items',
+        {
+          p_plan_id: mockPlanId,
+          p_plan: { name: 'Updated Plan' },
+          p_items: [
+            {
+              id: 'item-1',
+              name: 'Rent',
+              category_id: 'category-1',
+              amount: 600,
+              is_fixed_payment: true,
+            },
+          ],
+        },
+      ])
+    })
+
+    it('translates duplicate-name failures from the atomic RPC', async () => {
+      const rpcError = {
+        code: '23505',
+        message: 'duplicate key value violates unique constraint "unique_plan_name_per_user"',
+        details: '',
+        hint: '',
+      } as PostgrestError
+      const duplicateError = new Error('DUPLICATE_PLAN_NAME')
+      mockIsDuplicateNameError.mockReturnValue(true)
+      mockCreateDuplicateNameError.mockReturnValue(duplicateError)
+      mockSupabase.rpc.mockResolvedValueOnce({ data: null, error: rpcError })
+
+      await expect(
+        plansApi.createPlanWithItems(
+          {
+            name: 'Duplicate',
+            start_date: '2024-01-01',
+            end_date: '2024-01-31',
+            template_id: 'template-123',
+            status: 'active',
+          },
+          [],
+        ),
+      ).rejects.toEqual(duplicateError)
+
+      expect(mockIsDuplicateNameError).toHaveBeenCalledWith(rpcError, 'unique_plan_name_per_user')
+      expect(mockCreateDuplicateNameError).toHaveBeenCalledWith('PLAN')
+    })
+
+    it('preserves non-duplicate failures from the atomic RPC', async () => {
+      const rpcError = {
+        code: '42501',
+        message: 'permission denied',
+        details: '',
+        hint: '',
+      } as PostgrestError
+      mockIsDuplicateNameError.mockReturnValue(false)
+      mockSupabase.rpc.mockResolvedValueOnce({ data: null, error: rpcError })
+
+      await expect(
+        plansApi.updatePlanWithItems(mockPlanId, { name: 'Updated Plan' }, []),
+      ).rejects.toBe(rpcError)
+    })
+  })
+
   describe('updatePlan', () => {
     const mockPlanUpdate: plansApi.PlanUpdate = {
       name: 'Updated Plan',
@@ -382,7 +513,7 @@ describe('plans API', () => {
       })
     })
 
-    it('should return null if plan not found', async () => {
+    it('should throw a typed not-found error if plan does not exist', async () => {
       const mockQuery = {
         select: vi.fn().mockReturnThis(),
         match: vi.fn().mockReturnThis(),
@@ -395,9 +526,12 @@ describe('plans API', () => {
       mockFrom.mockReturnValue(mockQuery)
       mockSupabase.from = mockFrom
 
-      const result = await plansApi.getPlanWithItems(mockPlanId, mockUserId)
-
-      expect(result).toBeNull()
+      await expect(plansApi.getPlanWithItems(mockPlanId, mockUserId)).rejects.toMatchObject({
+        name: 'ENTITY_LOAD_ERROR',
+        kind: 'not-found',
+        entityType: 'plan',
+        entityId: mockPlanId,
+      })
     })
 
     it('should throw error if plan not shared with user', async () => {
@@ -427,9 +561,11 @@ describe('plans API', () => {
       mockFrom.mockReturnValueOnce(mockPlanQuery).mockReturnValueOnce(mockShareQuery)
       mockSupabase.from = mockFrom
 
-      await expect(plansApi.getPlanWithItems(mockPlanId, otherUserId)).rejects.toThrow(
-        'plan not found or access denied',
-      )
+      await expect(plansApi.getPlanWithItems(mockPlanId, otherUserId)).rejects.toMatchObject({
+        name: 'ENTITY_LOAD_ERROR',
+        kind: 'access-denied',
+        entityType: 'plan',
+      })
     })
 
     it('should throw error if plan query fails', async () => {
@@ -446,7 +582,11 @@ describe('plans API', () => {
       mockFrom.mockReturnValue(mockQuery)
       mockSupabase.from = mockFrom
 
-      await expect(plansApi.getPlanWithItems(mockPlanId, mockUserId)).rejects.toEqual(mockError)
+      await expect(plansApi.getPlanWithItems(mockPlanId, mockUserId)).rejects.toMatchObject({
+        name: 'ENTITY_LOAD_ERROR',
+        kind: 'transient',
+        originalError: mockError,
+      })
     })
   })
 

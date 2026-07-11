@@ -162,14 +162,9 @@ vi.mock('src/queries/sharing', () => ({
 }))
 
 vi.mock('src/queries/expenses', () => ({
-  useExpensesByPlanQuery: vi.fn(() => ({
-    expenses: ref([]),
-    totalExpensesAmount: ref(0),
-    sortedExpenses: ref([]),
-    expensesByCategory: ref({}),
-    getExpensesForPlanItem: vi.fn(() => []),
-    isPending: ref(false),
-    data: ref(null),
+  usePlanExpenseExport: vi.fn(() => ({
+    fetchAllExpenses: vi.fn().mockResolvedValue([]),
+    fetchSummary: vi.fn().mockResolvedValue([]),
   })),
   useExpenseSummaryQuery: vi.fn(() => ({
     expenseSummary: ref([]),
@@ -202,13 +197,14 @@ vi.mock('src/api', () => ({
 }))
 
 const mockUsePlan = {
-  currentPlan: ref<PlanWithItems | null>(null),
+  currentPlan: ref<(PlanWithItems & { permission_level?: string }) | null>(null),
   isPlanLoading: ref(false),
   isNewPlan: ref(false),
   isOwner: ref(true),
   isReadOnlyMode: ref(false),
   isEditMode: ref(true),
   canEditPlanData: ref(true),
+  canAddExpenses: ref(true),
   planCurrency: ref('USD'),
   createNewPlanWithItems: vi.fn(),
   updateExistingPlanWithItems: vi.fn(),
@@ -370,7 +366,7 @@ function createWrapper(
     canEditPlanData?: boolean
     hasItems?: boolean
     hasDuplicates?: boolean
-    currentPlan?: PlanWithItems | null
+    currentPlan?: (PlanWithItems & { permission_level?: string }) | null
   } = {},
 ) {
   const {
@@ -653,6 +649,17 @@ describe('PlanPage', () => {
     expect(shareButton.exists()).toBe(true)
   })
 
+  it('should not show share button for a collaborator with edit access', () => {
+    const { wrapper } = createWrapper({
+      isOwner: false,
+      isReadOnlyMode: false,
+      currentPlan: { ...mockPlan, owner_id: 'owner-2', permission_level: 'edit' },
+    })
+
+    expect(wrapper.find('[data-label="Share"]').exists()).toBe(false)
+    expect(wrapper.find('.share-plan-dialog-mock').exists()).toBe(false)
+  })
+
   it('should not show share button for new plan', () => {
     const { wrapper } = createWrapper({ isNewPlan: true })
 
@@ -760,5 +767,13 @@ describe('PlanPage', () => {
 
     expect(wrapper.text()).toContain('Overview')
     expect(wrapper.findComponent({ name: 'PlanOverviewTab' }).exists()).toBe(true)
+  })
+
+  it('does not mount inactive plan tab content', () => {
+    const { wrapper } = createWrapper({ currentPlan: mockPlan })
+
+    expect(wrapper.findComponent({ name: 'PlanOverviewTab' }).exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'PlanItemsTrackingTab' }).exists()).toBe(false)
+    expect(wrapper.findComponent({ name: 'PlanEditTab' }).exists()).toBe(false)
   })
 })

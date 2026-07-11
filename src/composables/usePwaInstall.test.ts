@@ -38,6 +38,18 @@ describe('usePwaInstall', () => {
       writable: true,
       value: undefined,
     })
+    Object.defineProperty(window.navigator, 'platform', {
+      writable: true,
+      value: 'Linux x86_64',
+    })
+    Object.defineProperty(window.navigator, 'userAgent', {
+      writable: true,
+      value: 'Mozilla/5.0',
+    })
+    Object.defineProperty(window.navigator, 'maxTouchPoints', {
+      writable: true,
+      value: 0,
+    })
   })
 
   describe('checkIfInstalled', () => {
@@ -67,6 +79,35 @@ describe('usePwaInstall', () => {
       await nextTick()
 
       expect(wrapper.vm.isInstalled).toBe(false)
+    })
+  })
+
+  describe('iOS install guidance', () => {
+    it('is available for mobile Safari when the app is not installed', async () => {
+      Object.defineProperty(window.navigator, 'userAgent', {
+        writable: true,
+        value:
+          'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 Version/17.4 Mobile/15E148 Safari/604.1',
+      })
+
+      const wrapper = mount(createTestComponent())
+      await nextTick()
+
+      expect(wrapper.vm.isIosInstallGuidanceAvailable).toBe(true)
+    })
+
+    it('does not offer iOS guidance after it was dismissed', async () => {
+      Object.defineProperty(window.navigator, 'userAgent', {
+        writable: true,
+        value:
+          'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 Version/17.4 Mobile/15E148 Safari/604.1',
+      })
+      localStorage.setItem('pwa-install-dismissed', String(Date.now()))
+
+      const wrapper = mount(createTestComponent())
+      await nextTick()
+
+      expect(wrapper.vm.isIosInstallGuidanceAvailable).toBe(false)
     })
   })
 
@@ -181,6 +222,7 @@ describe('usePwaInstall', () => {
       const result = await wrapper.vm.promptInstall()
 
       expect(result).toBe('dismissed')
+      expect(localStorage.getItem('pwa-install-dismissed')).toBeTruthy()
     })
 
     it('returns error when no deferred prompt exists', async () => {

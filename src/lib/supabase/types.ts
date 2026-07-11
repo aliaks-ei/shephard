@@ -525,12 +525,65 @@ export type Database = {
         Args: { days_to_keep?: number }
         Returns: number
       }
+      create_plan_with_items: {
+        Args: { p_items?: Json; p_plan: Json }
+        Returns: Json
+      }
+      create_template_with_items: {
+        Args: { p_items?: Json; p_template: Json }
+        Returns: Json
+      }
+      delete_expenses_and_reconcile: {
+        Args: { p_expense_ids: string[] }
+        Returns: number
+      }
+      get_recent_expenses_page: {
+        Args: {
+          p_category_id?: string | null
+          p_limit?: number
+          p_offset?: number
+          p_search?: string | null
+          p_sort_by?: string
+          p_user_id: string
+        }
+        Returns: {
+          amount: number
+          categories: Json
+          category_id: string
+          created_at: string
+          currency: string | null
+          expense_date: string
+          id: string
+          name: string
+          original_amount: number | null
+          original_currency: string | null
+          plan_id: string
+          plan_item_id: string | null
+          plans: Json
+          updated_at: string | null
+          user_id: string
+        }[]
+      }
       get_plan_expense_summary: {
         Args: { p_plan_id: string }
         Returns: {
           actual_amount: number
           category_id: string
           expense_count: number
+          planned_amount: number
+          remaining_amount: number
+        }[]
+      }
+      get_plan_overview_snapshots: {
+        Args: { p_plan_ids: string[] }
+        Returns: {
+          actual_amount: number
+          category_color: string
+          category_icon: string
+          category_id: string
+          category_name: string
+          expense_count: number
+          plan_id: string
           planned_amount: number
           remaining_amount: number
         }[]
@@ -627,6 +680,14 @@ export type Database = {
       user_owns_plan: {
         Args: { plan_id: string; user_id: string }
         Returns: boolean
+      }
+      update_plan_with_items: {
+        Args: { p_items?: Json; p_plan: Json; p_plan_id: string }
+        Returns: Json
+      }
+      update_template_with_items: {
+        Args: { p_items?: Json; p_template: Json; p_template_id: string }
+        Returns: Json
       }
     }
     Enums: {

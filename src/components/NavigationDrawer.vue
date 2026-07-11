@@ -27,6 +27,10 @@
         full-width
         align="left"
         class="full-width q-pa-sm"
+        aria-label="Open account menu"
+        aria-haspopup="menu"
+        :aria-expanded="String(showAccountMenu)"
+        aria-controls="account-menu"
       >
         <UserAvatar
           size="36px"
@@ -46,6 +50,8 @@
         />
 
         <q-menu
+          id="account-menu"
+          v-model="showAccountMenu"
           anchor="top left"
           self="top right"
           :offset="[4, 0]"
@@ -135,7 +141,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from 'src/stores/user'
 import { usePreferencesStore } from 'src/stores/preferences'
@@ -146,6 +152,7 @@ const router = useRouter()
 const userStore = useUserStore()
 const preferencesStore = usePreferencesStore()
 const { isActive } = useRouteActive()
+const showAccountMenu = ref(false)
 
 defineProps<{
   items: {

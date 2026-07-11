@@ -14,7 +14,7 @@
               :icon="slot1Action.icon"
               :label="slot1Action.label"
               :loading="slot1Action.loading"
-              :disabled="slot1Action.loading"
+              :disabled="slot1Action.loading || slot1Action.disabled"
               size="sm"
               flat
               stack
@@ -35,7 +35,7 @@
               :icon="slot2Action.icon"
               :label="slot2Action.label"
               :loading="slot2Action.loading"
-              :disabled="slot2Action.loading"
+              :disabled="slot2Action.loading || slot2Action.disabled"
               size="sm"
               flat
               stack
@@ -57,7 +57,8 @@
               size="md"
               class="mobile-action-add-btn glass-fab-btn liquid-glass-animated"
               :loading="addExpenseAction?.loading"
-              :disable="addExpenseAction?.loading"
+              :disable="addExpenseAction?.loading || addExpenseAction?.disabled || isOffline"
+              aria-label="Add expense"
               @click="void handleAddExpenseClick()"
             />
           </div>
@@ -68,7 +69,7 @@
               :icon="slot4Action.icon"
               :label="slot4Action.label"
               :loading="slot4Action.loading"
-              :disabled="slot4Action.loading"
+              :disabled="slot4Action.loading || slot4Action.disabled"
               size="sm"
               flat
               stack
@@ -94,8 +95,13 @@
               dense
               no-caps
               class="full-width mobile-action-btn liquid-glass-animated"
+              aria-haspopup="menu"
+              :aria-expanded="String(showMoreMenu)"
+              aria-controls="detail-mobile-actions-menu"
             >
               <q-menu
+                id="detail-mobile-actions-menu"
+                v-model="showMoreMenu"
                 auto-close
                 anchor="top right"
                 self="bottom right"
@@ -109,6 +115,7 @@
                     v-for="action in moreMenuActions"
                     :key="action.key"
                     clickable
+                    :disable="action.disabled"
                     @click="void handleActionClick(action)"
                   >
                     <q-item-section
@@ -135,7 +142,7 @@
               :icon="slot5Action.icon"
               :label="slot5Action.label"
               :loading="slot5Action.loading"
-              :disabled="slot5Action.loading"
+              :disabled="slot5Action.loading || slot5Action.disabled"
               size="sm"
               flat
               stack
@@ -169,6 +176,7 @@ import { useRoute, useRouter } from 'vue-router'
 import type { ActionBarAction } from './ActionBar.vue'
 import { usePreferencesStore } from 'src/stores/preferences'
 import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
+import { useNetworkStatus } from 'src/composables/useNetworkStatus'
 
 interface ToolbarAction extends ActionBarAction {
   fallback?: boolean
@@ -186,9 +194,11 @@ const props = defineProps<{
 const route = useRoute()
 const router = useRouter()
 const preferencesStore = usePreferencesStore()
+const { isOffline } = useNetworkStatus()
 
 const hasOpenedExpenseDialog = ref(false)
 const showExpenseDialog = ref(false)
+const showMoreMenu = ref(false)
 
 const visibleActions = computed(() => {
   return props.actions.filter((action) => action.visible !== false)
@@ -392,11 +402,15 @@ const hasVisibleToolbar = computed(() => {
 })
 
 async function handleActionClick(action: ToolbarAction): Promise<void> {
+  if (action.disabled) return
+
   emit('action-clicked', action.key)
   await action.handler()
 }
 
 async function handleAddExpenseClick(): Promise<void> {
+  if (isOffline.value || addExpenseAction.value?.disabled) return
+
   if (addExpenseAction.value) {
     await handleActionClick(addExpenseAction.value)
     return
@@ -433,6 +447,12 @@ function getMobileActionButtonClasses(
     background-color 0.2s ease,
     box-shadow 0.2s ease,
     color 0.2s ease;
+  min-height: 44px;
+}
+
+.mobile-action-add-btn {
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .mobile-slot-placeholder {

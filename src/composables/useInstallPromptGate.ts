@@ -1,6 +1,8 @@
-import { useStorage } from '@vueuse/core'
+import { computed } from 'vue'
+import { useSessionStorage, useStorage } from '@vueuse/core'
 
 const HAS_SAVED_EXPENSE_KEY = 'shephard-has-saved-expense'
+const INSTALL_PROMPT_SHOWN_SESSION_KEY = 'shephard-install-prompt-shown'
 
 /**
  * Gates the PWA install promotion behind the first successfully saved expense,
@@ -8,13 +10,27 @@ const HAS_SAVED_EXPENSE_KEY = 'shephard-has-saved-expense'
  */
 export function useInstallPromptGate() {
   const hasSavedExpense = useStorage(HAS_SAVED_EXPENSE_KEY, false)
+  const hasShownInstallPromptThisSession = useSessionStorage(
+    INSTALL_PROMPT_SHOWN_SESSION_KEY,
+    false,
+  )
+  const canShowInstallPrompt = computed(
+    () => hasSavedExpense.value && !hasShownInstallPromptThisSession.value,
+  )
 
   function markExpenseSaved() {
     hasSavedExpense.value = true
   }
 
+  function markInstallPromptShown() {
+    hasShownInstallPromptThisSession.value = true
+  }
+
   return {
+    canShowInstallPrompt,
     hasSavedExpense,
+    hasShownInstallPromptThisSession,
     markExpenseSaved,
+    markInstallPromptShown,
   }
 }

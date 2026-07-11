@@ -151,6 +151,7 @@ it('renders desktop dialog layout and footer slot', () => {
 
   expect(wrapper.find('.q-dialog-stub').attributes('data-position')).toBe('standard')
   expect(wrapper.find('.q-dialog-stub').attributes('data-persistent')).toBe('true')
+  expect(wrapper.find('.q-dialog-stub').attributes('data-pwa-update-blocker')).toBe('dialog')
   expect(wrapper.find('.desktop-prefix').exists()).toBe(true)
   expect(wrapper.find('.desktop-footer-slot').exists()).toBe(true)
   expect(wrapper.find('.dialog-shell__mobile-primary').exists()).toBe(false)

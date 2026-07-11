@@ -46,6 +46,7 @@ it('calls resetEmailState on mount', () => {
 it('renders form, email input, and submit button', () => {
   const { wrapper } = mountComponent()
   expect(wrapper.find('form').exists()).toBe(true)
+  expect(wrapper.find('form').attributes('data-pwa-update-blocker')).toBe('form')
   expect(wrapper.find('input[type="email"]').exists()).toBe(true)
   expect(wrapper.find('button[type="submit"]').exists()).toBe(true)
 })
@@ -77,5 +78,5 @@ it('calls signInWithOtp with email on submit', async () => {
   await wrapper.find('form').trigger('submit')
   await flushPromises()
 
-  expect(userStore.auth.signInWithOtp).toHaveBeenCalledWith('test@example.com')
+  expect(userStore.auth.signInWithOtp).toHaveBeenCalledWith('test@example.com', '/')
 })

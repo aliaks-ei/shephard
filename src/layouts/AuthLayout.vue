@@ -1,5 +1,5 @@
 <template>
-  <div class="row fit">
+  <div class="auth-layout row">
     <!-- Brand Panel (desktop only) -->
     <div class="col-6 gt-sm column items-center flex justify-center q-pa-xl bg-primary text-white">
       <div class="text-center flex column items-center">
@@ -47,7 +47,7 @@
     </div>
 
     <!-- Form Panel -->
-    <div class="col-12 col-md-6 column items-center justify-center q-pa-md window-height">
+    <div class="col-12 col-md-6 column items-center justify-center q-pa-md">
       <router-view />
     </div>
   </div>
@@ -60,3 +60,10 @@ const features = [
   { icon: 'eva-camera-outline', text: 'AI-powered receipt scanning' },
 ]
 </script>
+
+<style lang="scss" scoped>
+.auth-layout {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+</style>

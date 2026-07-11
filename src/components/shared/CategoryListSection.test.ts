@@ -111,6 +111,23 @@ describe('CategoryListSection', () => {
     expect(wrapper.emitted('toggle-expand')).toBeTruthy()
   })
 
+  it('should expose disclosure state and the controlled category list', () => {
+    const wrapper = renderComponent({
+      headerIcon: 'eva-list-outline',
+      headerTitle: 'My Items',
+      hasCategories: true,
+      allExpanded: true,
+      contentId: 'my-item-categories',
+    })
+
+    const button = wrapper.find('button')
+    expect(button.attributes('aria-label')).toBe('Collapse all categories')
+    expect(button.attributes('aria-expanded')).toBe('true')
+    expect(button.attributes('aria-pressed')).toBe('true')
+    expect(button.attributes('aria-controls')).toBe('my-item-categories')
+    expect(wrapper.find('#my-item-categories').exists()).toBe(true)
+  })
+
   it('should render duplicate warning banner at top when hasDuplicates is true', () => {
     const wrapper = renderComponent({
       headerIcon: 'eva-list-outline',

@@ -1,5 +1,7 @@
 <template>
   <q-menu
+    :id="id"
+    v-model="modelValue"
     auto-close
     anchor="bottom right"
     self="top right"
@@ -24,7 +26,7 @@
         </q-item-section>
       </q-item>
       <q-item
-        v-if="canEdit"
+        v-if="canShare"
         clickable
         @click="emit('share')"
       >
@@ -88,6 +90,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+const modelValue = defineModel<boolean>({ default: false })
+
 const emit = defineEmits<{
   (e: 'export'): void
   (e: 'share'): void
@@ -97,7 +101,9 @@ const emit = defineEmits<{
 
 const props = defineProps<{
   canEdit: boolean
+  canShare: boolean
   planStatus: 'pending' | 'active' | 'completed' | 'cancelled'
+  id?: string
 }>()
 
 const canDelete = computed(() => {

@@ -1,9 +1,10 @@
 {
-  "name": "Shephard - Smart Expenses Wallet",
+  "name": "Shephard",
   "short_name": "Shephard",
   "id": "/",
-  "description": "Smart expenses wallet to manage your finances efficiently",
-  "orientation": "portrait",
+  "description": "Smart budget management and expense tracking",
+  "lang": "en",
+  "orientation": "portrait-primary",
   "background_color": "#f7f7f7",
   "theme_color": "#00919a",
   "display": "standalone",
@@ -12,34 +13,81 @@
   "categories": ["finance", "productivity"],
   "icons": [
     {
-      "src": "icons/icon-128x128.png",
+      "src": "/icons/icon-128x128.png",
       "sizes": "128x128",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icons/icon-192x192.png",
+      "src": "/icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icons/icon-256x256.png",
+      "src": "/icons/icon-256x256.png",
       "sizes": "256x256",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icons/icon-384x384.png",
+      "src": "/icons/icon-384x384.png",
       "sizes": "384x384",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icons/icon-512x512.png",
+      "src": "/icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Home",
+      "short_name": "Home",
+      "description": "Open your budget overview",
+      "url": "/",
+      "icons": [
+        {
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Plans",
+      "short_name": "Plans",
+      "description": "Open your budget plans",
+      "url": "/plans",
+      "icons": [
+        {
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Activity",
+      "short_name": "Activity",
+      "description": "Open your expense activity",
+      "url": "/expenses",
+      "icons": [
+        {
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }

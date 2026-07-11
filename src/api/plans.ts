@@ -1,16 +1,34 @@
-import type { Tables, TablesInsert, TablesUpdate } from 'src/lib/supabase/types'
+import type { PostgrestError } from '@supabase/supabase-js'
+import type { Json, Tables, TablesInsert, TablesUpdate } from 'src/lib/supabase/types'
+import { createDuplicateNameError, isDuplicateNameError } from 'src/utils/database'
 import { BaseAPIService } from './base'
 import { searchUsersByEmail } from './user'
 
 export type Plan = Tables<'plans'>
 export type PlanInsert = TablesInsert<'plans'>
 export type PlanUpdate = TablesUpdate<'plans'>
+export type PlanTransactionInsert = Omit<
+  PlanInsert,
+  'id' | 'owner_id' | 'created_at' | 'updated_at'
+>
+export type PlanTransactionUpdate = Pick<
+  PlanUpdate,
+  'name' | 'start_date' | 'end_date' | 'currency' | 'total' | 'status'
+>
 export type PlanShare = Tables<'plan_shares'>
 export type PlanShareInsert = TablesInsert<'plan_shares'>
 export type PlanItem = Tables<'plan_items'>
 export type PlanItemInsert = TablesInsert<'plan_items'>
 export type PlanWithItems = Plan & {
   plan_items: PlanItem[]
+}
+
+export type PlanItemTransactionInput = {
+  id?: string
+  name: string
+  category_id: string
+  amount: number
+  is_fixed_payment: boolean
 }
 
 export type PlanWithPermission = Plan & {
@@ -54,6 +72,47 @@ export async function updatePlan(id: string, updates: PlanUpdate): Promise<Plan>
   return planService.update(id, updates)
 }
 
+function toJson(value: unknown): Json {
+  return JSON.parse(JSON.stringify(value)) as Json
+}
+
+function throwPlanTransactionError(error: PostgrestError): never {
+  if (isDuplicateNameError(error, 'unique_plan_name_per_user')) {
+    throw createDuplicateNameError('PLAN')
+  }
+
+  throw error
+}
+
+export async function createPlanWithItems(
+  plan: PlanTransactionInsert,
+  items: PlanItemTransactionInput[],
+): Promise<PlanWithItems> {
+  const itemPayload = items.map(({ id: _id, ...item }) => item)
+  const { data, error } = await planService.supabase.rpc('create_plan_with_items', {
+    p_plan: toJson(plan),
+    p_items: toJson(itemPayload),
+  })
+
+  if (error) throwPlanTransactionError(error)
+  return data as unknown as PlanWithItems
+}
+
+export async function updatePlanWithItems(
+  planId: string,
+  updates: PlanTransactionUpdate,
+  items: PlanItemTransactionInput[],
+): Promise<PlanWithItems> {
+  const { data, error } = await planService.supabase.rpc('update_plan_with_items', {
+    p_plan_id: planId,
+    p_plan: toJson(updates),
+    p_items: toJson(items),
+  })
+
+  if (error) throwPlanTransactionError(error)
+  return data as unknown as PlanWithItems
+}
+
 export async function deletePlan(id: string): Promise<void> {
   return planService.delete(id)
 }
@@ -61,7 +120,7 @@ export async function deletePlan(id: string): Promise<void> {
 export async function getPlanWithItems(
   planId: string,
   userId: string,
-): Promise<(PlanWithItems & { permission_level?: string }) | null> {
+): Promise<PlanWithItems & { permission_level?: string }> {
   return planService.getEntityWithItems(planId, userId, 'plan_items!plan_items_plan_id_fkey')
 }
 
