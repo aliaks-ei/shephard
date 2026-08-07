@@ -423,11 +423,11 @@ describe('TemplatePage', () => {
     expect(wrapper.exists()).toBe(true)
   })
 
-  it('should call loadTemplate on mount', async () => {
+  it('should rely on the enabled detail query on mount', async () => {
     createWrapper()
     await flushPromises()
 
-    expect(mockUseTemplate.loadTemplate).toHaveBeenCalledOnce()
+    expect(mockUseTemplate.loadTemplate).not.toHaveBeenCalled()
   })
 
   it('should show loading skeleton when template is loading', () => {
@@ -684,7 +684,7 @@ describe('TemplatePage', () => {
     createWrapper()
     await flushPromises()
 
-    expect(mockUseTemplate.loadTemplate).toHaveBeenCalledOnce()
+    expect(mockUseTemplate.loadTemplate).not.toHaveBeenCalled()
     expect(mockUseTemplateItems.loadTemplateItems).toHaveBeenCalledWith(mockTemplate)
   })
 

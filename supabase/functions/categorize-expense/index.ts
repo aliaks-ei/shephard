@@ -34,7 +34,6 @@ const clampUnitInterval = (value: number): number => Math.min(1, Math.max(0, val
 const categorySuggestionSchema = z.object({
   categoryIndex: z.coerce.number().int().min(1),
   confidence: z.coerce.number().finite().transform(clampUnitInterval),
-  reasoning: z.string().trim().min(1).max(200),
 })
 
 type CategorizeRequest = {
@@ -246,6 +245,7 @@ Deno.serve(async (req) => {
             categoryName: exactMatch.name,
             confidence: 0.98,
             reasoning: 'Matched the expense name to an existing planned item.',
+            source: 'plan_item',
           },
         }),
         { headers: corsHeaders },
@@ -263,6 +263,7 @@ Deno.serve(async (req) => {
             categoryName: memoryMatch.name,
             confidence: 0.96,
             reasoning: 'Matched the expense name to a previous user choice.',
+            source: 'previous_choice',
           },
         }),
         { headers: corsHeaders },
@@ -274,7 +275,7 @@ Deno.serve(async (req) => {
     const categorySuggestionJsonSchema = {
       type: 'object',
       additionalProperties: false,
-      required: ['categoryIndex', 'confidence', 'reasoning'],
+      required: ['categoryIndex', 'confidence'],
       properties: {
         categoryIndex: {
           type: 'integer',
@@ -286,65 +287,67 @@ Deno.serve(async (req) => {
           minimum: 0,
           maximum: 1,
         },
-        reasoning: {
-          type: 'string',
-          minLength: 1,
-          maxLength: 200,
-        },
       },
     }
 
-    const response = await createResponseWithRetry({
-      maxAttempts: 1,
-      timeoutMs: OPENAI_TIMEOUT_MS,
-      operation: () =>
-        openai.responses.create({
-          model: 'gpt-5-nano',
-          instructions,
-          input: trimmedExpenseName,
-          reasoning: { effort: 'minimal' },
-          max_output_tokens: 120,
-          store: false,
-          text: {
-            format: {
-              type: 'json_schema',
-              name: 'expense_category_suggestion',
-              schema: categorySuggestionJsonSchema,
-              strict: true,
+    let response
+    try {
+      response = await createResponseWithRetry({
+        maxAttempts: 1,
+        timeoutMs: OPENAI_TIMEOUT_MS,
+        operation: () =>
+          openai.responses.create({
+            model: 'gpt-5.6-luna',
+            instructions,
+            input: trimmedExpenseName,
+            reasoning: { effort: 'none' },
+            max_output_tokens: 64,
+            store: false,
+            text: {
+              format: {
+                type: 'json_schema',
+                name: 'expense_category_suggestion',
+                schema: categorySuggestionJsonSchema,
+                strict: true,
+              },
+              verbosity: 'low',
             },
-            verbosity: 'low',
-          },
-        }),
-    })
-
-    const fallbackSuggestion = {
-      categoryIndex: 1,
-      confidence: 0,
-      reasoning: 'No reliable category suggestion returned by AI',
+          }),
+      })
+    } catch (error) {
+      console.error('Category model request failed:', error)
+      return new Response(JSON.stringify({ success: true, data: null }), { headers: corsHeaders })
     }
+
     const parsedModelOutput = parseModelJsonObject(response.output_text)
     const validatedSuggestion = categorySuggestionSchema.safeParse(parsedModelOutput)
-    const suggestion = validatedSuggestion.success ? validatedSuggestion.data : fallbackSuggestion
+
+    if (!validatedSuggestion.success) {
+      return new Response(JSON.stringify({ success: true, data: null }), { headers: corsHeaders })
+    }
+
+    const suggestion = validatedSuggestion.data
 
     const hasValidCategoryIndex =
       suggestion.categoryIndex >= 1 && suggestion.categoryIndex <= categories.length
     const matchedCategory = hasValidCategoryIndex ? categories[suggestion.categoryIndex - 1] : null
 
-    const categoryId = matchedCategory?.id ?? categories[0].id
-    const categoryName = matchedCategory?.name ?? categories[0].name
-    const confidence = matchedCategory ? suggestion.confidence : 0
-    const reasoning = matchedCategory
-      ? suggestion.reasoning
-      : 'No strong match found, suggesting default category'
+    if (!matchedCategory) {
+      return new Response(JSON.stringify({ success: true, data: null }), { headers: corsHeaders })
+    }
 
     return new Response(
       JSON.stringify({
         success: true,
         data: {
-          categoryId,
-          categoryName,
-          confidence,
-          reasoning,
+          categoryId: matchedCategory.id,
+          categoryName: matchedCategory.name,
+          confidence: suggestion.confidence,
+          reasoning:
+            suggestion.confidence > 0.65
+              ? 'Matched by category detection.'
+              : 'Not confident enough to select automatically.',
+          source: 'model',
         },
       }),
       { headers: corsHeaders },

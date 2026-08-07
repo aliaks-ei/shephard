@@ -19,21 +19,11 @@ import {
   type TemplateItemTransactionInput,
   getEntityLoadErrorKind,
 } from 'src/api'
-import { useUserStore } from 'src/stores/user'
 import { queryKeys } from './query-keys'
 import { createSpecificErrorHandler, createMutationErrorHandler } from './query-error-handler'
 
-function invalidateTemplateQueries(
-  queryClient: ReturnType<typeof useQueryClient>,
-  templateId?: string,
-) {
-  const userStore = useUserStore()
-  const userId = userStore.userProfile?.id ?? ''
-
-  queryClient.invalidateQueries({ queryKey: queryKeys.templates.list(userId) })
-  if (templateId) {
-    queryClient.invalidateQueries({ queryKey: queryKeys.templates.detail(templateId, userId) })
-  }
+function invalidateTemplateQueries(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({ queryKey: queryKeys.templates.all })
 }
 
 export function useTemplatesQuery(userId: MaybeRefOrGetter<string | undefined>) {
@@ -108,8 +98,8 @@ export function useCreateTemplateWithItemsMutation() {
       template: TemplateTransactionInsert
       items: TemplateItemTransactionInput[]
     }) => createTemplateWithItems(vars.template, vars.items),
-    onSuccess: (template) => {
-      invalidateTemplateQueries(queryClient, template.id)
+    onSuccess: () => {
+      invalidateTemplateQueries(queryClient)
     },
     onError: createSpecificErrorHandler(
       [
@@ -129,8 +119,8 @@ export function useUpdateTemplateMutation() {
   return useMutation({
     mutationFn: (vars: { id: string; updates: TemplateUpdate }) =>
       updateTemplate(vars.id, vars.updates),
-    onSuccess: (_data, vars) => {
-      invalidateTemplateQueries(queryClient, vars.id)
+    onSuccess: () => {
+      invalidateTemplateQueries(queryClient)
     },
     onError: createSpecificErrorHandler(
       [
@@ -153,8 +143,8 @@ export function useUpdateTemplateWithItemsMutation() {
       updates: TemplateTransactionUpdate
       items: TemplateItemTransactionInput[]
     }) => updateTemplateWithItems(vars.id, vars.updates, vars.items),
-    onSuccess: (template) => {
-      invalidateTemplateQueries(queryClient, template.id)
+    onSuccess: () => {
+      invalidateTemplateQueries(queryClient)
     },
     onError: createSpecificErrorHandler(
       [
@@ -186,8 +176,8 @@ export function useCreateTemplateItemsMutation() {
   return useMutation({
     mutationFn: (vars: { templateId: string; items: TemplateItemInsert[] }) =>
       createTemplateItems(vars.items),
-    onSuccess: (_data, vars) => {
-      invalidateTemplateQueries(queryClient, vars.templateId)
+    onSuccess: () => {
+      invalidateTemplateQueries(queryClient)
     },
     onError: createMutationErrorHandler('TEMPLATE_ITEMS.CREATE_FAILED'),
   })
@@ -198,8 +188,8 @@ export function useDeleteTemplateItemsMutation() {
 
   return useMutation({
     mutationFn: (vars: { templateId: string; ids: string[] }) => deleteTemplateItems(vars.ids),
-    onSuccess: (_data, vars) => {
-      invalidateTemplateQueries(queryClient, vars.templateId)
+    onSuccess: () => {
+      invalidateTemplateQueries(queryClient)
     },
     onError: createMutationErrorHandler('TEMPLATE_ITEMS.DELETE_FAILED'),
   })

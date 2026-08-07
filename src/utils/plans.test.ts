@@ -67,7 +67,7 @@ describe('plans utils', () => {
       currency: 'USD',
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
-      total: null,
+      total: 0,
       template_id: '',
     })
 
@@ -118,7 +118,7 @@ describe('plans utils', () => {
       currency: 'USD',
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
-      total: null,
+      total: 0,
       template_id: '',
       ...(permissionLevel !== undefined && { permission_level: permissionLevel }),
     })
@@ -181,7 +181,7 @@ describe('plans utils', () => {
         currency: 'USD',
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z',
-        total: null,
+        total: 0,
         template_id: '',
       }
 
@@ -234,7 +234,7 @@ describe('plans utils', () => {
       currency: 'USD',
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
-      total: null,
+      total: 0,
       template_id: '',
     })
 
@@ -270,7 +270,7 @@ describe('plans utils', () => {
       currency: 'USD',
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
-      total: null,
+      total: 0,
       template_id: '',
     })
 
@@ -310,7 +310,7 @@ describe('plans utils', () => {
       currency: 'USD',
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
-      total: null,
+      total: 0,
       template_id: '',
     })
 
@@ -370,7 +370,7 @@ describe('plans utils', () => {
       currency: 'USD',
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
-      total: null,
+      total: 0,
       template_id: '',
     })
 
@@ -410,7 +410,7 @@ describe('plans utils', () => {
       currency: 'USD',
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
-      total: null,
+      total: 0,
       template_id: '',
     })
 

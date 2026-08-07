@@ -32,33 +32,15 @@ export function useItemCompletion(planId: MaybeRefOrGetter<string | null>) {
         const day = String(today.getDate()).padStart(2, '0')
         const expenseDate = `${year}-${month}-${day}`
 
-        await completionMutation.mutateAsync({
-          itemId: item.id,
-          isCompleted: true,
-          planId: currentPlanId,
-        })
-
-        try {
-          await createExpenseMutation.mutateAsync({
+        await createExpenseMutation.mutateAsync({
             plan_id: currentPlanId,
             category_id: item.category_id,
             name: item.name,
             amount: item.amount,
             expense_date: expenseDate,
             plan_item_id: item.id,
+            completePlanItem: true,
           })
-        } catch (error) {
-          try {
-            await completionMutation.mutateAsync({
-              itemId: item.id,
-              isCompleted: false,
-              planId: currentPlanId,
-            })
-          } catch {
-            // Best-effort rollback to reduce partial updates.
-          }
-          throw error
-        }
       } else {
         await completionMutation.mutateAsync({
           itemId: item.id,

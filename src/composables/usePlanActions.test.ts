@@ -36,7 +36,7 @@ describe('usePlanActions', () => {
       owner_id: 'user-1',
       template_id: 'template-1',
       currency: 'USD',
-      total: null,
+      total: 0,
       created_at: '2024-01-01',
       updated_at: '2024-01-01',
       plan_items: [],

@@ -25,8 +25,8 @@
           style="display: inline-block"
         >
           <CategoryIcon
-            :color="category.color"
-            :icon="category.icon"
+            :color="category.color || 'grey'"
+            :icon="category.icon || 'pricetags-outline'"
             size="lg"
           />
         </div>

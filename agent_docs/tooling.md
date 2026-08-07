@@ -21,6 +21,7 @@ Source of truth: `package.json`
 - `npm run type-check`: `vue-tsc --noEmit`
 - `npm run test:unit`: Vitest watch mode
 - `npm run test:unit:ci`: single-run Vitest
+- `npm run test:edge`: Deno tests for Edge Function helpers
 
 Changed-file helpers also exist:
 
@@ -42,6 +43,7 @@ Run the smallest relevant checks for the change.
 - Type-level or composable changes: `npm run type-check`
 - Broad app behavior changes: `npm run lint` and `npm run test:unit:ci`
 - Build/config/perf changes: `npm run build`
+- Edge Function changes: `npm run test:edge`, then deploy and verify the live function version
 
 ## Environment
 
@@ -73,6 +75,8 @@ Important behavior already configured there:
 - Checker plugin for TypeScript and ESLint in dev
 - PWA runtime caching rules for Supabase API/auth, static assets, fonts, and images
 - Capacitor support enabled
+- Node 22 is the minimum local/CI runtime.
+- HEIC source images are excluded from the Workbox precache; conversion remains runtime-only.
 
 Treat `quasar.config.ts` as the place to change app-level runtime/build behavior, not individual feature files.
 
@@ -97,7 +101,7 @@ Prefer fixing formatting and linting with the configured tools instead of adding
 
 Important limitation:
 
-- Root `npm run lint` and `npm run type-check` do not validate Deno edge functions under `supabase/functions/`. If you edit those files, use Supabase/Deno-aware validation as part of your own workflow.
+- Root `npm run lint` and `npm run type-check` do not validate Deno edge functions under `supabase/functions/`. Use `npm run test:edge` for the existing Deno suite and deploy validation for function entrypoints.
 
 Pre-commit behavior is intentionally light:
 
@@ -155,6 +159,8 @@ Important nuance:
 - Edge functions run in Deno and are operationally separate from the frontend build/lint setup.
 - Frontend docs and tests should not assume ESLint coverage or Node runtime conventions apply there.
 - `supabase/config.toml` does not currently enumerate every function directory in the repo, so review it when adding or changing edge functions.
+- Each function pins its import-map dependencies; do not replace exact versions with floating major ranges.
+- `emit-notification-event` claims durable outbox rows and schedules web-push delivery with `EdgeRuntime.waitUntil`.
 
 ## PWA And Mobile Wrapper
 

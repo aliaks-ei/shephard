@@ -43,6 +43,7 @@ describe('AI API', () => {
           expenseName: 'Grocery shopping',
           planId: 'plan-1',
         }),
+        region: 'eu-central-1',
       })
       expect(result).toEqual(mockResponse.data)
     })
@@ -71,8 +72,18 @@ describe('AI API', () => {
           expenseName: 'Random expense',
           planId: undefined,
         }),
+        region: 'eu-central-1',
       })
       expect(result).toEqual(mockResponse.data)
+    })
+
+    it('should return null when the optional suggestion is unavailable', async () => {
+      mockInvoke.mockResolvedValue({
+        data: { success: true, data: null },
+        error: null,
+      } as unknown as Awaited<ReturnType<typeof mockInvoke>>)
+
+      await expect(suggestExpenseCategory('Unknown merchant', 'plan-1')).resolves.toBeNull()
     })
 
     it('should throw error when API call fails', async () => {

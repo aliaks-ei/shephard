@@ -230,7 +230,7 @@ import BannerContainer from 'src/components/shared/BannerContainer.vue'
 import ActionBar from 'src/components/shared/ActionBar.vue'
 import DetailMobileActionBar from 'src/components/shared/DetailMobileActionBar.vue'
 import QueryErrorState from 'src/components/shared/QueryErrorState.vue'
-import type { ActionBarAction } from 'src/components/shared/ActionBar.vue'
+import type { ActionBarAction } from 'src/types'
 import type { QueryErrorStateKind } from 'src/components/shared/QueryErrorState.vue'
 
 export interface BannerConfig {

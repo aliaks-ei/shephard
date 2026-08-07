@@ -2,27 +2,23 @@ import { ref, computed, type Ref } from 'vue'
 import {
   usePlansQuery,
   usePlanItemsQuery,
-  useUpdatePlanItemCompletionMutation,
-  useUpdatePlanItemsCompletionMutation,
 } from 'src/queries/plans'
 import { useCategoriesQuery } from 'src/queries/categories'
 import {
   useExpenseSummaryQuery,
   useCreateExpenseMutation,
   useCreateExpensesBatchMutation,
-  useDeleteExpenseMutation,
-  useDeleteExpensesBatchMutation,
   useLastExpenseForPlanQuery,
 } from 'src/queries/expenses'
 import { useUserStore } from 'src/stores/user'
 import { useBanner } from 'src/composables/useBanner'
-import { useNotificationEvents } from 'src/composables/useNotificationEvents'
+import { useInstallPromptGate } from 'src/composables/useInstallPromptGate'
 import { getPlanStatus } from 'src/utils/plans'
 import { convertCurrency } from 'src/api/currency'
 import { parseDecimalInput } from 'src/utils/decimal'
 import { formatDateInput } from 'src/utils/date'
 import type { PlanItem } from 'src/api/plans'
-import type { PlanOption } from 'src/components/expenses/PlanSelectorField.vue'
+import type { PlanOption } from 'src/types'
 import type { CurrencyCode } from 'src/utils/currency'
 
 export interface ExpenseRegistrationForm {
@@ -41,25 +37,22 @@ export type QuickSelectPhase = 'selection' | 'finalize'
 export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undefined>) {
   const userStore = useUserStore()
   const { showError } = useBanner()
-  const { emitNotificationEvent } = useNotificationEvents()
+  const { markExpenseSaved } = useInstallPromptGate()
   const userId = computed(() => userStore.userProfile?.id)
   const { plans, plansForExpenses } = usePlansQuery(userId)
   const { categories } = useCategoriesQuery()
   const createExpenseMutation = useCreateExpenseMutation()
   const createExpensesBatchMutation = useCreateExpensesBatchMutation()
-  const rollbackDeleteExpenseMutation = useDeleteExpenseMutation()
-  const rollbackDeleteExpensesMutation = useDeleteExpensesBatchMutation()
 
   const currentMode = ref<ExpenseMode>('custom-entry')
   const activeSummaryPlanId = ref<string | null>(null)
   const quickSelectPlanId = computed(() =>
     currentMode.value === 'quick-select' ? activeSummaryPlanId.value : null,
   )
-  const { expenseSummary } = useExpenseSummaryQuery(activeSummaryPlanId)
+  const expenseSummaryQuery = useExpenseSummaryQuery(activeSummaryPlanId)
+  const { expenseSummary } = expenseSummaryQuery
   const planItemsQuery = usePlanItemsQuery(quickSelectPlanId)
   const lastExpenseQuery = useLastExpenseForPlanQuery(activeSummaryPlanId)
-  const completionMutation = useUpdatePlanItemCompletionMutation()
-  const batchCompletionMutation = useUpdatePlanItemsCompletionMutation()
 
   const isLoading = ref(false)
   const didAutoSelectPlan = ref(false)
@@ -150,8 +143,8 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
         return {
           label: category.name,
           value: category.id,
-          color: category.color,
-          icon: category.icon,
+          color: category.color || 'grey',
+          icon: category.icon || 'pricetags-outline',
           plannedAmount,
           actualAmount,
           remainingAmount: categoryData?.remaining_amount || 0,
@@ -299,54 +292,8 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
         plan_item_id: item.id,
       }))
 
-      const createdExpenses = await createExpensesBatchMutation.mutateAsync(expensesForCreate)
-
-      const itemIdsByPlan = new Map<string, string[]>()
-      for (const item of selectedPlanItems.value) {
-        const ids = itemIdsByPlan.get(item.plan_id) ?? []
-        ids.push(item.id)
-        itemIdsByPlan.set(item.plan_id, ids)
-      }
-
-      const completionPromises = Array.from(itemIdsByPlan.entries()).map(([planId, itemIds]) =>
-        batchCompletionMutation.mutateAsync({
-          itemIds,
-          isCompleted: true,
-          planId,
-        }),
-      )
-
-      try {
-        await Promise.all(completionPromises)
-      } catch (error) {
-        const expenseIdsByPlan = new Map<string, string[]>()
-        for (const expense of createdExpenses) {
-          if (!expense.plan_id) continue
-          const ids = expenseIdsByPlan.get(expense.plan_id) ?? []
-          ids.push(expense.id)
-          expenseIdsByPlan.set(expense.plan_id, ids)
-        }
-
-        for (const [planId, expenseIds] of expenseIdsByPlan.entries()) {
-          try {
-            await rollbackDeleteExpensesMutation.mutateAsync({ expenseIds, planId })
-          } catch {
-            // Best-effort rollback to reduce partial updates.
-          }
-        }
-
-        throw error
-      }
-
-      if (form.value.planId) {
-        await emitNotificationEvent({
-          type: 'shared_plan_expense_added',
-          entityType: 'plan',
-          entityId: form.value.planId,
-          expenseName:
-            selectedPlanItems.value.length === 1 ? selectedPlanItems.value[0]?.name : undefined,
-        })
-      }
+      await createExpensesBatchMutation.mutateAsync(expensesForCreate)
+      markExpenseSaved()
 
       onSuccess()
     } catch {
@@ -387,7 +334,7 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
         originalAmountToStore = originalAmount
       }
 
-      const createdExpense = await createExpenseMutation.mutateAsync({
+      await createExpenseMutation.mutateAsync({
         plan_id: form.value.planId,
         category_id: form.value.categoryId,
         name: form.value.name.trim(),
@@ -397,34 +344,9 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
         original_currency: originalCurrencyToStore,
         expense_date: expenseDate,
         plan_item_id: form.value.planItemId || null,
+        completePlanItem: !!form.value.planItemId,
       })
-
-      if (form.value.planItemId && form.value.planId) {
-        try {
-          await completionMutation.mutateAsync({
-            itemId: form.value.planItemId,
-            isCompleted: true,
-            planId: form.value.planId,
-          })
-        } catch (error) {
-          try {
-            await rollbackDeleteExpenseMutation.mutateAsync({
-              expenseId: createdExpense.id,
-              planId: form.value.planId,
-            })
-          } catch {
-            // Best-effort rollback to reduce partial updates.
-          }
-          throw error
-        }
-      }
-
-      await emitNotificationEvent({
-        type: 'shared_plan_expense_added',
-        entityType: 'plan',
-        entityId: form.value.planId,
-        expenseName: createdExpense.name,
-      })
+      markExpenseSaved()
 
       onSuccess()
     } catch {
@@ -450,6 +372,7 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
   return {
     form,
     isLoading,
+    isLoadingCategories: computed(() => expenseSummaryQuery.isPending.value),
     isLoadingPlanItems,
     didAutoSelectPlan,
     currentMode,

@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useCategoriesQuery } from 'src/queries/categories'
@@ -11,8 +11,7 @@ import { useCategoryRefs } from 'src/composables/useCategoryRefs'
 import { validateItemForm } from 'src/composables/useItemFormValidation'
 import { useTemplateActions } from 'src/composables/useTemplateActions'
 import { useTemplateExport } from 'src/composables/useTemplateExport'
-import { getTemplateSharedUsers, type Category, type CurrencyCode } from 'src/api'
-import { useNotificationEvents } from 'src/composables/useNotificationEvents'
+import type { Category, CurrencyCode } from 'src/api'
 import type { ExportFormat } from 'src/utils/export'
 import { useNetworkStatus } from 'src/composables/useNetworkStatus'
 
@@ -20,7 +19,6 @@ export function useTemplatePageState() {
   const router = useRouter()
   const { categories } = useCategoriesQuery()
   const deleteTemplateMutation = useDeleteTemplateMutation()
-  const { emitRemovalNotification } = useNotificationEvents()
   const { isOnline } = useNetworkStatus()
 
   const {
@@ -246,13 +244,6 @@ export function useTemplatePageState() {
   async function deleteTemplate(): Promise<void> {
     if (!isOnline.value || !routeTemplateId.value) return
 
-    await emitRemovalNotification(
-      'template',
-      routeTemplateId.value,
-      form.value.name.trim() || currentTemplate.value?.name,
-      () => getTemplateSharedUsers(routeTemplateId.value!),
-    )
-
     await deleteTemplateMutation.mutateAsync(routeTemplateId.value)
     showDeleteDialog.value = false
     goBack()
@@ -262,9 +253,17 @@ export function useTemplatePageState() {
     closeDialog('share')
   }
 
-  onMounted(async () => {
-    await loadCurrentTemplate()
-  })
+  watch(
+    currentTemplate,
+    (template) => {
+      if (!template) return
+      form.value.name = template.name
+      form.value.duration = template.duration
+      form.value.currency = (template.currency as CurrencyCode) || templateCurrency.value
+      loadTemplateItems(template)
+    },
+    { immediate: true },
+  )
 
   return {
     currentTemplate,

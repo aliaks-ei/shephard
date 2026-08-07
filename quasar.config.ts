@@ -77,7 +77,7 @@ export default defineConfig((ctx) => {
     build: {
       target: {
         browser: ['es2022', 'firefox115', 'chrome115', 'safari14'],
-        node: 'node20',
+        node: 'node22',
       },
 
       typescript: {
@@ -308,6 +308,7 @@ export default defineConfig((ctx) => {
           '**/*.gz',
           '**/mockServiceWorker.js',
           '**/icons/apple-launch-*.png',
+          '**/*.{heic,HEIC}',
         ]
       },
     },

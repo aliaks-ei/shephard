@@ -1,5 +1,5 @@
 import { computed, type ComputedRef, type Ref } from 'vue'
-import type { ActionBarAction } from 'src/components/shared/ActionBar.vue'
+import type { ActionBarAction } from 'src/types'
 
 export type TemplateActionHandlers = {
   onAddCategory: () => void

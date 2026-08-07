@@ -408,34 +408,19 @@ describe('plans API', () => {
 
   describe('deletePlan', () => {
     it('should delete a plan successfully', async () => {
-      const mockQuery = {
-        match: vi.fn().mockResolvedValue({
-          error: null,
-        }),
-      }
-
-      mockFrom.mockReturnValue({
-        delete: vi.fn().mockReturnValue(mockQuery),
-      } as never)
-      mockSupabase.from = mockFrom
+      mockSupabase.rpc.mockResolvedValueOnce({ data: { outbox_id: 'event-1' }, error: null })
 
       await plansApi.deletePlan(mockPlanId)
 
-      expect(mockFrom).toHaveBeenCalledWith('plans')
+      expect(mockSupabase.rpc.mock.calls).toContainEqual([
+        'delete_plan_transaction',
+        { p_plan_id: mockPlanId },
+      ])
     })
 
     it('should throw error if delete fails', async () => {
       const mockError = { message: 'Delete failed' }
-      const mockQuery = {
-        match: vi.fn().mockResolvedValue({
-          error: mockError,
-        }),
-      }
-
-      mockFrom.mockReturnValue({
-        delete: vi.fn().mockReturnValue(mockQuery),
-      } as never)
-      mockSupabase.from = mockFrom
+      mockSupabase.rpc.mockResolvedValueOnce({ data: null, error: mockError as never })
 
       await expect(plansApi.deletePlan(mockPlanId)).rejects.toEqual(mockError)
     })

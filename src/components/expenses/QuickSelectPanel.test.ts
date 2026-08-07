@@ -5,7 +5,7 @@ import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-v
 import QuickSelectPanel from './QuickSelectPanel.vue'
 import { createMockPlanItem } from 'test/fixtures/plans'
 import { createMockCategories } from 'test/fixtures/categories'
-import type { PlanOption } from './PlanSelectorField.vue'
+import type { PlanOption } from 'src/types'
 
 installQuasarPlugin()
 

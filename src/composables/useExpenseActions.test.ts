@@ -43,7 +43,7 @@ describe('useExpenseActions', () => {
     plan_item_id: null,
     created_at: '2024-01-01',
     updated_at: '2024-01-01',
-    currency: null,
+    currency: 'USD',
     original_amount: null,
     original_currency: null,
     categories: {

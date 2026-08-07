@@ -1,3 +1,4 @@
+import { FunctionRegion } from '@supabase/supabase-js'
 import { supabase } from 'src/lib/supabase/client'
 
 export type CategorySuggestion = {
@@ -5,6 +6,7 @@ export type CategorySuggestion = {
   categoryName: string
   confidence: number
   reasoning: string
+  source?: 'plan_item' | 'previous_choice' | 'model'
 }
 
 export type PhotoAnalysisResult = {
@@ -34,13 +36,14 @@ function getCategorizationDeviceContext(): CategorizationDeviceContext {
 export async function suggestExpenseCategory(
   expenseName: string,
   planId?: string,
-): Promise<CategorySuggestion> {
+): Promise<CategorySuggestion | null> {
   const { data, error } = await supabase.functions.invoke('categorize-expense', {
     body: {
       expenseName,
       planId,
       deviceContext: getCategorizationDeviceContext(),
     },
+    region: FunctionRegion.EuCentral1,
   })
 
   if (error) {

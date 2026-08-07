@@ -164,10 +164,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useMeta, useQuasar } from 'quasar'
-import { refDebounced } from '@vueuse/core'
-import type { RouteLocationRaw } from 'vue-router'
+import { useMeta } from 'quasar'
 
 import ListPageLayout from 'src/layouts/ListPageLayout.vue'
 import SearchAndSort from 'src/components/shared/SearchAndSort.vue'
@@ -176,175 +173,17 @@ import QueryErrorState from 'src/components/shared/QueryErrorState.vue'
 import EmptyExpensesState from 'src/components/expenses/EmptyExpensesState.vue'
 import ExpenseListItem from 'src/components/expenses/ExpenseListItem.vue'
 import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
-import { useQueryClient } from '@tanstack/vue-query'
-import { useRecentExpensesInfiniteQuery } from 'src/queries/expenses'
-import { usePlansQuery } from 'src/queries/plans'
-import { useCategoriesQuery } from 'src/queries/categories'
-import { queryKeys } from 'src/queries/query-keys'
-import { useUserStore } from 'src/stores/user'
-import { usePreferencesStore } from 'src/stores/preferences'
-import { formatCurrency, formatCurrencyPrivate, type CurrencyCode } from 'src/utils/currency'
-import { formatDateRelative } from 'src/utils/date'
-import type { ExpenseSort, ExpenseWithCategoryAndPlan } from 'src/api'
-import { useNetworkStatus } from 'src/composables/useNetworkStatus'
+import { useExpensesPage } from 'src/composables/useExpensesPage'
 
 useMeta({ title: 'Activity' })
 
-const $q = useQuasar()
-const userStore = useUserStore()
-const preferencesStore = usePreferencesStore()
-
-const userId = computed(() => userStore.userProfile?.id)
-const searchQuery = ref('')
-const debouncedSearchQuery = refDebounced(searchQuery, 300)
-const sortBy = ref('date-desc')
-const expenseSort = computed<ExpenseSort>(() => {
-  switch (sortBy.value) {
-    case 'date-desc':
-    case 'date-asc':
-    case 'amount-desc':
-    case 'amount-asc':
-      return sortBy.value
-    default:
-      return 'date-desc'
-  }
-})
-const selectedCategoryId = ref<string | null>(null)
-const expenseFilters = computed(() => ({
-  search: debouncedSearchQuery.value,
-  categoryId: selectedCategoryId.value,
-  sortBy: expenseSort.value,
-}))
-const expensesQuery = useRecentExpensesInfiniteQuery(userId, expenseFilters)
-const { expenses, isPending, hasNextPage, isFetchingNextPage, fetchNextPage } = expensesQuery
-const { plansForExpenses } = usePlansQuery(userId)
-const { categories } = useCategoriesQuery()
-const { isOnline, isOffline } = useNetworkStatus()
-const hasExpensePlan = computed(() => plansForExpenses.value.length > 0)
-const canAddExpense = computed(() => isOnline.value && hasExpensePlan.value)
-const queryClient = useQueryClient()
-const hasLoadError = computed(
-  () => ((expensesQuery.isError?.value ?? false) || isOffline.value) && expenses.value.length === 0,
-)
-const isRetrying = computed(() => expensesQuery.isFetching?.value ?? false)
-
-async function retryActivity(): Promise<void> {
-  await expensesQuery.refetch?.()
-}
-
-async function onRefresh(done: () => void) {
-  try {
-    await queryClient.invalidateQueries({ queryKey: queryKeys.expenses.recentAll() })
-  } finally {
-    done()
-  }
-}
-
-const sortOptions = [
-  { label: 'Newest first', value: 'date-desc' },
-  { label: 'Oldest first', value: 'date-asc' },
-  { label: 'Highest amount', value: 'amount-desc' },
-  { label: 'Lowest amount', value: 'amount-asc' },
-]
-
-const hasOpenedExpenseDialog = ref(false)
-const showExpenseDialog = ref(false)
-
-function openExpenseDialog() {
-  if (!isOnline.value || !canAddExpense.value) return
-
-  hasOpenedExpenseDialog.value = true
-  showExpenseDialog.value = true
-}
-
-const availableCategories = computed(() => {
-  return [...categories.value].sort((a, b) => a.name.localeCompare(b.name))
-})
-
-function toggleCategory(categoryId: string) {
-  selectedCategoryId.value = selectedCategoryId.value === categoryId ? null : categoryId
-}
-
-const hasActiveFilter = computed(() => !!searchQuery.value || !!selectedCategoryId.value)
-
-function clearFilters() {
-  searchQuery.value = ''
-  selectedCategoryId.value = null
-}
-
-type DayGroup = {
-  date: string
-  label: string
-  totalLabel: string
-  expenses: ExpenseWithCategoryAndPlan[]
-}
-
-const isDateSort = computed(() => sortBy.value === 'date-desc' || sortBy.value === 'date-asc')
-
-const dayGroups = computed((): DayGroup[] => {
-  if (expenses.value.length === 0) return []
-
-  // Amount sorts render as a single flat group
-  if (!isDateSort.value) {
-    return [
-      {
-        date: 'all',
-        label: 'All expenses',
-        totalLabel: groupTotalLabel(expenses.value),
-        expenses: expenses.value,
-      },
-    ]
-  }
-
-  const groups = new Map<string, ExpenseWithCategoryAndPlan[]>()
-  expenses.value.forEach((expense) => {
-    const day = expense.expense_date.slice(0, 10)
-    const group = groups.get(day)
-    if (group) {
-      group.push(expense)
-    } else {
-      groups.set(day, [expense])
-    }
-  })
-
-  return Array.from(groups.entries()).map(([date, dayExpenses]) => ({
-    date,
-    label: formatDateRelative(date),
-    totalLabel: groupTotalLabel(dayExpenses),
-    expenses: dayExpenses,
-  }))
-})
-
-function expenseCurrency(expense: ExpenseWithCategoryAndPlan): CurrencyCode {
-  return (expense.plans?.currency ?? preferencesStore.currency) as CurrencyCode
-}
-
-function sourcePlanRoute(expense: ExpenseWithCategoryAndPlan): RouteLocationRaw {
-  const planId = expense.plans?.id ?? expense.plan_id
-
-  return {
-    name: 'plan',
-    params: { id: planId },
-  }
-}
-
-function groupTotalLabel(groupExpenses: ExpenseWithCategoryAndPlan[]): string {
-  const first = groupExpenses[0]
-  if (!first) return ''
-
-  const currency = expenseCurrency(first)
-
-  if (preferencesStore.isPrivacyModeEnabled) {
-    return formatCurrencyPrivate(currency)
-  }
-
-  // Mixed currencies within one day can't be summed meaningfully
-  const hasMixedCurrencies = groupExpenses.some((expense) => expenseCurrency(expense) !== currency)
-  if (hasMixedCurrencies) return ''
-
-  const total = groupExpenses.reduce((sum, expense) => sum + expense.amount, 0)
-  return formatCurrency(total, currency)
-}
+const {
+  searchQuery, sortBy, selectedCategoryId, isPending, hasNextPage,
+  isFetchingNextPage, fetchNextPage, isOffline, hasExpensePlan, canAddExpense,
+  hasLoadError, isRetrying, sortOptions, hasOpenedExpenseDialog, showExpenseDialog,
+  availableCategories, hasActiveFilter, dayGroups, retryActivity, onRefresh,
+  openExpenseDialog, toggleCategory, clearFilters, expenseCurrency, sourcePlanRoute,
+} = useExpensesPage()
 </script>
 
 <style lang="scss" scoped>

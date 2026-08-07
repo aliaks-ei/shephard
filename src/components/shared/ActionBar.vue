@@ -173,18 +173,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useQuasar } from 'quasar'
-
-export interface ActionBarAction {
-  key: string
-  icon: string
-  label: string
-  color: string
-  loading?: boolean
-  disabled?: boolean
-  visible?: boolean
-  priority?: 'primary' | 'secondary'
-  handler: () => void | Promise<void>
-}
+import type { ActionBarAction } from 'src/types'
 
 const emit = defineEmits<{
   (e: 'action-clicked', key: string): void

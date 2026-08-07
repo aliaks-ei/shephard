@@ -19,17 +19,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
 import ShareDialog from 'src/components/shared/ShareDialog.vue'
-import {
-  useSharedUsersQuery,
-  useShareEntityMutation,
-  useUnshareEntityMutation,
-  useUpdatePermissionMutation,
-  useSearchUsersQuery,
-} from 'src/queries/sharing'
-import { useUserStore } from 'src/stores/user'
-import { useNotificationEvents } from 'src/composables/useNotificationEvents'
+import { useShareEntityDialog } from 'src/composables/useShareEntityDialog'
 
 const props = defineProps<{
   entityId: string
@@ -44,89 +35,16 @@ const emit = defineEmits<{
   shared: []
 }>()
 
-const userStore = useUserStore()
-const { emitNotificationEvent } = useNotificationEvents()
-const userId = computed(() => userStore.userProfile?.id)
-
-const reactiveEntityId = ref(props.entityId)
-watch(
-  () => props.entityId,
-  (val) => {
-    reactiveEntityId.value = val
-  },
-)
-
-const searchQuery = ref('')
-const { data: sharedUsersData, isFetching: isLoadingShares } = useSharedUsersQuery(
-  props.entityType,
-  reactiveEntityId,
-)
-const { data: searchData, isFetching: isSearching } = useSearchUsersQuery(
-  searchQuery,
-  props.entityType,
-  reactiveEntityId,
-)
-const shareMutation = useShareEntityMutation(props.entityType, userId)
-const unshareMutation = useUnshareEntityMutation(props.entityType)
-const updatePermissionMutation = useUpdatePermissionMutation(props.entityType)
-
-const sharedUsers = computed(() => sharedUsersData.value ?? [])
-const searchResults = computed(() => searchData.value ?? [])
-
-function onSearchUsers(query: string) {
-  searchQuery.value = query
-}
-
-function clearSearch() {
-  searchQuery.value = ''
-}
-
-async function handleShareWithUser(
-  entityId: string,
-  targetUserId: string,
-  email: string,
-  permission: 'view' | 'edit',
-) {
-  await shareMutation.mutateAsync({ entityId, userEmail: email, permission })
-  await emitNotificationEvent({
-    type: props.entityType === 'plan' ? 'plan_shared' : 'template_shared',
-    entityType: props.entityType,
-    entityId,
-    targetUserId,
-    targetPermission: permission,
-  })
-  emit('shared')
-}
-
-async function handleUpdateUserPermission(
-  entityId: string,
-  targetUserId: string,
-  permission: 'view' | 'edit',
-) {
-  await updatePermissionMutation.mutateAsync({
-    entityId,
-    userId: targetUserId,
-    permission,
-  })
-  await emitNotificationEvent({
-    type:
-      props.entityType === 'plan'
-        ? 'shared_plan_permission_changed'
-        : 'shared_template_permission_changed',
-    entityType: props.entityType,
-    entityId,
-    targetUserId,
-    targetPermission: permission,
-  })
-}
-
-async function handleRemoveUserAccess(entityId: string, targetUserId: string) {
-  await unshareMutation.mutateAsync({ entityId, userId: targetUserId })
-  await emitNotificationEvent({
-    type: props.entityType === 'plan' ? 'shared_plan_removed' : 'shared_template_removed',
-    entityType: props.entityType,
-    entityId,
-    targetUserId,
-  })
-}
+const {
+  shareMutation,
+  sharedUsers,
+  searchResults,
+  isLoadingShares,
+  isSearching,
+  onSearchUsers,
+  clearSearch,
+  handleShareWithUser,
+  handleUpdateUserPermission,
+  handleRemoveUserAccess,
+} = useShareEntityDialog(props, () => emit('shared'))
 </script>

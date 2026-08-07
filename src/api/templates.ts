@@ -3,6 +3,7 @@ import type { Json, Tables, TablesInsert, TablesUpdate } from 'src/lib/supabase/
 import { createDuplicateNameError, isDuplicateNameError } from 'src/utils/database'
 import { BaseAPIService } from './base'
 import { searchUsersByEmail } from './user'
+import { processNotificationOutbox } from './notifications'
 
 export type Template = Tables<'templates'>
 export type TemplateInsert = TablesInsert<'templates'>
@@ -41,7 +42,7 @@ export type TemplateSharedUser = {
   user_name: string
   user_email: string
   permission_level: string
-  shared_at: string
+  shared_at: string | null
 }
 
 const templateService = new BaseAPIService<
@@ -102,11 +103,10 @@ export async function updateTemplateWithItems(
   updates: TemplateTransactionUpdate,
   items: TemplateItemTransactionInput[],
 ): Promise<TemplateWithItems> {
-  const itemPayload = items.map(({ id: _id, ...item }) => item)
   const { data, error } = await templateService.supabase.rpc('update_template_with_items', {
     p_template_id: templateId,
     p_template: toJson(updates),
-    p_items: toJson(itemPayload),
+    p_items: toJson(items),
   })
 
   if (error) throwTemplateTransactionError(error)
@@ -114,7 +114,12 @@ export async function updateTemplateWithItems(
 }
 
 export async function deleteTemplate(id: string): Promise<void> {
-  return templateService.delete(id)
+  const { data, error } = await templateService.supabase.rpc('delete_template_transaction', {
+    p_template_id: id,
+  })
+  if (error) throw error
+  const outboxId = (data as { outbox_id?: string } | null)?.outbox_id
+  if (outboxId) void processNotificationOutbox([outboxId]).catch(() => undefined)
 }
 
 export async function getTemplateWithItems(

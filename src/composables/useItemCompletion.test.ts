@@ -95,14 +95,13 @@ describe('useItemCompletion', () => {
     await toggleItemCompletion({ ...planItem, is_completed: false }, true)
 
     expect(mockCreateExpenseMutateAsync).toHaveBeenCalledTimes(1)
-    expect(mockCompletionMutateAsync).toHaveBeenNthCalledWith(1, {
-      itemId: 'item-1',
-      isCompleted: true,
-      planId: 'plan-1',
-    })
+    expect(mockCompletionMutateAsync).not.toHaveBeenCalled()
+    expect(mockCreateExpenseMutateAsync).toHaveBeenCalledWith(
+      expect.objectContaining({ plan_item_id: 'item-1', completePlanItem: true }),
+    )
   })
 
-  it('rolls completion back if expense creation fails while checking', async () => {
+  it('keeps local completion unchanged if the atomic create fails', async () => {
     mockCreateExpenseMutateAsync.mockRejectedValueOnce(new Error('create failed'))
 
     const { toggleItemCompletion } = useItemCompletion(ref('plan-1'))
@@ -110,16 +109,7 @@ describe('useItemCompletion', () => {
 
     await toggleItemCompletion(item, true)
 
-    expect(mockCompletionMutateAsync).toHaveBeenNthCalledWith(1, {
-      itemId: 'item-1',
-      isCompleted: true,
-      planId: 'plan-1',
-    })
-    expect(mockCompletionMutateAsync).toHaveBeenNthCalledWith(2, {
-      itemId: 'item-1',
-      isCompleted: false,
-      planId: 'plan-1',
-    })
+    expect(mockCompletionMutateAsync).not.toHaveBeenCalled()
     expect(item.is_completed).toBe(false)
     expect(mockShowError).toHaveBeenCalledWith(
       'Failed to mark item as completed. Please try again.',

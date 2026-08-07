@@ -123,7 +123,7 @@ When behavior changes, cover the branches this repo cares about most:
 - navigation and route-derived behavior
 - event emissions and parent-child wiring
 - duplicate-name / validation / backend error translation
-- mutation rollback or partial-failure paths
+- atomic mutation failure paths and preference persistence rollback
 - action visibility and guard logic
 
 If you change query keys, invalidation, or mutation `onSuccess` / `onError` behavior, consider adding direct query-layer tests. That area currently has less explicit coverage than pages/components/composables.
@@ -139,6 +139,8 @@ Useful but optional helpers:
 - `test/fixtures/*`
 
 Current repo convention still favors explicit inline mocks in each test file, especially for query hooks and route state. Match that convention unless a helper makes the test noticeably clearer.
+
+Mock mode must mirror every frontend-used RPC. Atomic expense creation and plan/template deletion handlers live in `src/mocks/handlers/rpc.ts`.
 
 ## Good Testing Workflow
 

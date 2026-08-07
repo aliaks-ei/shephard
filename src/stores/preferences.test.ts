@@ -53,6 +53,8 @@ describe('Preferences Store', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    localStorage.clear()
+    vi.mocked(userApi.saveUserPreferences).mockResolvedValue(undefined)
 
     mockUser = {
       id: 'test-user-id',
@@ -119,7 +121,7 @@ describe('Preferences Store', () => {
 
       vi.mocked(userApi.getUserPreferences).mockResolvedValue(mockPreferences)
 
-      await preferencesStore.loadPreferences()
+      await preferencesStore.loadPreferences('test-user-id')
 
       expect(userApi.getUserPreferences).toHaveBeenCalledWith('test-user-id')
       expect(preferencesStore.isLoading).toBe(false)
@@ -149,7 +151,7 @@ describe('Preferences Store', () => {
       const mockError = new Error('Failed to load preferences')
       vi.mocked(userApi.getUserPreferences).mockRejectedValue(mockError)
 
-      await preferencesStore.loadPreferences()
+      await preferencesStore.loadPreferences('test-user-id')
 
       expect(userApi.getUserPreferences).toHaveBeenCalledWith('test-user-id')
       expect(mockHandleError).toHaveBeenCalledWith('USER.PREFERENCES_LOAD_FAILED', mockError, {
@@ -164,7 +166,7 @@ describe('Preferences Store', () => {
     it('should update preferences successfully', async () => {
       const updates = { theme: 'dark' as const }
 
-      await preferencesStore.updatePreferences(updates)
+      await preferencesStore.updatePreferences(updates, 'test-user-id')
 
       expect(preferencesStore.preferences).toEqual({
         ...userApi.DEFAULT_PREFERENCES,
@@ -199,11 +201,13 @@ describe('Preferences Store', () => {
       const mockError = new Error('Failed to save preferences')
       vi.mocked(userApi.saveUserPreferences).mockRejectedValue(mockError)
 
-      await preferencesStore.updatePreferences({ theme: 'dark' })
+      await expect(
+        preferencesStore.updatePreferences({ theme: 'dark' }, 'test-user-id'),
+      ).rejects.toThrow('Failed to save preferences')
 
       expect(preferencesStore.preferences).toEqual({
         ...userApi.DEFAULT_PREFERENCES,
-        theme: 'dark',
+        theme: 'light',
       })
 
       expect(mockHandleError).toHaveBeenCalledWith('USER.PREFERENCES_SAVE_FAILED', mockError, {
@@ -229,7 +233,7 @@ describe('Preferences Store', () => {
     it('should toggle privacy mode from false to true', async () => {
       expect(preferencesStore.isPrivacyModeEnabled).toBe(false)
 
-      await preferencesStore.togglePrivacyMode()
+      await preferencesStore.togglePrivacyMode('test-user-id')
 
       expect(preferencesStore.preferences.isPrivacyModeEnabled).toBe(true)
       expect(userApi.saveUserPreferences).toHaveBeenCalledWith('test-user-id', {
@@ -241,7 +245,7 @@ describe('Preferences Store', () => {
     it('should toggle privacy mode from true to false', async () => {
       preferencesStore.preferences.isPrivacyModeEnabled = true
 
-      await preferencesStore.togglePrivacyMode()
+      await preferencesStore.togglePrivacyMode('test-user-id')
 
       expect(preferencesStore.preferences.isPrivacyModeEnabled).toBe(false)
       expect(userApi.saveUserPreferences).toHaveBeenCalledWith('test-user-id', {

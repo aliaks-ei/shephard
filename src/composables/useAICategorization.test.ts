@@ -215,7 +215,7 @@ describe('useAICategorization', () => {
 
       expect(result).toBeNull()
       expect(hasError.value).toBe(true)
-      expect(errorMessage.value).toBe('Failed to categorize expense')
+      expect(errorMessage.value).toBe("Couldn't suggest a category. Please choose one manually.")
       expect(lastSuggestion.value).toBeNull()
     })
 
@@ -246,7 +246,7 @@ describe('useAICategorization', () => {
 
       await categorizeName('First')
       expect(hasError.value).toBe(true)
-      expect(errorMessage.value).toBe('Failed to categorize expense')
+      expect(errorMessage.value).toBe("Couldn't suggest a category. Please choose one manually.")
 
       const mockSuggestion: CategorySuggestion = {
         categoryId: '123',
@@ -295,7 +295,7 @@ describe('useAICategorization', () => {
       expect(typeof debouncedCategorize).toBe('function')
     })
 
-    it('should delay execution by 500ms', async () => {
+    it('should delay execution by 300ms', async () => {
       vi.useFakeTimers()
       const { debouncedCategorize } = useAICategorization()
       const mockSuggestion: CategorySuggestion = {
@@ -310,7 +310,7 @@ describe('useAICategorization', () => {
 
       expect(mockSuggestExpenseCategory).not.toHaveBeenCalled()
 
-      vi.advanceTimersByTime(499)
+      vi.advanceTimersByTime(299)
       expect(mockSuggestExpenseCategory).not.toHaveBeenCalled()
 
       vi.advanceTimersByTime(1)
@@ -348,7 +348,7 @@ describe('useAICategorization', () => {
       await categorizeName('Another expense')
 
       expect(hasError.value).toBe(true)
-      expect(errorMessage.value).toBe('Failed to categorize expense')
+      expect(errorMessage.value).toBe("Couldn't suggest a category. Please choose one manually.")
 
       clearSuggestion()
 
@@ -409,5 +409,38 @@ describe('useAICategorization', () => {
 
       expect(lastSuggestion.value).toEqual(mockSuggestion)
     })
+  })
+
+  it('keeps a no-suggestion response distinct from an API failure', async () => {
+    const { categorizeName, hasError, hasNoSuggestion, noSuggestionMessage } = useAICategorization()
+    mockSuggestExpenseCategory.mockResolvedValue(null)
+
+    await expect(categorizeName('Unknown merchant')).resolves.toBeNull()
+
+    expect(hasError.value).toBe(false)
+    expect(hasNoSuggestion.value).toBe(true)
+    expect(noSuggestionMessage.value).toContain('Please choose one manually')
+  })
+
+  it('ignores an older response after the suggestion is cleared', async () => {
+    const { categorizeName, clearSuggestion, lastSuggestion } = useAICategorization()
+    let resolveSuggestion: (value: CategorySuggestion | null) => void
+    mockSuggestExpenseCategory.mockReturnValue(
+      new Promise<CategorySuggestion | null>((resolve) => {
+        resolveSuggestion = resolve
+      }),
+    )
+
+    const request = categorizeName('Coffee')
+    clearSuggestion()
+    resolveSuggestion!({
+      categoryId: 'cat-1',
+      categoryName: 'Food',
+      confidence: 0.9,
+      reasoning: 'test',
+    })
+
+    await expect(request).resolves.toBeNull()
+    expect(lastSuggestion.value).toBeNull()
   })
 })

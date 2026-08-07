@@ -11,7 +11,6 @@ import {
   updateUserPreferences,
   onAuthStateChange,
 } from 'src/api/auth'
-import { usePreferencesStore } from './preferences'
 import { sanitizeRedirectPath } from 'src/utils/navigation'
 import type { Session } from 'src/api/auth'
 import type { User } from 'src/api/user'
@@ -20,26 +19,22 @@ import type { GoogleSignInResponse } from 'src/types'
 export const useAuthStore = defineStore('auth', () => {
   const { currentNonce } = useNonce()
   const { handleError } = useError()
-  const preferencesStore = usePreferencesStore()
 
   const user = ref<User | null>(null)
   const session = ref<Session | null>(null)
   const isLoading = ref(true)
   const isEmailSent = ref(false)
   const emailError = ref<string | null>(null)
+  let unsubscribeFromAuth: () => void = () => undefined
 
   const isAuthenticated = computed(() => !!user.value)
 
   const ready = new Promise<void>((resolve) => {
     let resolved = false
 
-    onAuthStateChange((event, currentSession) => {
+    const listener = onAuthStateChange((event, currentSession) => {
       session.value = currentSession
       user.value = currentSession?.user ?? null
-
-      if (event === 'SIGNED_OUT') {
-        preferencesStore.reset()
-      }
 
       if (!resolved) {
         isLoading.value = false
@@ -47,15 +42,8 @@ export const useAuthStore = defineStore('auth', () => {
         resolve()
       }
     })
+    unsubscribeFromAuth = () => listener?.data.subscription.unsubscribe()
 
-    setTimeout(() => {
-      if (!resolved) {
-        console.warn('[Auth] Initialization timeout - proceeding without session')
-        isLoading.value = false
-        resolved = true
-        resolve()
-      }
-    }, 5000)
   })
 
   async function signInWithGoogle(response: GoogleSignInResponse) {
@@ -136,6 +124,10 @@ export const useAuthStore = defineStore('auth', () => {
     emailError.value = null
   }
 
+  function dispose() {
+    unsubscribeFromAuth()
+  }
+
   return {
     user,
     session,
@@ -151,5 +143,6 @@ export const useAuthStore = defineStore('auth', () => {
     signInWithOtp,
     verifyOtp,
     resetEmailState,
+    dispose,
   }
 })

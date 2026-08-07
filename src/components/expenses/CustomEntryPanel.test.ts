@@ -4,7 +4,7 @@ import { mount } from '@vue/test-utils'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 import CustomEntryPanel from './CustomEntryPanel.vue'
 import { createMockCategories } from 'test/fixtures/categories'
-import type { PlanOption } from './PlanSelectorField.vue'
+import type { PlanOption } from 'src/types'
 
 installQuasarPlugin()
 
@@ -114,6 +114,25 @@ it('should enable category select when plan is selected', () => {
   const categorySelect = selects.find((s) => s.props('optionLabel') === 'label')
   expect(categorySelect).toBeDefined()
   expect(categorySelect?.props('disable')).toBe(false)
+})
+
+it('should show category loading state while plan categories load', () => {
+  const wrapper = mount(CustomEntryPanel, {
+    props: {
+      ...defaultProps,
+      planId: 'plan-1',
+      selectedPlan: mockPlan,
+      isLoadingCategories: true,
+    },
+  })
+
+  const categorySelect = wrapper
+    .findAllComponents({ name: 'QSelect' })
+    .find((select) => select.props('optionLabel') === 'label')
+
+  expect(categorySelect?.props('disable')).toBe(true)
+  expect(categorySelect?.props('loading')).toBe(true)
+  expect(categorySelect?.props('hint')).toBe('Loading categories...')
 })
 
 it('should make category readonly when defaultCategoryId is set', () => {

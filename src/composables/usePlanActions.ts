@@ -1,5 +1,5 @@
 import { computed, type Ref, type ComputedRef } from 'vue'
-import type { ActionBarAction } from 'src/components/shared/ActionBar.vue'
+import type { ActionBarAction } from 'src/types'
 import type { PlanWithItems } from 'src/api'
 import { getPlanStatus } from 'src/utils/plans'
 

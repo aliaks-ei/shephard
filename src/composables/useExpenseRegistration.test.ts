@@ -446,28 +446,20 @@ describe('useExpenseRegistration', () => {
           plan_item_id: 'item-1',
         },
       ])
-      expect(mockBatchCompletionMutateAsync).toHaveBeenCalledWith({
-        itemIds: ['item-1'],
-        isCompleted: true,
-        planId: 'plan-1',
-      })
+      expect(mockBatchCompletionMutateAsync).not.toHaveBeenCalled()
       expect(onSuccess).toHaveBeenCalled()
     })
 
-    it('rolls back created expenses when completion update fails', async () => {
+    it('reports an atomic batch failure without compensating writes', async () => {
       const onSuccess = vi.fn()
-      mockCreateExpensesBatchMutateAsync.mockResolvedValueOnce([{ id: 'exp-1', plan_id: 'plan-1' }])
-      mockBatchCompletionMutateAsync.mockRejectedValueOnce(new Error('completion failed'))
+      mockCreateExpensesBatchMutateAsync.mockRejectedValueOnce(new Error('transaction failed'))
 
       const { handleQuickSelectSubmit, selectedPlanItems } = useExpenseRegistration()
       selectedPlanItems.value = [mockPlanItems[0]!]
 
       await handleQuickSelectSubmit(onSuccess)
 
-      expect(mockDeleteExpensesBatchMutateAsync).toHaveBeenCalledWith({
-        expenseIds: ['exp-1'],
-        planId: 'plan-1',
-      })
+      expect(mockDeleteExpensesBatchMutateAsync).not.toHaveBeenCalled()
       expect(onSuccess).not.toHaveBeenCalled()
     })
 
@@ -481,7 +473,7 @@ describe('useExpenseRegistration', () => {
       expect(onSuccess).not.toHaveBeenCalled()
     })
 
-    it('submits multiple selected items with one batch create and one batch completion call', async () => {
+    it('submits multiple selected items with one atomic batch call', async () => {
       const onSuccess = vi.fn()
       const { handleQuickSelectSubmit, selectedPlanItems } = useExpenseRegistration()
       selectedPlanItems.value = [
@@ -492,12 +484,7 @@ describe('useExpenseRegistration', () => {
       await handleQuickSelectSubmit(onSuccess)
 
       expect(mockCreateExpensesBatchMutateAsync).toHaveBeenCalledTimes(1)
-      expect(mockBatchCompletionMutateAsync).toHaveBeenCalledTimes(1)
-      expect(mockBatchCompletionMutateAsync).toHaveBeenCalledWith({
-        itemIds: ['item-1', 'item-2'],
-        isCompleted: true,
-        planId: 'plan-1',
-      })
+      expect(mockBatchCompletionMutateAsync).not.toHaveBeenCalled()
       expect(onSuccess).toHaveBeenCalled()
     })
   })
@@ -533,17 +520,14 @@ describe('useExpenseRegistration', () => {
 
       await handleCustomEntrySubmit(true, onSuccess)
 
-      expect(mockCompletionMutateAsync).toHaveBeenCalledWith({
-        itemId: 'item-1',
-        isCompleted: true,
-        planId: 'plan-1',
-      })
+      expect(mockCreateExpenseMutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({ plan_item_id: 'item-1', completePlanItem: true }),
+      )
     })
 
-    it('rolls back created expense when completion update fails', async () => {
+    it('does not issue a compensating delete when the atomic save fails', async () => {
       mockPlans.value = [mockPlan]
-      mockCreateExpenseMutateAsync.mockResolvedValueOnce({ id: 'expense-123' })
-      mockCompletionMutateAsync.mockRejectedValueOnce(new Error('completion failed'))
+      mockCreateExpenseMutateAsync.mockRejectedValueOnce(new Error('transaction failed'))
 
       const onSuccess = vi.fn()
       const { handleCustomEntrySubmit, form } = useExpenseRegistration()
@@ -555,18 +539,13 @@ describe('useExpenseRegistration', () => {
 
       await handleCustomEntrySubmit(true, onSuccess)
 
-      expect(mockDeleteExpenseMutateAsync).toHaveBeenCalledWith({
-        expenseId: 'expense-123',
-        planId: 'plan-1',
-      })
+      expect(mockDeleteExpenseMutateAsync).not.toHaveBeenCalled()
       expect(onSuccess).not.toHaveBeenCalled()
     })
 
-    it('keeps the original save failed when best-effort rollback also fails', async () => {
+    it('keeps the original atomic save failure', async () => {
       mockPlans.value = [mockPlan]
-      mockCreateExpenseMutateAsync.mockResolvedValueOnce({ id: 'expense-123' })
-      mockCompletionMutateAsync.mockRejectedValueOnce(new Error('completion failed'))
-      mockDeleteExpenseMutateAsync.mockRejectedValueOnce(new Error('rollback failed'))
+      mockCreateExpenseMutateAsync.mockRejectedValueOnce(new Error('transaction failed'))
 
       const onSuccess = vi.fn()
       const { handleCustomEntrySubmit, form } = useExpenseRegistration()
@@ -578,10 +557,7 @@ describe('useExpenseRegistration', () => {
 
       await handleCustomEntrySubmit(true, onSuccess)
 
-      expect(mockDeleteExpenseMutateAsync).toHaveBeenCalledWith({
-        expenseId: 'expense-123',
-        planId: 'plan-1',
-      })
+      expect(mockDeleteExpenseMutateAsync).not.toHaveBeenCalled()
       expect(mockShowError).toHaveBeenCalledWith('Failed to register expense. Please try again.')
       expect(onSuccess).not.toHaveBeenCalled()
     })

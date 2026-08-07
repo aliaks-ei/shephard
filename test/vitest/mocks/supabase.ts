@@ -36,6 +36,9 @@ export const mockCreateClient = vi.fn().mockReturnValue(mockSupabaseClient)
 
 vi.mock('@supabase/supabase-js', () => ({
   createClient: vi.fn().mockImplementation(() => mockSupabaseClient),
+  FunctionRegion: {
+    EuCentral1: 'eu-central-1',
+  },
 }))
 
 vi.mock('src/lib/supabase/client', () => ({

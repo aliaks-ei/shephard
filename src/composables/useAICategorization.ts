@@ -11,10 +11,14 @@ export function useAICategorization(planId?: Ref<string | null>) {
   const lastSuggestion = ref<CategorySuggestion | null>(null)
   const lowConfidenceSuggestion = ref<CategorySuggestion | null>(null)
   const categorizationError = ref<string | null>(null)
+  const noSuggestionMessage = ref<string | null>(null)
+  let requestVersion = 0
 
   async function categorizeName(expenseName: string) {
+    const currentRequestVersion = ++requestVersion
     categorizationError.value = null
     lowConfidenceSuggestion.value = null
+    noSuggestionMessage.value = null
 
     if (!expenseName || expenseName.trim().length < 3) {
       lastSuggestion.value = null
@@ -27,6 +31,17 @@ export function useAICategorization(planId?: Ref<string | null>) {
     try {
       const currentPlanId = planId?.value ?? undefined
       const suggestion = await suggestExpenseCategory(expenseName, currentPlanId)
+
+      if (currentRequestVersion !== requestVersion) {
+        return null
+      }
+
+      if (!suggestion) {
+        lastSuggestion.value = null
+        noSuggestionMessage.value = 'No category suggestion found. Please choose one manually.'
+        return null
+      }
+
       lastSuggestion.value = suggestion
 
       if (suggestion.confidence <= 0.65) {
@@ -36,20 +51,28 @@ export function useAICategorization(planId?: Ref<string | null>) {
 
       return suggestion
     } catch (error) {
-      categorizationError.value = 'Failed to categorize expense'
+      if (currentRequestVersion !== requestVersion) {
+        return null
+      }
+
+      categorizationError.value = "Couldn't suggest a category. Please choose one manually."
       handleError('AI.CATEGORIZATION_FAILED', error, { expenseName })
       return null
     } finally {
-      isCategorizing.value = false
+      if (currentRequestVersion === requestVersion) {
+        isCategorizing.value = false
+      }
     }
   }
 
-  const debouncedCategorize = useDebounceFn(categorizeName, 500)
+  const debouncedCategorize = useDebounceFn(categorizeName, 300)
 
   function clearSuggestion() {
+    requestVersion += 1
     lastSuggestion.value = null
     lowConfidenceSuggestion.value = null
     categorizationError.value = null
+    noSuggestionMessage.value = null
     isCategorizing.value = false
   }
 
@@ -59,6 +82,8 @@ export function useAICategorization(planId?: Ref<string | null>) {
     lowConfidenceSuggestion: computed(() => lowConfidenceSuggestion.value),
     hasError: computed(() => !!categorizationError.value),
     errorMessage: computed(() => categorizationError.value),
+    hasNoSuggestion: computed(() => !!noSuggestionMessage.value),
+    noSuggestionMessage: computed(() => noSuggestionMessage.value),
     categorizeName,
     debouncedCategorize,
     clearSuggestion,

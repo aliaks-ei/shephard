@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 import PlanSelectorField from './PlanSelectorField.vue'
-import type { PlanOption } from './PlanSelectorField.vue'
+import type { PlanOption } from 'src/types'
 
 installQuasarPlugin()
 

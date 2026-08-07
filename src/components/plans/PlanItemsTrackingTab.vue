@@ -196,7 +196,7 @@
                   :currency="currency"
                   clickable
                   :dense="$q.screen.lt.md"
-                  :strike="item.is_completed"
+                  :strike="item.is_completed === true"
                   @click="handleToggleItemCompletion(item)"
                 >
                   <template #leading>
@@ -254,7 +254,7 @@
 import { computed } from 'vue'
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import CompactDisplayItemRow from 'src/components/shared/CompactDisplayItemRow.vue'
-import { useCategoriesQuery } from 'src/queries/categories'
+import { useCategoryHelpers } from 'src/composables/useCategoryHelpers'
 import { useItemCompletion } from 'src/composables/useItemCompletion'
 import {
   groupTrackablePlanItemsByCategory,
@@ -276,7 +276,7 @@ const emit = defineEmits<{
   refresh: []
 }>()
 
-const { getCategoryById } = useCategoriesQuery()
+const { getCategoryById } = useCategoryHelpers()
 const planIdRef = computed(() => props.plan?.id ?? null)
 const { toggleItemCompletion: toggleCompletion } = useItemCompletion(planIdRef)
 

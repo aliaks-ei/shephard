@@ -1,8 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { useStorage } from '@vueuse/core'
 
-import { useAuthStore } from 'src/stores/auth'
 import {
   getUserPreferences,
   saveUserPreferences,
@@ -15,10 +13,10 @@ import { useTheme } from 'src/composables/useTheme'
 import { defaultNotificationPushPreferences } from 'src/types/notifications'
 
 export const usePreferencesStore = defineStore('preferences', () => {
-  const authStore = useAuthStore()
   const { handleError } = useError()
+  const activeUserId = ref<string | null>(null)
 
-  const preferences = useStorage<CompleteUserPreferences>('user-preferences', {
+  const preferences = ref<CompleteUserPreferences>({
     ...DEFAULT_PREFERENCES,
   })
   const isLoading = ref(false)
@@ -35,14 +33,25 @@ export const usePreferencesStore = defineStore('preferences', () => {
     preferences.value = { ...DEFAULT_PREFERENCES }
   }
 
-  async function loadPreferences() {
-    if (!authStore.isAuthenticated || !authStore.user?.id) {
+  function storageKey(userId: string) {
+    return `user-preferences:${userId}`
+  }
+
+  function persistLocally(userId: string) {
+    localStorage.setItem(storageKey(userId), JSON.stringify(preferences.value))
+  }
+
+  async function loadPreferences(userId = activeUserId.value) {
+    activeUserId.value = userId
+    if (!userId) {
       initializeWithDefaults()
       return
     }
 
     try {
-      const userPreferences = await getUserPreferences(authStore.user.id)
+      const cached = localStorage.getItem(storageKey(userId))
+      if (cached) preferences.value = JSON.parse(cached) as CompleteUserPreferences
+      const userPreferences = await getUserPreferences(userId)
 
       preferences.value = {
         theme: userPreferences.theme ?? DEFAULT_PREFERENCES.theme,
@@ -56,13 +65,16 @@ export const usePreferencesStore = defineStore('preferences', () => {
         isPrivacyModeEnabled:
           userPreferences.isPrivacyModeEnabled ?? DEFAULT_PREFERENCES.isPrivacyModeEnabled,
       }
+      persistLocally(userId)
     } catch (err) {
-      handleError('USER.PREFERENCES_LOAD_FAILED', err, { userId: authStore.user?.id })
+      handleError('USER.PREFERENCES_LOAD_FAILED', err, { userId })
     }
   }
 
-  async function updatePreferences(updates: Partial<UserPreferences>) {
-    if (!authStore.user?.id) return
+  async function updatePreferences(updates: Partial<UserPreferences>, userId = activeUserId.value) {
+    if (!userId) return
+
+    const previous = JSON.parse(JSON.stringify(preferences.value)) as CompleteUserPreferences
 
     preferences.value = {
       ...preferences.value,
@@ -74,19 +86,23 @@ export const usePreferencesStore = defineStore('preferences', () => {
     }
 
     try {
-      await saveUserPreferences(authStore.user.id, preferences.value)
+      await saveUserPreferences(userId, preferences.value)
+      persistLocally(userId)
     } catch (err) {
-      handleError('USER.PREFERENCES_SAVE_FAILED', err, { userId: authStore.user?.id })
+      preferences.value = previous
+      handleError('USER.PREFERENCES_SAVE_FAILED', err, { userId })
+      throw err
     }
   }
 
-  async function togglePrivacyMode() {
+  async function togglePrivacyMode(userId = activeUserId.value) {
     const newValue = !preferences.value.isPrivacyModeEnabled
 
-    await updatePreferences({ isPrivacyModeEnabled: newValue })
+    await updatePreferences({ isPrivacyModeEnabled: newValue }, userId)
   }
 
   function reset() {
+    activeUserId.value = null
     preferences.value = { ...DEFAULT_PREFERENCES }
     isLoading.value = false
   }

@@ -3,7 +3,7 @@ import { usePlansQuery, useDeletePlanMutation, useUpdatePlanMutation } from 'src
 import { useUserStore } from 'src/stores/user'
 import { useListPage } from './useListPage'
 import { filterAndSortPlans } from 'src/utils/list-filters'
-import { getPlanSharedUsers, type PlanWithPermission } from 'src/api'
+import type { PlanWithPermission } from 'src/api'
 import { useNotificationEvents } from './useNotificationEvents'
 
 export function usePlans() {
@@ -13,7 +13,7 @@ export function usePlans() {
   const { plans, isPending } = plansQuery
   const deletePlanMutation = useDeletePlanMutation()
   const updatePlanMutation = useUpdatePlanMutation()
-  const { emitNotificationEvent, emitRemovalNotification } = useNotificationEvents()
+  const { emitNotificationEvent } = useNotificationEvents()
 
   const sortOptions = [
     { label: 'Name', value: 'name' },
@@ -47,10 +47,6 @@ export function usePlans() {
         filterAndSortFn: filterAndSortPlans,
         deleteFn: async (plan: PlanWithPermission) => {
           try {
-            await emitRemovalNotification('plan', plan.id, plan.name, () =>
-              getPlanSharedUsers(plan.id),
-            )
-
             await deletePlanMutation.mutateAsync(plan.id)
             return { success: true }
           } catch {

@@ -310,7 +310,7 @@ describe('atomic template transactions', () => {
     expect(result).toEqual(createdTemplate)
   })
 
-  it('omits template item IDs to preserve replace-all semantics', async () => {
+  it('preserves template item IDs for granular updates', async () => {
     mockSupabase.rpc.mockResolvedValueOnce({
       data: { ...mockTemplate, template_items: [] },
       error: null,
@@ -333,6 +333,7 @@ describe('atomic template transactions', () => {
         p_template: { name: 'Updated Template' },
         p_items: [
           {
+            id: 'old-item-id',
             name: 'Rent',
             category_id: 'category-1',
             amount: 600,
@@ -424,32 +425,19 @@ describe('updateTemplate', () => {
 
 describe('deleteTemplate', () => {
   it('should delete template successfully', async () => {
-    const mockQuery = {
-      match: vi.fn().mockResolvedValue({
-        error: null,
-      }),
-    }
-
-    mockFrom.mockReturnValue({
-      delete: vi.fn().mockReturnValue(mockQuery),
-    } as never)
+    mockSupabase.rpc.mockResolvedValueOnce({ data: { outbox_id: 'event-1' }, error: null })
 
     await deleteTemplate('template-1')
 
-    expect(mockFrom).toHaveBeenCalledWith('templates')
+    expect(mockSupabase.rpc.mock.calls).toContainEqual([
+      'delete_template_transaction',
+      { p_template_id: 'template-1' },
+    ])
   })
 
   it('should throw error when delete fails', async () => {
     const mockError = createPostgrestError('Failed to delete template')
-    const mockQuery = {
-      match: vi.fn().mockResolvedValue({
-        error: mockError,
-      }),
-    }
-
-    mockFrom.mockReturnValue({
-      delete: vi.fn().mockReturnValue(mockQuery),
-    } as never)
+    mockSupabase.rpc.mockResolvedValueOnce({ data: null, error: mockError })
 
     await expect(deleteTemplate('template-1')).rejects.toEqual(mockError)
   })

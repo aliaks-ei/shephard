@@ -1,9 +1,13 @@
 import type { Tables, TablesInsert, TablesUpdate } from 'src/lib/supabase/types'
+import type { Json } from 'src/lib/supabase/types'
 import { BaseAPIService } from './base'
+import { processNotificationOutbox } from './notifications'
 
 export type Expense = Tables<'expenses'>
 export type ExpenseInsert = TablesInsert<'expenses'>
 export type ExpenseUpdate = TablesUpdate<'expenses'>
+export type ExpenseTransactionInsert = Omit<ExpenseInsert, 'currency' | 'user_id'> &
+  Partial<Pick<ExpenseInsert, 'currency' | 'user_id'>>
 export type ExpenseWithCategory = Expense & {
   categories: Tables<'categories'>
 }
@@ -137,8 +141,8 @@ export async function getRecentExpensesPageForUser(
     p_user_id: userId,
     p_limit: page.limit,
     p_offset: page.offset,
-    p_search: options.search?.trim() || null,
-    p_category_id: options.categoryId || null,
+    ...(options.search?.trim() ? { p_search: options.search.trim() } : {}),
+    ...(options.categoryId ? { p_category_id: options.categoryId } : {}),
     p_sort_by: sortBy,
   })
 
@@ -173,43 +177,41 @@ export async function getLastExpenseForPlan(planId: string): Promise<Expense | n
   return data
 }
 
-export async function createExpense(expense: ExpenseInsert): Promise<Expense> {
-  const createdExpense = await expenseService.create(expense)
-
-  if (expense.plan_id) {
-    await expenseService.supabase
-      .from('plans')
-      .update({ updated_at: new Date().toISOString() })
-      .eq('id', expense.plan_id)
-  }
-
-  return createdExpense
+function toJson(value: unknown): Json {
+  return JSON.parse(JSON.stringify(value)) as Json
 }
 
-export async function createExpenses(expenses: ExpenseInsert[]): Promise<Expense[]> {
+export async function createExpense(
+  expense: ExpenseTransactionInsert,
+  completePlanItem = false,
+): Promise<Expense> {
+  const { data, error } = await expenseService.supabase.rpc('create_expense_transaction', {
+    p_expense: toJson(expense),
+    p_complete_plan_item: completePlanItem,
+  })
+
+  if (error) throw error
+  const result = data as { expense: Expense; outbox_id: string }
+  void processNotificationOutbox([result.outbox_id]).catch(() => undefined)
+  return result.expense
+}
+
+export async function createExpenses(
+  expenses: ExpenseTransactionInsert[],
+  completePlanItems = true,
+): Promise<Expense[]> {
   if (expenses.length === 0) {
     return []
   }
 
-  const { data, error } = await expenseService.supabase.from('expenses').insert(expenses).select()
+  const { data, error } = await expenseService.supabase.rpc('create_expenses_transaction', {
+    p_expenses: toJson(expenses),
+    p_complete_plan_items: completePlanItems,
+  })
   if (error) throw error
-
-  const planIds = Array.from(
-    new Set(
-      expenses
-        .map((expense) => expense.plan_id)
-        .filter((planId): planId is string => typeof planId === 'string'),
-    ),
-  )
-
-  if (planIds.length > 0) {
-    await expenseService.supabase
-      .from('plans')
-      .update({ updated_at: new Date().toISOString() })
-      .in('id', planIds)
-  }
-
-  return data || []
+  const result = data as { expenses: Expense[]; outbox_ids: string[] }
+  void processNotificationOutbox(result.outbox_ids).catch(() => undefined)
+  return result.expenses
 }
 
 export async function updateExpense(id: string, updates: ExpenseUpdate): Promise<Expense> {

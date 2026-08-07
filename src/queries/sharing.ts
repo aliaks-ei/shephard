@@ -11,7 +11,6 @@ import {
   updatePlanSharePermission,
   searchUsersByEmail,
 } from 'src/api'
-import { useUserStore } from 'src/stores/user'
 import { createMutationErrorHandler, createSpecificErrorHandler } from './query-error-handler'
 import { queryKeys } from './query-keys'
 import type { ErrorMessageKey } from 'src/config/error-messages'
@@ -99,14 +98,16 @@ export function useShareEntityMutation(
 
 export function useUnshareEntityMutation(entityType: EntityType) {
   const queryClient = useQueryClient()
-  const userStore = useUserStore()
   const api = sharingApiMap[entityType]
 
   return useMutation({
     mutationFn: (vars: { entityId: string; userId: string }) =>
       api.unshare(vars.entityId, vars.userId),
     onSuccess: (_data, vars) => {
-      invalidateSharingQueries(queryClient, api, vars.entityId, userStore.userProfile?.id)
+      queryClient.invalidateQueries({ queryKey: api.sharedUsersKey(vars.entityId) })
+      queryClient.invalidateQueries({
+        queryKey: entityType === 'plan' ? queryKeys.plans.all : queryKeys.templates.all,
+      })
     },
     onError: createMutationErrorHandler(`${api.errorPrefix}.UNSHARE_FAILED` as ErrorMessageKey),
   })

@@ -254,6 +254,7 @@ export const edgeFunctionHandlers = [
         categoryName: foodCategory.name,
         confidence: 0.85,
         reasoning: 'Mock: expense name suggests a food-related purchase.',
+        source: 'model',
       },
     })
   }),
@@ -293,7 +294,11 @@ export const edgeFunctionHandlers = [
 
   // emit-notification-event
   http.post(`${SUPABASE_URL}/functions/v1/emit-notification-event`, async ({ request }) => {
-    const input = (await request.json()) as EmitNotificationEventInput
+    const body = (await request.json()) as EmitNotificationEventInput | { outboxIds: string[] }
+    if ('outboxIds' in body) {
+      return HttpResponse.json({ success: true, data: { processed: body.outboxIds.length } })
+    }
+    const input = body
     const actor = getById('users', MOCK_USER_ID)
     const entity = getEntity(input.entityType, input.entityId)
 

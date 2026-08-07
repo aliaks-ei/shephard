@@ -133,7 +133,7 @@ describe('usePlanOverview', () => {
       plan_item_id: null,
       created_at: '2024-01-05',
       updated_at: '2024-01-05',
-      currency: null,
+      currency: 'USD',
       original_amount: null,
       original_currency: null,
       categories: testCategories[0]!,

@@ -1,17 +1,17 @@
 # Supabase Setup
 
 The production Supabase project (`rirgsoufkldfcogfjwwy`) is the source of truth
-for the database schema. This repo tracks only **incremental** migrations and
-edge function source.
+for the database schema. This repo tracks a production baseline, the remote
+migration ledger, subsequent migrations, and Edge Function source.
 
 ## Bootstrapping a new environment
 
-To apply the schema to a fresh Supabase project, first pull a baseline snapshot
-from production (see `migrations/README.md`), then push:
+To apply the schema to a fresh Supabase project, apply the committed baseline,
+verify it, and then apply migrations newer than the baseline snapshot:
 
 ```bash
-supabase db dump --linked --schema public --file supabase/migrations/<ts>_baseline.sql
-supabase db push
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/baseline/production_schema.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/baseline/verify_schema.sql
 ```
 
 ## Edge functions

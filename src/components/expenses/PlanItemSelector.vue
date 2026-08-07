@@ -172,7 +172,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
-import { useCategoriesQuery } from 'src/queries/categories'
+import { useCategoryHelpers } from 'src/composables/useCategoryHelpers'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import type { PlanItem } from 'src/api/plans'
 
@@ -197,7 +197,7 @@ const emit = defineEmits<{
   'selection-changed': [items: PlanItem[]]
 }>()
 
-const { getCategoryById } = useCategoriesQuery()
+const { getCategoryById } = useCategoryHelpers()
 
 const selectedItemIds = ref<Set<string>>(new Set())
 
@@ -212,8 +212,8 @@ const categoryGroups = computed((): CategoryGroup[] => {
       groups.set(item.category_id, {
         categoryId: item.category_id,
         categoryName: category.name,
-        categoryColor: category.color,
-        categoryIcon: category.icon,
+        categoryColor: category.color || 'grey',
+        categoryIcon: category.icon || 'pricetags-outline',
         availableItems: [],
         selectedCount: 0,
       })

@@ -69,12 +69,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
 import { useMeta } from 'quasar'
-
 import ListPageLayout from 'src/layouts/ListPageLayout.vue'
-
-useMeta({ title: 'Templates' })
 import SearchAndSort from 'src/components/shared/SearchAndSort.vue'
 import ListPageSkeleton from 'src/components/shared/ListPageSkeleton.vue'
 import EmptyState from 'src/components/shared/EmptyState.vue'
@@ -82,19 +78,9 @@ import QueryErrorState from 'src/components/shared/QueryErrorState.vue'
 import TemplatesGroup from 'src/components/templates/TemplatesGroup.vue'
 import ShareTemplateDialog from 'src/components/templates/ShareTemplateDialog.vue'
 import ExportDialog from 'src/components/shared/ExportDialog.vue'
-import { useTemplates } from 'src/composables/useTemplates'
-import { useQueryClient } from '@tanstack/vue-query'
-import { queryKeys } from 'src/queries/query-keys'
-import { useCategoriesQuery } from 'src/queries/categories'
-import { useUserStore } from 'src/stores/user'
-import { useBanner } from 'src/composables/useBanner'
-import { getTemplateWithItems } from 'src/api'
-import { useNetworkStatus } from 'src/composables/useNetworkStatus'
-import {
-  createTemplateExportDownload,
-  downloadExportFile,
-  type ExportFormat,
-} from 'src/utils/export'
+import { useTemplatesPage } from 'src/composables/useTemplatesPage'
+
+useMeta({ title: 'Templates' })
 
 const {
   searchQuery,
@@ -111,63 +97,14 @@ const {
   deleteItem,
   clearSearch,
   retryItems,
-} = useTemplates()
-const { categories } = useCategoriesQuery()
-const queryClient = useQueryClient()
-const { isOffline } = useNetworkStatus()
-
-async function onRefresh(done: () => void) {
-  try {
-    await queryClient.invalidateQueries({ queryKey: queryKeys.templates.all })
-  } finally {
-    done()
-  }
-}
-const userStore = useUserStore()
-const { showError, showSuccess } = useBanner()
-
-const isShareDialogOpen = ref(false)
-const isExportDialogOpen = ref(false)
-const shareTemplateId = ref<string | null>(null)
-const exportTemplateId = ref<string | null>(null)
-const shareTemplateOwnerId = computed(() => {
-  if (!shareTemplateId.value) return undefined
-  return allFilteredAndSortedItems.value.find((t) => t.id === shareTemplateId.value)?.owner_id
-})
-
-function openShareDialog(templateId: string): void {
-  const template = allFilteredAndSortedItems.value.find((item) => item.id === templateId)
-  if (!template || template.owner_id !== userStore.userProfile?.id) return
-
-  shareTemplateId.value = templateId
-  isShareDialogOpen.value = true
-}
-
-function openExportDialog(templateId: string): void {
-  exportTemplateId.value = templateId
-  isExportDialogOpen.value = true
-}
-
-async function handleTemplateExport(format: ExportFormat): Promise<void> {
-  if (!exportTemplateId.value || !userStore.userProfile?.id) {
-    showError('Template export is unavailable right now.')
-    return
-  }
-
-  try {
-    const template = await getTemplateWithItems(exportTemplateId.value, userStore.userProfile.id)
-
-    if (!template) {
-      throw new Error('TEMPLATE_NOT_FOUND')
-    }
-
-    const download = createTemplateExportDownload(template, categories.value, format)
-
-    downloadExportFile(download)
-    isExportDialogOpen.value = false
-    showSuccess(`Template exported as ${format.toUpperCase()}.`)
-  } catch {
-    showError(`Failed to export template as ${format.toUpperCase()}.`)
-  }
-}
+  isOffline,
+  isShareDialogOpen,
+  isExportDialogOpen,
+  shareTemplateId,
+  shareTemplateOwnerId,
+  onRefresh,
+  openShareDialog,
+  openExportDialog,
+  handleTemplateExport,
+} = useTemplatesPage()
 </script>

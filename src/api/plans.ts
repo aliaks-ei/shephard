@@ -2,6 +2,7 @@ import type { PostgrestError } from '@supabase/supabase-js'
 import type { Json, Tables, TablesInsert, TablesUpdate } from 'src/lib/supabase/types'
 import { createDuplicateNameError, isDuplicateNameError } from 'src/utils/database'
 import { BaseAPIService } from './base'
+import { processNotificationOutbox } from './notifications'
 import { searchUsersByEmail } from './user'
 
 export type Plan = Tables<'plans'>
@@ -41,7 +42,7 @@ export type PlanSharedUser = {
   user_name: string
   user_email: string
   permission_level: string
-  shared_at: string
+  shared_at: string | null
 }
 
 const planService = new BaseAPIService<
@@ -114,7 +115,12 @@ export async function updatePlanWithItems(
 }
 
 export async function deletePlan(id: string): Promise<void> {
-  return planService.delete(id)
+  const { data, error } = await planService.supabase.rpc('delete_plan_transaction', {
+    p_plan_id: id,
+  })
+  if (error) throw error
+  const outboxId = (data as { outbox_id?: string } | null)?.outbox_id
+  if (outboxId) void processNotificationOutbox([outboxId]).catch(() => undefined)
 }
 
 export async function getPlanWithItems(

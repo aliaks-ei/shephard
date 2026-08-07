@@ -103,7 +103,10 @@ const addNamesByCategoryId = (
     namesByCategoryId.set(categoryId, new Map())
   }
 
-  namesByCategoryId.get(categoryId)!.set(normalizedName, trimmedName)
+  const categoryNames = namesByCategoryId.get(categoryId)!
+  if (!categoryNames.has(normalizedName)) {
+    categoryNames.set(normalizedName, trimmedName)
+  }
 }
 
 export const buildCategoryContexts = (
@@ -262,7 +265,6 @@ export const buildCategorizationInstructions = (
       - Return only valid JSON that follows the output schema.
       - categoryIndex must be the 1-based index from the categories list above.
       - confidence must be between 0 and 1.
-      - reasoning must be a single short sentence (max 50 words) and must not quote the user message.
       - Prefer exact or near-exact matches to planned_items first, then learned_user_examples, then regional merchant knowledge, then generic semantic similarity.
       - Use user_context only as non-authoritative locale context for regional merchant names.
       - If a merchant, brand, biller, or service strongly implies one listed category, choose it with confidence at least 0.85.

@@ -570,11 +570,11 @@ describe('PlanPage', () => {
     expect(wrapper.exists()).toBe(true)
   })
 
-  it('should call loadPlan on mount', async () => {
+  it('should rely on the enabled detail query on mount', async () => {
     createWrapper()
     await flushPromises()
 
-    expect(mockUsePlan.loadPlan).toHaveBeenCalledOnce()
+    expect(mockUsePlan.loadPlan).not.toHaveBeenCalled()
   })
 
   it('should render edit form when in edit mode and can edit plan data', () => {
@@ -730,7 +730,7 @@ describe('PlanPage', () => {
     createWrapper({ currentPlan: mockPlan })
     await flushPromises()
 
-    expect(mockUsePlan.loadPlan).toHaveBeenCalledOnce()
+    expect(mockUsePlan.loadPlan).not.toHaveBeenCalled()
     expect(mockUsePlanItems.loadPlanItems).toHaveBeenCalledWith(mockPlan)
   })
 

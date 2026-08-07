@@ -60,6 +60,8 @@ type CreatedNotification = {
   user_id: string
 }
 
+type AuthenticatedUser = Awaited<ReturnType<typeof getAuthenticatedUser>>
+
 const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
 const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
 const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -348,6 +350,73 @@ async function sendPushNotifications(
   }
 }
 
+async function deliverNotificationEvent(
+  serviceClient: ReturnType<typeof createServiceClient>,
+  actor: AuthenticatedUser,
+  input: EmitNotificationEventInput,
+  options: { recipients?: string[]; entityName?: string; trustedOutbox?: boolean } = {},
+) {
+  let entity: EntityRecord
+  let actorShare: ShareRecord | null = null
+
+  if (options.trustedOutbox && options.entityName) {
+    entity = { id: input.entityId, name: options.entityName, owner_id: actor.id }
+  } else {
+    const access = await getEntityAndActorAccess(
+      serviceClient,
+      input.entityType,
+      input.entityId,
+      actor.id,
+    )
+    entity = access.entity
+    actorShare = access.actorShare
+  }
+
+  const actorIsOwner = entity.owner_id === actor.id
+  if (!options.trustedOutbox && !actorIsOwner) {
+    if (!isCollaboratorAction(input.type) || actorShare?.permission_level !== 'edit') {
+      throw new Error('FORBIDDEN_NOTIFICATION_EVENT')
+    }
+  }
+
+  const recipients = options.recipients
+    ? dedupe(options.recipients).filter((id) => id !== actor.id)
+    : await resolveRecipients(serviceClient, input, actor.id, entity.owner_id)
+  if (recipients.length === 0) return
+
+  const relevantUsers = await getUsersByIds(serviceClient, [actor.id, ...recipients])
+  const usersById = new Map(relevantUsers.map((user) => [user.id, user]))
+  const actorUser = usersById.get(actor.id)
+  const actorName = actorUser?.name ?? actorUser?.email ?? actor.email ?? 'Someone'
+  const entityName = input.entityName ?? options.entityName ?? entity.name
+  const copy = buildNotificationCopy(input, actorName, entityName)
+  const rows: NotificationInsert[] = recipients.map((recipientId) => ({
+    user_id: recipientId,
+    actor_user_id: actor.id,
+    type: input.type,
+    entity_type: input.entityType,
+    entity_id: input.entityId,
+    title: copy.title,
+    body: copy.body,
+    payload: {
+      actorName,
+      entityName,
+      ...(input.expenseName ? { expenseName: input.expenseName } : {}),
+      ...(input.targetPermission ? { permissionLevel: input.targetPermission } : {}),
+      route: copy.route,
+    },
+  }))
+  const { data, error } = await serviceClient
+    .from('notifications')
+    .insert(rows)
+    .select('id, user_id, type, title, body')
+  if (error) throw error
+
+  const notifications = (data ?? []) as CreatedNotification[]
+  const payloadById = new Map(notifications.map((item) => [item.id, { route: copy.route }]))
+  EdgeRuntime.waitUntil(sendPushNotifications(serviceClient, notifications, payloadById, usersById))
+}
+
 Deno.serve(async (req) => {
   const corsHeaders = buildCorsHeaders(req.headers.get('Origin'))
   const errorResponse = (error: string, status = 400) =>
@@ -374,6 +443,51 @@ Deno.serve(async (req) => {
 
     if (!isRecord(rawBody)) {
       return errorResponse('Invalid notification payload', 400)
+    }
+
+    const actor = await getAuthenticatedUser(authHeader)
+    const serviceClient = createServiceClient()
+
+    if (Array.isArray(rawBody.outboxIds)) {
+      const outboxIds = rawBody.outboxIds
+        .filter((id): id is string => typeof id === 'string' && id.length <= 64)
+        .slice(0, 100)
+      const { data: events, error: outboxError } = await serviceClient
+        .from('notification_outbox')
+        .select('*')
+        .in('id', outboxIds)
+        .eq('actor_user_id', actor.id)
+        .in('status', ['pending', 'failed'])
+      if (outboxError) throw outboxError
+
+      for (const event of events ?? []) {
+        await serviceClient.from('notification_outbox').update({
+          status: 'processing', claimed_at: new Date().toISOString(), attempts: event.attempts + 1,
+        }).eq('id', event.id)
+        try {
+          const payload = isRecord(event.payload) ? event.payload : {}
+          await deliverNotificationEvent(serviceClient, actor, {
+            type: event.event_type as NotificationType,
+            entityType: event.entity_type as NotificationEntityType,
+            entityId: event.entity_id,
+            ...(typeof payload.expenseName === 'string' ? { expenseName: payload.expenseName } : {}),
+            ...(typeof payload.entityName === 'string' ? { entityName: payload.entityName } : {}),
+          }, {
+            ...(Array.isArray(event.recipient_ids) ? { recipients: event.recipient_ids } : {}),
+            ...(typeof payload.entityName === 'string' ? { entityName: payload.entityName } : {}),
+            trustedOutbox: true,
+          })
+          await serviceClient.from('notification_outbox').update({
+            status: 'completed', processed_at: new Date().toISOString(), last_error: null,
+          }).eq('id', event.id)
+        } catch (error) {
+          await serviceClient.from('notification_outbox').update({
+            status: 'failed', last_error: error instanceof Error ? error.message : 'Unknown error',
+            available_at: new Date(Date.now() + 60_000).toISOString(),
+          }).eq('id', event.id)
+        }
+      }
+      return successResponse({ processed: events?.length ?? 0 })
     }
 
     if (
@@ -425,66 +539,14 @@ Deno.serve(async (req) => {
         : {}),
     }
 
-    const actor = await getAuthenticatedUser(authHeader)
-    const serviceClient = createServiceClient()
-    const { entity, actorShare } = await getEntityAndActorAccess(
-      serviceClient,
-      input.entityType,
-      input.entityId,
-      actor.id,
-    )
-
-    const actorIsOwner = entity.owner_id === actor.id
-    if (!actorIsOwner) {
-      if (!isCollaboratorAction(input.type) || actorShare?.permission_level !== 'edit') {
+    try {
+      await deliverNotificationEvent(serviceClient, actor, input)
+    } catch (error) {
+      if (error instanceof Error && error.message === 'FORBIDDEN_NOTIFICATION_EVENT') {
         return errorResponse('You do not have access to emit this notification event', 403)
       }
+      throw error
     }
-
-    const recipients = await resolveRecipients(serviceClient, input, actor.id, entity.owner_id)
-    if (recipients.length === 0) {
-      return successResponse(null)
-    }
-
-    const relevantUsers = await getUsersByIds(serviceClient, [actor.id, ...recipients])
-    const usersById = new Map(relevantUsers.map((user) => [user.id, user]))
-    const actorUser = usersById.get(actor.id)
-    const actorName = actorUser?.name ?? actorUser?.email ?? actor.email ?? 'Someone'
-    const entityName = input.entityName ?? entity.name
-    const copy = buildNotificationCopy(input, actorName, entityName)
-
-    const rows: NotificationInsert[] = recipients.map((recipientId) => ({
-      user_id: recipientId,
-      actor_user_id: actor.id,
-      type: input.type,
-      entity_type: input.entityType,
-      entity_id: input.entityId,
-      title: copy.title,
-      body: copy.body,
-      payload: {
-        actorName,
-        entityName,
-        ...(input.expenseName ? { expenseName: input.expenseName } : {}),
-        ...(input.targetPermission ? { permissionLevel: input.targetPermission } : {}),
-        route: copy.route,
-      },
-    }))
-
-    const { data: createdNotifications, error: insertError } = await serviceClient
-      .from('notifications')
-      .insert(rows)
-      .select('id, user_id, type, title, body')
-
-    if (insertError) {
-      throw insertError
-    }
-
-    const notificationList = (createdNotifications ?? []) as CreatedNotification[]
-    const payloadById = new Map(
-      notificationList.map((notification) => [notification.id, { route: copy.route }]),
-    )
-
-    await sendPushNotifications(serviceClient, notificationList, payloadById, usersById)
 
     return successResponse(null)
   } catch (error) {
