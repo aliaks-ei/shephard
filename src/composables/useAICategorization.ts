@@ -1,8 +1,18 @@
 import { ref, computed, type Ref } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { suggestExpenseCategory } from 'src/api/ai'
-import type { CategorySuggestion } from 'src/api/ai'
+import type { CategoryDetectionResult, CategorySuggestion } from 'src/api/ai'
 import { useError } from './useError'
+
+const unavailableMessages: Record<
+  Extract<CategoryDetectionResult, { status: 'unavailable' }>['reason'],
+  string
+> = {
+  model_timeout: 'Category detection took too long. Please choose one manually.',
+  model_error: "Couldn't suggest a category. Please choose one manually.",
+  invalid_model_response: "Couldn't suggest a category. Please choose one manually.",
+  no_matching_category: 'No category suggestion found. Please choose one manually.',
+}
 
 export function useAICategorization(planId?: Ref<string | null>) {
   const { handleError } = useError()
@@ -30,26 +40,26 @@ export function useAICategorization(planId?: Ref<string | null>) {
 
     try {
       const currentPlanId = planId?.value ?? undefined
-      const suggestion = await suggestExpenseCategory(expenseName, currentPlanId)
+      const result = await suggestExpenseCategory(expenseName, currentPlanId)
 
       if (currentRequestVersion !== requestVersion) {
         return null
       }
 
-      if (!suggestion) {
+      if (result.status === 'unavailable') {
         lastSuggestion.value = null
-        noSuggestionMessage.value = 'No category suggestion found. Please choose one manually.'
-        return null
+        noSuggestionMessage.value = unavailableMessages[result.reason]
+        return result
       }
 
+      const suggestion = result.suggestion
       lastSuggestion.value = suggestion
 
-      if (suggestion.confidence <= 0.65) {
+      if (result.status === 'suggested') {
         lowConfidenceSuggestion.value = suggestion
-        return null
       }
 
-      return suggestion
+      return result
     } catch (error) {
       if (currentRequestVersion !== requestVersion) {
         return null
@@ -76,6 +86,14 @@ export function useAICategorization(planId?: Ref<string | null>) {
     isCategorizing.value = false
   }
 
+  function reportUnavailable(message: string) {
+    lastSuggestion.value = null
+    lowConfidenceSuggestion.value = null
+    categorizationError.value = null
+    noSuggestionMessage.value = message
+    isCategorizing.value = false
+  }
+
   return {
     isCategorizing: computed(() => isCategorizing.value),
     lastSuggestion: computed(() => lastSuggestion.value),
@@ -87,5 +105,6 @@ export function useAICategorization(planId?: Ref<string | null>) {
     categorizeName,
     debouncedCategorize,
     clearSuggestion,
+    reportUnavailable,
   }
 }

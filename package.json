@@ -20,7 +20,7 @@
     "postinstall": "quasar prepare",
     "test:unit": "vitest",
     "test:unit:ci": "vitest run",
-    "test:edge": "deno test --allow-env supabase/functions/categorize-expense/helpers.test.ts",
+    "test:edge": "deno test --allow-env supabase/functions/categorize-expense/helpers.test.ts supabase/functions/_shared/notification-utils.test.ts",
     "type-check": "vue-tsc --noEmit --composite false",
     "prepare": "husky"
   },

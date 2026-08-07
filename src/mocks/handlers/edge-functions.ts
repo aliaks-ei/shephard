@@ -249,6 +249,7 @@ export const edgeFunctionHandlers = [
     const foodCategory = categories.find((c) => c.id === 'cat-food')!
     return HttpResponse.json({
       success: true,
+      outcome: 'selected',
       data: {
         categoryId: foodCategory.id,
         categoryName: foodCategory.name,

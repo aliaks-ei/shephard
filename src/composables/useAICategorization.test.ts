@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref, nextTick } from 'vue'
 import { useAICategorization } from './useAICategorization'
-import type { CategorySuggestion } from 'src/api/ai'
+import type { CategoryDetectionResult, CategorySuggestion } from 'src/api/ai'
 import * as aiApi from 'src/api/ai'
 import * as errorComposable from './useError'
 
@@ -15,6 +15,17 @@ vi.mock('./useError', () => ({
 
 const mockSuggestExpenseCategory = vi.mocked(aiApi.suggestExpenseCategory)
 const mockHandleError = vi.fn()
+
+const detectionResult = (suggestion: CategorySuggestion): CategoryDetectionResult => ({
+  status: suggestion.confidence > 0.65 ? 'selected' : 'suggested',
+  suggestion,
+})
+
+const unavailableResult = (reason: 'model_timeout' = 'model_timeout'): CategoryDetectionResult => ({
+  status: 'unavailable',
+  suggestion: null,
+  reason,
+})
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -74,7 +85,7 @@ describe('useAICategorization', () => {
         confidence: 0.9,
         reasoning: 'test',
       }
-      mockSuggestExpenseCategory.mockResolvedValue(mockSuggestion)
+      mockSuggestExpenseCategory.mockResolvedValue(detectionResult(mockSuggestion))
 
       await categorizeName('Coffee at Starbucks')
       expect(lastSuggestion.value).not.toBeNull()
@@ -92,8 +103,8 @@ describe('useAICategorization', () => {
         reasoning: 'test',
       }
 
-      let resolvePromise: (value: CategorySuggestion) => void
-      const promise = new Promise<CategorySuggestion>((resolve) => {
+      let resolvePromise: (value: CategoryDetectionResult) => void
+      const promise = new Promise<CategoryDetectionResult>((resolve) => {
         resolvePromise = resolve
       })
       mockSuggestExpenseCategory.mockReturnValue(promise)
@@ -103,7 +114,7 @@ describe('useAICategorization', () => {
       await nextTick()
       expect(isCategorizing.value).toBe(true)
 
-      resolvePromise!(mockSuggestion)
+      resolvePromise!(detectionResult(mockSuggestion))
       await categorizationPromise
 
       expect(isCategorizing.value).toBe(false)
@@ -117,16 +128,16 @@ describe('useAICategorization', () => {
         confidence: 0.85,
         reasoning: 'Common food establishment',
       }
-      mockSuggestExpenseCategory.mockResolvedValue(mockSuggestion)
+      mockSuggestExpenseCategory.mockResolvedValue(detectionResult(mockSuggestion))
 
       const result = await categorizeName('Coffee at Starbucks')
 
-      expect(result).toEqual(mockSuggestion)
+      expect(result).toEqual(detectionResult(mockSuggestion))
       expect(lastSuggestion.value).toEqual(mockSuggestion)
       expect(lowConfidenceSuggestion.value).toBeNull()
     })
 
-    it('should store low confidence suggestion and return null', async () => {
+    it('should store and return a low confidence suggestion', async () => {
       const { categorizeName, lastSuggestion, lowConfidenceSuggestion } = useAICategorization()
       const mockSuggestion: CategorySuggestion = {
         categoryId: '456',
@@ -134,11 +145,11 @@ describe('useAICategorization', () => {
         confidence: 0.3,
         reasoning: 'Uncertain categorization',
       }
-      mockSuggestExpenseCategory.mockResolvedValue(mockSuggestion)
+      mockSuggestExpenseCategory.mockResolvedValue(detectionResult(mockSuggestion))
 
       const result = await categorizeName('Purchase')
 
-      expect(result).toBeNull()
+      expect(result).toEqual(detectionResult(mockSuggestion))
       expect(lastSuggestion.value).toEqual(mockSuggestion)
       expect(lowConfidenceSuggestion.value).toEqual(mockSuggestion)
     })
@@ -151,11 +162,11 @@ describe('useAICategorization', () => {
         confidence: 0.65,
         reasoning: 'Border case',
       }
-      mockSuggestExpenseCategory.mockResolvedValue(mockSuggestion)
+      mockSuggestExpenseCategory.mockResolvedValue(detectionResult(mockSuggestion))
 
       const result = await categorizeName('Movie ticket')
 
-      expect(result).toBeNull()
+      expect(result).toEqual(detectionResult(mockSuggestion))
       expect(lowConfidenceSuggestion.value).toEqual(mockSuggestion)
     })
 
@@ -167,7 +178,7 @@ describe('useAICategorization', () => {
         confidence: 0.9,
         reasoning: 'test',
       }
-      mockSuggestExpenseCategory.mockResolvedValue(mockSuggestion)
+      mockSuggestExpenseCategory.mockResolvedValue(detectionResult(mockSuggestion))
 
       await categorizeName('Coffee')
 
@@ -183,7 +194,7 @@ describe('useAICategorization', () => {
         confidence: 0.9,
         reasoning: 'test',
       }
-      mockSuggestExpenseCategory.mockResolvedValue(mockSuggestion)
+      mockSuggestExpenseCategory.mockResolvedValue(detectionResult(mockSuggestion))
 
       await categorizeName('Coffee')
 
@@ -199,7 +210,7 @@ describe('useAICategorization', () => {
         confidence: 0.9,
         reasoning: 'test',
       }
-      mockSuggestExpenseCategory.mockResolvedValue(mockSuggestion)
+      mockSuggestExpenseCategory.mockResolvedValue(detectionResult(mockSuggestion))
 
       await categorizeName('Coffee')
 
@@ -254,7 +265,7 @@ describe('useAICategorization', () => {
         confidence: 0.9,
         reasoning: 'test',
       }
-      mockSuggestExpenseCategory.mockResolvedValue(mockSuggestion)
+      mockSuggestExpenseCategory.mockResolvedValue(detectionResult(mockSuggestion))
 
       await categorizeName('Second')
       expect(hasError.value).toBe(false)
@@ -270,7 +281,7 @@ describe('useAICategorization', () => {
         confidence: 0.3,
         reasoning: 'test',
       }
-      mockSuggestExpenseCategory.mockResolvedValue(lowConfSuggestion)
+      mockSuggestExpenseCategory.mockResolvedValue(detectionResult(lowConfSuggestion))
       await categorizeName('First')
 
       expect(lowConfidenceSuggestion.value).not.toBeNull()
@@ -281,7 +292,7 @@ describe('useAICategorization', () => {
         confidence: 0.9,
         reasoning: 'test',
       }
-      mockSuggestExpenseCategory.mockResolvedValue(highConfSuggestion)
+      mockSuggestExpenseCategory.mockResolvedValue(detectionResult(highConfSuggestion))
       await categorizeName('Second')
 
       expect(lowConfidenceSuggestion.value).toBeNull()
@@ -304,7 +315,7 @@ describe('useAICategorization', () => {
         confidence: 0.9,
         reasoning: 'test',
       }
-      mockSuggestExpenseCategory.mockResolvedValue(mockSuggestion)
+      mockSuggestExpenseCategory.mockResolvedValue(detectionResult(mockSuggestion))
 
       debouncedCategorize('Coffee')
 
@@ -339,7 +350,7 @@ describe('useAICategorization', () => {
         confidence: 0.9,
         reasoning: 'test',
       }
-      mockSuggestExpenseCategory.mockResolvedValue(mockSuggestion)
+      mockSuggestExpenseCategory.mockResolvedValue(detectionResult(mockSuggestion))
       await categorizeName('Coffee')
 
       expect(lastSuggestion.value).not.toBeNull()
@@ -368,7 +379,7 @@ describe('useAICategorization', () => {
         confidence: 0.3,
         reasoning: 'test',
       }
-      mockSuggestExpenseCategory.mockResolvedValue(mockSuggestion)
+      mockSuggestExpenseCategory.mockResolvedValue(detectionResult(mockSuggestion))
       await categorizeName('Coffee')
 
       expect(lowConfidenceSuggestion.value).not.toBeNull()
@@ -403,7 +414,7 @@ describe('useAICategorization', () => {
         confidence: 0.9,
         reasoning: 'test',
       }
-      mockSuggestExpenseCategory.mockResolvedValue(mockSuggestion)
+      mockSuggestExpenseCategory.mockResolvedValue(detectionResult(mockSuggestion))
 
       await categorizeName('Coffee')
 
@@ -413,9 +424,9 @@ describe('useAICategorization', () => {
 
   it('keeps a no-suggestion response distinct from an API failure', async () => {
     const { categorizeName, hasError, hasNoSuggestion, noSuggestionMessage } = useAICategorization()
-    mockSuggestExpenseCategory.mockResolvedValue(null)
+    mockSuggestExpenseCategory.mockResolvedValue(unavailableResult())
 
-    await expect(categorizeName('Unknown merchant')).resolves.toBeNull()
+    await expect(categorizeName('Unknown merchant')).resolves.toEqual(unavailableResult())
 
     expect(hasError.value).toBe(false)
     expect(hasNoSuggestion.value).toBe(true)
@@ -424,21 +435,23 @@ describe('useAICategorization', () => {
 
   it('ignores an older response after the suggestion is cleared', async () => {
     const { categorizeName, clearSuggestion, lastSuggestion } = useAICategorization()
-    let resolveSuggestion: (value: CategorySuggestion | null) => void
+    let resolveSuggestion: (value: CategoryDetectionResult) => void
     mockSuggestExpenseCategory.mockReturnValue(
-      new Promise<CategorySuggestion | null>((resolve) => {
+      new Promise<CategoryDetectionResult>((resolve) => {
         resolveSuggestion = resolve
       }),
     )
 
     const request = categorizeName('Coffee')
     clearSuggestion()
-    resolveSuggestion!({
-      categoryId: 'cat-1',
-      categoryName: 'Food',
-      confidence: 0.9,
-      reasoning: 'test',
-    })
+    resolveSuggestion!(
+      detectionResult({
+        categoryId: 'cat-1',
+        categoryName: 'Food',
+        confidence: 0.9,
+        reasoning: 'test',
+      }),
+    )
 
     await expect(request).resolves.toBeNull()
     expect(lastSuggestion.value).toBeNull()

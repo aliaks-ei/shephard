@@ -1,12 +1,21 @@
-import { it, expect, vi } from 'vitest'
+import { beforeEach, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 import CustomEntryPanel from './CustomEntryPanel.vue'
 import { createMockCategories } from 'test/fixtures/categories'
 import type { PlanOption } from 'src/types'
 
 installQuasarPlugin()
+
+const { mockSuggestExpenseCategory } = vi.hoisted(() => ({
+  mockSuggestExpenseCategory: vi.fn(),
+}))
+
+vi.mock('src/api/ai', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('src/api/ai')>()),
+  suggestExpenseCategory: mockSuggestExpenseCategory,
+}))
 
 vi.mock('src/queries/categories', () => ({
   useCategoriesQuery: vi.fn(() => ({
@@ -62,6 +71,10 @@ const defaultProps = {
   nameRules: [(val: string) => !!val || 'Required'],
   amountRules: [(val: number) => !!val || 'Required'],
 }
+
+beforeEach(() => {
+  vi.clearAllMocks()
+})
 
 it('should mount component properly', () => {
   const wrapper = mount(CustomEntryPanel, {
@@ -133,6 +146,86 @@ it('should show category loading state while plan categories load', () => {
   expect(categorySelect?.props('disable')).toBe(true)
   expect(categorySelect?.props('loading')).toBe(true)
   expect(categorySelect?.props('hint')).toBe('Loading categories...')
+})
+
+it('should explain when the selected plan has no categories', () => {
+  const wrapper = mount(CustomEntryPanel, {
+    props: {
+      ...defaultProps,
+      planId: 'plan-1',
+      selectedPlan: mockPlan,
+    },
+  })
+
+  const categorySelect = wrapper
+    .findAllComponents({ name: 'QSelect' })
+    .find((select) => select.props('optionLabel') === 'label')
+
+  expect(categorySelect?.props('hint')).toBe('No categories are available in this plan')
+})
+
+it('waits for categories to load before applying a detected category', async () => {
+  vi.useFakeTimers()
+  mockSuggestExpenseCategory.mockResolvedValue({
+    status: 'selected',
+    suggestion: {
+      categoryId: 'cat-1',
+      categoryName: 'Food',
+      confidence: 0.95,
+      reasoning: 'Matched a planned item.',
+      source: 'plan_item',
+    },
+  })
+  const wrapper = mount(CustomEntryPanel, {
+    props: {
+      ...defaultProps,
+      planId: 'plan-1',
+      selectedPlan: mockPlan,
+      isLoadingCategories: true,
+    },
+  })
+
+  const nameInput = wrapper.findAllComponents({ name: 'QInput' })[1]
+  await nameInput?.vm.$emit('update:modelValue', 'Groceries')
+  expect(mockSuggestExpenseCategory).not.toHaveBeenCalled()
+
+  await wrapper.setProps({ isLoadingCategories: false, categoryOptions: mockCategoryOptions })
+  await vi.advanceTimersByTimeAsync(300)
+  await flushPromises()
+
+  expect(mockSuggestExpenseCategory).toHaveBeenCalledWith('Groceries', 'plan-1')
+  expect(wrapper.emitted('update:categoryId')).toContainEqual(['cat-1'])
+  vi.useRealTimers()
+})
+
+it('shows a message when a detected category cannot be applied', async () => {
+  vi.useFakeTimers()
+  mockSuggestExpenseCategory.mockResolvedValue({
+    status: 'selected',
+    suggestion: {
+      categoryId: 'missing-category',
+      categoryName: 'Missing',
+      confidence: 0.95,
+      reasoning: 'Matched by category detection.',
+      source: 'model',
+    },
+  })
+  const wrapper = mount(CustomEntryPanel, {
+    props: {
+      ...defaultProps,
+      planId: 'plan-1',
+      selectedPlan: mockPlan,
+      categoryOptions: mockCategoryOptions,
+    },
+  })
+
+  const nameInput = wrapper.findAllComponents({ name: 'QInput' })[1]
+  await nameInput?.vm.$emit('update:modelValue', 'Unexpected merchant')
+  await vi.advanceTimersByTimeAsync(300)
+  await flushPromises()
+
+  expect(wrapper.text()).toContain("Couldn't apply the suggested category")
+  vi.useRealTimers()
 })
 
 it('should make category readonly when defaultCategoryId is set', () => {

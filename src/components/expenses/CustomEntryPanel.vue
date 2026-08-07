@@ -295,6 +295,8 @@ const planIdRef = toRef(props, 'planId')
 
 const aiCategorization = useAICategorization(planIdRef)
 const aiSelectedCategoryId = ref<string | null>(null)
+const latestExpenseName = ref(props.name)
+const pendingCategorizationName = ref<string | null>(null)
 
 const {
   convertWithDebounce,
@@ -359,6 +361,10 @@ const isAiSelected = computed(() => {
 })
 
 const isLoadingCategories = computed(() => props.isLoadingCategories ?? false)
+const canCategorize = computed(
+  () =>
+    Boolean(props.selectedPlan) && !isLoadingCategories.value && props.categoryOptions.length > 0,
+)
 
 const categoryHint = computed(() => {
   if (isLoadingCategories.value) {
@@ -371,6 +377,10 @@ const categoryHint = computed(() => {
 
   if (isAiSelected.value) {
     return 'Category selected automatically'
+  }
+
+  if (props.selectedPlan && props.categoryOptions.length === 0) {
+    return 'No categories are available in this plan'
   }
 
   return undefined
@@ -396,12 +406,15 @@ function handlePhotoAnalysisApplied(result: {
 const handlePlanSelected = (planId: string | null) => {
   aiCategorization.clearSuggestion()
   aiSelectedCategoryId.value = null
+  pendingCategorizationName.value =
+    latestExpenseName.value.trim().length >= 3 ? latestExpenseName.value : null
   photoAnalysisSectionRef.value?.reset()
   emit('plan-selected', planId)
 }
 
 const handleUpdateCategoryId = (value: string | null) => {
   aiCategorization.clearSuggestion()
+  pendingCategorizationName.value = null
   if (value !== aiSelectedCategoryId.value) {
     aiSelectedCategoryId.value = null
   }
@@ -410,15 +423,48 @@ const handleUpdateCategoryId = (value: string | null) => {
 
 function applyLowConfidenceSuggestion() {
   const suggestion = aiCategorization.lowConfidenceSuggestion.value
-  if (suggestion && props.categoryOptions.some((option) => option.value === suggestion.categoryId)) {
+  if (
+    suggestion &&
+    props.categoryOptions.some((option) => option.value === suggestion.categoryId)
+  ) {
     aiSelectedCategoryId.value = suggestion.categoryId
     emit('update:categoryId', suggestion.categoryId)
     aiCategorization.clearSuggestion()
   }
 }
 
+async function runCategorization(expenseName: string): Promise<void> {
+  if (
+    !canCategorize.value ||
+    props.defaultCategoryId ||
+    expenseName !== latestExpenseName.value ||
+    expenseName.trim().length < 3
+  ) {
+    return
+  }
+
+  pendingCategorizationName.value = null
+  const result = await aiCategorization.debouncedCategorize(expenseName)
+
+  if (!result || result.status !== 'selected' || expenseName !== latestExpenseName.value) {
+    return
+  }
+
+  const suggestion = result.suggestion
+  if (props.categoryOptions.some((option) => option.value === suggestion.categoryId)) {
+    aiSelectedCategoryId.value = suggestion.categoryId
+    emit('update:categoryId', suggestion.categoryId)
+    return
+  }
+
+  aiCategorization.reportUnavailable(
+    "Couldn't apply the suggested category. Please choose one manually.",
+  )
+}
+
 async function handleUpdateName(value: string | number | null) {
   const nameValue = String(value || '')
+  latestExpenseName.value = nameValue
   emit('update:name', nameValue)
 
   // Skip AI categorization if category is preselected
@@ -426,20 +472,22 @@ async function handleUpdateName(value: string | number | null) {
     return
   }
 
+  aiCategorization.clearSuggestion()
+  pendingCategorizationName.value = null
+
+  if (isAiSelected.value) {
+    aiSelectedCategoryId.value = null
+    emit('update:categoryId', null)
+  }
+
   if (!props.selectedPlan || nameValue.trim().length < 3) {
-    aiCategorization.clearSuggestion()
     return
   }
 
-  const suggestion = await aiCategorization.debouncedCategorize(nameValue)
+  pendingCategorizationName.value = nameValue
 
-  if (suggestion && suggestion.confidence > 0.5) {
-    if (props.categoryOptions.some((option) => option.value === suggestion.categoryId)) {
-      aiSelectedCategoryId.value = suggestion.categoryId
-      emit('update:categoryId', suggestion.categoryId)
-    } else {
-      aiCategorization.clearSuggestion()
-    }
+  if (canCategorize.value) {
+    await runCategorization(nameValue)
   }
 }
 
@@ -463,12 +511,17 @@ const handleUpdateAmount = (value: number | string | null) => {
   emit('update:amount', numValue)
 }
 
-watch(
-  () => props.planId,
-  () => {
+watch([() => props.planId, canCategorize], ([planId, ready], [previousPlanId]) => {
+  if (planId !== previousPlanId) {
     aiCategorization.clearSuggestion()
     aiSelectedCategoryId.value = null
+    pendingCategorizationName.value =
+      latestExpenseName.value.trim().length >= 3 ? latestExpenseName.value : null
     photoAnalysisSectionRef.value?.reset()
-  },
-)
+  }
+
+  if (ready && pendingCategorizationName.value) {
+    void runCategorization(pendingCategorizationName.value)
+  }
+})
 </script>

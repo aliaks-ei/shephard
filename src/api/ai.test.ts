@@ -22,6 +22,7 @@ describe('AI API', () => {
     it('should return category suggestion when successful', async () => {
       const mockResponse = {
         success: true,
+        outcome: 'selected',
         data: {
           categoryId: 'cat-1',
           categoryName: 'Groceries',
@@ -45,7 +46,7 @@ describe('AI API', () => {
         }),
         region: 'eu-central-1',
       })
-      expect(result).toEqual(mockResponse.data)
+      expect(result).toEqual({ status: 'selected', suggestion: mockResponse.data })
     })
 
     it('should work without planId', async () => {
@@ -74,16 +75,43 @@ describe('AI API', () => {
         }),
         region: 'eu-central-1',
       })
-      expect(result).toEqual(mockResponse.data)
+      expect(result).toEqual({ status: 'selected', suggestion: mockResponse.data })
     })
 
-    it('should return null when the optional suggestion is unavailable', async () => {
+    it('should return an actionable reason when detection is unavailable', async () => {
       mockInvoke.mockResolvedValue({
-        data: { success: true, data: null },
+        data: {
+          success: true,
+          outcome: 'unavailable',
+          reason: 'model_timeout',
+          data: null,
+        },
         error: null,
       } as unknown as Awaited<ReturnType<typeof mockInvoke>>)
 
-      await expect(suggestExpenseCategory('Unknown merchant', 'plan-1')).resolves.toBeNull()
+      await expect(suggestExpenseCategory('Unknown merchant', 'plan-1')).resolves.toEqual({
+        status: 'unavailable',
+        suggestion: null,
+        reason: 'model_timeout',
+      })
+    })
+
+    it('supports the previous edge response shape during rollout', async () => {
+      const suggestion = {
+        categoryId: 'cat-1',
+        categoryName: 'Other',
+        confidence: 0.4,
+        reasoning: 'Uncertain match',
+      }
+      mockInvoke.mockResolvedValue({
+        data: { success: true, data: suggestion },
+        error: null,
+      } as unknown as Awaited<ReturnType<typeof mockInvoke>>)
+
+      await expect(suggestExpenseCategory('Unknown merchant')).resolves.toEqual({
+        status: 'suggested',
+        suggestion,
+      })
     })
 
     it('should throw error when API call fails', async () => {
