@@ -140,11 +140,7 @@ describe('expense query contracts', () => {
     const createdExpenses = await options.mutationFn(variables)
     options.onSuccess(createdExpenses, variables)
 
-    expect(mocks.createExpenses).toHaveBeenCalledWith([
-      { ...variables[0]!, user_id: 'user-1' },
-      { ...variables[1]!, user_id: 'user-1' },
-    ])
-    expect(mocks.markExpenseSaved).toHaveBeenCalledOnce()
+    expect(mocks.createExpenses).toHaveBeenCalledWith(variables, true)
     expect(mocks.invalidateQueries.mock.calls.map(([options]) => options)).toEqual([
       { queryKey: queryKeys.expenses.byPlan('plan-1') },
       { queryKey: queryKeys.expenses.summary('plan-1') },
@@ -154,8 +150,6 @@ describe('expense query contracts', () => {
       { queryKey: queryKeys.expenses.categories('plan-1') },
       { queryKey: queryKeys.plans.items('plan-1') },
       { queryKey: queryKeys.expenses.recentAll() },
-      { queryKey: queryKeys.plans.list('user-1') },
-      { queryKey: queryKeys.plans.detail('plan-1', 'user-1') },
     ])
   })
 })

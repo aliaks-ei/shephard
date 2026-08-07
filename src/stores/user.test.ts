@@ -154,7 +154,7 @@ describe('User Store', () => {
 
         await userStore.updateUserPreferences(updates)
 
-        expect(mockUpdatePreferences).toHaveBeenCalledWith(updates.preferences)
+        expect(mockUpdatePreferences).toHaveBeenCalledWith(updates.preferences, 'test-user-id')
       })
     })
 

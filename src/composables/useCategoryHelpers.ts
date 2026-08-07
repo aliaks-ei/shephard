@@ -19,6 +19,7 @@ export function useCategoryHelpers() {
   }
 
   return {
+    getCategoryById,
     getCategoryName,
     getCategoryColor,
     getCategoryIcon,

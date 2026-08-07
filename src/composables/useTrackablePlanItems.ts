@@ -75,8 +75,8 @@ export function groupTrackablePlanItemsByCategory(
       groups.set(item.category_id, {
         categoryId: item.category_id,
         categoryName: category.name,
-        categoryColor: category.color,
-        categoryIcon: category.icon,
+        categoryColor: category.color || 'grey',
+        categoryIcon: category.icon || 'pricetags-outline',
         items: [],
         nonFixedItems: [],
         totalPlanned: 0,

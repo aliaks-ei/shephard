@@ -1,3 +1,4 @@
+import { FunctionRegion } from '@supabase/supabase-js'
 import { supabase } from 'src/lib/supabase/client'
 
 export type CategorySuggestion = {
@@ -5,7 +6,25 @@ export type CategorySuggestion = {
   categoryName: string
   confidence: number
   reasoning: string
+  source?: 'plan_item' | 'previous_choice' | 'category_name' | 'semantic_match' | 'model'
 }
+
+export type CategoryDetectionUnavailableReason =
+  | 'model_timeout'
+  | 'model_error'
+  | 'invalid_model_response'
+  | 'no_matching_category'
+
+export type CategoryDetectionResult =
+  | {
+      status: 'selected' | 'suggested'
+      suggestion: CategorySuggestion
+    }
+  | {
+      status: 'unavailable'
+      suggestion: null
+      reason: CategoryDetectionUnavailableReason
+    }
 
 export type PhotoAnalysisResult = {
   expenseName: string
@@ -21,6 +40,13 @@ export type CategorizationDeviceContext = {
   timeZone?: string
 }
 
+const unavailableReasons = new Set<CategoryDetectionUnavailableReason>([
+  'model_timeout',
+  'model_error',
+  'invalid_model_response',
+  'no_matching_category',
+])
+
 function getCategorizationDeviceContext(): CategorizationDeviceContext {
   const locale = typeof navigator !== 'undefined' ? navigator.language : undefined
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -34,24 +60,44 @@ function getCategorizationDeviceContext(): CategorizationDeviceContext {
 export async function suggestExpenseCategory(
   expenseName: string,
   planId?: string,
-): Promise<CategorySuggestion> {
+): Promise<CategoryDetectionResult> {
   const { data, error } = await supabase.functions.invoke('categorize-expense', {
     body: {
       expenseName,
       planId,
       deviceContext: getCategorizationDeviceContext(),
     },
+    region: FunctionRegion.EuCentral1,
   })
 
   if (error) {
     throw new Error(`Failed to categorize expense: ${error.message}`)
   }
 
-  if (!data.success) {
-    throw new Error(data.error || 'Unknown error occurred')
+  if (!data?.success) {
+    throw new Error(data?.error || 'Unknown error occurred')
   }
 
-  return data.data
+  if (!data.data) {
+    const reason = unavailableReasons.has(data.reason) ? data.reason : 'no_matching_category'
+    return {
+      status: 'unavailable',
+      suggestion: null,
+      reason,
+    }
+  }
+
+  const status =
+    data.outcome === 'selected' || data.outcome === 'suggested'
+      ? data.outcome
+      : data.data.confidence > 0.65
+        ? 'selected'
+        : 'suggested'
+
+  return {
+    status,
+    suggestion: data.data,
+  }
 }
 
 export async function analyzeExpensePhoto(

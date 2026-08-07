@@ -57,6 +57,39 @@ export default defineConfigWithVueTs(
       ],
     },
   },
+  {
+    files: ['src/components/**/*.vue', 'src/pages/**/*.vue'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['src/queries', 'src/queries/*'],
+              message: 'UI must consume server state through a composable.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/composables/**/*.{ts,vue}', 'src/stores/**/*.ts', 'src/queries/**/*.ts'],
+    ignores: ['src/**/*.test.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['src/components', 'src/components/*', 'src/components/**'],
+              message: 'Business layers must not depend on presentation components.',
+            },
+          ],
+        },
+      ],
+    },
+  },
   // https://github.com/vuejs/eslint-config-typescript
   vueTsConfigs.recommendedTypeChecked,
 

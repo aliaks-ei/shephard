@@ -41,7 +41,7 @@ const mockExpense: Expense = {
   created_at: '2023-01-15T12:00:00Z',
   updated_at: '2023-01-15T12:00:00Z',
   plan_item_id: null,
-  currency: null,
+  currency: 'USD',
   original_amount: null,
   original_currency: null,
 }
@@ -268,7 +268,7 @@ describe('bounded expense reads', () => {
 })
 
 describe('createExpense', () => {
-  it('should create a new expense successfully and update plan timestamp', async () => {
+  it('should create an expense through the atomic transaction RPC', async () => {
     const newExpense: ExpenseInsert = {
       plan_id: 'plan-1',
       category_id: 'category-1',
@@ -276,53 +276,24 @@ describe('createExpense', () => {
       amount: 75.5,
       name: 'New expense',
       expense_date: '2023-01-20',
+      currency: 'USD',
     }
 
-    const mockSingle = vi.fn().mockResolvedValue({
-      data: { ...mockExpense, ...newExpense },
+    mockSupabase.rpc.mockResolvedValueOnce({
+      data: { expense: { ...mockExpense, ...newExpense }, outbox_id: 'event-1' },
       error: null,
     })
-    const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
-    const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
-
-    // Mock for updating plan timestamp
-    const mockPlanEq = vi.fn().mockResolvedValue({
-      data: null,
-      error: null,
-    })
-    const mockPlanUpdate = vi.fn().mockReturnValue({ eq: mockPlanEq })
-
-    // Setup mock to handle both expenses table and plans table
-    const mockFrom = vi.fn().mockImplementation((table: string) => {
-      if (table === 'expenses') {
-        return { insert: mockInsert }
-      }
-      if (table === 'plans') {
-        return { update: mockPlanUpdate }
-      }
-      return {}
-    })
-
-    mockSupabase.from.mockImplementation(mockFrom)
 
     const result = await createExpense(newExpense)
 
-    expect(mockFrom).toHaveBeenCalledWith('expenses')
-    expect(mockInsert).toHaveBeenCalledWith(newExpense)
-    expect(mockSelect).toHaveBeenCalledWith()
+    expect(mockSupabase.rpc.mock.calls).toContainEqual([
+      'create_expense_transaction',
+      { p_expense: newExpense, p_complete_plan_item: false },
+    ])
     expect(result).toEqual({ ...mockExpense, ...newExpense })
-
-    // Verify plan timestamp was updated
-    expect(mockFrom).toHaveBeenCalledWith('plans')
-    expect(mockPlanUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        updated_at: expect.any(String),
-      }),
-    )
-    expect(mockPlanEq).toHaveBeenCalledWith('id', 'plan-1')
   })
 
-  it('should create expense successfully even if plan timestamp update fails', async () => {
+  it('can complete a related plan item in the same transaction', async () => {
     const newExpense: ExpenseInsert = {
       plan_id: 'plan-1',
       category_id: 'category-1',
@@ -330,38 +301,21 @@ describe('createExpense', () => {
       amount: 75.5,
       name: 'New expense',
       expense_date: '2023-01-20',
+      currency: 'USD',
     }
 
-    const mockSingle = vi.fn().mockResolvedValue({
-      data: { ...mockExpense, ...newExpense },
+    mockSupabase.rpc.mockResolvedValueOnce({
+      data: { expense: { ...mockExpense, ...newExpense }, outbox_id: 'event-1' },
       error: null,
     })
-    const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
-    const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
 
-    // Mock plan update to fail
-    const mockPlanEq = vi.fn().mockResolvedValue({
-      data: null,
-      error: createPostgrestError('Failed to update plan'),
-    })
-    const mockPlanUpdate = vi.fn().mockReturnValue({ eq: mockPlanEq })
-
-    const mockFrom = vi.fn().mockImplementation((table: string) => {
-      if (table === 'expenses') {
-        return { insert: mockInsert }
-      }
-      if (table === 'plans') {
-        return { update: mockPlanUpdate }
-      }
-      return {}
-    })
-
-    mockSupabase.from.mockImplementation(mockFrom)
-
-    const result = await createExpense(newExpense)
+    const result = await createExpense(newExpense, true)
 
     expect(result).toEqual({ ...mockExpense, ...newExpense })
-    expect(mockPlanUpdate).toHaveBeenCalled()
+    expect(mockSupabase.rpc.mock.calls).toContainEqual([
+      'create_expense_transaction',
+      expect.objectContaining({ p_complete_plan_item: true }),
+    ])
   })
 
   it('should throw error when creation fails', async () => {
@@ -372,18 +326,11 @@ describe('createExpense', () => {
       amount: 75.5,
       name: 'New expense',
       expense_date: '2023-01-20',
+      currency: 'USD',
     }
 
     const mockError = createPostgrestError('Failed to create expense')
-    const mockSingle = vi.fn().mockResolvedValue({
-      data: null,
-      error: mockError,
-    })
-    const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
-    const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
-    const mockFrom = vi.fn().mockReturnValue({ insert: mockInsert })
-
-    mockSupabase.from.mockImplementation(mockFrom)
+    mockSupabase.rpc.mockResolvedValueOnce({ data: null, error: mockError })
 
     await expect(createExpense(newExpense)).rejects.toThrow('Failed to create expense')
   })

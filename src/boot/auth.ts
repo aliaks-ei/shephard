@@ -2,6 +2,7 @@ import { defineBoot } from '#q-app/wrappers'
 import { watch } from 'vue'
 import { useAuthStore } from 'src/stores/auth'
 import { usePreferencesStore } from 'src/stores/preferences'
+import { queryClient } from 'src/boot/vue-query'
 
 export default defineBoot(async () => {
   try {
@@ -20,9 +21,15 @@ export default defineBoot(async () => {
 
     watch(
       () => authStore.user,
-      (newUser, oldUser) => {
+      async (newUser, oldUser) => {
+        if (newUser?.id !== oldUser?.id) {
+          await queryClient.cancelQueries()
+          queryClient.clear()
+        }
         if (newUser && newUser.id !== oldUser?.id) {
-          preferencesStore.loadPreferences()
+          await preferencesStore.loadPreferences(newUser.id)
+        } else if (!newUser) {
+          preferencesStore.reset()
         }
       },
       { immediate: true },

@@ -110,8 +110,7 @@ describe('plan query contracts', () => {
 
     expect(mocks.createPlanWithItems).toHaveBeenCalledWith(variables.plan, variables.items)
     expect(mocks.invalidateQueries.mock.calls.map(([options]) => options)).toEqual([
-      { queryKey: queryKeys.plans.list('user-1') },
-      { queryKey: queryKeys.plans.detail('plan-1', 'user-1') },
+      { queryKey: queryKeys.plans.all },
       { queryKey: queryKeys.plans.items('plan-1') },
       { queryKey: queryKeys.expenses.byPlan('plan-1') },
       { queryKey: queryKeys.expenses.summary('plan-1') },

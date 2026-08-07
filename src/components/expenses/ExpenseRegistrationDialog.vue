@@ -92,6 +92,7 @@
             :default-expense-currency="defaultExpenseCurrency"
             :readonly="!!defaultPlanId"
             :loading="isLoading"
+            :is-loading-categories="isLoadingCategories"
             :show-auto-select-hint="didAutoSelectPlan"
             :default-category-id="defaultCategoryId ?? null"
             @plan-selected="handlePlanSelected"
@@ -190,6 +191,7 @@ const defaultPlanIdRef = toRef(props, 'defaultPlanId')
 const {
   form,
   isLoading,
+  isLoadingCategories,
   isLoadingPlanItems,
   didAutoSelectPlan,
   currentMode,

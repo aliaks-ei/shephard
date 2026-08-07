@@ -1,11 +1,11 @@
 import { computed, type ComputedRef } from 'vue'
-import type { Category } from 'src/api'
+import type { Tables } from 'src/lib/supabase/types'
 import type { CategoryGroup } from './useItemsManager'
 import type { BaseItemUI, BaseCategoryUI } from 'src/types'
 
 export function useEnrichedCategories<T extends BaseItemUI = BaseItemUI>(
   categoryGroups: ComputedRef<CategoryGroup<T>[]>,
-  categories: ComputedRef<Category[]> | Category[],
+  categories: ComputedRef<Tables<'categories'>[]> | Tables<'categories'>[],
 ) {
   const enrichedCategories = computed((): (BaseCategoryUI & { items: T[] })[] => {
     const categoryArray = Array.isArray(categories) ? categories : categories.value
@@ -18,7 +18,7 @@ export function useEnrichedCategories<T extends BaseItemUI = BaseItemUI>(
           acc.push({
             ...group,
             categoryName: category.name,
-            categoryIcon: category.icon,
+            categoryIcon: category.icon || 'pricetags-outline',
           })
         }
         return acc

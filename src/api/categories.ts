@@ -1,7 +1,18 @@
 import { supabase } from 'src/lib/supabase/client'
 import type { Tables } from 'src/lib/supabase/types'
 
-export type Category = Tables<'categories'>
+export type Category = Omit<Tables<'categories'>, 'color' | 'icon'> & {
+  color: string
+  icon: string
+}
+
+function normalizeCategory(category: Tables<'categories'>): Category {
+  return {
+    ...category,
+    color: category.color || 'grey',
+    icon: category.icon || 'pricetags-outline',
+  }
+}
 
 export type CategoryWithStats = Category & {
   templates: CategoryTemplate[]
@@ -14,7 +25,7 @@ export async function getCategories(): Promise<Category[]> {
     .order('name', { ascending: true })
 
   if (error) throw error
-  return data
+  return data.map(normalizeCategory)
 }
 
 export type CategoryTemplate = {
@@ -38,7 +49,7 @@ export async function getCategoriesWithStats(userId: string): Promise<CategoryWi
   if (ownedTemplatesResult.error) throw ownedTemplatesResult.error
   if (sharedTemplatesResult.error) throw sharedTemplatesResult.error
 
-  const categories = categoriesResult.data
+  const categories = categoriesResult.data.map(normalizeCategory)
   const ownedTemplates = ownedTemplatesResult.data
   const sharedTemplatesData = sharedTemplatesResult.data
 

@@ -22,7 +22,6 @@ import {
   getEntityLoadErrorKind,
 } from 'src/api'
 import { updatePlanItemCompletion, updatePlanItemsCompletion } from 'src/api/plans'
-import { useUserStore } from 'src/stores/user'
 import { queryKeys } from './query-keys'
 import { createSpecificErrorHandler, createMutationErrorHandler } from './query-error-handler'
 import { canAddExpensesToPlan } from 'src/utils/plans'
@@ -92,12 +91,8 @@ export function usePlanItemsQuery(planId: MaybeRefOrGetter<string | null>) {
 }
 
 function invalidatePlanQueries(queryClient: ReturnType<typeof useQueryClient>, planId?: string) {
-  const userStore = useUserStore()
-  const userId = userStore.userProfile?.id ?? ''
-
-  queryClient.invalidateQueries({ queryKey: queryKeys.plans.list(userId) })
+  queryClient.invalidateQueries({ queryKey: queryKeys.plans.all })
   if (planId) {
-    queryClient.invalidateQueries({ queryKey: queryKeys.plans.detail(planId, userId) })
     queryClient.invalidateQueries({ queryKey: queryKeys.plans.items(planId) })
     queryClient.invalidateQueries({ queryKey: queryKeys.expenses.byPlan(planId) })
     queryClient.invalidateQueries({ queryKey: queryKeys.expenses.summary(planId) })

@@ -7,7 +7,7 @@ import type {
 } from 'src/api/expenses'
 import type { PlanSharedUser } from 'src/api/plans'
 import type { TemplateSharedUser } from 'src/api/templates'
-import { getAll, getById } from 'src/mocks/data/db'
+import { getAll, getById, insert, remove, update } from 'src/mocks/data/db'
 import { getPlanItemsWithTrackingData, users as seedUsers } from 'src/mocks/data/seed'
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
@@ -61,8 +61,8 @@ function getPlanOverviewSnapshots(planIds: string[]): PlanOverviewSnapshotRow[] 
           ...summary,
           plan_id: planId,
           category_name: category.name,
-          category_color: category.color,
-          category_icon: category.icon,
+          category_color: category.color || 'grey',
+          category_icon: category.icon || 'pricetags-outline',
         },
       ]
     }),
@@ -90,7 +90,7 @@ function compareRecentExpenses(
 ): number {
   const newestFirst =
     b.expense_date.localeCompare(a.expense_date) ||
-    b.created_at.localeCompare(a.created_at) ||
+    (b.created_at || '').localeCompare(a.created_at || '') ||
     b.id.localeCompare(a.id)
 
   switch (sortBy) {
@@ -99,7 +99,7 @@ function compareRecentExpenses(
     case 'date-asc':
       return (
         a.expense_date.localeCompare(b.expense_date) ||
-        a.created_at.localeCompare(b.created_at) ||
+        (a.created_at || '').localeCompare(b.created_at || '') ||
         a.id.localeCompare(b.id)
       )
     case 'amount-desc':
@@ -195,6 +195,80 @@ function getPlanSharedUsers(planId: string): PlanSharedUser[] {
 }
 
 export const rpcHandlers = [
+  http.post(`${SUPABASE_URL}/rest/v1/rpc/create_expense_transaction`, async ({ request }) => {
+    const body = (await request.json()) as {
+      p_expense: Record<string, unknown>
+      p_complete_plan_item?: boolean
+    }
+    const input = body.p_expense
+    const planId = String(input.plan_id)
+    const plan = getById('plans', planId)
+    if (!plan) return HttpResponse.json({ message: 'Plan not found' }, { status: 404 })
+    const now = new Date().toISOString()
+    const expense = insert('expenses', {
+      id: crypto.randomUUID(),
+      plan_id: planId,
+      category_id: String(input.category_id),
+      user_id: seedUsers[0]!.id,
+      name: String(input.name),
+      amount: Number(input.amount),
+      expense_date: typeof input.expense_date === 'string' ? input.expense_date : now.slice(0, 10),
+      plan_item_id: typeof input.plan_item_id === 'string' ? input.plan_item_id : null,
+      currency: typeof input.currency === 'string' ? input.currency : plan.currency,
+      original_amount: typeof input.original_amount === 'number' ? input.original_amount : null,
+      original_currency:
+        typeof input.original_currency === 'string' ? input.original_currency : null,
+      created_at: now,
+      updated_at: now,
+    })
+    if (body.p_complete_plan_item && expense.plan_item_id) {
+      update('plan_items', expense.plan_item_id, { is_completed: true, updated_at: now })
+    }
+    update('plans', planId, { updated_at: now })
+    return HttpResponse.json({ expense, outbox_id: crypto.randomUUID() })
+  }),
+
+  http.post(`${SUPABASE_URL}/rest/v1/rpc/create_expenses_transaction`, async ({ request }) => {
+    const body = (await request.json()) as { p_expenses: Record<string, unknown>[] }
+    const expenses = []
+    for (const input of body.p_expenses) {
+      const plan = getById('plans', String(input.plan_id))
+      if (!plan) continue
+      const now = new Date().toISOString()
+      const expense = insert('expenses', {
+        id: crypto.randomUUID(),
+        plan_id: plan.id,
+        category_id: String(input.category_id),
+        user_id: seedUsers[0]!.id,
+        name: String(input.name),
+        amount: Number(input.amount),
+        expense_date:
+          typeof input.expense_date === 'string' ? input.expense_date : now.slice(0, 10),
+        plan_item_id: typeof input.plan_item_id === 'string' ? input.plan_item_id : null,
+        currency: typeof input.currency === 'string' ? input.currency : plan.currency,
+        original_amount: null,
+        original_currency: null,
+        created_at: now,
+        updated_at: now,
+      })
+      if (expense.plan_item_id) update('plan_items', expense.plan_item_id, { is_completed: true })
+      expenses.push(expense)
+    }
+    return HttpResponse.json({ expenses, outbox_ids: expenses.map(() => crypto.randomUUID()) })
+  }),
+
+  http.post(`${SUPABASE_URL}/rest/v1/rpc/delete_plan_transaction`, async ({ request }) => {
+    const { p_plan_id } = (await request.json()) as { p_plan_id: string }
+    remove('plans', p_plan_id)
+    return HttpResponse.json({ deleted_id: p_plan_id, outbox_id: crypto.randomUUID() })
+  }),
+
+  http.post(`${SUPABASE_URL}/rest/v1/rpc/delete_template_transaction`, async ({ request }) => {
+    const { p_template_id } = (await request.json()) as { p_template_id: string }
+    remove('templates', p_template_id)
+    return HttpResponse.json({ deleted_id: p_template_id, outbox_id: crypto.randomUUID() })
+  }),
+
   // get_plan_expense_summary
   http.post(`${SUPABASE_URL}/rest/v1/rpc/get_plan_expense_summary`, async ({ request }) => {
     const body = (await request.json()) as { p_plan_id: string }

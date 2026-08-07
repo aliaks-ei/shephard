@@ -72,6 +72,7 @@ Page files stay thin. Most page behavior should live in composables, not route S
 - `src/pages/TemplatePage.vue` -> `src/composables/useTemplatePageState.ts`
 - `src/pages/PlansPage.vue` -> `src/composables/usePlans.ts`
 - `src/pages/TemplatesPage.vue` -> `src/composables/useTemplates.ts`
+- `src/pages/ExpensesPage.vue` -> `src/composables/useExpensesPage.ts`
 
 ## Ownership Boundaries
 
@@ -86,6 +87,8 @@ Rules implied by that boundary:
 - Stores hold local/session/preferences state, not server collections.
 - Composables own workflows, permissions, and multi-step operations.
 - Pages and most components should wire UI to composables rather than re-implement business logic.
+- Production pages/components must not import `src/queries/` directly; ESLint enforces this.
+- Composables, stores, and queries must not import presentation components; shared contracts live in `src/types/`.
 
 See:
 

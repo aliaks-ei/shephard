@@ -33,7 +33,7 @@ export function usePlanExport(
           {
             categoryId: item.category_id,
             categoryName: category.name,
-            categoryColor: category.color,
+            categoryColor: category.color || 'grey',
             categoryIcon: category.icon || 'eva-folder-outline',
             plannedAmount: item.planned_amount,
             actualAmount: item.actual_amount,

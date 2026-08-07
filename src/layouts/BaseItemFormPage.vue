@@ -25,7 +25,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import DetailPageLayout, { type BannerConfig } from './DetailPageLayout.vue'
-import type { ActionBarAction } from 'src/components/shared/ActionBar.vue'
+import type { ActionBarAction } from 'src/types'
 
 type DetailPageLoadState = 'loading' | 'ready' | 'not-found' | 'denied' | 'error'
 

@@ -31,7 +31,7 @@ export type TemplateExportPayload = {
     currency: string | null
     total: number | null
     owner_id: string
-    created_at: string
+    created_at: string | null
     updated_at: string | null
   }
   items: ExportItemRecord[]
@@ -61,7 +61,7 @@ export type PlanExportExpense = {
   original_currency: string | null
   expense_date: string
   plan_item_id: string | null
-  created_at: string
+  created_at: string | null
   updated_at: string | null
 }
 
@@ -79,7 +79,7 @@ export type PlanExportPayload = {
     currency: string | null
     total: number | null
     owner_id: string
-    created_at: string
+    created_at: string | null
     updated_at: string | null
   }
   items: ExportItemRecord[]

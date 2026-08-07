@@ -160,6 +160,11 @@ export async function emitNotificationEvent(input: EmitNotificationEventInput): 
   await invokeFunction<null>('emit-notification-event', input)
 }
 
+export async function processNotificationOutbox(outboxIds: string[]): Promise<void> {
+  if (outboxIds.length === 0) return
+  await invokeFunction<{ processed: number }>('emit-notification-event', { outboxIds })
+}
+
 export async function getPushSubscriptionConfig(): Promise<PushSubscriptionConfig> {
   return invokeFunction<PushSubscriptionConfig>('push-subscriptions', {
     action: 'get-config' satisfies PushSubscriptionAction,

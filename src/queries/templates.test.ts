@@ -70,7 +70,7 @@ beforeEach(() => {
 })
 
 describe('template query contracts', () => {
-  it('invalidates the user list and edited detail after an atomic update', async () => {
+  it('invalidates every template cache after an atomic update', async () => {
     const variables = {
       id: 'template-1',
       updates: { name: 'Updated template' },
@@ -97,8 +97,7 @@ describe('template query contracts', () => {
       variables.items,
     )
     expect(mocks.invalidateQueries.mock.calls.map(([options]) => options)).toEqual([
-      { queryKey: queryKeys.templates.list('user-1') },
-      { queryKey: queryKeys.templates.detail('template-1', 'user-1') },
+      { queryKey: queryKeys.templates.all },
     ])
   })
 

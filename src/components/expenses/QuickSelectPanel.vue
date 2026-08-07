@@ -130,7 +130,8 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import PlanSelectorField, { type PlanOption } from './PlanSelectorField.vue'
+import PlanSelectorField from './PlanSelectorField.vue'
+import type { PlanOption } from 'src/types'
 import PlanItemSelector from './PlanItemSelector.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import type { PlanItem } from 'src/api/plans'

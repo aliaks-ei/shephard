@@ -1,0 +1,65 @@
+{
+  "version": "5",
+  "specifiers": {
+    "jsr:@std/assert@*": "1.0.19",
+    "jsr:@std/internal@^1.0.12": "1.0.14"
+  },
+  "jsr": {
+    "@std/assert@1.0.19": {
+      "integrity": "eaada96ee120cb980bc47e040f82814d786fe8162ecc53c91d8df60b8755991e",
+      "dependencies": [
+        "jsr:@std/internal"
+      ]
+    },
+    "@std/internal@1.0.14": {
+      "integrity": "291516b3d4c35024d6ffbc0a9df5bf4c64116e05b50012cf846710152d2ffdf7"
+    }
+  },
+  "workspace": {
+    "packageJson": {
+      "dependencies": [
+        "npm:@eslint/js@^9.14.0",
+        "npm:@pinia/testing@^1.0.1",
+        "npm:@prettier/plugin-oxc@^0.0.4",
+        "npm:@quasar/app-vite@^2.1.0",
+        "npm:@quasar/extras@^1.16.4",
+        "npm:@quasar/quasar-app-extension-testing-unit-vitest@^1.1.0",
+        "npm:@supabase/supabase-js@^2.49.1",
+        "npm:@tanstack/vue-query@^5.92.9",
+        "npm:@types/node@^20.5.9",
+        "npm:@vue/eslint-config-prettier@^10.1.0",
+        "npm:@vue/eslint-config-typescript@^14.4.0",
+        "npm:@vue/test-utils@^2.4.4",
+        "npm:@vueuse/core@^13.2.0",
+        "npm:autoprefixer@^10.4.2",
+        "npm:eslint-plugin-vue@^9.30.0",
+        "npm:eslint-plugin-vuejs-accessibility@^2.4.1",
+        "npm:eslint@^9.14.0",
+        "npm:globals@^15.12.0",
+        "npm:heic2any@^0.0.4",
+        "npm:husky@^9.1.7",
+        "npm:lint-staged@^16.1.0",
+        "npm:msw@^2.12.10",
+        "npm:pinia@^3.0.1",
+        "npm:prettier@^3.3.3",
+        "npm:quasar@^2.16.0",
+        "npm:register-service-worker@^1.7.2",
+        "npm:supabase@^2.51.0",
+        "npm:typescript@~5.5.3",
+        "npm:vite-plugin-checker@0.9",
+        "npm:vite-plugin-compression@~0.5.1",
+        "npm:vitest@^2.0.5",
+        "npm:vue-router@^4.0.12",
+        "npm:vue-tsc@^2.0.29",
+        "npm:vue@^3.4.18",
+        "npm:workbox-build@^7.3.0",
+        "npm:workbox-cacheable-response@^7.3.0",
+        "npm:workbox-core@^7.3.0",
+        "npm:workbox-expiration@^7.3.0",
+        "npm:workbox-precaching@^7.3.0",
+        "npm:workbox-routing@^7.3.0",
+        "npm:workbox-strategies@^7.3.0"
+      ]
+    }
+  }
+}

@@ -57,15 +57,7 @@
 
 <script setup lang="ts">
 import { formatDateRange, getStatusColor } from 'src/utils/plans'
-
-export interface PlanOption {
-  label: string
-  value: string
-  status: string
-  startDate: string
-  endDate: string
-  currency: string
-}
+import type { PlanOption } from 'src/types'
 
 interface Props {
   modelValue: string | null

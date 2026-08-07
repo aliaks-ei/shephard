@@ -98,27 +98,25 @@ Primary references:
 - `src/composables/useBanner.ts`
 - `src/config/error-messages.ts`
 
-## Multi-Step Write Patterns
+## Transactional Write Patterns
 
 Preferred pattern:
 
-- perform the workflow in a composable
-- wrap each async step with `toActionResult()`
-- return a structured result to the page
-- use best-effort rollback when partial writes would leave user-visible inconsistencies
+- perform multi-table writes in a database RPC transaction
+- enqueue collaboration events into `notification_outbox` in the same transaction
+- let the API trigger best-effort outbox delivery after commit
+- return structured results from composables for page feedback
 
 Current examples:
 
 - Plan create/update orchestration: `src/composables/usePlan.ts`
 - Template create/update orchestration: `src/composables/useTemplate.ts`
-- Expense create/delete rollback logic: `src/composables/useExpenseRegistration.ts`
+- Expense create/completion and plan/template deletion: `supabase/migrations/20260806172029_atomic_domain_workflows.sql`
 
 Important current nuance:
 
 - Plan item updates are diff-based and try to preserve existing item IDs.
-- Template item updates are replace-all and do not preserve item IDs across edits.
-
-Do not assume template item IDs are stable after edits.
+- Template and plan item updates preserve submitted IDs and apply granular inserts, updates, and deletes.
 
 ## Permissions And Sharing
 
@@ -162,11 +160,8 @@ Primary references:
 
 ## Existing Exceptions
 
-The current codebase has a few intentional or tolerated exceptions. Do not “normalize” them without understanding the reason.
-
 - `usePlanPageState()` fetches template details directly for template selection instead of introducing a dedicated one-off query hook.
 - Some dialogs are direct imports by design because the repo prefers predictable UX and simpler loading behavior over speculative lazy loading.
-- Expenses currently show the strongest rollback behavior; plan/template flows are more fail-fast.
 
 ## What Good Changes Usually Look Like
 

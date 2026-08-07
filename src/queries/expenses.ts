@@ -17,13 +17,11 @@ import {
   getExpensesByDateRange,
   type ExpenseWithCategory,
   type ExpenseWithCategoryAndPlan,
-  type ExpenseInsert,
+  type ExpenseTransactionInsert,
   type ExpenseSort,
   type PlanExpenseSummary,
   type PlanOverviewSnapshotRow,
 } from 'src/api'
-import { useUserStore } from 'src/stores/user'
-import { useInstallPromptGate } from 'src/composables/useInstallPromptGate'
 import { queryKeys } from './query-keys'
 import {
   createSpecificErrorHandler,
@@ -259,11 +257,13 @@ export function useLastExpenseForPlanQuery(planId: MaybeRefOrGetter<string | nul
   })
 }
 
-type ExpenseInput = Omit<ExpenseInsert, 'user_id'> & { user_id?: string }
+type ExpenseInput = ExpenseTransactionInsert & { completePlanItem?: boolean }
 
-function invalidateExpenseQueries(queryClient: ReturnType<typeof useQueryClient>, planId: string) {
-  const userId = useUserStore().userProfile?.id
-
+function invalidateExpenseQueries(
+  queryClient: ReturnType<typeof useQueryClient>,
+  planId: string,
+  userId?: string,
+) {
   queryClient.invalidateQueries({
     queryKey: queryKeys.expenses.byPlan(planId),
   })
@@ -300,19 +300,15 @@ function invalidateExpenseQueries(queryClient: ReturnType<typeof useQueryClient>
 
 export function useCreateExpenseMutation() {
   const queryClient = useQueryClient()
-  const userStore = useUserStore()
-  const { markExpenseSaved } = useInstallPromptGate()
 
   return useMutation({
     mutationFn: (expense: ExpenseInput) => {
-      const userId = expense.user_id || userStore.userProfile?.id
-      if (!userId) throw new Error('User not authenticated')
-      return createExpense({ ...expense, user_id: userId })
+      const { completePlanItem = false, ...payload } = expense
+      return createExpense(payload, completePlanItem)
     },
     onSuccess: (_data, vars) => {
-      markExpenseSaved()
       if (vars.plan_id) {
-        invalidateExpenseQueries(queryClient, vars.plan_id)
+        invalidateExpenseQueries(queryClient, vars.plan_id, vars.user_id)
       }
     },
     onError: createSpecificErrorHandler(EXPENSE_FK_ERROR_MATCHERS, 'EXPENSES.CREATE_FAILED'),
@@ -321,25 +317,10 @@ export function useCreateExpenseMutation() {
 
 export function useCreateExpensesBatchMutation() {
   const queryClient = useQueryClient()
-  const userStore = useUserStore()
-  const { markExpenseSaved } = useInstallPromptGate()
 
   return useMutation({
-    mutationFn: (expenses: ExpenseInput[]) => {
-      const defaultUserId = userStore.userProfile?.id
-      if (!defaultUserId && expenses.some((expense) => !expense.user_id)) {
-        throw new Error('User not authenticated')
-      }
-
-      return createExpenses(
-        expenses.map((expense) => ({
-          ...expense,
-          user_id: expense.user_id || defaultUserId!,
-        })),
-      )
-    },
+    mutationFn: (expenses: ExpenseTransactionInsert[]) => createExpenses(expenses, true),
     onSuccess: (_data, vars) => {
-      markExpenseSaved()
       const planIds = Array.from(
         new Set(
           vars
@@ -349,7 +330,7 @@ export function useCreateExpensesBatchMutation() {
       )
 
       for (const planId of planIds) {
-        invalidateExpenseQueries(queryClient, planId)
+        invalidateExpenseQueries(queryClient, planId, vars[0]?.user_id)
       }
     },
     onError: createSpecificErrorHandler(EXPENSE_FK_ERROR_MATCHERS, 'EXPENSES.CREATE_FAILED'),

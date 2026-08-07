@@ -173,7 +173,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import type { ActionBarAction } from './ActionBar.vue'
+import type { ActionBarAction } from 'src/types'
 import { usePreferencesStore } from 'src/stores/preferences'
 import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 import { useNetworkStatus } from 'src/composables/useNetworkStatus'

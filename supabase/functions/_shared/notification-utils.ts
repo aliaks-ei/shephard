@@ -80,7 +80,7 @@ export function resolveAllowedOrigin(requestOrigin: string | null): string {
 export function buildCorsHeaders(requestOrigin: string | null): Record<string, string> {
   return {
     'Access-Control-Allow-Origin': resolveAllowedOrigin(requestOrigin),
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-region',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Max-Age': '3600',
     Vary: 'Origin',

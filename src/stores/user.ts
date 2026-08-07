@@ -37,7 +37,7 @@ export const useUserStore = defineStore('user', () => {
   const isLoading = computed(() => authStore.isLoading)
 
   async function updateUserPreferences({ preferences }: UserProfileUpdates) {
-    await preferencesStore.updatePreferences(preferences)
+    await preferencesStore.updatePreferences(preferences, authStore.user?.id ?? null)
   }
 
   async function signOut() {
