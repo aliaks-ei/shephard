@@ -461,30 +461,51 @@ Deno.serve(async (req) => {
       if (outboxError) throw outboxError
 
       for (const event of events ?? []) {
-        await serviceClient.from('notification_outbox').update({
-          status: 'processing', claimed_at: new Date().toISOString(), attempts: event.attempts + 1,
-        }).eq('id', event.id)
+        await serviceClient
+          .from('notification_outbox')
+          .update({
+            status: 'processing',
+            claimed_at: new Date().toISOString(),
+            attempts: event.attempts + 1,
+          })
+          .eq('id', event.id)
         try {
           const payload = isRecord(event.payload) ? event.payload : {}
-          await deliverNotificationEvent(serviceClient, actor, {
-            type: event.event_type as NotificationType,
-            entityType: event.entity_type as NotificationEntityType,
-            entityId: event.entity_id,
-            ...(typeof payload.expenseName === 'string' ? { expenseName: payload.expenseName } : {}),
-            ...(typeof payload.entityName === 'string' ? { entityName: payload.entityName } : {}),
-          }, {
-            ...(Array.isArray(event.recipient_ids) ? { recipients: event.recipient_ids } : {}),
-            ...(typeof payload.entityName === 'string' ? { entityName: payload.entityName } : {}),
-            trustedOutbox: true,
-          })
-          await serviceClient.from('notification_outbox').update({
-            status: 'completed', processed_at: new Date().toISOString(), last_error: null,
-          }).eq('id', event.id)
+          await deliverNotificationEvent(
+            serviceClient,
+            actor,
+            {
+              type: event.event_type as NotificationType,
+              entityType: event.entity_type as NotificationEntityType,
+              entityId: event.entity_id,
+              ...(typeof payload.expenseName === 'string'
+                ? { expenseName: payload.expenseName }
+                : {}),
+              ...(typeof payload.entityName === 'string' ? { entityName: payload.entityName } : {}),
+            },
+            {
+              ...(Array.isArray(event.recipient_ids) ? { recipients: event.recipient_ids } : {}),
+              ...(typeof payload.entityName === 'string' ? { entityName: payload.entityName } : {}),
+              trustedOutbox: true,
+            },
+          )
+          await serviceClient
+            .from('notification_outbox')
+            .update({
+              status: 'completed',
+              processed_at: new Date().toISOString(),
+              last_error: null,
+            })
+            .eq('id', event.id)
         } catch (error) {
-          await serviceClient.from('notification_outbox').update({
-            status: 'failed', last_error: error instanceof Error ? error.message : 'Unknown error',
-            available_at: new Date(Date.now() + 60_000).toISOString(),
-          }).eq('id', event.id)
+          await serviceClient
+            .from('notification_outbox')
+            .update({
+              status: 'failed',
+              last_error: error instanceof Error ? error.message : 'Unknown error',
+              available_at: new Date(Date.now() + 60_000).toISOString(),
+            })
+            .eq('id', event.id)
         }
       }
       return successResponse({ processed: events?.length ?? 0 })

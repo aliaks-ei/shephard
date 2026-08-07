@@ -264,7 +264,6 @@ function invalidateExpenseQueries(
   planId: string,
   userId?: string,
 ) {
-
   queryClient.invalidateQueries({
     queryKey: queryKeys.expenses.byPlan(planId),
   })

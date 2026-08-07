@@ -33,14 +33,14 @@ export function useItemCompletion(planId: MaybeRefOrGetter<string | null>) {
         const expenseDate = `${year}-${month}-${day}`
 
         await createExpenseMutation.mutateAsync({
-            plan_id: currentPlanId,
-            category_id: item.category_id,
-            name: item.name,
-            amount: item.amount,
-            expense_date: expenseDate,
-            plan_item_id: item.id,
-            completePlanItem: true,
-          })
+          plan_id: currentPlanId,
+          category_id: item.category_id,
+          name: item.name,
+          amount: item.amount,
+          expense_date: expenseDate,
+          plan_item_id: item.id,
+          completePlanItem: true,
+        })
       } else {
         await completionMutation.mutateAsync({
           itemId: item.id,

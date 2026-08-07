@@ -40,7 +40,8 @@ export function useExpensesPage() {
   const hasExpensePlan = computed(() => plansForExpenses.value.length > 0)
   const canAddExpense = computed(() => isOnline.value && hasExpensePlan.value)
   const hasLoadError = computed(
-    () => ((expensesQuery.isError?.value ?? false) || isOffline.value) && expenses.value.length === 0,
+    () =>
+      ((expensesQuery.isError?.value ?? false) || isOffline.value) && expenses.value.length === 0,
   )
   const isRetrying = computed(() => expensesQuery.isFetching?.value ?? false)
   const sortOptions = [
@@ -102,7 +103,14 @@ export function useExpensesPage() {
   const dayGroups = computed(() => {
     if (expenses.value.length === 0) return []
     if (sortBy.value !== 'date-desc' && sortBy.value !== 'date-asc') {
-      return [{ date: 'all', label: 'All expenses', totalLabel: groupTotalLabel(expenses.value), expenses: expenses.value }]
+      return [
+        {
+          date: 'all',
+          label: 'All expenses',
+          totalLabel: groupTotalLabel(expenses.value),
+          expenses: expenses.value,
+        },
+      ]
     }
     const groups = new Map<string, ExpenseWithCategoryAndPlan[]>()
     for (const expense of expenses.value) {
@@ -122,10 +130,31 @@ export function useExpensesPage() {
   }
 
   return {
-    searchQuery, sortBy, selectedCategoryId, expenses, isPending, hasNextPage,
-    isFetchingNextPage, fetchNextPage, isOffline, hasExpensePlan, canAddExpense,
-    hasLoadError, isRetrying, sortOptions, hasOpenedExpenseDialog, showExpenseDialog,
-    availableCategories, hasActiveFilter, dayGroups, retryActivity, onRefresh,
-    openExpenseDialog, toggleCategory, clearFilters, expenseCurrency, sourcePlanRoute,
+    searchQuery,
+    sortBy,
+    selectedCategoryId,
+    expenses,
+    isPending,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+    isOffline,
+    hasExpensePlan,
+    canAddExpense,
+    hasLoadError,
+    isRetrying,
+    sortOptions,
+    hasOpenedExpenseDialog,
+    showExpenseDialog,
+    availableCategories,
+    hasActiveFilter,
+    dayGroups,
+    retryActivity,
+    onRefresh,
+    openExpenseDialog,
+    toggleCategory,
+    clearFilters,
+    expenseCurrency,
+    sourcePlanRoute,
   }
 }

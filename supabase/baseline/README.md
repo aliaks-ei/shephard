@@ -19,4 +19,3 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 +  -f supabase/baseline/verify_schema.sq
 The database baseline does not contain user, plan, template, expense,
 notification, or subscription records. Auth providers, secrets, Realtime
 configuration, and Edge Function deployments remain environment configuration.
-

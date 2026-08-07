@@ -1,8 +1,5 @@
 import { ref, computed, type Ref } from 'vue'
-import {
-  usePlansQuery,
-  usePlanItemsQuery,
-} from 'src/queries/plans'
+import { usePlansQuery, usePlanItemsQuery } from 'src/queries/plans'
 import { useCategoriesQuery } from 'src/queries/categories'
 import {
   useExpenseSummaryQuery,

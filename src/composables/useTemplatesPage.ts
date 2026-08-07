@@ -7,7 +7,11 @@ import { useUserStore } from 'src/stores/user'
 import { useBanner } from './useBanner'
 import { useNetworkStatus } from './useNetworkStatus'
 import { getTemplateWithItems } from 'src/api'
-import { createTemplateExportDownload, downloadExportFile, type ExportFormat } from 'src/utils/export'
+import {
+  createTemplateExportDownload,
+  downloadExportFile,
+  type ExportFormat,
+} from 'src/utils/export'
 
 export function useTemplatesPage() {
   const list = useTemplates()
@@ -54,10 +58,7 @@ export function useTemplatesPage() {
       return
     }
     try {
-      const template = await getTemplateWithItems(
-        exportTemplateId.value,
-        userStore.userProfile.id,
-      )
+      const template = await getTemplateWithItems(exportTemplateId.value, userStore.userProfile.id)
       const download = createTemplateExportDownload(template, categories.value, format)
       downloadExportFile(download)
       isExportDialogOpen.value = false

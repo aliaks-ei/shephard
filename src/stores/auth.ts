@@ -43,7 +43,6 @@ export const useAuthStore = defineStore('auth', () => {
       }
     })
     unsubscribeFromAuth = () => listener?.data.subscription.unsubscribe()
-
   })
 
   async function signInWithGoogle(response: GoogleSignInResponse) {

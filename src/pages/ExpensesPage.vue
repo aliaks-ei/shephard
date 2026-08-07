@@ -178,11 +178,31 @@ import { useExpensesPage } from 'src/composables/useExpensesPage'
 useMeta({ title: 'Activity' })
 
 const {
-  searchQuery, sortBy, selectedCategoryId, isPending, hasNextPage,
-  isFetchingNextPage, fetchNextPage, isOffline, hasExpensePlan, canAddExpense,
-  hasLoadError, isRetrying, sortOptions, hasOpenedExpenseDialog, showExpenseDialog,
-  availableCategories, hasActiveFilter, dayGroups, retryActivity, onRefresh,
-  openExpenseDialog, toggleCategory, clearFilters, expenseCurrency, sourcePlanRoute,
+  searchQuery,
+  sortBy,
+  selectedCategoryId,
+  isPending,
+  hasNextPage,
+  isFetchingNextPage,
+  fetchNextPage,
+  isOffline,
+  hasExpensePlan,
+  canAddExpense,
+  hasLoadError,
+  isRetrying,
+  sortOptions,
+  hasOpenedExpenseDialog,
+  showExpenseDialog,
+  availableCategories,
+  hasActiveFilter,
+  dayGroups,
+  retryActivity,
+  onRefresh,
+  openExpenseDialog,
+  toggleCategory,
+  clearFilters,
+  expenseCurrency,
+  sourcePlanRoute,
 } = useExpensesPage()
 </script>
 

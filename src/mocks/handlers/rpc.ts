@@ -236,12 +236,20 @@ export const rpcHandlers = [
       if (!plan) continue
       const now = new Date().toISOString()
       const expense = insert('expenses', {
-        id: crypto.randomUUID(), plan_id: plan.id, category_id: String(input.category_id),
-        user_id: seedUsers[0]!.id, name: String(input.name), amount: Number(input.amount),
-        expense_date: typeof input.expense_date === 'string' ? input.expense_date : now.slice(0, 10),
+        id: crypto.randomUUID(),
+        plan_id: plan.id,
+        category_id: String(input.category_id),
+        user_id: seedUsers[0]!.id,
+        name: String(input.name),
+        amount: Number(input.amount),
+        expense_date:
+          typeof input.expense_date === 'string' ? input.expense_date : now.slice(0, 10),
         plan_item_id: typeof input.plan_item_id === 'string' ? input.plan_item_id : null,
         currency: typeof input.currency === 'string' ? input.currency : plan.currency,
-        original_amount: null, original_currency: null, created_at: now, updated_at: now,
+        original_amount: null,
+        original_currency: null,
+        created_at: now,
+        updated_at: now,
       })
       if (expense.plan_item_id) update('plan_items', expense.plan_item_id, { is_completed: true })
       expenses.push(expense)
