@@ -4,6 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 import CustomEntryPanel from './CustomEntryPanel.vue'
 import { createMockCategories } from 'test/fixtures/categories'
+import type * as AiApi from 'src/api/ai'
 import type { PlanOption } from 'src/types'
 
 installQuasarPlugin()
@@ -13,7 +14,7 @@ const { mockSuggestExpenseCategory } = vi.hoisted(() => ({
 }))
 
 vi.mock('src/api/ai', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('src/api/ai')>()),
+  ...(await importOriginal<typeof AiApi>()),
   suggestExpenseCategory: mockSuggestExpenseCategory,
 }))
 
