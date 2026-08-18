@@ -33,3 +33,7 @@ enabled = true
 verify_jwt = true
 import_map = "./functions/push-subscriptions/deno.json"
 entrypoint = "./functions/push-subscriptions/index.ts"
+
+[auth.hook.custom_access_token]
+enabled = true
+uri = "pg-functions://postgres/public/custom_access_token_hook"

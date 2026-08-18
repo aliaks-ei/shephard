@@ -38,4 +38,7 @@ Keep this file compact. Read only the docs that match the task under `agent_docs
 ## Environment
 
 - Required env vars: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_GOOGLE_CLIENT_ID`.
+- Local Supabase uses Colima: run `colima start` before `npx supabase start` or `npx supabase db reset --local`. The Docker CLI must also be installed and on `PATH` for Colima's Docker runtime.
+- The hosted Supabase project is `rirgsoufkldfcogfjwwy` (`shephard`). Prefer the connected Supabase MCP for managed migrations and post-migration verification.
+- The production PWA is deployed on Netlify at `https://shephard.app`; keep its OAuth consent callback at `https://shephard.app/oauth/consent` and use that origin for MCP browser-origin configuration.
 - Never commit secrets.

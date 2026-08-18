@@ -22,6 +22,8 @@ Source of truth: `package.json`
 - `npm run test:unit`: Vitest watch mode
 - `npm run test:unit:ci`: single-run Vitest
 - `npm run test:edge`: Deno tests for Edge Function helpers
+- `npm run mcp:dev`: run the dedicated MCP service
+- `npm run mcp:type-check`, `npm run mcp:test`, `npm run mcp:build`: validate the MCP service
 
 Changed-file helpers also exist:
 
@@ -137,6 +139,12 @@ Backend-local config:
 
 - `supabase/config.toml`
 
+Local database workflow:
+
+- This machine uses Colima. Start it with `colima start` before any local Supabase command.
+- Colima's Docker runtime also requires the Docker CLI to be installed and available on `PATH`.
+- For managed schema changes in the production `shephard` project (`rirgsoufkldfcogfjwwy`), use the connected Supabase MCP, then verify migration history and advisors.
+
 Edge functions currently cover:
 
 - expense photo analysis
@@ -212,6 +220,8 @@ Primary reference:
 Important deployment behavior:
 
 - published output is `dist/pwa`
+- production PWA domain is `https://shephard.app`
+- OAuth consent for the MCP authorization server is served by the PWA at `https://shephard.app/oauth/consent`
 - SPA routing is handled with a redirect to `/index.html`
 - CSP and cache headers are tightly coupled to the current Supabase + Google Sign-In setup
 

@@ -77,6 +77,15 @@ const routes: RouteRecordRaw[] = [
     ],
   },
   {
+    path: '/oauth/consent',
+    component: () => import('pages/OAuthConsentPage.vue'),
+    name: 'oauth-consent',
+    meta: {
+      requiresAuth: true,
+      allowAuthenticated: true,
+    },
+  },
+  {
     path: '/:catchAll(.*)*',
     component: () => import('pages/ErrorNotFound.vue'),
     meta: {
