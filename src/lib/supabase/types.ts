@@ -626,6 +626,64 @@ export type Database = {
           remaining_amount: number
         }[]
       }
+      authorize_mcp_client: { Args: { p_client_id: string }; Returns: undefined }
+      list_mcp_authorizations: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          access_level: string
+          client_id: string
+          created_at: string
+          updated_at: string
+        }[]
+      }
+      mcp_get_plan_overview: { Args: { p_plan_id: string }; Returns: Json }
+      mcp_list_categories: {
+        Args: Record<PropertyKey, never>
+        Returns: { color: string | null; icon: string | null; id: string; name: string }[]
+      }
+      mcp_list_expenses: {
+        Args: {
+          p_before_created_at?: string | null
+          p_before_id?: string | null
+          p_limit?: number
+          p_plan_id?: string | null
+        }
+        Returns: {
+          amount: number
+          category_id: string
+          category_name: string
+          created_at: string
+          currency: string
+          expense_date: string
+          id: string
+          name: string
+          plan_id: string
+          plan_item_id: string | null
+          plan_name: string
+        }[]
+      }
+      mcp_list_plans: {
+        Args: { p_limit?: number }
+        Returns: {
+          currency: string
+          end_date: string
+          id: string
+          name: string
+          permission_level: string
+          start_date: string
+          status: string
+          total: number
+        }[]
+      }
+      mcp_record_expense: {
+        Args: { p_expense: Json; p_idempotency_key: string }
+        Returns: Json
+      }
+      revoke_mcp_authorization: { Args: { p_client_id: string }; Returns: undefined }
+      set_mcp_authorization_access: {
+        Args: { p_access_level: string; p_client_id: string }
+        Returns: undefined
+      }
       get_plan_items_with_tracking: {
         Args: { p_plan_id: string }
         Returns: {

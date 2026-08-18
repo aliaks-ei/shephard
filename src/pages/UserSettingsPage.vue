@@ -86,6 +86,8 @@
 
       <NotificationSettingsSection />
 
+      <McpConnectionsSection />
+
       <!-- Sign Out -->
       <div class="text-center">
         <q-btn
@@ -113,6 +115,7 @@ useMeta({ title: 'Settings' })
 
 import UserAvatar from 'src/components/UserAvatar.vue'
 import NotificationSettingsSection from 'src/components/settings/NotificationSettingsSection.vue'
+import McpConnectionsSection from 'src/components/settings/McpConnectionsSection.vue'
 import SettingsSectionCard from 'src/components/settings/SettingsSectionCard.vue'
 import { useUserStore } from 'src/stores/user'
 

@@ -60,6 +60,13 @@ function createWrapper() {
             </div>
           `,
         },
+        McpConnectionsSection: {
+          template: `
+            <div class="shadow-1 q-mb-lg" data-testid="mcp-connections-section">
+              <div class="text-subtitle1 text-weight-medium">AI connections</div>
+            </div>
+          `,
+        },
       },
     },
   })
@@ -77,8 +84,10 @@ it('renders user profile information correctly', () => {
   expect(wrapper.find('.q-btn').exists()).toBe(true)
   expect(wrapper.text()).toContain('Preferences')
   expect(wrapper.text()).toContain('Notifications')
-  expect(wrapper.findAll('.shadow-1.q-mb-lg')).toHaveLength(2)
+  expect(wrapper.text()).toContain('AI connections')
+  expect(wrapper.findAll('.shadow-1.q-mb-lg')).toHaveLength(3)
   expect(wrapper.find('[data-testid="notification-settings-section"]').exists()).toBe(true)
+  expect(wrapper.find('[data-testid="mcp-connections-section"]').exists()).toBe(true)
 })
 
 it('updates currency preference when select is changed', () => {
