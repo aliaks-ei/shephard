@@ -1,11 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mockSupabaseClient } from 'test/vitest/mocks/supabase'
-import {
-  decideOAuthAuthorization,
-  getOAuthAuthorizationDetails,
-  listOAuthGrants,
-  revokeOAuthGrant,
-} from './mcp'
+import { decideOAuthAuthorization, getOAuthAuthorizationDetails } from './mcp'
 
 describe('MCP OAuth API', () => {
   beforeEach(() => {
@@ -46,19 +41,6 @@ describe('MCP OAuth API', () => {
     expect(fetchSpy).toHaveBeenCalledWith(
       expect.stringMatching(/\/auth\/v1\/oauth\/authorizations\/request-id\/consent$/),
       expect.objectContaining({ method: 'POST', body: JSON.stringify({ action: 'approve' }) }),
-    )
-  })
-
-  it('lists and revokes OAuth grants', async () => {
-    const fetchSpy = vi
-      .spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
-      .mockResolvedValueOnce(new Response(JSON.stringify({}), { status: 200 }))
-
-    await expect(listOAuthGrants()).resolves.toEqual([])
-    await expect(revokeOAuthGrant('client-id')).resolves.toBeUndefined()
-    expect(fetchSpy.mock.calls[1]?.[0]).toEqual(
-      expect.stringMatching(/\/auth\/v1\/oauth\/grants\/client-id$/),
     )
   })
 })

@@ -7,12 +7,6 @@ export type OAuthAuthorizationDetails = {
   scope: string
 }
 
-export type OAuthGrant = {
-  client: { id: string; name: string; uri: string; logo_uri: string }
-  scopes: string[]
-  granted_at: string
-}
-
 export type McpAuthorization = {
   client_id: string
   access_level: 'read' | 'write'
@@ -80,12 +74,4 @@ export async function decideOAuthAuthorization(
     method: 'POST',
     body: JSON.stringify({ action }),
   })
-}
-
-export async function listOAuthGrants(): Promise<OAuthGrant[]> {
-  return oauthRequest('/oauth/grants')
-}
-
-export async function revokeOAuthGrant(clientId: string): Promise<void> {
-  await oauthRequest(`/oauth/grants/${encodeURIComponent(clientId)}`, { method: 'DELETE' })
 }
