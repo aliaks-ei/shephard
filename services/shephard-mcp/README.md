@@ -33,6 +33,9 @@ docker run --env-file services/shephard-mcp/.env -p 8787:8787 shephard-mcp
 
 Deploy the resulting container to a service that gives it a stable HTTPS URL. Set `MCP_RESOURCE_URL` to the full public MCP endpoint (for example, `https://mcp.example.com/mcp`) and set `MCP_ALLOWED_HOSTS` to its hostname. Do not place a service-role or secret Supabase key in the service environment.
 
+Railway automatically provides `PORT`; the service uses it when `MCP_PORT` is not set. Leave `MCP_PORT` unset in Railway.
+The root `railway.toml` selects the nested Dockerfile and configures `/health` as the deployment health check. Include `healthcheck.railway.app` in `MCP_ALLOWED_HOSTS` so Railway can run that check.
+
 ## Verification
 
 ```sh
