@@ -120,9 +120,11 @@ export function createShephardMcpServer(context: AuthenticatedMcpRequest): McpSe
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     },
     async ({ idempotency_key, ...expense }) => {
-      const result = await callRpc(context, 'mcp_record_expense', {
-        p_expense: expense,
-        p_idempotency_key: idempotency_key ?? randomUUID(),
+      const result = await callRpc(context, 'mcp_create_expense', {
+        p_request: {
+          expense,
+          idempotency_key: idempotency_key ?? randomUUID(),
+        },
       })
       return toolResult(result)
     },
