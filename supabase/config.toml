@@ -1,7 +1,7 @@
 
 [functions.categorize-expense]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/categorize-expense/deno.json"
 # Uncomment to specify a custom file path to the entrypoint.
 # Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
@@ -12,25 +12,25 @@ entrypoint = "./functions/categorize-expense/index.ts"
 
 [functions.emit-notification-event]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/emit-notification-event/deno.json"
 entrypoint = "./functions/emit-notification-event/index.ts"
 
 [functions.analyze-expense-photo]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/analyze-expense-photo/deno.json"
 entrypoint = "./functions/analyze-expense-photo/index.ts"
 
 [functions.convert-currency]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/convert-currency/deno.json"
 entrypoint = "./functions/convert-currency/index.ts"
 
 [functions.push-subscriptions]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/push-subscriptions/deno.json"
 entrypoint = "./functions/push-subscriptions/index.ts"
 
