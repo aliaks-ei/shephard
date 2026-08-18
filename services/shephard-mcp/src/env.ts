@@ -15,7 +15,9 @@ export type McpEnvironment = z.infer<typeof envSchema> & {
   allowedHosts: string[]
 }
 
-export function loadEnvironment(source: NodeJS.ProcessEnv = process.env): McpEnvironment {
+export function loadEnvironment(
+  source: Readonly<Record<string, string | undefined>> = process.env,
+): McpEnvironment {
   // Railway and other managed container platforms provide PORT. An explicit
   // MCP_PORT remains available for local development and fixed-port hosts.
   const parsed = envSchema.parse({
