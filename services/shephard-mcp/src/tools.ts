@@ -8,10 +8,15 @@ const pageLimit = z.number().int().min(1).max(100).default(50)
 
 type RpcContext = Pick<AuthenticatedMcpRequest, 'supabase'>
 
-function toolResult(payload: unknown) {
+export function toolResult(payload: unknown) {
+  const structuredContent =
+    payload !== null && typeof payload === 'object' && !Array.isArray(payload)
+      ? (payload as Record<string, unknown>)
+      : { items: payload }
+
   return {
     content: [{ type: 'text' as const, text: JSON.stringify(payload) }],
-    structuredContent: payload as Record<string, unknown>,
+    structuredContent,
   }
 }
 
