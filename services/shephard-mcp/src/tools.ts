@@ -5,6 +5,8 @@ import type { AuthenticatedMcpRequest } from './auth.js'
 
 const uuid = z.string().uuid()
 const pageLimit = z.number().int().min(1).max(100).default(50)
+const objectOutput = z.object({}).passthrough()
+const listOutput = z.object({ items: z.array(objectOutput) })
 
 type RpcContext = Pick<AuthenticatedMcpRequest, 'supabase'>
 
@@ -44,6 +46,7 @@ export function createShephardMcpServer(context: AuthenticatedMcpRequest): McpSe
       title: 'List plans',
       description: 'List budget plans that the signed-in Shephard user can access.',
       inputSchema: { limit: pageLimit.optional() },
+      outputSchema: listOutput,
       annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     },
     async ({ limit }) =>
@@ -57,6 +60,7 @@ export function createShephardMcpServer(context: AuthenticatedMcpRequest): McpSe
       description:
         'Get the budget, spending progress, and plan items for one accessible Shephard plan.',
       inputSchema: { plan_id: uuid },
+      outputSchema: objectOutput,
       annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     },
     async ({ plan_id }) =>
@@ -75,6 +79,7 @@ export function createShephardMcpServer(context: AuthenticatedMcpRequest): McpSe
         before_created_at: z.string().datetime({ offset: true }).optional(),
         before_id: uuid.optional(),
       },
+      outputSchema: listOutput,
       annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     },
     async ({ plan_id, limit, before_created_at, before_id }) =>
@@ -94,6 +99,7 @@ export function createShephardMcpServer(context: AuthenticatedMcpRequest): McpSe
       title: 'List categories',
       description: 'List valid Shephard expense categories before creating an expense.',
       inputSchema: {},
+      outputSchema: listOutput,
       annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     },
     async () => toolResult(await callRpc(context, 'mcp_list_categories')),
@@ -117,6 +123,7 @@ export function createShephardMcpServer(context: AuthenticatedMcpRequest): McpSe
         original_currency: z.string().trim().length(3).toUpperCase().optional(),
         idempotency_key: uuid.optional(),
       },
+      outputSchema: objectOutput,
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     },
     async ({ idempotency_key, ...expense }) => {
