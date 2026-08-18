@@ -59,9 +59,7 @@ import { onMounted, ref } from 'vue'
 import { Notify } from 'quasar'
 import {
   getMcpAuthorizations,
-  listOAuthGrants,
   revokeMcpAuthorization,
-  revokeOAuthGrant,
   setMcpAuthorizationAccess,
   type McpAuthorization,
 } from 'src/api/mcp'
@@ -80,14 +78,10 @@ const connections = ref<McpConnection[]>([])
 async function loadConnections() {
   isLoading.value = true
   try {
-    const [authorizations, grantsResult] = await Promise.all([
-      getMcpAuthorizations(),
-      listOAuthGrants(),
-    ])
-    const grantsByClientId = new Map(grantsResult.map((grant) => [grant.client.id, grant]))
+    const authorizations = await getMcpAuthorizations()
     connections.value = authorizations.map((authorization) => ({
       clientId: authorization.client_id,
-      name: grantsByClientId.get(authorization.client_id)?.client.name ?? 'AI connection',
+      name: 'AI connection',
       accessLevel: authorization.access_level,
     }))
   } catch {
@@ -113,7 +107,6 @@ async function setWriteAccess(clientId: string, enabled: boolean) {
 async function revoke(clientId: string) {
   pendingClientId.value = clientId
   try {
-    await revokeOAuthGrant(clientId)
     await revokeMcpAuthorization(clientId)
     connections.value = connections.value.filter((item) => item.clientId !== clientId)
   } catch {
