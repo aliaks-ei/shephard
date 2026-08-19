@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import express, { type NextFunction, type Request, type Response } from 'express'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import { createMcpExpressApp } from '@modelcontextprotocol/sdk/server/express.js'
@@ -28,9 +28,20 @@ function createRateLimiter() {
   const requests = new Map<string, RateLimitEntry>()
   const windowMs = 60_000
   const maximumRequests = 120
+  let nextSweepAt = 0
+
+  // Without this sweep the map grows for every distinct token and IP seen.
+  function evictExpired(now: number) {
+    if (now < nextSweepAt) return
+    nextSweepAt = now + windowMs
+    for (const [key, entry] of requests) {
+      if (entry.resetAt <= now) requests.delete(key)
+    }
+  }
 
   return (request: Request, response: Response, next: NextFunction) => {
     const now = Date.now()
+    evictExpired(now)
     const key = requestKey(request)
     const entry = requests.get(key)
     const current = !entry || entry.resetAt <= now ? { count: 0, resetAt: now + windowMs } : entry
@@ -63,6 +74,26 @@ function rejectUnexpectedOrigin(env: McpEnvironment) {
   }
 }
 
+function logRequests() {
+  return (request: Request, response: Response, next: NextFunction) => {
+    const requestId = request.header('x-request-id') ?? randomUUID()
+    const startedAt = Date.now()
+    response.setHeader('x-request-id', requestId)
+    response.on('finish', () => {
+      console.info(
+        JSON.stringify({
+          requestId,
+          method: request.method,
+          path: request.path,
+          status: response.statusCode,
+          durationMs: Date.now() - startedAt,
+        }),
+      )
+    })
+    next()
+  }
+}
+
 function bearerChallenge(env: McpEnvironment): string {
   const metadataUrl = new URL('/.well-known/oauth-protected-resource/mcp', env.MCP_RESOURCE_URL)
   return `Bearer resource_metadata="${metadataUrl.toString()}"`
@@ -71,6 +102,7 @@ function bearerChallenge(env: McpEnvironment): string {
 export function createMcpApp(env: McpEnvironment) {
   const app = createMcpExpressApp({ allowedHosts: env.allowedHosts })
   app.disable('x-powered-by')
+  app.use(logRequests())
   app.use(express.json({ limit: '128kb', strict: true, type: 'application/json' }))
   app.use(createRateLimiter())
   app.use(rejectUnexpectedOrigin(env))
@@ -92,9 +124,13 @@ export function createMcpApp(env: McpEnvironment) {
       const context = await authenticateMcpRequest(request.header('authorization'), env)
       const server = createShephardMcpServer(context)
       const transport = new StreamableHTTPServerTransport()
+      // Close only once the response is fully written. Closing straight after
+      // handleRequest would cut a reply that is still being streamed.
+      response.on('close', () => {
+        void server.close()
+      })
       await server.connect(transport as never)
       await transport.handleRequest(request, response, request.body)
-      await server.close()
     } catch (error) {
       if (error instanceof McpAuthenticationError) {
         response.setHeader('WWW-Authenticate', bearerChallenge(env))
