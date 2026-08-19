@@ -94,6 +94,9 @@ describe('advertised tool schemas', () => {
     const tools = await listTools()
 
     expect(tools.map((tool) => tool.name).sort()).toEqual([
+      'add_plan_item',
+      'create_plan',
+      'create_template',
       'get_plan_overview',
       'get_plan_summary',
       'get_template',
@@ -106,6 +109,10 @@ describe('advertised tool schemas', () => {
       'list_plans',
       'list_templates',
       'record_expense',
+      'record_expenses',
+      'update_expense',
+      'update_plan',
+      'update_plan_item',
     ])
 
     // A schema without `properties` is what makes ChatGPT report
@@ -136,11 +143,39 @@ describe('advertised tool schemas', () => {
     ])
   })
 
-  it('marks every tool except record_expense as read-only', async () => {
+  const writeTools = [
+    'add_plan_item',
+    'create_plan',
+    'create_template',
+    'record_expense',
+    'record_expenses',
+    'update_expense',
+    'update_plan',
+    'update_plan_item',
+  ]
+
+  it('separates read-only tools from write tools', async () => {
     const tools = await listTools()
 
     for (const tool of tools) {
-      expect(tool.annotations?.readOnlyHint, tool.name).toBe(tool.name !== 'record_expense')
+      expect(tool.annotations?.readOnlyHint, tool.name).toBe(!writeTools.includes(tool.name))
+    }
+  })
+
+  it('never marks a tool as destructive, because no tool deletes anything', async () => {
+    const tools = await listTools()
+
+    for (const tool of tools) {
+      expect(tool.annotations?.destructiveHint, tool.name).toBe(false)
+    }
+  })
+
+  it('requires an idempotency key on every write tool', async () => {
+    const tools = await listTools()
+
+    for (const name of writeTools) {
+      const tool = tools.find((candidate) => candidate.name === name)
+      expect(tool?.inputSchema?.required ?? [], name).toContain('idempotency_key')
     }
   })
 
