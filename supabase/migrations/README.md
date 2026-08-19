@@ -80,3 +80,55 @@ The historical migration bodies before the baseline are intentionally squashed i
 | 20260806172018 | `architecture_hardening`                                            |
 | 20260806172029 | `atomic_domain_workflows`                                           |
 | 20260806173839 | `advisor_index_cleanup`                                             |
+| 20260818113042 | `add_mcp_authorization_boundary`                                    |
+| 20260818113242 | `restrict_mcp_rpc_execution`                                        |
+| 20260818141117 | `fix_mcp_list_expenses_result_type`                                 |
+| 20260818144320 | `refresh_mcp_record_expense_api_cache`                              |
+| 20260818144600 | `add_mcp_create_expense_rpc`                                        |
+| 20260818151800 | `fix_mcp_expense_digest_schema`                                     |
+| 20260819140000 | `add_mcp_read_tools`                                                |
+| 20260819150000 | `add_mcp_write_tools`                                               |
+| 20260819160000 | `fix_mcp_revoked_grant_bypass`                                      |
+
+Add a row here whenever you add a migration. The ledger drifted once already:
+the `20260818*` MCP migrations were merged without being listed.
+
+## Verify a migration locally
+
+There is no need for the full Supabase stack, which also avoids a port clash
+when another project's stack is running. A single container is enough to prove
+that a migration parses, that its PL/pgSQL compiles, and that its grants apply.
+
+```sh
+docker run -d --name shephard-verify -e POSTGRES_PASSWORD=postgres \
+  -p 55432:5432 supabase/postgres:15.8.1.060
+```
+
+The image already provides the `anon`, `authenticated`, `service_role`,
+`authenticator`, and `supabase_auth_admin` roles, the `auth` and `extensions`
+schemas, and `pgcrypto`. Only `auth.jwt()` is missing, because GoTrue supplies
+it on a real project. Create a stub first:
+
+```sql
+create or replace function auth.jwt() returns jsonb
+language sql stable as $$
+  select coalesce(nullif(current_setting('request.jwt.claims', true), ''), '{}')::jsonb;
+$$;
+```
+
+Then apply `../baseline/production_schema.sql` followed by every `20260818*`
+and later migration, each with `psql -v ON_ERROR_STOP=1`.
+
+To exercise the `mcp_*` functions, seed a user and a grant, then set the
+claims the OAuth token would carry and switch role:
+
+```sql
+set request.jwt.claim.sub = '<user uuid>';
+set request.jwt.claims = '{"sub":"<user uuid>","client_id":"<client uuid>","role":"mcp_user"}';
+set role mcp_user;
+```
+
+`mcp_user` cannot read the tables directly; "permission denied for table plans"
+means the authorization boundary is working. Test all three grant states —
+`write`, `read`, and revoked — because a revoked grant is easy to get wrong;
+see `20260819160000_fix_mcp_revoked_grant_bypass.sql`.
