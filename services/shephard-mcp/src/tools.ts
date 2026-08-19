@@ -145,6 +145,150 @@ export function createShephardMcpServer(context: AuthenticatedMcpRequest): McpSe
   )
 
   server.registerTool(
+    'list_templates',
+    {
+      title: 'List templates',
+      description:
+        'List the reusable budget templates that the signed-in Shephard user can access.',
+      inputSchema: { limit: pageLimit.optional() },
+      outputSchema: schemas.templateListOutput,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
+    async ({ limit }) =>
+      toolResult(await callRpc(context, 'mcp_list_templates', { p_limit: limit ?? defaultLimit })),
+  )
+
+  server.registerTool(
+    'get_template',
+    {
+      title: 'Get template',
+      description: 'Get one accessible Shephard template with its items.',
+      inputSchema: { template_id: uuid },
+      outputSchema: schemas.template,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
+    async ({ template_id }) =>
+      toolResult(await callRpc(context, 'mcp_get_template', { p_template_id: template_id })),
+  )
+
+  server.registerTool(
+    'get_plan_summary',
+    {
+      title: 'Get plan summary',
+      description:
+        'Get planned versus actual spending per category for one plan. Use this to answer questions about which categories are over or under budget.',
+      inputSchema: { plan_id: uuid },
+      outputSchema: schemas.planSummaryOutput,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
+    async ({ plan_id }) =>
+      toolResult(await callRpc(context, 'mcp_get_plan_summary', { p_plan_id: plan_id })),
+  )
+
+  server.registerTool(
+    'list_expenses_by_date_range',
+    {
+      title: 'List expenses by date range',
+      description:
+        'List accessible expenses with an expense_date inside an inclusive range. Use this for questions about a month, a week, or any other period.',
+      inputSchema: {
+        start_date: z.string().date(),
+        end_date: z.string().date(),
+        plan_id: uuid.optional(),
+        limit: pageLimit.optional(),
+      },
+      outputSchema: schemas.dateRangeExpenseListOutput,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
+    async ({ start_date, end_date, plan_id, limit }) =>
+      toolResult(
+        await callRpc(context, 'mcp_list_expenses_by_date_range', {
+          p_start_date: start_date,
+          p_end_date: end_date,
+          p_plan_id: plan_id ?? null,
+          p_limit: limit ?? defaultLimit,
+        }),
+      ),
+  )
+
+  server.registerTool(
+    'list_plan_shares',
+    {
+      title: 'List plan collaborators',
+      description:
+        'List the people a Shephard plan is shared with, and what each of them may do. Email addresses are not exposed.',
+      inputSchema: { plan_id: uuid },
+      outputSchema: schemas.planShareListOutput,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
+    async ({ plan_id }) =>
+      toolResult(await callRpc(context, 'mcp_list_plan_shares', { p_plan_id: plan_id })),
+  )
+
+  server.registerTool(
+    'list_notifications',
+    {
+      title: 'List notifications',
+      description: "List the signed-in user's Shephard notifications, newest first.",
+      inputSchema: { limit: pageLimit.optional() },
+      outputSchema: schemas.notificationListOutput,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
+    async ({ limit }) =>
+      toolResult(
+        await callRpc(context, 'mcp_list_notifications', { p_limit: limit ?? defaultLimit }),
+      ),
+  )
+
+  server.registerTool(
+    'get_user_preferences',
+    {
+      title: 'Get user preferences',
+      description:
+        "Get the signed-in user's default currency and theme. Read this before presenting amounts.",
+      inputSchema: {},
+      outputSchema: schemas.userPreferences,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
+    async () => toolResult(await callRpc(context, 'mcp_get_user_preferences')),
+  )
+
+  server.registerTool(
     'record_expense',
     {
       title: 'Record expense',
