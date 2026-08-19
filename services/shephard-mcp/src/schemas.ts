@@ -143,3 +143,37 @@ export const planSummaryOutput = z.object({ items: z.array(planSummaryRow) })
 export const notificationListOutput = z.object({ items: z.array(notification) })
 export const planShareListOutput = z.object({ items: z.array(planShare) })
 export const dateRangeExpenseListOutput = z.object({ items: z.array(expense) })
+
+export const createdPlan = z.object({
+  id: uuid,
+  name: z.string(),
+  start_date: isoDate,
+  end_date: isoDate,
+  status: z.string(),
+  currency: currencyCode,
+  total: z.number(),
+  item_count: z.number().int(),
+})
+
+export const updatedPlan = planSummary.omit({ permission_level: true })
+
+export const planItem = z.object({
+  id: uuid,
+  plan_id: uuid,
+  name: z.string(),
+  category_id: uuid,
+  amount: z.number(),
+  is_fixed_payment: z.boolean(),
+  is_completed: z.boolean().nullable(),
+})
+
+export const recordedExpenseListOutput = z.object({ items: z.array(recordedExpense) })
+
+export const createdTemplate = z.object({
+  id: uuid,
+  name: z.string(),
+  duration: z.string(),
+  currency: currencyCode,
+  total: z.number(),
+  item_count: z.number().int(),
+})

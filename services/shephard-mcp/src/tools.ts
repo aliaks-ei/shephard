@@ -9,6 +9,33 @@ const defaultLimit = 50
 const rpcTimeoutMs = 10_000
 
 type RpcContext = Pick<AuthenticatedMcpRequest, 'supabase'>
+const idempotencyKey = uuid.describe(
+  'A UUID that identifies this request. Reuse the same value when you retry a call that may already have been applied, so the change is not made twice. Use a new value for a genuinely new change.',
+)
+
+const writeAnnotations = {
+  readOnlyHint: false,
+  destructiveHint: false,
+  idempotentHint: true,
+  openWorldHint: false,
+} as const
+
+const planItemInput = {
+  name: z.string().trim().min(1).max(100),
+  category_id: uuid,
+  amount: z.number().positive().max(100000000),
+  is_fixed_payment: z.boolean().optional(),
+}
+
+const expenseInput = z.object({
+  name: z.string().trim().min(1).max(100),
+  amount: z.number().positive().max(100000000),
+  plan_id: uuid,
+  category_id: uuid,
+  expense_date: z.string().date().optional(),
+  plan_item_id: uuid.optional(),
+  currency: z.string().trim().length(3).toUpperCase().optional(),
+})
 
 export function toolResult(payload: unknown) {
   const structuredContent =
@@ -320,6 +347,177 @@ export function createShephardMcpServer(context: AuthenticatedMcpRequest): McpSe
       toolResult(
         await callRpc(context, 'mcp_create_expense', {
           p_request: { expense, idempotency_key },
+        }),
+      ),
+  )
+
+  server.registerTool(
+    'create_plan',
+    {
+      title: 'Create plan',
+      description:
+        'Create a budget plan from a template. Call list_templates first: a plan must reference a template the user can access. This changes financial data and requires a write-enabled connection.',
+      inputSchema: {
+        name: z.string().trim().min(1).max(100),
+        template_id: uuid,
+        start_date: z.string().date(),
+        end_date: z.string().date(),
+        currency: z.string().trim().length(3).toUpperCase(),
+        total: z.number().nonnegative().max(100000000),
+        items: z.array(z.object(planItemInput)).max(100).optional(),
+        idempotency_key: idempotencyKey,
+      },
+      outputSchema: schemas.createdPlan,
+      annotations: writeAnnotations,
+    },
+    async ({ idempotency_key, items, ...plan }) =>
+      toolResult(
+        await callRpc(context, 'mcp_create_plan', {
+          p_request: { plan, items: items ?? [], idempotency_key },
+        }),
+      ),
+  )
+
+  server.registerTool(
+    'update_plan',
+    {
+      title: 'Update plan',
+      description:
+        'Change the name, dates, currency, or status of a plan. Plan items are not touched. Use update_plan_item or add_plan_item to change items.',
+      inputSchema: {
+        plan_id: uuid,
+        name: z.string().trim().min(1).max(100).optional(),
+        start_date: z.string().date().optional(),
+        end_date: z.string().date().optional(),
+        currency: z.string().trim().length(3).toUpperCase().optional(),
+        status: z.string().trim().min(1).max(50).optional(),
+        idempotency_key: idempotencyKey,
+      },
+      outputSchema: schemas.updatedPlan,
+      annotations: writeAnnotations,
+    },
+    async ({ idempotency_key, plan_id, ...plan }) =>
+      toolResult(
+        await callRpc(context, 'mcp_update_plan', {
+          p_request: { plan_id, plan, idempotency_key },
+        }),
+      ),
+  )
+
+  server.registerTool(
+    'add_plan_item',
+    {
+      title: 'Add plan item',
+      description: 'Add one budgeted item to a plan the user can edit.',
+      inputSchema: {
+        plan_id: uuid,
+        ...planItemInput,
+        idempotency_key: idempotencyKey,
+      },
+      outputSchema: schemas.planItem,
+      annotations: writeAnnotations,
+    },
+    async ({ idempotency_key, ...item }) =>
+      toolResult(
+        await callRpc(context, 'mcp_add_plan_item', {
+          p_request: { item, idempotency_key },
+        }),
+      ),
+  )
+
+  server.registerTool(
+    'update_plan_item',
+    {
+      title: 'Update plan item',
+      description:
+        'Change one plan item. Only the fields you send are changed. Use is_completed to mark an item done.',
+      inputSchema: {
+        plan_item_id: uuid,
+        name: z.string().trim().min(1).max(100).optional(),
+        category_id: uuid.optional(),
+        amount: z.number().positive().max(100000000).optional(),
+        is_fixed_payment: z.boolean().optional(),
+        is_completed: z.boolean().optional(),
+        idempotency_key: idempotencyKey,
+      },
+      outputSchema: schemas.planItem,
+      annotations: writeAnnotations,
+    },
+    async ({ idempotency_key, plan_item_id, ...item }) =>
+      toolResult(
+        await callRpc(context, 'mcp_update_plan_item', {
+          p_request: { plan_item_id, item, idempotency_key },
+        }),
+      ),
+  )
+
+  server.registerTool(
+    'record_expenses',
+    {
+      title: 'Record several expenses',
+      description:
+        'Create up to 50 expenses in one call. Prefer this over repeated record_expense calls when the user lists several purchases at once. All of them are written together, or none are.',
+      inputSchema: {
+        expenses: z.array(expenseInput).min(1).max(50),
+        idempotency_key: idempotencyKey,
+      },
+      outputSchema: schemas.recordedExpenseListOutput,
+      annotations: writeAnnotations,
+    },
+    async ({ idempotency_key, expenses }) =>
+      toolResult(
+        await callRpc(context, 'mcp_record_expenses', {
+          p_request: { expenses, idempotency_key },
+        }),
+      ),
+  )
+
+  server.registerTool(
+    'update_expense',
+    {
+      title: 'Update expense',
+      description:
+        'Correct one recorded expense. Only the fields you send are changed. The plan an expense belongs to cannot be changed here.',
+      inputSchema: {
+        expense_id: uuid,
+        name: z.string().trim().min(1).max(100).optional(),
+        amount: z.number().positive().max(100000000).optional(),
+        expense_date: z.string().date().optional(),
+        category_id: uuid.optional(),
+        idempotency_key: idempotencyKey,
+      },
+      outputSchema: schemas.recordedExpense,
+      annotations: writeAnnotations,
+    },
+    async ({ idempotency_key, expense_id, ...expense }) =>
+      toolResult(
+        await callRpc(context, 'mcp_update_expense', {
+          p_request: { expense_id, expense, idempotency_key },
+        }),
+      ),
+  )
+
+  server.registerTool(
+    'create_template',
+    {
+      title: 'Create template',
+      description:
+        'Create a reusable budget template. Plans are created from templates, so make one before create_plan when no suitable template exists.',
+      inputSchema: {
+        name: z.string().trim().min(1).max(100),
+        duration: z.string().trim().min(1).max(50),
+        currency: z.string().trim().length(3).toUpperCase(),
+        total: z.number().nonnegative().max(100000000),
+        items: z.array(z.object(planItemInput)).max(100).optional(),
+        idempotency_key: idempotencyKey,
+      },
+      outputSchema: schemas.createdTemplate,
+      annotations: writeAnnotations,
+    },
+    async ({ idempotency_key, items, ...template }) =>
+      toolResult(
+        await callRpc(context, 'mcp_create_template', {
+          p_request: { template, items: items ?? [], idempotency_key },
         }),
       ),
   )
