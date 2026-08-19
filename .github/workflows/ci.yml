@@ -71,6 +71,32 @@ jobs:
       - name: Run Edge Function tests
         run: deno test --allow-env supabase/functions/categorize-expense/helpers.test.ts
 
+  # The MCP service has its own tsconfig and vitest config, so the app-wide
+  # lint, type-check, and test steps above do not cover it.
+  mcp:
+    name: MCP Service
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run type checking
+        run: npm run mcp:type-check
+
+      - name: Run tests
+        run: npm run mcp:test
+
   # Build job to ensure the app actually builds
   build:
     name: Build Application
