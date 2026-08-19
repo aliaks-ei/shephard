@@ -36,6 +36,39 @@ Deploy the resulting container to a service that gives it a stable HTTPS URL. Se
 Railway automatically provides `PORT`; the service uses it when `MCP_PORT` is not set. Leave `MCP_PORT` unset in Railway.
 The root `railway.toml` selects the nested Dockerfile and configures `/health` as the deployment health check. Include `healthcheck.railway.app` in `MCP_ALLOWED_HOSTS` so Railway can run that check.
 
+## Tools
+
+19 tools. Read tools need the `read` grant; write tools need `write`.
+
+Read: `list_plans`, `get_plan_overview`, `get_plan_summary`, `list_expenses`,
+`list_expenses_by_date_range`, `list_categories`, `list_templates`,
+`get_template`, `list_plan_shares`, `list_notifications`,
+`get_user_preferences`.
+
+Write: `record_expense`, `record_expenses`, `update_expense`, `create_plan`,
+`update_plan`, `add_plan_item`, `update_plan_item`, `create_template`.
+
+No tool deletes anything. `update_plan_with_items` and
+`update_template_with_items` are deliberately not exposed: both delete every
+item missing from the payload, so a partial list from an assistant would
+destroy plan items. Plan edits go through the narrow tools instead.
+
+Every write tool requires an `idempotency_key`. Reusing a key replays the
+stored result instead of applying the change twice; reusing a key with a
+different payload is rejected.
+
+Every tool declares an output schema with real fields. A schema without
+`properties` makes ChatGPT report "Output schema recommended" at install time,
+so keep `services/shephard-mcp/src/schemas.ts` in step with the `mcp_*` SQL
+return columns.
+
+## After changing the tool list
+
+1. Apply any new migration; a tool whose RPC is missing fails at call time.
+2. Redeploy this service.
+3. Reconnect the connector in ChatGPT or Claude so it re-reads `tools/list`.
+   Clients cache the tool list from the initial handshake.
+
 ## Verification
 
 ```sh
