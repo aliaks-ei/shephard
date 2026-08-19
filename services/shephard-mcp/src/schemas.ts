@@ -81,3 +81,65 @@ export const expenseListOutput = z.object({
   next_cursor: expenseCursor.nullable(),
 })
 export const categoryListOutput = z.object({ items: z.array(category) })
+
+export const templateSummary = z.object({
+  id: uuid,
+  name: z.string(),
+  duration: z.string().describe('Template period, for example monthly or weekly'),
+  currency: currencyCode,
+  total: z.number(),
+  permission_level: z.string().describe('Access of the signed-in user: owner, edit, or view'),
+})
+
+export const templateItem = z.object({
+  id: uuid,
+  name: z.string(),
+  category_id: uuid,
+  category_name: z.string(),
+  amount: z.number(),
+  is_fixed_payment: z.boolean(),
+})
+
+export const template = templateSummary.extend({
+  items: z.array(templateItem),
+})
+
+export const planSummaryRow = z.object({
+  category_id: uuid,
+  category_name: z.string(),
+  category_color: z.string().nullable(),
+  category_icon: z.string().nullable(),
+  planned_amount: z.number(),
+  actual_amount: z.number(),
+  remaining_amount: z.number().describe('planned_amount minus actual_amount'),
+  expense_count: z.number().int(),
+})
+
+export const notification = z.object({
+  id: uuid,
+  type: z.string(),
+  title: z.string(),
+  body: z.string(),
+  entity_type: z.string().describe('What the notification refers to, for example plan or expense'),
+  entity_id: uuid,
+  read_at: isoTimestamp.nullable().describe('Null while the notification is unread'),
+  created_at: isoTimestamp,
+})
+
+export const planShare = z.object({
+  user_id: uuid,
+  user_name: z.string(),
+  permission_level: z.string(),
+  shared_at: isoTimestamp.nullable(),
+})
+
+export const userPreferences = z.object({
+  currency: currencyCode.describe('Default currency for new expenses'),
+  theme: z.string(),
+})
+
+export const templateListOutput = z.object({ items: z.array(templateSummary) })
+export const planSummaryOutput = z.object({ items: z.array(planSummaryRow) })
+export const notificationListOutput = z.object({ items: z.array(notification) })
+export const planShareListOutput = z.object({ items: z.array(planShare) })
+export const dateRangeExpenseListOutput = z.object({ items: z.array(expense) })

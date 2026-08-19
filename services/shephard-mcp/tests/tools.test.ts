@@ -95,9 +95,16 @@ describe('advertised tool schemas', () => {
 
     expect(tools.map((tool) => tool.name).sort()).toEqual([
       'get_plan_overview',
+      'get_plan_summary',
+      'get_template',
+      'get_user_preferences',
       'list_categories',
       'list_expenses',
+      'list_expenses_by_date_range',
+      'list_notifications',
+      'list_plan_shares',
       'list_plans',
+      'list_templates',
       'record_expense',
     ])
 
@@ -127,6 +134,24 @@ describe('advertised tool schemas', () => {
       'status',
       'total',
     ])
+  })
+
+  it('marks every tool except record_expense as read-only', async () => {
+    const tools = await listTools()
+
+    for (const tool of tools) {
+      expect(tool.annotations?.readOnlyHint, tool.name).toBe(tool.name !== 'record_expense')
+    }
+  })
+
+  it('does not expose collaborator email addresses', async () => {
+    const tools = await listTools()
+    const shares = tools.find((tool) => tool.name === 'list_plan_shares')
+    const item = shares?.outputSchema?.properties?.items as
+      | { items?: { properties?: Record<string, unknown> } }
+      | undefined
+
+    expect(Object.keys(item?.items?.properties ?? {})).not.toContain('user_email')
   })
 
   it('requires an idempotency key for the write tool', async () => {
