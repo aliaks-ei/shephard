@@ -16,6 +16,7 @@
             dense
             debounce="300"
             outlined
+            class="search-field"
             clearable
             no-error-icon
             inputmode="search"
@@ -39,6 +40,7 @@
             option-label="label"
             option-value="value"
             outlined
+            class="sort-field"
             emit-value
             map-options
             hide-bottom-space
@@ -94,3 +96,31 @@ const sortLabel = computed(() => ($q.screen.lt.md ? undefined : 'Sort by'))
 // Hide the display value on mobile to show only the icon
 const displayValue = computed(() => ($q.screen.lt.md ? ' ' : undefined))
 </script>
+
+<style lang="scss" scoped>
+// Tonal pill controls (no outline) — reads as a native search bar on mobile
+.search-field :deep(.q-field__control),
+.sort-field :deep(.q-field__control) {
+  border-radius: var(--radius-full);
+  background: hsl(var(--muted));
+  border-color: transparent;
+  box-shadow: none;
+  min-height: 44px;
+}
+
+.search-field :deep(.q-field__control:focus-within),
+.sort-field :deep(.q-field__control:focus-within) {
+  background: hsl(var(--card));
+  border-color: hsl(var(--ring) / 0.5);
+  box-shadow: 0 0 0 3px hsl(var(--ring) / 0.18);
+}
+
+.search-field :deep(.q-field__prepend),
+.sort-field :deep(.q-field__prepend) {
+  color: hsl(var(--muted-foreground));
+}
+
+.sort-field {
+  min-width: 44px;
+}
+</style>

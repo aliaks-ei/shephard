@@ -10,7 +10,7 @@
   >
     <template #header-prefix>
       <CategoryIcon
-        :color="category?.categoryColor || '#666'"
+        :color="category?.categoryColor || DEFAULT_CATEGORY_COLOR"
         :icon="category?.categoryIcon || 'eva-folder-outline'"
         size="sm"
         class="q-mr-sm"
@@ -72,6 +72,7 @@
 
       <!-- Tabs Navigation -->
       <q-tabs
+        v-tab-pill
         v-model="activeTab"
         dense
         no-caps
@@ -317,6 +318,7 @@ import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 import ExpenseListItem from 'src/components/expenses/ExpenseListItem.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
+import { DEFAULT_CATEGORY_COLOR } from 'src/utils/categories'
 import { getBudgetProgressColor, getBudgetRemainingColorClass } from 'src/utils/budget'
 import { useItemCompletion } from 'src/composables/useItemCompletion'
 import { useTrackablePlanItems } from 'src/composables/useTrackablePlanItems'

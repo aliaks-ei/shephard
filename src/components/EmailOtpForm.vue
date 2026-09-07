@@ -74,7 +74,7 @@
     <!-- Step 2: OTP Verification -->
     <template v-else>
       <q-banner
-        class="bg-green-1 text-green-9 q-mb-md"
+        class="bg-success-soft text-success-strong q-mb-md"
         rounded
         dense
       >

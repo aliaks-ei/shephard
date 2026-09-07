@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, vi } from 'vitest'
+import { config } from '@vue/test-utils'
+import { tabPill } from 'src/directives/tab-pill'
 import './mocks/supabase'
+
+// Global directives are registered in boot files, which do not run under Vitest.
+config.global.directives = { ...config.global.directives, 'tab-pill': tabPill }
 
 vi.stubEnv('MODE', 'test')
 

@@ -126,6 +126,7 @@ const renderMainLayout = (props: MainLayoutProps = {}, authLoading = false) => {
       stubs: {
         'router-view': true,
         PrivacyModeToggle: true,
+        ExpenseDeleteDialog: true,
         NavigationDrawer: {
           template: '<div data-testid="navigation-drawer" :items="items" />',
           props: ['items'],

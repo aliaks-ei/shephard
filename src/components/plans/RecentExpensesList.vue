@@ -122,7 +122,7 @@
               >
                 <div class="row items-center q-gutter-sm">
                   <div class="column items-end">
-                    <q-item-label class="text-weight-bold text-primary text-amount">
+                    <q-item-label class="text-weight-bold text-amount">
                       {{ formatCurrency(expense.amount, currency) }}
                     </q-item-label>
                     <q-item-label
@@ -174,7 +174,7 @@
             >
               <div class="row items-center q-gutter-sm">
                 <div class="column items-end">
-                  <q-item-label class="text-weight-bold text-primary text-amount">
+                  <q-item-label class="text-weight-bold text-amount">
                     {{ formatCurrency(expense.amount, currency) }}
                   </q-item-label>
                   <q-item-label

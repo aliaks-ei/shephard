@@ -207,6 +207,41 @@ describe('TemplateCard', () => {
     expect(vi.mocked(currencyUtils.formatCurrency)).not.toHaveBeenCalled()
   })
 
+  it('renders the duration in an info status pill', () => {
+    const wrapper = renderTemplateCard({
+      template: mockTemplate,
+    })
+
+    const pill = wrapper.find('.status-pill')
+    expect(pill.exists()).toBe(true)
+    expect(pill.text()).toContain('1 hour')
+    expect(pill.classes()).toContain('status-pill--info')
+  })
+
+  it('renders a pressable card with the actions button when editable', () => {
+    const wrapper = renderTemplateCard({
+      template: mockTemplate,
+    })
+
+    expect(wrapper.find('.q-card').classes()).toContain('pressable')
+    expect(wrapper.find('button[aria-label="Actions for Test Template"]').exists()).toBe(true)
+  })
+
+  it('renders a flat non-pressable card without actions when readonly', async () => {
+    const wrapper = renderTemplateCard({
+      template: mockTemplate,
+      readonly: true,
+    })
+
+    const card = wrapper.find('.q-card')
+    expect(card.classes()).not.toContain('pressable')
+    expect(card.classes()).toContain('q-card--bordered')
+    expect(wrapper.find('button[aria-label="Actions for Test Template"]').exists()).toBe(false)
+
+    await wrapper.find('.q-item').trigger('click')
+    expect(wrapper.emitted('edit')).toBeFalsy()
+  })
+
   it('shows actions button for view-only shared template', () => {
     const wrapper = renderTemplateCard({
       template: { ...mockTemplate, owner_id: 'user-2', permission_level: 'view' },

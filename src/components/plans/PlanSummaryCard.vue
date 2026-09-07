@@ -1,5 +1,8 @@
 <template>
-  <q-card flat>
+  <q-card
+    flat
+    :style="heroStyle"
+  >
     <q-card-section :class="$q.screen.lt.md ? 'q-px-sm' : 'q-px-md'">
       <div class="row items-center justify-between q-mb-md">
         <div>
@@ -8,15 +11,12 @@
             {{ formatDateRange(plan?.start_date || '', plan?.end_date || '') }}
           </div>
         </div>
-        <q-chip
-          :color="statusColor"
+        <StatusPill
+          :label="statusText"
           :icon="statusIcon"
-          text-color="white"
-          :size="$q.screen.lt.md ? 'sm' : 'md'"
-          square
-        >
-          {{ statusText }}
-        </q-chip>
+          :tone="statusTone"
+          size="md"
+        />
       </div>
 
       <q-separator class="q-my-md" />
@@ -28,7 +28,7 @@
         <div class="col">
           <div class="text-caption">Planned Budget</div>
           <div
-            class="text-weight-bold text-amount"
+            class="summary-metric text-amount"
             :class="$q.screen.lt.md ? 'text-subtitle2' : 'text-h6'"
           >
             {{ formatCurrency(totalBudget, currency) }}
@@ -37,16 +37,16 @@
         <div class="col">
           <div class="text-caption">Total Spent</div>
           <div
-            class="text-weight-bold text-info text-amount"
+            class="summary-metric text-info text-amount"
             :class="$q.screen.lt.md ? 'text-subtitle2' : 'text-h6'"
           >
-            {{ formatCurrency(totalSpent, currency) }}
+            {{ formatCurrency(animatedSpent, currency) }}
           </div>
         </div>
         <div class="col">
           <div class="text-caption">{{ remaining >= 0 ? 'Still to pay' : 'Over' }}</div>
           <div
-            class="text-weight-bold text-amount"
+            class="summary-metric text-amount"
             :class="[remainingColorClass, $q.screen.lt.md ? 'text-subtitle2' : 'text-h6']"
           >
             <q-icon
@@ -54,7 +54,7 @@
               name="eva-alert-triangle-outline"
               size="14px"
             />
-            {{ formatCurrencyWithSign(remaining, currency) }}
+            {{ formatCurrencyWithSign(animatedRemaining, currency) }}
           </div>
         </div>
       </div>
@@ -63,7 +63,7 @@
         :value="overallProgress"
         :color="progressColor"
         size="8px"
-        class="q-mt-sm"
+        class="q-mt-sm progress-animated"
       />
 
       <div class="text-caption q-mt-xs">{{ Math.round(progressPercentage) }}% of budget spent</div>
@@ -73,6 +73,10 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import StatusPill from 'src/components/shared/StatusPill.vue'
+import { statusColorToTone } from 'src/components/shared/status-tone'
+import { useCountUp } from 'src/composables/useCountUp'
+import { useSharedPlanTransition } from 'src/composables/useSharedPlanTransition'
 import { formatCurrency, formatCurrencyWithSign, type CurrencyCode } from 'src/utils/currency'
 import { getStatusText, getStatusColor, getStatusIcon, formatDateRange } from 'src/utils/plans'
 import { getBudgetProgressColor, getBudgetRemainingColorClass } from 'src/utils/budget'
@@ -86,7 +90,12 @@ const props = defineProps<{
   currency: CurrencyCode
 }>()
 
+const { heroStyle } = useSharedPlanTransition(() => props.plan?.id)
+
 const remaining = computed(() => props.stillToPay)
+
+const { displayValue: animatedSpent } = useCountUp(() => props.totalSpent)
+const { displayValue: animatedRemaining } = useCountUp(remaining)
 
 const progressPercentage = computed(() => {
   if (props.totalBudget === 0) return 0
@@ -111,8 +120,16 @@ const statusColor = computed(() => {
   return getStatusColor(props.plan)
 })
 
+const statusTone = computed(() => statusColorToTone(statusColor.value))
+
 const statusIcon = computed(() => {
   if (!props.plan) return 'eva-question-mark-outline'
   return getStatusIcon(props.plan)
 })
 </script>
+
+<style scoped lang="scss">
+.summary-metric {
+  font-weight: 700;
+}
+</style>

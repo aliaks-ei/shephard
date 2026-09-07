@@ -1,92 +1,83 @@
 <template>
   <q-card
-    :bordered="$q.dark.isActive"
-    class="full-height shadow-1"
+    class="plan-card full-height pressable"
+    :style="heroStyle"
   >
     <q-item
-      class="full-height q-pa-md"
+      class="plan-card__row q-pa-md"
       clickable
-      @click="emit('edit', plan.id)"
+      @click="openPlan"
     >
-      <q-item-section class="justify-between">
-        <div class="row items-start justify-between">
-          <div class="col">
-            <h3 class="text-h6 q-mt-none q-mb-xs">
-              {{ plan.name }}
-            </h3>
+      <q-item-section class="plan-card__main">
+        <div class="row items-center no-wrap q-gutter-x-xs">
+          <div class="plan-card__name text-subtitle1 text-weight-bold ellipsis">
+            {{ plan.name }}
           </div>
-          <div class="col-auto row items-center q-gutter-xs">
-            <q-icon
-              v-if="isViewOnly"
-              name="eva-lock-outline"
-              size="16px"
-              class="text-warning"
-            >
-              <q-tooltip>View only</q-tooltip>
-            </q-icon>
-            <q-icon
-              v-if="!isOwner"
-              name="eva-people-outline"
-              size="16px"
-              class="text-info"
-            >
-              <q-tooltip>Shared with me</q-tooltip>
-            </q-icon>
-            <q-btn
-              flat
-              round
-              size="sm"
-              icon="eva-more-vertical-outline"
-              :aria-label="menuButtonLabel"
-              aria-haspopup="menu"
-              :aria-expanded="String(isActionsMenuOpen)"
-              :aria-controls="menuId"
-              class="text-muted mobile-touch-target"
-              @click.stop
-            >
-              <PlanCardMenu
-                :id="menuId"
-                v-model="isActionsMenuOpen"
-                :can-edit="canEdit"
-                :can-share="isOwner"
-                :plan-status="planStatus"
-                @export="emit('export', plan.id)"
-                @share="emit('share', plan.id)"
-                @delete="showDeleteDialog"
-                @cancel="showCancelDialog"
-              />
-            </q-btn>
-          </div>
+          <q-icon
+            v-if="isViewOnly"
+            name="eva-lock-outline"
+            size="14px"
+            class="text-warning"
+          >
+            <q-tooltip>View only</q-tooltip>
+          </q-icon>
+          <q-icon
+            v-if="!isOwner"
+            name="eva-people-outline"
+            size="14px"
+            class="text-info"
+          >
+            <q-tooltip>Shared with me</q-tooltip>
+          </q-icon>
         </div>
-
-        <div class="q-mt-lg">
-          <div class="row items-center justify-between">
-            <div class="col">
-              <div class="text-subtitle1 text-weight-bold text-primary text-amount">
-                {{ formatAmount(plan.total) }}
-              </div>
-            </div>
-            <div class="col-auto">
-              <q-chip
-                :color="getStatusColor(plan)"
-                :icon="getStatusIcon(plan)"
-                text-color="white"
-                size="sm"
-                square
-              >
-                {{ getStatusText(plan) }}
-              </q-chip>
-            </div>
-          </div>
-
-          <div class="row items-center">
-            <div class="col">
-              <div class="text-caption">
-                {{ formatDateRange(plan.start_date, plan.end_date) }}
-              </div>
-            </div>
-          </div>
+        <div class="text-caption text-muted ellipsis">
+          {{ formatDateRange(plan.start_date, plan.end_date) }}
         </div>
+      </q-item-section>
+
+      <q-item-section
+        side
+        class="plan-card__meta items-end"
+      >
+        <div class="text-subtitle1 text-weight-bold text-amount plan-card__amount">
+          {{ formatAmount(plan.total) }}
+        </div>
+        <StatusPill
+          :label="getStatusText(plan)"
+          :icon="getStatusIcon(plan)"
+          :tone="statusColorToTone(getStatusColor(plan))"
+          class="q-mt-xs"
+        />
+      </q-item-section>
+
+      <q-item-section
+        side
+        class="plan-card__actions"
+      >
+        <q-btn
+          flat
+          round
+          size="sm"
+          icon="eva-more-vertical-outline"
+          :aria-label="menuButtonLabel"
+          aria-haspopup="menu"
+          :aria-expanded="String(isActionsMenuOpen)"
+          :aria-controls="menuId"
+          class="text-muted mobile-touch-target"
+          @click.stop
+        >
+          <PlanCardMenu
+            :id="menuId"
+            v-model="isActionsMenuOpen"
+            :can-edit="canEdit"
+            :can-share="isOwner"
+            :plan-status="planStatus"
+            @export="emit('export', plan.id)"
+            @share="emit('share', plan.id)"
+            @delete="showDeleteDialog"
+            @cancel="showCancelDialog"
+          />
+        </q-btn>
       </q-item-section>
     </q-item>
 
@@ -117,9 +108,12 @@ import { computed, ref } from 'vue'
 
 import PlanCardMenu from './PlanCardMenu.vue'
 import DeleteDialog from 'src/components/shared/DeleteDialog.vue'
+import StatusPill from 'src/components/shared/StatusPill.vue'
+import { statusColorToTone } from 'src/components/shared/status-tone'
 import { formatCurrency, formatCurrencyPrivate, type CurrencyCode } from 'src/utils/currency'
 import { useUserStore } from 'src/stores/user'
 import { usePreferencesStore } from 'src/stores/preferences'
+import { useSharedPlanTransition } from 'src/composables/useSharedPlanTransition'
 import {
   getPlanStatus,
   getStatusText,
@@ -144,6 +138,8 @@ const props = defineProps<{
 const userStore = useUserStore()
 const preferencesStore = usePreferencesStore()
 
+const { heroStyle, markShared } = useSharedPlanTransition(() => props.plan.id)
+
 const isDeleteDialogOpen = ref(false)
 const isCancelDialogOpen = ref(false)
 const isActionsMenuOpen = ref(false)
@@ -165,6 +161,12 @@ function formatAmount(amount: number | null | undefined): string {
   return formatCurrency(amount, currency)
 }
 
+function openPlan(): void {
+  // Mark before navigating so the list card and the detail summary morph into each other.
+  markShared()
+  emit('edit', props.plan.id)
+}
+
 function showDeleteDialog(): void {
   isDeleteDialogOpen.value = true
 }
@@ -183,3 +185,31 @@ function confirmCancel(): void {
   isCancelDialogOpen.value = false
 }
 </script>
+
+<style scoped lang="scss">
+.plan-card__row {
+  min-height: 0;
+}
+
+.plan-card__main {
+  min-width: 0;
+}
+
+.plan-card__name {
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.plan-card__meta {
+  padding-left: 12px;
+}
+
+.plan-card__amount {
+  color: hsl(var(--foreground));
+  line-height: 1.3;
+}
+
+.plan-card__actions {
+  padding-left: 4px;
+}
+</style>

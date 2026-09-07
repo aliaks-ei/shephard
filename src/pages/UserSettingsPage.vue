@@ -43,6 +43,7 @@
                 :options="currencyOptions"
                 dense
                 outlined
+                class="settings-select"
                 emit-value
                 options-dense
                 hide-bottom-space
@@ -73,6 +74,7 @@
                 :options="themeOptions"
                 dense
                 outlined
+                class="settings-select"
                 emit-value
                 options-dense
                 map-options
@@ -162,3 +164,22 @@ async function handleSignOut() {
   isSigningOut.value = false
 }
 </script>
+
+<style lang="scss" scoped>
+.settings-select :deep(.q-field__control) {
+  border-radius: var(--radius-full);
+  background: hsl(var(--muted));
+  border-color: transparent;
+  box-shadow: none;
+  padding-inline: 12px 6px;
+  min-height: 36px;
+}
+
+.settings-select :deep(.q-field__control:focus-within) {
+  box-shadow: 0 0 0 3px hsl(var(--ring) / 0.18);
+}
+
+.settings-select :deep(.q-field__native) {
+  font-weight: 500;
+}
+</style>

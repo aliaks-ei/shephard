@@ -64,7 +64,6 @@
         :color="progressColor"
         size="sm"
         rounded
-        :track-color="$q.dark.isActive ? 'grey-9' : 'grey-2'"
       />
     </q-item-section>
   </q-item>
@@ -117,3 +116,10 @@ const statusBadge = computed<null | { label: string; color: string }>(() => {
   return null
 })
 </script>
+
+<style lang="scss" scoped>
+:deep(.q-circular-progress__track),
+:deep(.q-linear-progress__track) {
+  color: hsl(var(--muted));
+}
+</style>

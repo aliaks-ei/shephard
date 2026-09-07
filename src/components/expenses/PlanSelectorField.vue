@@ -46,7 +46,7 @@
       </template>
       <template #no-option>
         <q-item>
-          <q-item-section class="text-grey">
+          <q-item-section class="text-muted">
             No plans available. Create a plan first.
           </q-item-section>
         </q-item>

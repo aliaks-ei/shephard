@@ -3,7 +3,7 @@
     v-if="isUpdateAvailable"
     rounded
     role="status"
-    class="pwa-update-banner text-white shadow-4"
+    class="pwa-update-banner shadow-4"
   >
     <template #avatar>
       <q-icon name="eva-refresh-outline" />
@@ -48,12 +48,12 @@ const { activateUpdate, hasBlockingWork, isApplying, isUpdateAvailable } = usePw
   z-index: 7000;
   max-width: 560px;
   margin-inline: auto;
-  background: #002427;
-  color: #fff;
+  background: hsl(var(--hero-gradient-to));
+  color: hsl(var(--hero-foreground));
 }
 
 .pwa-update-banner__description {
-  color: rgb(255 255 255 / 92%);
+  color: hsl(var(--hero-muted));
   line-height: 1.45;
 }
 

@@ -1,30 +1,25 @@
 <template>
   <q-card
-    class="full-height"
+    class="template-card full-height"
+    :class="readonly ? '' : 'pressable'"
     :flat="readonly"
-    :bordered="readonly || $q.dark.isActive"
-    :class="readonly ? '' : 'shadow-1'"
+    :bordered="readonly"
   >
     <q-item
-      class="full-height q-pa-md"
+      class="template-card__row q-pa-md"
       :clickable="!readonly"
       @click="onCardClick"
     >
-      <q-item-section class="justify-between">
-        <div class="row items-start justify-between">
-          <div class="col">
-            <h3 class="text-h6 q-mt-none q-mb-xs">
-              {{ template.name }}
-            </h3>
+      <q-item-section class="template-card__main">
+        <div class="row items-center no-wrap q-gutter-x-xs">
+          <div class="template-card__name text-subtitle1 text-weight-bold ellipsis">
+            {{ template.name }}
           </div>
-          <div
-            v-if="!readonly"
-            class="col-auto row items-center q-gutter-xs"
-          >
+          <template v-if="!readonly">
             <q-icon
               v-if="isViewOnly"
               name="eva-lock-outline"
-              size="16px"
+              size="14px"
               class="text-warning"
             >
               <q-tooltip>View only</q-tooltip>
@@ -32,65 +27,58 @@
             <q-icon
               v-if="!isOwner"
               name="eva-people-outline"
-              size="16px"
+              size="14px"
               class="text-info"
             >
               <q-tooltip>Shared with me</q-tooltip>
             </q-icon>
-            <q-btn
-              flat
-              round
-              size="sm"
-              icon="eva-more-vertical-outline"
-              :aria-label="menuButtonLabel"
-              aria-haspopup="menu"
-              :aria-expanded="String(isActionsMenuOpen)"
-              :aria-controls="menuId"
-              class="text-muted mobile-touch-target"
-              @click.stop
-            >
-              <TemplateCardMenu
-                :id="menuId"
-                v-model="isActionsMenuOpen"
-                :can-edit="canEdit"
-                :can-share="isOwner"
-                @export="emit('export', template.id)"
-                @share="emit('share', template.id)"
-                @delete="showDeleteDialog"
-              />
-            </q-btn>
-          </div>
+          </template>
         </div>
+        <div class="text-caption text-muted">Total amount</div>
+      </q-item-section>
 
-        <div class="q-mt-lg">
-          <div class="row items-center justify-between">
-            <div class="col">
-              <div class="text-subtitle1 text-weight-bold text-primary text-amount">
-                {{ formatAmount(template.total) }}
-              </div>
-            </div>
-            <div class="col-auto">
-              <q-badge
-                color="primary"
-                text-color="white"
-                class="q-py-xs"
-                size="sm"
-              >
-                <q-icon
-                  name="eva-clock-outline"
-                  size="12px"
-                  class="q-mr-xs"
-                />
-                {{ template.duration }}
-              </q-badge>
-            </div>
-          </div>
-          <div class="row items-center">
-            <div class="col">
-              <div class="text-caption">Total amount</div>
-            </div>
-          </div>
+      <q-item-section
+        side
+        class="template-card__meta items-end"
+      >
+        <div class="text-subtitle1 text-weight-bold text-amount template-card__amount">
+          {{ formatAmount(template.total) }}
         </div>
+        <StatusPill
+          :label="template.duration"
+          icon="eva-clock-outline"
+          tone="info"
+          class="q-mt-xs"
+        />
+      </q-item-section>
+
+      <q-item-section
+        v-if="!readonly"
+        side
+        class="template-card__actions"
+      >
+        <q-btn
+          flat
+          round
+          size="sm"
+          icon="eva-more-vertical-outline"
+          :aria-label="menuButtonLabel"
+          aria-haspopup="menu"
+          :aria-expanded="String(isActionsMenuOpen)"
+          :aria-controls="menuId"
+          class="text-muted mobile-touch-target"
+          @click.stop
+        >
+          <TemplateCardMenu
+            :id="menuId"
+            v-model="isActionsMenuOpen"
+            :can-edit="canEdit"
+            :can-share="isOwner"
+            @export="emit('export', template.id)"
+            @share="emit('share', template.id)"
+            @delete="showDeleteDialog"
+          />
+        </q-btn>
       </q-item-section>
     </q-item>
 
@@ -111,6 +99,7 @@ import { computed, ref } from 'vue'
 
 import TemplateCardMenu from './TemplateCardMenu.vue'
 import DeleteDialog from 'src/components/shared/DeleteDialog.vue'
+import StatusPill from 'src/components/shared/StatusPill.vue'
 import { formatCurrency, formatCurrencyPrivate, type CurrencyCode } from 'src/utils/currency'
 import { useUserStore } from 'src/stores/user'
 import { usePreferencesStore } from 'src/stores/preferences'
@@ -170,3 +159,31 @@ function confirmDelete(): void {
   isDeleteDialogOpen.value = false
 }
 </script>
+
+<style scoped lang="scss">
+.template-card__row {
+  min-height: 0;
+}
+
+.template-card__main {
+  min-width: 0;
+}
+
+.template-card__name {
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.template-card__meta {
+  padding-left: 12px;
+}
+
+.template-card__amount {
+  color: hsl(var(--foreground));
+  line-height: 1.3;
+}
+
+.template-card__actions {
+  padding-left: 4px;
+}
+</style>

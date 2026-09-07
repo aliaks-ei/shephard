@@ -26,7 +26,7 @@
       round
       dense
       icon="eva-more-vertical-outline"
-      color="grey-8"
+      class="text-muted"
       aria-label="More actions"
       aria-haspopup="menu"
       :aria-expanded="String(showDesktopOverflow)"
@@ -59,7 +59,8 @@
             >
               <q-icon
                 :name="action.icon"
-                :color="action.color === 'negative' ? 'negative' : 'grey-7'"
+                :color="action.color === 'negative' ? 'negative' : undefined"
+                :class="{ 'text-muted': action.color !== 'negative' }"
                 size="xs"
               />
             </q-item-section>
@@ -151,7 +152,8 @@
                     >
                       <q-icon
                         :name="action.icon"
-                        :color="action.color === 'negative' ? 'negative' : 'grey-7'"
+                        :color="action.color === 'negative' ? 'negative' : undefined"
+                        :class="{ 'text-muted': action.color !== 'negative' }"
                         size="xs"
                       />
                     </q-item-section>

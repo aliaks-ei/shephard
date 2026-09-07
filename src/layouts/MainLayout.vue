@@ -1,10 +1,18 @@
 <template>
   <q-layout view="hHh Lpr fFf">
-    <q-header>
+    <q-header
+      v-if="!hideHeader"
+      class="app-header"
+      :class="{
+        'app-header--mobile': $q.screen.lt.md,
+        'app-header--scrolled': isScrolled,
+      }"
+    >
       <q-toolbar>
         <q-toolbar-title>
           <q-btn
-            class="text-h6"
+            v-if="!$q.screen.lt.md"
+            class="text-h6 app-header__brand"
             label="Shephard"
             to="/"
             flat
@@ -92,7 +100,7 @@
 
     <q-footer
       v-if="showMobileBottomNav"
-      class="bg-transparent safe-area-bottom-toolbar--glass"
+      class="bg-transparent safe-area-bottom-toolbar--glass app-footer"
     >
       <MobileBottomNavigation
         :can-add-expense="canAddExpense"
@@ -158,6 +166,8 @@
     </q-page-container>
 
     <!-- Dialogs -->
+    <ExpenseDeleteDialog />
+
     <ExpenseRegistrationDialog
       v-if="canAddExpense && hasOpenedExpenseDialog"
       v-model="showExpenseDialog"
@@ -208,6 +218,8 @@ import MobileBottomNavigation from 'src/components/MobileBottomNavigation.vue'
 import NotificationInbox from 'src/components/notifications/NotificationInbox.vue'
 import NotificationInboxHeaderActions from 'src/components/notifications/NotificationInboxHeaderActions.vue'
 import AppDialogShell from 'src/components/shared/AppDialogShell.vue'
+import ExpenseDeleteDialog from 'src/components/expenses/ExpenseDeleteDialog.vue'
+import { useScrolledHeader } from 'src/composables/useScrolledHeader'
 import { useUserStore } from 'src/stores/user'
 import { usePwaInstall } from 'src/composables/usePwaInstall'
 import { useInstallPromptGate } from 'src/composables/useInstallPromptGate'
@@ -222,6 +234,7 @@ const { isOnline, isOffline } = useNetworkStatus()
 const canAddExpense = computed(() => isOnline.value && plansForExpenses.value.length > 0)
 const route = useRoute()
 const $q = useQuasar()
+const { isScrolled } = useScrolledHeader()
 const { isInstallable, isIosInstallGuidanceAvailable, promptInstall, dismissInstall } =
   usePwaInstall()
 const { canShowInstallPrompt, markInstallPromptShown } = useInstallPromptGate()
@@ -380,9 +393,67 @@ const isDetailPage = computed(() => {
 const showMobileBottomNav = computed(() => {
   return $q.screen.lt.md && !isDetailPage.value
 })
+
+// Detail pages carry their own back-button toolbar on mobile; a second bar on top
+// of it is the biggest "old Material app" signal, so the global header steps aside.
+const hideHeader = computed(() => $q.screen.lt.md && isDetailPage.value)
 </script>
 
 <style lang="scss" scoped>
+// Neutral header: no brand-colored band. Desktop gets a card surface with a
+// hairline; mobile is transparent over the page and turns into glass on scroll.
+.app-header {
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+  border-bottom: 1px solid hsl(var(--border));
+  transition:
+    background-color var(--duration-base) ease,
+    border-color var(--duration-base) ease,
+    box-shadow var(--duration-base) ease;
+
+  :deep(.q-toolbar) {
+    min-height: 56px;
+  }
+}
+
+.app-header__brand {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.app-header--mobile {
+  background: transparent;
+  border-bottom-color: transparent;
+
+  &.app-header--scrolled {
+    background: hsl(var(--glass-bg-fallback));
+    border-bottom-color: hsl(var(--glass-border-inner));
+
+    @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+      background: hsl(var(--glass-bg));
+      -webkit-backdrop-filter: saturate(var(--glass-saturation)) blur(var(--glass-blur));
+      backdrop-filter: saturate(var(--glass-saturation)) blur(var(--glass-blur));
+    }
+
+    @media (prefers-reduced-transparency: reduce) {
+      background: hsl(var(--card));
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+}
+
+// Scrim behind the floating nav: scrolling rows fade out before they reach the bar
+.app-footer {
+  padding-top: 20px;
+  background: linear-gradient(
+    to top,
+    hsl(var(--background)) 0%,
+    hsl(var(--background) / 0.92) 55%,
+    hsl(var(--background) / 0) 100%
+  );
+}
+
 .navigation-drawer-bg {
   background-color: hsl(var(--card));
   border-right: 1px solid hsl(var(--border));

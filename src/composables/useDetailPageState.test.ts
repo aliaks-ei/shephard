@@ -27,7 +27,7 @@ describe('titles', () => {
 
   it('returns Edit title by default', () => {
     const { pageTitle } = useDetailPageState(baseConfig, false, false)
-    expect(pageTitle.value).toBe('Edit Plan')
+    expect(pageTitle.value).toBe('Plan')
   })
 
   it('reacts to state changes when refs are passed', () => {
@@ -38,7 +38,7 @@ describe('titles', () => {
     expect(pageTitle.value).toBe('View Plan')
 
     isReadOnly.value = false
-    expect(pageTitle.value).toBe('Edit Plan')
+    expect(pageTitle.value).toBe('Plan')
 
     isNew.value = true
     expect(pageTitle.value).toBe('Create Plan')
