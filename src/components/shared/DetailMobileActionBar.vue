@@ -124,7 +124,8 @@
                     >
                       <q-icon
                         :name="action.icon"
-                        :color="isDestructiveAction(action) ? 'negative' : 'grey-7'"
+                        :color="isDestructiveAction(action) ? 'negative' : undefined"
+                        :class="{ 'text-muted': !isDestructiveAction(action) }"
                         size="xs"
                       />
                     </q-item-section>

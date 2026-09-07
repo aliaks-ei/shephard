@@ -119,7 +119,7 @@ describe('DashboardHeader', () => {
     mockScreen.lt.md = false
     const wrapper = createWrapper()
     const title = wrapper.find('h1')
-    expect(title.classes()).toContain('text-weight-medium')
+    expect(title.classes()).toContain('page-title')
     expect(title.classes()).toContain('q-my-none')
     expect(title.classes()).toContain('text-h4')
   })

@@ -42,6 +42,7 @@
     <div v-else-if="!isNewPlan && detailState.status === 'ready'">
       <div class="row q-mb-md">
         <q-tabs
+          v-tab-pill
           v-model="activeTab"
           dense
           :shrink="!$q.screen.lt.md"

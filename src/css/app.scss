@@ -15,14 +15,9 @@ html:has(.body--dark) {
 
 body {
   font-family:
-    'Inter',
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    Helvetica,
-    Arial,
-    sans-serif;
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, sans-serif;
+  font-optical-sizing: auto;
   min-height: 100vh;
   min-height: 100dvh;
   background: hsl(var(--background));
@@ -42,7 +37,7 @@ body {
 .q-dialog__inner > .q-card {
   width: 90vw;
   min-width: 300px;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-2xl);
   background: hsl(var(--card));
   color: hsl(var(--card-foreground));
   box-shadow: var(--shadow-lg);
@@ -60,15 +55,73 @@ body {
   color: hsl(var(--card-foreground));
 }
 
-// Global Notification Styles - Full width on mobile with bottom offset for navigation
-.q-notification {
-  width: 100%;
-  margin-bottom: calc(72px + max(12px, env(safe-area-inset-bottom, 0px)));
+// Global Notification Styles - glass pill toasts anchored to the top
+.q-notifications__list--top {
+  padding-top: max(8px, env(safe-area-inset-top, 0px));
+}
 
-  @media (min-width: $breakpoint-sm-min) {
-    width: auto;
-    margin-bottom: 0;
+.q-notification {
+  width: auto;
+  max-width: min(420px, calc(100vw - 24px));
+  min-height: 44px;
+  padding: 6px 8px 6px 14px;
+  border-radius: var(--radius-full);
+  background: hsl(var(--glass-bg-fallback));
+  color: hsl(var(--foreground));
+  border: 1px solid hsl(var(--glass-border-outer));
+  box-shadow: var(--glass-shadow);
+  font-weight: 500;
+  letter-spacing: var(--tracking-tight);
+
+  @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+    background: hsl(var(--glass-bg));
+    -webkit-backdrop-filter: saturate(var(--glass-saturation)) blur(var(--glass-blur));
+    backdrop-filter: saturate(var(--glass-saturation)) blur(var(--glass-blur));
   }
+
+  .q-notification__icon {
+    font-size: 20px;
+  }
+
+  .q-notification__actions .q-btn {
+    color: hsl(var(--primary));
+    font-weight: 600;
+  }
+
+  &.bg-positive .q-notification__icon {
+    color: hsl(var(--success));
+  }
+  &.bg-negative .q-notification__icon {
+    color: hsl(var(--destructive));
+  }
+  &.bg-warning .q-notification__icon {
+    color: hsl(var(--warning));
+  }
+  &.bg-info .q-notification__icon {
+    color: hsl(var(--primary));
+  }
+
+  // Quasar type presets set solid backgrounds; keep the glass surface instead.
+  &.bg-positive,
+  &.bg-negative,
+  &.bg-warning,
+  &.bg-info,
+  &.text-white {
+    background: hsl(var(--glass-bg-fallback)) !important;
+    color: hsl(var(--foreground)) !important;
+
+    @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+      background: hsl(var(--glass-bg)) !important;
+    }
+  }
+}
+
+// Pull-to-refresh: replace the Material puller with a small floating disc
+.q-pull-to-refresh__puller {
+  background: hsl(var(--card));
+  color: hsl(var(--primary));
+  border: 1px solid hsl(var(--border));
+  box-shadow: var(--shadow-md);
 }
 
 // Safe Area Bottom Padding - Reusable class for iOS PWA bottom spacing
@@ -247,16 +300,17 @@ body {
 // Cards (q-card) - shadcn-vue conventions
 // --------------------------------------------
 .q-card {
-  border-radius: var(--radius-xl); // 12px (shadcn uses rounded-xl)
+  border-radius: var(--radius-2xl); // 16px
   background: hsl(var(--card));
   color: hsl(var(--card-foreground));
-  border: 1px solid hsl(var(--border));
+  border: 1px solid hsl(var(--card-border));
   transition:
     box-shadow 0.15s ease,
-    border-color 0.15s ease;
+    border-color 0.15s ease,
+    transform var(--duration-fast) var(--ease-out-quint);
 
   &:not(.q-card--flat) {
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--shadow-card);
   }
 
   &.q-card--bordered {
@@ -265,7 +319,11 @@ body {
 
   &.q-card--flat {
     box-shadow: none;
-    border: 1px solid hsl(var(--border));
+    border: 1px solid hsl(var(--card-border));
+  }
+
+  &.shadow-1 {
+    box-shadow: var(--shadow-card) !important;
   }
 
   // Cards with no-shadow should also have no border
@@ -277,15 +335,15 @@ body {
 
   .q-card__section {
     &:first-child {
-      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
     }
 
     &:last-child {
-      border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+      border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
     }
 
     &:only-child {
-      border-radius: var(--radius-xl);
+      border-radius: var(--radius-2xl);
     }
   }
 
@@ -437,7 +495,7 @@ body {
 
   .q-card:not(.q-card--flat),
   .q-card.shadow-1 {
-    box-shadow: var(--shadow-xs) !important;
+    box-shadow: var(--shadow-card) !important;
   }
 
   .q-field--outlined .q-field__control,
@@ -507,9 +565,18 @@ body {
 // --------------------------------------------
 .q-dialog {
   &__backdrop {
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.42);
     backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    transition: opacity var(--duration-base) var(--ease-out-quint);
   }
+}
+
+// Bottom sheets: native-feeling spring-in, smoother settle
+.q-transition--slide-up-enter-active,
+.q-transition--slide-down-leave-active {
+  transition-timing-function: var(--ease-out-quint) !important;
+  transition-duration: var(--duration-slow) !important;
 }
 
 // --------------------------------------------
@@ -790,22 +857,34 @@ h6,
 h4,
 .text-h4 {
   font-size: 1.75rem;
-  line-height: 1.3;
-  font-weight: 500;
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.025em;
 }
 
 h5,
 .text-h5 {
-  font-size: 1.25rem;
-  line-height: 1.3;
-  font-weight: 500;
+  font-size: 1.375rem;
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 h6,
 .text-h6 {
-  font-size: 1.125rem;
+  font-size: 1.0625rem;
   line-height: 1.35;
-  font-weight: 500;
+  font-weight: 600;
+}
+
+// Large page titles on mobile (iOS large-title scale)
+@media (max-width: $breakpoint-sm-max) {
+  .page-title {
+    font-size: 1.75rem;
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: -0.028em;
+  }
 }
 
 .text-subtitle1 {
@@ -977,15 +1056,6 @@ h6,
   }
 }
 
-.dashboard-mobile-section {
-  @media (max-width: 1023px) {
-    border-right: 0;
-    border-left: 0;
-    border-radius: 0;
-    box-shadow: none !important;
-  }
-}
-
 .menu-list {
   min-width: 160px;
 }
@@ -1065,4 +1135,298 @@ h6,
 .form-label--required::after {
   content: ' *';
   color: $negative;
+}
+
+// ============================================
+// Motion layer
+// ============================================
+
+// Press feedback for touch surfaces (replaces Material ripple)
+.pressable {
+  transition:
+    transform var(--duration-fast) var(--ease-out-quint),
+    opacity var(--duration-fast) var(--ease-out-quint),
+    box-shadow var(--duration-fast) var(--ease-out-quint);
+  -webkit-tap-highlight-color: transparent;
+
+  &:active {
+    transform: scale(0.975);
+    opacity: 0.92;
+  }
+}
+
+.pressable-row {
+  transition:
+    background-color var(--duration-fast) ease,
+    transform var(--duration-fast) var(--ease-out-quint);
+  -webkit-tap-highlight-color: transparent;
+
+  &:active {
+    background: hsl(var(--muted));
+    transform: scale(0.99);
+  }
+}
+
+// Staggered rise-in for list children on first paint
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.list-stagger > * {
+  animation: rise-in var(--duration-slow) var(--ease-out-quint) both;
+}
+
+@for $i from 1 through 12 {
+  .list-stagger > *:nth-child(#{$i}) {
+    animation-delay: #{($i - 1) * 32}ms;
+  }
+}
+
+.list-stagger > *:nth-child(n + 13) {
+  animation-delay: 384ms;
+}
+
+// Content entrance (skeleton → content crossfade)
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.fade-in {
+  animation: fade-in var(--duration-base) ease both;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity var(--duration-base) ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+// List enter/leave/move (TransitionGroup name="list")
+.list-enter-active {
+  transition:
+    opacity var(--duration-slow) var(--ease-out-quint),
+    transform var(--duration-slow) var(--ease-out-quint);
+}
+
+.list-leave-active {
+  position: absolute;
+  width: 100%;
+  transition:
+    opacity var(--duration-base) ease,
+    transform var(--duration-base) var(--ease-out-quint);
+}
+
+.list-move {
+  transition: transform var(--duration-slow) var(--ease-out-quint);
+}
+
+.list-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(-24px);
+}
+
+// Progress bars grow from zero on first paint
+@keyframes progress-grow {
+  from {
+    transform: scale3d(0, 1, 1);
+  }
+}
+
+.q-linear-progress__model--determinate,
+.progress-animated .q-linear-progress__model {
+  animation: progress-grow 700ms var(--ease-out-quint) both;
+  transform-origin: 0 0;
+}
+
+@keyframes ring-grow {
+  from {
+    stroke-dashoffset: var(--ring-circumference, 0);
+  }
+}
+
+// Same-document view transitions: iOS-style push/pop on mobile, crossfade on desktop
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--duration-base);
+  animation-timing-function: var(--ease-out-quint);
+}
+
+.q-header {
+  view-transition-name: app-header;
+}
+
+.q-footer {
+  view-transition-name: app-footer;
+}
+
+::view-transition-old(app-header),
+::view-transition-new(app-header),
+::view-transition-old(app-footer),
+::view-transition-new(app-footer) {
+  animation-duration: var(--duration-fast);
+}
+
+@keyframes vt-push-in {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes vt-push-out {
+  to {
+    transform: translateX(-28%);
+    opacity: 0.6;
+  }
+}
+
+@keyframes vt-pop-in {
+  from {
+    transform: translateX(-28%);
+    opacity: 0.6;
+  }
+}
+
+@keyframes vt-pop-out {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@media (max-width: $breakpoint-sm-max) {
+  html[data-vt-direction='forward']::view-transition-old(root) {
+    animation: vt-push-out var(--duration-slow) var(--ease-out-quint) both;
+  }
+
+  html[data-vt-direction='forward']::view-transition-new(root) {
+    animation: vt-push-in var(--duration-slow) var(--ease-out-quint) both;
+    box-shadow: -12px 0 32px rgb(0 0 0 / 0.16);
+  }
+
+  html[data-vt-direction='back']::view-transition-old(root) {
+    animation: vt-pop-out var(--duration-slow) var(--ease-out-quint) both;
+    z-index: 2;
+    box-shadow: -12px 0 32px rgb(0 0 0 / 0.16);
+  }
+
+  html[data-vt-direction='back']::view-transition-new(root) {
+    animation: vt-pop-in var(--duration-slow) var(--ease-out-quint) both;
+    z-index: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pressable,
+  .pressable-row,
+  .list-stagger > *,
+  .fade-in,
+  .q-linear-progress__model--determinate,
+  .progress-animated .q-linear-progress__model {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+// ============================================
+// Lucide icons (stroke glyphs served from the trimmed sprite)
+// ============================================
+.q-icon use,
+.q-icon > svg:has(> use) {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+// ============================================
+// Segmented tabs: one sliding pill instead of per-tab backgrounds (v-tab-pill)
+// ============================================
+.q-tabs--pill {
+  .q-tabs__content {
+    position: relative;
+  }
+
+  .q-tab {
+    position: relative;
+    z-index: 1;
+  }
+
+  .q-tab--active {
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .tab-pill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    opacity: 0;
+    pointer-events: none;
+    border-radius: var(--radius-md);
+    background: hsl(var(--tab-active-bg));
+    box-shadow: var(--tab-active-shadow);
+    will-change: transform, width;
+
+    &--ready {
+      transition:
+        transform var(--duration-slow) var(--ease-out-quint),
+        width var(--duration-slow) var(--ease-out-quint),
+        opacity var(--duration-fast) ease;
+    }
+  }
+}
+
+// Shared-element morph: plan card in a list ⇄ summary card on the detail page
+::view-transition-group(plan-hero) {
+  animation-duration: var(--duration-slow);
+  animation-timing-function: var(--ease-out-quint);
+  z-index: 5;
+}
+
+::view-transition-old(plan-hero),
+::view-transition-new(plan-hero) {
+  animation: none;
+  mix-blend-mode: normal;
+  height: 100%;
+  overflow: clip;
+}
+
+::view-transition-new(plan-hero) {
+  animation: fade-in var(--duration-base) ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .q-tabs--pill .tab-pill--ready {
+    transition: none;
+  }
 }

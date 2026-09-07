@@ -5,7 +5,7 @@
   >
     <section class="page-content-spacing">
       <div class="row justify-center">
-        <div class="col-12 col-lg-10 col-xl-8">
+        <div class="col-12 col-lg-10 col-xl-8 list-stagger">
           <!-- Dashboard Header -->
           <DashboardHeader />
 
@@ -119,6 +119,7 @@
               <q-item
                 clickable
                 to="/plans"
+                class="pressable-row"
               >
                 <q-item-section
                   avatar
@@ -153,6 +154,7 @@
               <q-item
                 clickable
                 to="/templates"
+                class="pressable-row"
               >
                 <q-item-section
                   avatar

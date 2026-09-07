@@ -468,7 +468,7 @@ describe('TemplatePage', () => {
   it('should show correct page title for edit mode', () => {
     const { wrapper } = createWrapper()
 
-    expect(wrapper.text()).toContain('Edit Template')
+    expect(wrapper.text()).toContain('Template')
   })
 
   it('should show read-only banner when in read-only mode', () => {
@@ -627,7 +627,7 @@ describe('TemplatePage', () => {
 
     // The page should render in edit mode with actions
     expect(wrapper.exists()).toBe(true)
-    expect(wrapper.text()).toContain('Edit Template')
+    expect(wrapper.text()).toContain('Template')
   })
 
   it('should allow form input interaction', async () => {
@@ -670,7 +670,7 @@ describe('TemplatePage', () => {
     const { wrapper } = createWrapper()
 
     // Page should show appropriate title for edit template
-    expect(wrapper.text()).toContain('Edit Template')
+    expect(wrapper.text()).toContain('Template')
   })
 
   it('should show correct breadcrumb labels for view template', () => {

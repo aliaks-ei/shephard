@@ -56,7 +56,6 @@
           size="48px"
           :thickness="0.15"
           :color="progressColor"
-          :track-color="$q.dark.isActive ? 'grey-9' : 'grey-2'"
           class="q-ml-md flex-shrink-0"
         >
           <span class="text-caption text-weight-bold">{{ Math.round(percentageUsed) }}%</span>
@@ -75,7 +74,6 @@
             size="52px"
             :thickness="0.17"
             :color="progressColor"
-            :track-color="$q.dark.isActive ? 'grey-9' : 'grey-2'"
             class="text-weight-bold q-mr-md"
           >
             <span class="text-caption text-weight-bold">{{ Math.round(percentageUsed) }}%</span>
@@ -95,7 +93,6 @@
               :color="progressColor"
               size="4px"
               rounded
-              :track-color="$q.dark.isActive ? 'grey-9' : 'grey-2'"
               class="q-my-xs"
             />
 
@@ -181,3 +178,10 @@ const statusTooltip = computed(() => {
   return 'Over Budget'
 })
 </script>
+
+<style lang="scss" scoped>
+:deep(.q-circular-progress__track),
+:deep(.q-linear-progress__track) {
+  color: hsl(var(--muted));
+}
+</style>

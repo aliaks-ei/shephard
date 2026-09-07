@@ -56,7 +56,7 @@ it('should render title with correct styling', () => {
   expect(titleElement.exists()).toBe(true)
   expect(titleElement.text()).toBe('Custom Title')
   expect(titleElement.classes()).toContain('text-h4')
-  expect(titleElement.classes()).toContain('text-weight-medium')
+  expect(titleElement.classes()).toContain('page-title')
   expect(titleElement.classes()).toContain('q-my-none')
 })
 
@@ -110,7 +110,7 @@ it('should render title and description in left column', () => {
     description: 'Left column description',
   })
 
-  const leftColumn = wrapper.find('.col.col-grow')
+  const leftColumn = wrapper.find('.col.min-w-0')
   const title = leftColumn.find('h1')
   const description = leftColumn.find('p')
 

@@ -42,6 +42,7 @@
     >
       <!-- Fixed Tabs -->
       <q-tabs
+        v-tab-pill
         v-model="currentMode"
         dense
         no-caps

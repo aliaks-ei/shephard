@@ -3,16 +3,7 @@ import { ref } from 'vue'
 import { useExpenseActions } from './useExpenseActions'
 import type { ExpenseWithCategory } from 'src/api'
 
-vi.mock('quasar', () => ({
-  Dialog: {
-    create: vi.fn(),
-  },
-  Dark: {
-    set: vi.fn(),
-  },
-}))
-
-const mockMutateAsync = vi.fn().mockResolvedValue(undefined)
+const mockMutateAsync = vi.fn()
 
 vi.mock('src/queries/expenses', () => ({
   useDeleteExpenseMutation: vi.fn(() => ({
@@ -21,180 +12,155 @@ vi.mock('src/queries/expenses', () => ({
   })),
 }))
 
-vi.mock('src/stores/user', () => ({
-  useUserStore: vi.fn(() => ({
-    userProfile: { id: 'user-1' },
-  })),
-}))
+const mockExpense: ExpenseWithCategory = {
+  id: 'expense-1',
+  plan_id: 'plan-1',
+  category_id: 'cat-1',
+  name: 'Groceries',
+  amount: 100,
+  expense_date: '2024-01-15',
+  user_id: 'user-1',
+  plan_item_id: null,
+  created_at: '2024-01-01',
+  updated_at: '2024-01-01',
+  currency: 'USD',
+  original_amount: null,
+  original_currency: null,
+  categories: {
+    id: 'cat-1',
+    name: 'Food',
+    color: '#FF5733',
+    icon: 'eva-shopping-bag-outline',
+    created_at: '2024-01-01',
+    updated_at: '2024-01-01',
+  },
+}
 
 beforeEach(() => {
   vi.clearAllMocks()
+  mockMutateAsync.mockResolvedValue(undefined)
+  // Reset the module-level singleton state between tests.
+  useExpenseActions().cancelPendingDelete()
 })
 
 describe('useExpenseActions', () => {
-  const mockExpense: ExpenseWithCategory = {
-    id: 'expense-1',
-    plan_id: 'plan-1',
-    category_id: 'cat-1',
-    name: 'Groceries',
-    amount: 100,
-    expense_date: '2024-01-15',
-    user_id: 'user-1',
-    plan_item_id: null,
-    created_at: '2024-01-01',
-    updated_at: '2024-01-01',
-    currency: 'USD',
-    original_amount: null,
-    original_currency: null,
-    categories: {
-      id: 'cat-1',
-      name: 'Food',
-      color: '#FF5733',
-      icon: 'eva-shopping-bag-outline',
-      created_at: '2024-01-01',
-      updated_at: '2024-01-01',
-    },
-  }
-
   describe('confirmDeleteExpense', () => {
-    it('shows confirmation dialog with correct content', async () => {
-      const { Dialog } = await import('quasar')
-      const mockCreate = vi.mocked(Dialog.create)
-      mockCreate.mockReturnValue({
-        onOk: vi.fn().mockReturnThis(),
-        onCancel: vi.fn().mockReturnThis(),
-        onDismiss: vi.fn().mockReturnThis(),
-      } as unknown as ReturnType<typeof Dialog.create>)
-
-      const { confirmDeleteExpense } = useExpenseActions()
+    it('stores the expense as pending without deleting it', () => {
+      const { confirmDeleteExpense, pendingDeleteExpense, isDeletingExpense } = useExpenseActions()
 
       confirmDeleteExpense(mockExpense)
 
-      expect(mockCreate).toHaveBeenCalledWith({
-        title: 'Delete Expense?',
-        message: 'Are you sure you want to delete "Groceries"?',
-        persistent: true,
-        ok: {
-          label: 'Delete',
-          color: 'negative',
-          unelevated: true,
-        },
-        cancel: {
-          label: 'Cancel',
-          flat: true,
-          color: 'text-white',
-        },
-      })
+      expect(pendingDeleteExpense.value).toStrictEqual(mockExpense)
+      expect(isDeletingExpense.value).toBe(false)
+      expect(mockMutateAsync).not.toHaveBeenCalled()
     })
 
-    it('deletes expense when confirmed', async () => {
-      const { Dialog } = await import('quasar')
+    it('shares pending state across composable instances', () => {
+      const first = useExpenseActions()
+      const second = useExpenseActions()
 
-      let onOkCallback: (() => void) | undefined
-      const mockCreate = vi.mocked(Dialog.create)
-      mockCreate.mockReturnValue({
-        onOk: vi.fn((callback) => {
-          onOkCallback = callback
-          return {
-            onCancel: vi.fn().mockReturnThis(),
-            onDismiss: vi.fn().mockReturnThis(),
-          }
-        }),
-        onCancel: vi.fn().mockReturnThis(),
-        onDismiss: vi.fn().mockReturnThis(),
-      } as unknown as ReturnType<typeof Dialog.create>)
+      first.confirmDeleteExpense(mockExpense)
 
-      const { confirmDeleteExpense } = useExpenseActions()
-
-      confirmDeleteExpense(mockExpense)
-
-      expect(onOkCallback).toBeDefined()
-      if (onOkCallback) {
-        onOkCallback()
-        await new Promise((resolve) => setTimeout(resolve, 0))
-
-        expect(mockMutateAsync).toHaveBeenCalledWith({
-          expenseId: 'expense-1',
-          planId: 'plan-1',
-        })
-      }
-    })
-
-    it('calls onSuccess callback after deletion', async () => {
-      const { Dialog } = await import('quasar')
-      const onSuccess = vi.fn()
-
-      let onOkCallback: (() => void) | undefined
-      const mockCreate = vi.mocked(Dialog.create)
-      mockCreate.mockReturnValue({
-        onOk: vi.fn((callback) => {
-          onOkCallback = callback
-          return {
-            onCancel: vi.fn().mockReturnThis(),
-            onDismiss: vi.fn().mockReturnThis(),
-          }
-        }),
-        onCancel: vi.fn().mockReturnThis(),
-        onDismiss: vi.fn().mockReturnThis(),
-      } as unknown as ReturnType<typeof Dialog.create>)
-
-      const { confirmDeleteExpense } = useExpenseActions()
-
-      confirmDeleteExpense(mockExpense, onSuccess)
-
-      expect(onOkCallback).toBeDefined()
-      if (onOkCallback) {
-        onOkCallback()
-        await new Promise((resolve) => setTimeout(resolve, 0))
-
-        expect(onSuccess).toHaveBeenCalled()
-      }
-    })
-
-    it('does not call onSuccess if not provided', async () => {
-      const { Dialog } = await import('quasar')
-
-      let onOkCallback: (() => void) | undefined
-      const mockCreate = vi.mocked(Dialog.create)
-      mockCreate.mockReturnValue({
-        onOk: vi.fn((callback) => {
-          onOkCallback = callback
-          return {
-            onCancel: vi.fn().mockReturnThis(),
-            onDismiss: vi.fn().mockReturnThis(),
-          }
-        }),
-        onCancel: vi.fn().mockReturnThis(),
-        onDismiss: vi.fn().mockReturnThis(),
-      } as unknown as ReturnType<typeof Dialog.create>)
-
-      const { confirmDeleteExpense } = useExpenseActions()
-
-      confirmDeleteExpense(mockExpense)
-
-      expect(onOkCallback).toBeDefined()
-      if (onOkCallback) {
-        onOkCallback()
-        await new Promise((resolve) => setTimeout(resolve, 0))
-      }
+      expect(second.pendingDeleteExpense.value).toStrictEqual(mockExpense)
     })
   })
 
-  describe('deleteExpense', () => {
-    it('deletes expense immediately without opening dialog', async () => {
-      const { Dialog } = await import('quasar')
-      const mockCreate = vi.mocked(Dialog.create)
+  describe('confirmPendingDelete', () => {
+    it('deletes the pending expense, runs onSuccess, and clears state', async () => {
       const onSuccess = vi.fn()
-      const { deleteExpense } = useExpenseActions()
+      const {
+        confirmDeleteExpense,
+        confirmPendingDelete,
+        pendingDeleteExpense,
+        isDeletingExpense,
+      } = useExpenseActions()
 
-      await deleteExpense(mockExpense, onSuccess)
+      confirmDeleteExpense(mockExpense, onSuccess)
+      await confirmPendingDelete()
 
-      expect(mockCreate).not.toHaveBeenCalled()
       expect(mockMutateAsync).toHaveBeenCalledWith({
         expenseId: 'expense-1',
         planId: 'plan-1',
       })
       expect(onSuccess).toHaveBeenCalledOnce()
+      expect(pendingDeleteExpense.value).toBeNull()
+      expect(isDeletingExpense.value).toBe(false)
+    })
+
+    it('sets isDeletingExpense while the mutation is in flight', async () => {
+      let resolveMutation: () => void = () => {}
+      mockMutateAsync.mockImplementation(
+        () =>
+          new Promise<void>((resolve) => {
+            resolveMutation = resolve
+          }),
+      )
+      const { confirmDeleteExpense, confirmPendingDelete, isDeletingExpense } = useExpenseActions()
+
+      confirmDeleteExpense(mockExpense)
+      const pending = confirmPendingDelete()
+
+      expect(isDeletingExpense.value).toBe(true)
+
+      resolveMutation()
+      await pending
+
+      expect(isDeletingExpense.value).toBe(false)
+    })
+
+    it('does nothing when there is no pending expense', async () => {
+      const { confirmPendingDelete } = useExpenseActions()
+
+      await confirmPendingDelete()
+
+      expect(mockMutateAsync).not.toHaveBeenCalled()
+    })
+
+    it('clears state without calling onSuccess when the mutation fails', async () => {
+      mockMutateAsync.mockRejectedValue(new Error('boom'))
+      const onSuccess = vi.fn()
+      const {
+        confirmDeleteExpense,
+        confirmPendingDelete,
+        pendingDeleteExpense,
+        isDeletingExpense,
+      } = useExpenseActions()
+
+      confirmDeleteExpense(mockExpense, onSuccess)
+      await expect(confirmPendingDelete()).resolves.toBeUndefined()
+
+      expect(onSuccess).not.toHaveBeenCalled()
+      expect(pendingDeleteExpense.value).toBeNull()
+      expect(isDeletingExpense.value).toBe(false)
+    })
+  })
+
+  describe('cancelPendingDelete', () => {
+    it('clears the pending expense without deleting', () => {
+      const { confirmDeleteExpense, cancelPendingDelete, pendingDeleteExpense } =
+        useExpenseActions()
+
+      confirmDeleteExpense(mockExpense)
+      cancelPendingDelete()
+
+      expect(pendingDeleteExpense.value).toBeNull()
+      expect(mockMutateAsync).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('deleteExpense', () => {
+    it('deletes immediately and calls onSuccess', async () => {
+      const onSuccess = vi.fn()
+      const { deleteExpense, pendingDeleteExpense } = useExpenseActions()
+
+      await deleteExpense(mockExpense, onSuccess)
+
+      expect(mockMutateAsync).toHaveBeenCalledWith({
+        expenseId: 'expense-1',
+        planId: 'plan-1',
+      })
+      expect(onSuccess).toHaveBeenCalledOnce()
+      expect(pendingDeleteExpense.value).toBeNull()
     })
   })
 })

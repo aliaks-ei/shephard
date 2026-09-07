@@ -60,7 +60,7 @@
       />
       <div
         v-else
-        class="text-caption text-grey-6"
+        class="text-caption text-muted"
       >
         {{ remainingBudget >= 0 ? 'Still to pay' : 'Over' }}:
         <span :class="remainingColorClass">{{ formatAmount(Math.abs(remainingBudget)) }}</span>

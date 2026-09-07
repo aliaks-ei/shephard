@@ -27,7 +27,7 @@
         avatar
       >
         <CategoryIcon
-          :color="categoryColor || '#666'"
+          :color="categoryColor || DEFAULT_CATEGORY_COLOR"
           :icon="categoryIcon || 'eva-folder-outline'"
           size="sm"
         />
@@ -51,7 +51,7 @@
         class="items-end"
       >
         <div class="column items-end">
-          <q-item-label class="text-weight-bold text-primary text-amount">
+          <q-item-label class="text-weight-bold text-amount">
             {{ formatCurrency(expense.amount, currency) }}
           </q-item-label>
           <q-item-label
@@ -79,7 +79,7 @@
       avatar
     >
       <CategoryIcon
-        :color="categoryColor || '#666'"
+        :color="categoryColor || DEFAULT_CATEGORY_COLOR"
         :icon="categoryIcon || 'eva-folder-outline'"
         size="sm"
       />
@@ -104,7 +104,7 @@
     >
       <div class="row items-center q-gutter-sm">
         <div class="column items-end">
-          <q-item-label class="text-weight-bold text-primary text-amount">
+          <q-item-label class="text-weight-bold text-amount">
             {{ formatCurrency(expense.amount, currency) }}
           </q-item-label>
           <q-item-label
@@ -139,7 +139,9 @@ import type { RouteLocationRaw } from 'vue-router'
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
 import { formatDate } from 'src/utils/date'
+import { DEFAULT_CATEGORY_COLOR } from 'src/utils/categories'
 import { useExpenseActions } from 'src/composables/useExpenseActions'
+import { hapticTap } from 'src/utils/haptics'
 import type { ExpenseWithCategory } from 'src/api'
 
 defineOptions({ inheritAttrs: false })
@@ -168,6 +170,7 @@ const emit = defineEmits<{
 const { confirmDeleteExpense } = useExpenseActions()
 
 function handleSwipeDelete(details: { reset: () => void }) {
+  hapticTap()
   details.reset()
   confirmDeleteExpense(props.expense, () => emit('deleted'))
 }

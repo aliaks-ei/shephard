@@ -1,7 +1,7 @@
 <template>
   <div :class="$q.screen.lt.md ? 'q-mb-md q-mt-sm' : 'q-mb-lg'">
     <h1
-      class="text-weight-medium q-my-none"
+      class="page-title q-my-none"
       :class="$q.screen.lt.md ? 'text-h5' : 'text-h4'"
     >
       {{ greeting }}

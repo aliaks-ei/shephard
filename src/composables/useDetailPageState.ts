@@ -48,7 +48,7 @@ export function useDetailPageState(
   const pageTitle = computed(() => {
     if (toValue(isNew)) return `Create ${config.entityName}`
     if (toValue(isReadOnly)) return `View ${config.entityName}`
-    return `Edit ${config.entityName}`
+    return config.entityName
   })
 
   return {

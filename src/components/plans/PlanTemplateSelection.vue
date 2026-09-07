@@ -70,7 +70,7 @@
       </template>
       <template #no-option>
         <q-item>
-          <q-item-section class="text-grey"> No templates available </q-item-section>
+          <q-item-section class="text-muted"> No templates available </q-item-section>
         </q-item>
       </template>
     </q-select>

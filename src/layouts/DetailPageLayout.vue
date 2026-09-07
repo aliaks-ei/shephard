@@ -5,23 +5,26 @@
       v-if="isMobile"
       class="page-content-spacing"
     >
-      <q-toolbar class="q-mb-sm q-px-none">
+      <q-toolbar
+        class="q-mb-sm detail-mobile-toolbar"
+        :class="{ 'detail-mobile-toolbar--scrolled': isScrolled }"
+      >
         <q-btn
           flat
           round
           size="sm"
           icon="eva-arrow-back-outline"
           aria-label="Go back"
-          class="detail-back-button"
+          class="detail-back-button pressable"
           @click="emit('back')"
         />
 
         <q-toolbar-title>
-          <div class="row items-center no-wrap text-body1">
+          <div class="row items-center no-wrap text-subtitle1 text-weight-bold">
             {{ pageTitle }}
             <q-badge
               v-if="showReadOnlyBadge && effectiveLoadState === 'ready'"
-              color="orange"
+              color="warning"
               text-color="white"
               class="q-ml-sm"
               outline
@@ -93,7 +96,10 @@
         @back="emit('back')"
       />
 
-      <div v-else>
+      <div
+        v-else
+        class="fade-in"
+      >
         <slot />
       </div>
     </div>
@@ -122,7 +128,7 @@
                 {{ pageTitle }}
                 <q-badge
                   v-if="showReadOnlyBadge && effectiveLoadState === 'ready'"
-                  color="orange"
+                  color="warning"
                   text-color="white"
                   class="q-ml-sm"
                   outline
@@ -203,7 +209,10 @@
             @back="emit('back')"
           />
 
-          <div v-else>
+          <div
+            v-else
+            class="fade-in"
+          >
             <slot />
           </div>
         </div>
@@ -230,6 +239,7 @@ import BannerContainer from 'src/components/shared/BannerContainer.vue'
 import ActionBar from 'src/components/shared/ActionBar.vue'
 import DetailMobileActionBar from 'src/components/shared/DetailMobileActionBar.vue'
 import QueryErrorState from 'src/components/shared/QueryErrorState.vue'
+import { useScrolledHeader } from 'src/composables/useScrolledHeader'
 import type { ActionBarAction } from 'src/types'
 import type { QueryErrorStateKind } from 'src/components/shared/QueryErrorState.vue'
 
@@ -271,6 +281,7 @@ const props = withDefaults(
 )
 
 const $q = useQuasar()
+const { isScrolled } = useScrolledHeader()
 
 const isMobile = computed(() => $q.screen.lt.md)
 const effectiveLoadState = computed(
@@ -303,8 +314,43 @@ const hasActions = computed(() => {
 
 .sticky-toolbar {
   position: sticky;
-  top: 52px;
+  top: 64px;
   z-index: 100;
+}
+
+// Mobile: the only header on detail pages. Transparent at rest, floating glass pill once
+// the page scrolls, so the back button stays reachable without a second bar.
+.detail-mobile-toolbar {
+  position: sticky;
+  top: calc(env(safe-area-inset-top, 0px) + 4px);
+  z-index: 100;
+  min-height: 48px;
+  padding-inline: 4px 12px;
+  color: hsl(var(--foreground));
+  border-radius: var(--radius-full);
+  border: 1px solid transparent;
+  transition:
+    background-color var(--duration-base) ease,
+    box-shadow var(--duration-base) ease,
+    border-color var(--duration-base) ease;
+
+  &--scrolled {
+    background: hsl(var(--glass-bg-fallback));
+    border-color: hsl(var(--glass-border-outer));
+    box-shadow: var(--glass-shadow);
+
+    @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+      background: hsl(var(--glass-bg));
+      -webkit-backdrop-filter: saturate(var(--glass-saturation)) blur(var(--glass-blur));
+      backdrop-filter: saturate(var(--glass-saturation)) blur(var(--glass-blur));
+    }
+
+    @media (prefers-reduced-transparency: reduce) {
+      background: hsl(var(--card));
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
 }
 
 .detail-toolbar {

@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { prepareRouteViewTransition, type ViewTransitionDocument } from './view-transition'
+import {
+  prepareRouteViewTransition,
+  resolveViewTransitionDirection,
+  type ViewTransitionDocument,
+} from './view-transition'
 
 describe('prepareRouteViewTransition', () => {
   it('falls back to normal navigation when the API is unavailable', () => {
@@ -41,5 +45,21 @@ describe('prepareRouteViewTransition', () => {
     } as unknown as ViewTransitionDocument
 
     expect(prepareRouteViewTransition(documentLike, false)).toBeNull()
+  })
+})
+
+describe('resolveViewTransitionDirection', () => {
+  it('returns forward when navigating deeper', () => {
+    expect(resolveViewTransitionDirection('/plans', '/plans/abc')).toBe('forward')
+    expect(resolveViewTransitionDirection('/', '/plans')).toBe('forward')
+  })
+
+  it('returns back when navigating shallower', () => {
+    expect(resolveViewTransitionDirection('/plans/abc', '/plans')).toBe('back')
+    expect(resolveViewTransitionDirection('/plans/abc?tab=items', '/plans')).toBe('back')
+  })
+
+  it('returns none for sibling routes', () => {
+    expect(resolveViewTransitionDirection('/plans', '/templates')).toBe('none')
   })
 })

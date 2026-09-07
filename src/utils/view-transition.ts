@@ -2,6 +2,30 @@ export type ViewTransitionDocument = Document & {
   startViewTransition?: (callback: () => Promise<void>) => unknown
 }
 
+export type ViewTransitionDirection = 'forward' | 'back' | 'none'
+
+function routeDepth(path: string): number {
+  const cleanPath = path.split(/[?#]/)[0] ?? ''
+  return cleanPath.split('/').filter(Boolean).length
+}
+
+/**
+ * Derives a push/pop direction from route depth so the view-transition CSS can
+ * slide detail pages in from the right and back out again. Sibling routes
+ * (tab-to-tab) get a plain crossfade.
+ */
+export function resolveViewTransitionDirection(
+  fromPath: string,
+  toPath: string,
+): ViewTransitionDirection {
+  const fromDepth = routeDepth(fromPath)
+  const toDepth = routeDepth(toPath)
+
+  if (toDepth > fromDepth) return 'forward'
+  if (toDepth < fromDepth) return 'back'
+  return 'none'
+}
+
 export type PendingRouteViewTransition = {
   finish: () => void
   navigationReady: Promise<void>

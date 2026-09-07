@@ -10,6 +10,7 @@ import routes from './routes'
 import { authGuard } from 'src/router/guards/auth'
 import {
   prepareRouteViewTransition,
+  resolveViewTransitionDirection,
   type PendingRouteViewTransition,
   type ViewTransitionDocument,
 } from 'src/utils/view-transition'
@@ -47,6 +48,13 @@ export default defineRouter(function (/* { store, ssrContext } */) {
       typeof window !== 'undefined' &&
       typeof window.matchMedia === 'function' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    if (doc?.documentElement) {
+      doc.documentElement.dataset.vtDirection = resolveViewTransitionDirection(
+        from.fullPath,
+        to.fullPath,
+      )
+    }
 
     pendingViewTransition = prepareRouteViewTransition(doc, prefersReducedMotion)
     return pendingViewTransition?.navigationReady

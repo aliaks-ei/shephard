@@ -7,6 +7,7 @@
     primary-action-color="negative"
     :primary-action-loading="isDeleting"
     :primary-action-disable="isDeleting"
+    detent="content"
     @update:model-value="emit('update:modelValue', $event)"
     @primary="emit('confirm')"
   >

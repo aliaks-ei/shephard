@@ -69,7 +69,7 @@
           class="min-w-auto"
         >
           <CategoryIcon
-            :color="expense.categories?.color || '#666'"
+            :color="expense.categories?.color || DEFAULT_CATEGORY_COLOR"
             :icon="expense.categories?.icon || 'eva-folder-outline'"
             size="sm"
           />
@@ -101,6 +101,7 @@ import QueryErrorState from 'src/components/shared/QueryErrorState.vue'
 import { usePreferencesStore } from 'src/stores/preferences'
 import { formatCurrency, formatCurrencyPrivate, type CurrencyCode } from 'src/utils/currency'
 import { formatDate } from 'src/utils/date'
+import { DEFAULT_CATEGORY_COLOR } from 'src/utils/categories'
 import type { ExpenseWithCategoryAndPlan } from 'src/api'
 
 defineProps<{

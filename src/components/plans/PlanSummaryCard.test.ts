@@ -2,6 +2,7 @@ import { mount } from '@vue/test-utils'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { ComponentProps } from 'vue-component-type-helpers'
+import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 
 import PlanSummaryCard from './PlanSummaryCard.vue'
 import type { PlanWithItems } from 'src/api'
@@ -21,6 +22,12 @@ vi.mock('src/utils/plans', () => ({
   getStatusColor: vi.fn(() => 'green'),
   getStatusIcon: vi.fn(() => 'eva-play-circle-outline'),
   formatDateRange: vi.fn(() => 'Jan 1 - Jan 31, 2024'),
+}))
+
+vi.mock('src/composables/useCountUp', () => ({
+  useCountUp: vi.fn((target: MaybeRefOrGetter<number>) => ({
+    displayValue: computed(() => toValue(target)),
+  })),
 }))
 
 vi.mock('src/utils/budget', () => ({
@@ -52,9 +59,9 @@ const renderPlanSummaryCard = (props: PlanSummaryCardProps) => {
       stubs: {
         'q-card': { template: '<div><slot /></div>' },
         'q-card-section': { template: '<div><slot /></div>' },
-        'q-chip': {
-          template: '<span class="q-chip"><slot /></span>',
-          props: ['color', 'textColor', 'icon'],
+        'q-icon': {
+          template: '<i class="q-icon" :data-name="name"></i>',
+          props: ['name', 'size'],
         },
         'q-separator': { template: '<hr />' },
         'q-linear-progress': {
@@ -171,9 +178,10 @@ describe('PlanSummaryCard', () => {
 
     const progressBar = wrapper.find('.q-linear-progress')
     expect(progressBar.exists()).toBe(true)
+    expect(progressBar.classes()).toContain('progress-animated')
   })
 
-  it('should display status chip', () => {
+  it('should display a status pill with the plan status', () => {
     const wrapper = renderPlanSummaryCard({
       plan: mockPlan,
       totalBudget: 1000,
@@ -182,9 +190,41 @@ describe('PlanSummaryCard', () => {
       currency: 'USD',
     })
 
-    const chip = wrapper.findComponent('.q-chip')
-    expect(chip.exists()).toBe(true)
-    expect(chip.text()).toContain('Active')
+    const pill = wrapper.find('.status-pill')
+    expect(pill.exists()).toBe(true)
+    expect(pill.text()).toContain('Active')
+    expect(pill.classes()).toContain('status-pill--success')
+    expect(pill.classes()).toContain('status-pill--md')
+    expect(pill.find('.q-icon').attributes('data-name')).toBe('eva-play-circle-outline')
+  })
+
+  it('should fall back to a muted Unknown pill when plan is null', () => {
+    const wrapper = renderPlanSummaryCard({
+      plan: null,
+      totalBudget: 0,
+      totalSpent: 0,
+      stillToPay: 0,
+      currency: 'USD',
+    })
+
+    const pill = wrapper.find('.status-pill')
+    expect(pill.text()).toContain('Unknown')
+    expect(pill.classes()).toContain('status-pill--muted')
+  })
+
+  it('should update the animated amounts when props change', async () => {
+    const wrapper = renderPlanSummaryCard({
+      plan: mockPlan,
+      totalBudget: 1000,
+      totalSpent: 500,
+      stillToPay: 500,
+      currency: 'USD',
+    })
+
+    await wrapper.setProps({ totalSpent: 750, stillToPay: 250 })
+
+    expect(wrapper.text()).toContain('USD 750.00')
+    expect(wrapper.text()).toContain('USD 250.00')
   })
 
   it('should display percentage over 100% when over budget', () => {

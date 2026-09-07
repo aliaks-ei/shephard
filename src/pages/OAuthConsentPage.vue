@@ -16,7 +16,7 @@
         </template>
         <template v-else-if="errorMessage">
           <div class="text-h6 q-mb-sm">Unable to continue</div>
-          <p class="text-body2 text-grey-7">{{ errorMessage }}</p>
+          <p class="text-body2 text-muted">{{ errorMessage }}</p>
           <q-btn
             no-caps
             color="primary"
@@ -27,7 +27,7 @@
         <template v-else-if="details">
           <div class="text-overline text-primary">Shephard connection</div>
           <div class="text-h5 q-mb-sm">Authorize {{ details.client.name }}</div>
-          <p class="text-body2 text-grey-7">
+          <p class="text-body2 text-muted">
             This connection can read your accessible plans, expenses, and categories. You can enable
             expense creation later in Settings.
           </p>

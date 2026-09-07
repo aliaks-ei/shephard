@@ -96,14 +96,6 @@ const renderPlanCard = (
           props: ['flat', 'label', 'color', 'unelevated'],
           emits: ['click'],
         },
-        'q-badge': {
-          template: '<span class="q-badge"><slot /></span>',
-          props: ['color', 'outline'],
-        },
-        'q-chip': {
-          template: '<span class="q-chip"><slot /></span>',
-          props: ['color', 'icon', 'textColor', 'size', 'square'],
-        },
         'q-tooltip': { template: '<div />' },
         DeleteDialog: { template: '<div />', props: ['modelValue'] },
         'q-icon': {
@@ -347,13 +339,31 @@ describe('PlanCard', () => {
     expect(html).toContain('text-warning')
   })
 
-  it('should show status chip', () => {
+  it('should show a status pill with the plan status text and tone', () => {
     const wrapper = renderPlanCard({
       plan: mockPlan,
     })
 
-    const chips = wrapper.findAll('.q-chip')
-    expect(chips.length).toBeGreaterThan(0)
+    const pill = wrapper.find('.status-pill')
+    expect(pill.exists()).toBe(true)
+    expect(pill.text()).toContain('5 days left')
+    expect(pill.classes()).toContain('status-pill--success')
+  })
+
+  it('should display the date range caption', () => {
+    const wrapper = renderPlanCard({
+      plan: mockPlan,
+    })
+
+    expect(wrapper.text()).toContain('Jan 1 - Jan 31, 2024')
+  })
+
+  it('should not render a primary-colored amount', () => {
+    const wrapper = renderPlanCard({
+      plan: mockPlan,
+    })
+
+    expect(wrapper.find('.text-amount').classes()).not.toContain('text-primary')
   })
 
   it('should format currency correctly', () => {

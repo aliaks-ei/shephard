@@ -84,14 +84,17 @@
       />
 
       <!-- Incrementally loaded day-grouped expense list -->
-      <template v-else-if="dayGroups.length > 0">
+      <div
+        v-else-if="dayGroups.length > 0"
+        class="list-stagger"
+      >
         <div
           v-for="group in dayGroups"
           :key="group.date"
           class="q-mb-md"
         >
           <div class="row items-baseline justify-between q-px-sm q-mb-xs">
-            <h2 class="text-subtitle2 text-weight-medium q-my-none">
+            <h2 class="section-overline text-caption q-my-none">
               {{ group.label }}
             </h2>
             <span class="text-caption text-amount">{{ group.totalLabel }}</span>
@@ -109,9 +112,10 @@
                 :can-edit="true"
                 show-category
                 :category-name="expense.plans?.name || ''"
-                :category-color="expense.categories?.color || '#666'"
+                :category-color="expense.categories?.color || DEFAULT_CATEGORY_COLOR"
                 :category-icon="expense.categories?.icon || 'eva-folder-outline'"
                 :to="sourcePlanRoute(expense)"
+                item-class="pressable-row"
               />
             </q-list>
           </q-card>
@@ -130,7 +134,7 @@
             @click="void fetchNextPage()"
           />
         </div>
-      </template>
+      </div>
 
       <!-- Empty: filtered -->
       <EmptyState
@@ -174,6 +178,7 @@ import EmptyExpensesState from 'src/components/expenses/EmptyExpensesState.vue'
 import ExpenseListItem from 'src/components/expenses/ExpenseListItem.vue'
 import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 import { useExpensesPage } from 'src/composables/useExpensesPage'
+import { DEFAULT_CATEGORY_COLOR } from 'src/utils/categories'
 
 useMeta({ title: 'Activity' })
 

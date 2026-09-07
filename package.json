@@ -26,7 +26,8 @@
     "mcp:test": "vitest run --config services/shephard-mcp/vitest.config.mts",
     "mcp:type-check": "tsc -p services/shephard-mcp/tsconfig.json --pretty false",
     "type-check": "vue-tsc --noEmit --composite false",
-    "prepare": "husky"
+    "prepare": "husky",
+    "icons:build": "node scripts/build-lucide-sprite.mjs"
   },
   "lint-staged": {
     "*.{js,ts,vue,scss,html,md,json}": "prettier --write \"**/*.{js,ts,vue,scss,html,md,json}\""
@@ -63,6 +64,7 @@
     "globals": "^15.12.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.1.0",
+    "lucide-static": "^1.42.0",
     "msw": "^2.12.10",
     "prettier": "^3.3.3",
     "supabase": "^2.51.0",

@@ -90,10 +90,8 @@
             <q-chip
               v-else-if="isAiSelected"
               size="sm"
-              color="blue-1"
-              text-color="blue-9"
               icon="eva-bulb-outline"
-              class="q-mr-xs"
+              class="bg-info-soft text-info-strong q-mr-xs"
             >
               AI
             </q-chip>
@@ -138,7 +136,7 @@
           </template>
           <template #no-option>
             <q-item class="q-py-xs q-px-md">
-              <q-item-section class="text-grey">
+              <q-item-section class="text-muted">
                 {{
                   isLoadingCategories
                     ? 'Loading categories...'
@@ -155,15 +153,12 @@
       <!-- AI Suggestion Banner (Low Confidence) -->
       <q-banner
         v-if="aiCategorization.lowConfidenceSuggestion.value && !isAiSelected"
-        class="bg-blue-1 text-blue-9 q-mt-md q-mb-md"
+        class="bg-info-soft text-info-strong q-mt-md q-mb-md"
         dense
         rounded
       >
         <template #avatar>
-          <q-icon
-            name="eva-bulb-outline"
-            color="blue-9"
-          />
+          <q-icon name="eva-bulb-outline" />
         </template>
         <div class="column">
           <div class="col">
@@ -175,7 +170,7 @@
           </div>
           <q-btn
             label="Apply"
-            color="blue-9"
+            color="primary"
             class="self-end"
             flat
             dense
@@ -187,7 +182,7 @@
 
       <q-banner
         v-else-if="aiCategorization.hasError.value || aiCategorization.hasNoSuggestion.value"
-        class="bg-grey-2 text-grey-9 q-mt-md q-mb-md"
+        class="themed-muted-banner q-mt-md q-mb-md"
         dense
         rounded
       >

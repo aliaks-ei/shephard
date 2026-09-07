@@ -12,6 +12,7 @@
         :color="content.color"
         size="40px"
         class="q-mb-sm"
+        :class="content.iconClass"
       />
       <div class="text-subtitle1 text-weight-medium">{{ resolvedTitle }}</div>
       <p class="text-body2 text-muted q-mb-md">
@@ -82,6 +83,7 @@ const content = computed(() => {
     return {
       icon: 'eva-wifi-off-outline',
       color: 'warning',
+      iconClass: undefined,
       title: 'You are offline',
       message: `Connect to the internet to load ${props.entityName.toLowerCase()}.`,
     }
@@ -91,7 +93,8 @@ const content = computed(() => {
     case 'not-found':
       return {
         icon: 'eva-search-outline',
-        color: 'grey-7',
+        color: undefined,
+        iconClass: 'text-faint',
         title: `${props.entityName} not found`,
         message: `This ${props.entityName.toLowerCase()} may have been deleted or the link is no longer valid.`,
       }
@@ -99,6 +102,7 @@ const content = computed(() => {
       return {
         icon: 'eva-lock-outline',
         color: 'warning',
+        iconClass: undefined,
         title: 'Access denied',
         message: `You do not have permission to view this ${props.entityName.toLowerCase()}.`,
       }
@@ -106,6 +110,7 @@ const content = computed(() => {
       return {
         icon: 'eva-alert-triangle-outline',
         color: 'negative',
+        iconClass: undefined,
         title: `Could not load ${props.entityName.toLowerCase()}`,
         message: 'Something went wrong while loading this data. Please try again.',
       }
