@@ -1,5 +1,4 @@
 # Cloudflare Workers static-asset headers.
-# Mirrors the rules previously held in netlify.toml.
 # Docs: https://developers.cloudflare.com/workers/static-assets/headers/
 #
 # A request that matches several blocks inherits the headers of all of them.
