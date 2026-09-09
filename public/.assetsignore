@@ -1,0 +1,6 @@
+# Files Cloudflare never serves. Wrangler skips these when uploading assets.
+# Docs: https://developers.cloudflare.com/workers/static-assets/binding/#ignoring-assets
+#
+# Cloudflare compresses responses on the fly, so the pre-compressed siblings
+# emitted by vite-plugin-compression are dead weight in the asset store.
+*.gz
