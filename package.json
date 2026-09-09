@@ -18,6 +18,7 @@
     "build:production": "NODE_ENV=production quasar build -m pwa",
     "preview": "quasar build -m pwa && quasar serve dist/pwa --port 4173",
     "deploy": "wrangler deploy",
+    "deploy:preview": "wrangler versions upload",
     "deploy:check": "wrangler deploy --dry-run",
     "postinstall": "quasar prepare",
     "test:unit": "vitest",
