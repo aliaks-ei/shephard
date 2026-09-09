@@ -43,3 +43,6 @@ yarn-error.log*
 # Cloudflare Wrangler local state
 .wrangler
 .dev.vars*
+
+# Supabase CLI local state (holds a pooler connection string)
+supabase/.temp/
