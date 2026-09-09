@@ -213,16 +213,24 @@ Important behavior:
 
 ## Deployment
 
-Primary reference:
+Primary references:
 
-- `netlify.toml`
+- `wrangler.jsonc` - Cloudflare Workers config (target host)
+- `public/_headers` - security and cache headers, copied to `dist/pwa` at build time
+- `netlify.toml` - current host, kept until the DNS cutover is done
 
 Important deployment behavior:
 
 - published output is `dist/pwa`
 - production PWA domain is `https://shephard.app`
 - OAuth consent for the MCP authorization server is served by the PWA at `https://shephard.app/oauth/consent`
-- SPA routing is handled with a redirect to `/index.html`
+- SPA routing uses `assets.not_found_handling = "single-page-application"` on Cloudflare, and a redirect to `/index.html` on Netlify
 - CSP and cache headers are tightly coupled to the current Supabase + Google Sign-In setup
+- `public/_headers` must stay in the Workbox `globIgnores` list in `quasar.config.ts`, or the service worker precaches a file Cloudflare never serves
 
-If you change auth providers, external scripts, remote assets, or PWA asset paths, review `netlify.toml` along with the app code.
+Deploy commands:
+
+- `npm run deploy` - build output in `dist/pwa` is uploaded with `wrangler deploy`
+- `npm run deploy:check` - `wrangler deploy --dry-run`, validates config without uploading
+
+If you change auth providers, external scripts, remote assets, or PWA asset paths, review `public/_headers` and `netlify.toml` along with the app code. Keep the two header sets in sync while both hosts are live.

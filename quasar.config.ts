@@ -316,6 +316,7 @@ export default defineConfig((ctx) => {
       extendInjectManifestOptions(cfg) {
         cfg.globIgnores = [
           '**/_redirects',
+          '**/_headers',
           '**/.DS_Store',
           '**/*.map',
           '**/*.gz',
