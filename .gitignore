@@ -39,3 +39,7 @@ yarn-error.log*
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Cloudflare Wrangler local state
+.wrangler
+.dev.vars*
