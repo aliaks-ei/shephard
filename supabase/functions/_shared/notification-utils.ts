@@ -44,14 +44,14 @@ export const defaultNotificationPushPreferences: Record<NotificationType, boolea
 // origin so a misconfigured preview deploy still gets a valid CORS header.
 //
 // If you deploy under a new origin, add it here AND update
-// `netlify.toml` CSP + Supabase dashboard redirect URLs.
-const ALLOWED_ORIGINS: readonly string[] = [
-  'https://shephard.app',
-  'https://www.shephard.app',
-  'https://shephard.netlify.app',
-]
+// `public/_headers` CSP + Supabase dashboard redirect URLs.
+const ALLOWED_ORIGINS: readonly string[] = ['https://shephard.app', 'https://www.shephard.app']
 
-const ALLOWED_ORIGIN_SUFFIXES: readonly string[] = ['.shephard.app', '--shephard.netlify.app']
+// `-shephard.aliaks-ei.workers.dev` matches Cloudflare per-branch preview URLs.
+const ALLOWED_ORIGIN_SUFFIXES: readonly string[] = [
+  '.shephard.app',
+  '-shephard.aliaks-ei.workers.dev',
+]
 
 const DEV_ORIGIN_PATTERN = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/
 

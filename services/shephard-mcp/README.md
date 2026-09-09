@@ -14,7 +14,7 @@ The migration introduces the `mcp_user` database role. MCP OAuth tokens receive 
 
 ## Local run
 
-Copy `.env.example` to `.env` and fill in the Supabase URL, publishable key, and the externally reachable service URL. Node 22 or newer is required. The PWA consent screen is deployed through Netlify at `https://shephard.app`; retain that production origin in `MCP_ALLOWED_ORIGINS`.
+Copy `.env.example` to `.env` and fill in the Supabase URL, publishable key, and the externally reachable service URL. Node 22 or newer is required. The PWA consent screen is deployed on Cloudflare Workers at `https://shephard.app`; retain that production origin in `MCP_ALLOWED_ORIGINS`.
 
 ```sh
 npm run mcp:dev
