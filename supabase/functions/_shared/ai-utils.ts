@@ -11,7 +11,7 @@ type RetryOptions<T> = {
   retryableStatusCodes?: number[]
 }
 
-const DEFAULT_RETRYABLE_STATUS_CODES = [429, 500, 502, 503, 504]
+const DEFAULT_RETRYABLE_STATUS_CODES = [429, 500, 502, 503, 504, 529]
 const DEFAULT_MAX_ATTEMPTS = 3
 const DEFAULT_TIMEOUT_MS = 12000
 const DEFAULT_BASE_DELAY_MS = 250
@@ -104,7 +104,7 @@ const withTimeout = async <T>(operation: () => Promise<T>, timeoutMs: number): P
       operation(),
       new Promise<T>((_, reject) => {
         timeoutId = setTimeout(() => {
-          reject(new Error(`OpenAI request timed out after ${timeoutMs}ms`))
+          reject(new Error(`Model request timed out after ${timeoutMs}ms`))
         }, timeoutMs)
       }),
     ])

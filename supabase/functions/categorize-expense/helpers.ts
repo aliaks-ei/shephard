@@ -361,6 +361,42 @@ export const extractCategorizationContext = (
     : null
 }
 
+export const JEV_SELECT_CONFIDENCE = 0.8
+export const JEV_FALLBACK_CONFIDENCE = 0.5
+
+export type JevOutcome = 'selected' | 'suggested' | 'fallback'
+
+// Option keys carry the 1-based index so two categories with the same name
+// still get unique keys.
+export const buildJevCriteria = (
+  categoryContexts: CategoryContext[],
+): { keys: string[]; criteria: Record<string, string | null> } => {
+  const keys = categoryContexts.map((category, index) => `${index + 1}. ${category.name}`)
+  const criteria = Object.fromEntries(
+    categoryContexts.map((category, index) => {
+      const parts = [
+        category.plannedItemNames.length > 0
+          ? `Planned items: ${category.plannedItemNames.slice(0, MAX_PROMPT_PLANNED_NAMES_PER_CATEGORY).join(', ')}`
+          : null,
+        category.memoryNames.length > 0
+          ? `Past expenses: ${category.memoryNames.slice(0, MAX_PROMPT_MEMORY_NAMES_PER_CATEGORY).join(', ')}`
+          : null,
+      ].filter((part): part is string => part !== null)
+
+      return [keys[index], parts.length > 0 ? parts.join('. ') : null]
+    }),
+  )
+
+  return { keys, criteria }
+}
+
+export const decideJevOutcome = (confidence: number): JevOutcome =>
+  confidence >= JEV_SELECT_CONFIDENCE
+    ? 'selected'
+    : confidence >= JEV_FALLBACK_CONFIDENCE
+      ? 'suggested'
+      : 'fallback'
+
 export const buildCategorizationInstructions = (
   categoryContexts: CategoryContext[],
   context: CategorizationContext | null = null,
