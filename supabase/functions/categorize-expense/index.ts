@@ -13,6 +13,8 @@ import {
 import {
   buildCategorizationInstructions,
   buildCategoryContexts,
+  buildJevCriteria,
+  decideJevOutcome,
   extractCategorizationContext,
   findCategoryNameMatch,
   findExactCategoryMatch,
@@ -29,7 +31,11 @@ const openai = new OpenAI({
   maxRetries: 0,
 })
 
+const OPENAI_MODEL = 'gpt-5.6-luna'
 const OPENAI_TIMEOUT_MS = 2500
+const JEV_MODEL = 'jev-1.13.0'
+const JEV_TIMEOUT_MS = 1000
+const JEV_API_URL = 'https://api.typesafe.ai/v1/systemone'
 const MAX_EXPENSE_NAME_LENGTH = 128
 const MAX_MEMORY_EXPENSES = 120
 
@@ -39,6 +45,54 @@ const categorySuggestionSchema = z.object({
   categoryIndex: z.coerce.number().int().min(1),
   confidence: z.coerce.number().finite().transform(clampUnitInterval),
 })
+
+const jevResponseSchema = z.object({
+  model: z.string(),
+  answers: z.object({
+    category: z.object({
+      choice: z.string(),
+      confidence: z.number().finite().transform(clampUnitInterval),
+    }),
+  }),
+})
+
+const requestJevCategory = (
+  expenseName: string,
+  context: CategorizationContext | null,
+  criteria: Record<string, string | null>,
+) =>
+  createResponseWithRetry({
+    maxAttempts: 1,
+    timeoutMs: JEV_TIMEOUT_MS,
+    operation: async () => {
+      const response = await fetch(JEV_API_URL, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${Deno.env.get('TYPESAFE_API_KEY')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: JEV_MODEL,
+          state: { expense_name: expenseName, ...context },
+          questions: {
+            category: {
+              type: 'choice',
+              instructions: 'Which budget category does this expense belong to?',
+              criteria,
+            },
+          },
+        }),
+      })
+
+      if (!response.ok) {
+        throw Object.assign(new Error(`Jev request failed with status ${response.status}`), {
+          status: response.status,
+        })
+      }
+
+      return jevResponseSchema.parse(await response.json())
+    },
+  })
 
 type CategorizeRequest = {
   deviceContext?: unknown
@@ -62,6 +116,7 @@ type UnavailableReason =
   | 'model_error'
   | 'invalid_model_response'
   | 'no_matching_category'
+type FallbackReason = 'jev_error' | 'jev_timeout' | 'jev_low_confidence'
 
 const isTimeoutError = (error: unknown): boolean =>
   error instanceof Error && error.message.toLowerCase().includes('timed out')
@@ -348,6 +403,70 @@ Deno.serve(async (req) => {
       })
     }
 
+    const { keys: jevOptionKeys, criteria: jevCriteria } = buildJevCriteria(categoryContexts)
+    let jevLowConfidenceMatch: { category: Category; confidence: number } | null = null
+    let fallbackReason: FallbackReason
+
+    const jevStartedAt = performance.now()
+    try {
+      const jevResponse = await requestJevCategory(
+        trimmedExpenseName,
+        categorizationContext,
+        jevCriteria,
+      )
+      const answer = jevResponse.answers.category
+      const jevCategory = categoryContexts[jevOptionKeys.indexOf(answer.choice)]
+
+      if (!jevCategory) {
+        throw new Error('Jev returned an unknown category option')
+      }
+
+      console.log(
+        JSON.stringify({
+          event: 'expense_category_model_success',
+          model: jevResponse.model,
+          modelMs: Math.round(performance.now() - jevStartedAt),
+          jevConfidence: answer.confidence,
+        }),
+      )
+
+      const jevOutcome = decideJevOutcome(answer.confidence)
+
+      if (jevOutcome !== 'fallback') {
+        return suggestionResponse(jevOutcome, {
+          categoryId: jevCategory.id,
+          categoryName: jevCategory.name,
+          confidence: answer.confidence,
+          reasoning:
+            jevOutcome === 'selected'
+              ? 'Matched by category detection.'
+              : 'Not confident enough to select automatically.',
+          source: 'model',
+        })
+      }
+
+      jevLowConfidenceMatch = { category: jevCategory, confidence: answer.confidence }
+      fallbackReason = 'jev_low_confidence'
+    } catch (jevError) {
+      fallbackReason = isTimeoutError(jevError) ? 'jev_timeout' : 'jev_error'
+      console.warn('Jev category model failed; trying OpenAI:', {
+        fallbackReason,
+        ...getModelErrorMetadata(jevError),
+      })
+    }
+
+    // When OpenAI cannot answer, a low-confidence Jev match is still better than nothing.
+    const openAiUnavailableResponse = (reason: UnavailableReason) =>
+      jevLowConfidenceMatch
+        ? suggestionResponse('suggested', {
+            categoryId: jevLowConfidenceMatch.category.id,
+            categoryName: jevLowConfidenceMatch.category.name,
+            confidence: jevLowConfidenceMatch.confidence,
+            reasoning: 'Not confident enough to select automatically.',
+            source: 'model',
+          })
+        : unavailableResponse(reason)
+
     const instructions = buildCategorizationInstructions(categoryContexts, categorizationContext)
 
     const categorySuggestionJsonSchema = {
@@ -370,19 +489,18 @@ Deno.serve(async (req) => {
 
     const modelStartedAt = performance.now()
     let response
-    let modelUsed: 'gpt-5.6-luna' | 'gpt-5-nano' = 'gpt-5.6-luna'
 
-    const createCategoryModelResponse = (model: 'gpt-5.6-luna' | 'gpt-5-nano', timeoutMs: number) =>
-      createResponseWithRetry({
+    try {
+      response = await createResponseWithRetry({
         maxAttempts: 1,
-        timeoutMs,
+        timeoutMs: OPENAI_TIMEOUT_MS,
         operation: () =>
           openai.responses.create({
-            model,
+            model: OPENAI_MODEL,
             instructions,
             input: trimmedExpenseName,
-            reasoning: { effort: model === 'gpt-5.6-luna' ? 'none' : 'minimal' },
-            max_output_tokens: model === 'gpt-5.6-luna' ? 64 : 120,
+            reasoning: { effort: 'none' },
+            max_output_tokens: 64,
             store: false,
             text: {
               format: {
@@ -395,47 +513,25 @@ Deno.serve(async (req) => {
             },
           }),
       })
-
-    try {
-      response = await createCategoryModelResponse(modelUsed, OPENAI_TIMEOUT_MS)
-    } catch (primaryError) {
-      if (isTimeoutError(primaryError)) {
-        console.error('Primary category model timed out:', getModelErrorMetadata(primaryError))
-        return unavailableResponse('model_timeout')
-      }
-
-      console.warn('Primary category model failed; trying fallback:', {
-        model: modelUsed,
-        ...getModelErrorMetadata(primaryError),
+    } catch (openAiError) {
+      console.error('OpenAI category model failed:', {
+        model: OPENAI_MODEL,
+        fallbackReason,
+        ...getModelErrorMetadata(openAiError),
       })
-
-      const remainingModelTime = Math.max(
-        0,
-        OPENAI_TIMEOUT_MS - Math.round(performance.now() - modelStartedAt),
+      return openAiUnavailableResponse(
+        isTimeoutError(openAiError) ? 'model_timeout' : 'model_error',
       )
-
-      if (remainingModelTime < 300) {
-        return unavailableResponse('model_error')
-      }
-
-      modelUsed = 'gpt-5-nano'
-      try {
-        response = await createCategoryModelResponse(modelUsed, remainingModelTime)
-      } catch (fallbackError) {
-        console.error('Fallback category model failed:', {
-          model: modelUsed,
-          ...getModelErrorMetadata(fallbackError),
-        })
-        return unavailableResponse(isTimeoutError(fallbackError) ? 'model_timeout' : 'model_error')
-      }
     }
 
     console.log(
       JSON.stringify({
         event: 'expense_category_model_success',
-        model: modelUsed,
+        model: OPENAI_MODEL,
         serviceTier: response.service_tier,
         modelMs: Math.round(performance.now() - modelStartedAt),
+        jevConfidence: jevLowConfidenceMatch?.confidence,
+        fallbackReason,
       }),
     )
 
@@ -443,7 +539,7 @@ Deno.serve(async (req) => {
     const validatedSuggestion = categorySuggestionSchema.safeParse(parsedModelOutput)
 
     if (!validatedSuggestion.success) {
-      return unavailableResponse('invalid_model_response')
+      return openAiUnavailableResponse('invalid_model_response')
     }
 
     const suggestion = validatedSuggestion.data
@@ -453,7 +549,7 @@ Deno.serve(async (req) => {
     const matchedCategory = hasValidCategoryIndex ? categories[suggestion.categoryIndex - 1] : null
 
     if (!matchedCategory) {
-      return unavailableResponse('no_matching_category')
+      return openAiUnavailableResponse('no_matching_category')
     }
 
     const outcome = suggestion.confidence > 0.65 ? 'selected' : 'suggested'

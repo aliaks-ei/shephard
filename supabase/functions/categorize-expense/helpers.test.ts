@@ -3,11 +3,15 @@ import type { Category } from '../_shared/ai-utils.ts'
 import {
   buildCategorizationInstructions,
   buildCategoryContexts,
+  buildJevCriteria,
+  decideJevOutcome,
   extractCategorizationContext,
   findCategoryNameMatch,
   findExactCategoryMatch,
   findMemoryCategoryMatch,
   findSemanticCategoryMatch,
+  JEV_FALLBACK_CONFIDENCE,
+  JEV_SELECT_CONFIDENCE,
 } from './helpers.ts'
 
 const categories: Category[] = [
@@ -223,4 +227,28 @@ Deno.test('buildCategorizationInstructions includes inferred device context', ()
   assertEquals(instructions.includes('inferred_country: PT'), true)
   assertEquals(instructions.includes('inferred_region: Lisbon'), true)
   assertEquals(instructions.includes('Use locale only as a hint'), true)
+})
+
+Deno.test('buildJevCriteria makes unique keys and describes categories', () => {
+  const contexts = buildCategoryContexts(
+    [...categories, { id: 'cat-3', name: 'Food' }],
+    [{ categoryId: 'cat-1', name: 'Milk' }],
+    [{ categoryId: 'cat-1', name: 'Lidl' }],
+  )
+
+  assertEquals(buildJevCriteria(contexts), {
+    keys: ['1. Food', '2. Food', '3. Transport'],
+    criteria: {
+      '1. Food': 'Planned items: Milk. Past expenses: Lidl',
+      '2. Food': null,
+      '3. Transport': null,
+    },
+  })
+})
+
+Deno.test('decideJevOutcome routes by confidence thresholds', () => {
+  assertEquals(decideJevOutcome(JEV_SELECT_CONFIDENCE), 'selected')
+  assertEquals(decideJevOutcome(JEV_SELECT_CONFIDENCE - 0.01), 'suggested')
+  assertEquals(decideJevOutcome(JEV_FALLBACK_CONFIDENCE), 'suggested')
+  assertEquals(decideJevOutcome(JEV_FALLBACK_CONFIDENCE - 0.01), 'fallback')
 })
