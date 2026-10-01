@@ -47,14 +47,8 @@ export const parseModelJsonObject = (
     return null
   }
 
-  const cleanedOutput = outputText
-    .trim()
-    .replace(/^```json\s*/i, '')
-    .replace(/^```\s*/i, '')
-    .replace(/\s*```$/, '')
-
   try {
-    const parsed = JSON.parse(cleanedOutput)
+    const parsed = JSON.parse(outputText)
     return isRecord(parsed) ? parsed : null
   } catch {
     return null
@@ -141,5 +135,5 @@ export const createResponseWithRetry = async <T>({
     }
   }
 
-  throw lastError instanceof Error ? lastError : new Error('OpenAI request failed')
+  throw lastError instanceof Error ? lastError : new Error('Model request failed')
 }

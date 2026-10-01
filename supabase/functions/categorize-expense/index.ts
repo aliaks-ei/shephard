@@ -529,6 +529,7 @@ Deno.serve(async (req) => {
         event: 'expense_category_model_success',
         model: OPENAI_MODEL,
         serviceTier: response.service_tier,
+        usage: response.usage,
         modelMs: Math.round(performance.now() - modelStartedAt),
         jevConfidence: jevLowConfidenceMatch?.confidence,
         fallbackReason,
