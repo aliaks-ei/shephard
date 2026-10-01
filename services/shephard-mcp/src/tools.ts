@@ -332,8 +332,23 @@ export function createShephardMcpServer(context: AuthenticatedMcpRequest): McpSe
         expense_date: z.string().date().optional(),
         plan_item_id: uuid.optional(),
         currency: z.string().trim().length(3).toUpperCase().optional(),
-        original_amount: z.number().positive().max(100000000).optional(),
-        original_currency: z.string().trim().length(3).toUpperCase().optional(),
+        original_amount: z
+          .number()
+          .positive()
+          .max(100000000)
+          .optional()
+          .describe(
+            'The amount in the currency the user actually paid, when it differs from the plan currency. Send together with original_currency, or omit both.',
+          ),
+        original_currency: z
+          .string()
+          .trim()
+          .length(3)
+          .toUpperCase()
+          .optional()
+          .describe(
+            'ISO 4217 code of original_amount. Send together with original_amount, or omit both.',
+          ),
       },
       outputSchema: schemas.recordedExpense,
       annotations: {
@@ -390,7 +405,12 @@ export function createShephardMcpServer(context: AuthenticatedMcpRequest): McpSe
         start_date: z.string().date().optional(),
         end_date: z.string().date().optional(),
         currency: z.string().trim().length(3).toUpperCase().optional(),
-        status: z.string().trim().min(1).max(50).optional(),
+        status: z
+          .enum(['pending', 'active', 'completed', 'cancelled'])
+          .optional()
+          .describe(
+            "Send 'cancelled' to cancel the plan. The app derives pending, active, and completed from the plan dates.",
+          ),
         idempotency_key: idempotencyKey,
       },
       outputSchema: schemas.updatedPlan,
@@ -505,7 +525,9 @@ export function createShephardMcpServer(context: AuthenticatedMcpRequest): McpSe
         'Create a reusable budget template. Plans are created from templates, so make one before create_plan when no suitable template exists.',
       inputSchema: {
         name: z.string().trim().min(1).max(100),
-        duration: z.string().trim().min(1).max(50),
+        duration: z
+          .enum(['weekly', 'monthly', 'yearly'])
+          .describe('How long plans made from this template last.'),
         currency: z.string().trim().length(3).toUpperCase(),
         total: z.number().nonnegative().max(100000000),
         items: z.array(z.object(planItemInput)).max(100).optional(),
