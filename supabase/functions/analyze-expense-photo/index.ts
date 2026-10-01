@@ -215,12 +215,11 @@ Deno.serve(async (req) => {
       </currency>
 
       <rules>
-      - Return only valid JSON that follows the output schema.
       - expenseName should be concise (2-5 words).
       - amount must be a numeric total (no currency symbol).
       - categoryIndex must be the 1-based index from the categories list.
       - confidence must be between 0 and 1.
-      - reasoning must be short (max 50 words).
+      - reasoning is one short sentence.
       - For blurry/no-receipt images, set low confidence (0 to 0.5).
       </rules>
     `
