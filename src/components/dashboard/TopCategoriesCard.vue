@@ -13,47 +13,55 @@
     />
 
     <q-card-section v-else>
-      <div class="row items-center justify-between q-mb-sm">
-        <h2 class="text-subtitle1 text-weight-medium q-my-none">Top categories</h2>
-      </div>
-
-      <div
-        v-for="(category, index) in topCategories"
-        :key="category.categoryId"
-        class="top-category-row"
-        :class="{ 'q-mt-md': index > 0 }"
-      >
-        <div class="row items-center justify-between no-wrap">
-          <div class="text-body2 ellipsis col q-pr-sm">{{ category.categoryName }}</div>
-          <div class="text-body2 text-weight-medium text-amount row items-center no-wrap">
-            <q-icon
-              v-if="category.remainingAmount < 0"
-              name="eva-alert-triangle-outline"
-              size="14px"
-              class="text-warning q-mr-xs"
-            />
-            {{ formatAmount(category.actualAmount) }}
-          </div>
-        </div>
-        <q-linear-progress
-          :value="categoryProgress(category)"
-          :style="{ color: chartColor(index) }"
-          :aria-label="`${category.categoryName}: ${formatAmount(category.actualAmount)} of ${formatAmount(category.plannedAmount)}`"
-          size="6px"
-          class="top-category-row__bar q-mt-xs"
+      <div class="row items-center justify-between no-wrap q-mb-md">
+        <h2 class="text-subtitle1 text-weight-bold q-my-none">Spent by category</h2>
+        <q-btn
+          flat
+          no-caps
+          dense
+          color="primary"
+          class="q-px-sm"
+          label="See all"
+          @click="emit('click', plan.id)"
         />
       </div>
 
-      <q-btn
-        flat
-        no-caps
-        dense
-        color="primary"
-        class="q-mt-md"
-        icon-right="eva-arrow-forward-outline"
-        label="See all categories"
-        @click="emit('click', plan.id)"
-      />
+      <!-- One stacked bar: each segment is a category's share of the budget -->
+      <div
+        class="category-stack"
+        role="img"
+        :aria-label="stackLabel"
+      >
+        <div
+          v-for="segment in segments"
+          :key="segment.categoryId"
+          class="category-stack__segment category-tone-fg"
+          :style="[getCategoryToneStyle(segment.categoryColor), { width: `${segment.share}%` }]"
+        />
+      </div>
+
+      <ul class="category-legend q-mt-md q-mb-none q-pl-none">
+        <li
+          v-for="category in topCategories"
+          :key="category.categoryId"
+          class="category-legend__row row items-center no-wrap"
+        >
+          <span
+            class="category-legend__dot category-tone-fg"
+            :style="getCategoryToneStyle(category.categoryColor)"
+          />
+          <span class="col ellipsis q-pl-sm">{{ category.categoryName }}</span>
+          <span
+            v-if="category.actualAmount > category.plannedAmount"
+            class="text-over text-amount text-weight-bold q-mr-sm category-legend__over"
+          >
+            {{ formatAmount(category.actualAmount - category.plannedAmount) }} over
+          </span>
+          <span class="text-ink text-amount text-weight-bold">
+            {{ formatAmount(category.actualAmount) }}
+          </span>
+        </li>
+      </ul>
     </q-card-section>
   </q-card>
 </template>
@@ -64,8 +72,8 @@ import { useQuasar } from 'quasar'
 import { usePreferencesStore } from 'src/stores/preferences'
 import QueryErrorState from 'src/components/shared/QueryErrorState.vue'
 import { formatCurrency, formatCurrencyPrivate, type CurrencyCode } from 'src/utils/currency'
+import { getCategoryToneStyle } from 'src/utils/categories'
 import type { PlanWithPermission } from 'src/api'
-import type { CategoryBudget } from 'src/types'
 import type { DashboardPlanOverview } from 'src/composables/useDashboardOverview'
 
 const emit = defineEmits<{
@@ -83,23 +91,30 @@ const props = defineProps<{
 const $q = useQuasar()
 const preferencesStore = usePreferencesStore()
 
-const topCategories = computed(() =>
+const spentCategories = computed(() =>
   [...(props.overview?.categoryBudgets ?? [])]
-    .sort((a, b) => b.actualAmount - a.actualAmount)
-    .slice(0, 3),
+    .filter((category) => category.actualAmount > 0)
+    .sort((a, b) => b.actualAmount - a.actualAmount),
 )
 
-// Category accents intentionally avoid the over/under-budget green/orange/red semantics
-const CHART_COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))']
+const topCategories = computed(() => spentCategories.value.slice(0, 3))
 
-function chartColor(index: number): string {
-  return CHART_COLORS[index % CHART_COLORS.length] as string
-}
+// Segments share the whole budget, so the empty track is what is left
+const segments = computed(() => {
+  const totalSpent = spentCategories.value.reduce((sum, c) => sum + c.actualAmount, 0)
+  const scale = Math.max(props.overview?.totalBudget ?? 0, totalSpent)
+  if (scale <= 0) return []
+  return spentCategories.value.map((category) => ({
+    ...category,
+    share: (category.actualAmount / scale) * 100,
+  }))
+})
 
-function categoryProgress(category: CategoryBudget): number {
-  if (category.plannedAmount <= 0) return 0
-  return Math.min(category.actualAmount / category.plannedAmount, 1)
-}
+const stackLabel = computed(() =>
+  topCategories.value
+    .map((category) => `${category.categoryName} ${formatAmount(category.actualAmount)}`)
+    .join(', '),
+)
 
 function formatAmount(amount: number | null | undefined): string {
   const currency = props.plan.currency as CurrencyCode
@@ -117,7 +132,46 @@ function retry(): void {
 </script>
 
 <style lang="scss" scoped>
-.top-category-row__bar {
+.category-stack {
+  display: flex;
+  gap: 2px;
+  height: 10px;
+  overflow: hidden;
   border-radius: var(--radius-full);
+  background: hsl(var(--muted-foreground) / 0.14);
+}
+
+.category-stack__segment {
+  height: 100%;
+  min-width: 4px;
+  background: currentColor;
+  transform-origin: 0 50%;
+  animation: progress-grow 700ms var(--ease-out-quint) both;
+}
+
+.category-legend {
+  list-style: none;
+}
+
+.category-legend__row {
+  min-height: 32px;
+}
+
+.category-legend__dot {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border-radius: 3px;
+  background: currentColor;
+}
+
+.category-legend__over {
+  font-size: 13px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .category-stack__segment {
+    animation: none;
+  }
 }
 </style>

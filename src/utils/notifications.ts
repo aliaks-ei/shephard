@@ -71,7 +71,7 @@ export function getNotificationSections(
   const earlier = notifications.filter((notification) => !!notification.read_at)
 
   const sections: NotificationSection[] = [
-    { key: 'unread', title: 'Unread', notifications: unread },
+    { key: 'unread', title: 'New', notifications: unread },
     { key: 'earlier', title: 'Earlier', notifications: earlier },
   ]
 

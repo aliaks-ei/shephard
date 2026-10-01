@@ -4,6 +4,9 @@ import { useExpenseActions } from './useExpenseActions'
 import type { ExpenseWithCategory } from 'src/api'
 
 const mockMutateAsync = vi.fn()
+const mockNotify = vi.fn()
+
+vi.mock('quasar', () => ({ Notify: { create: (options: unknown) => mockNotify(options) } }))
 
 vi.mock('src/queries/expenses', () => ({
   useDeleteExpenseMutation: vi.fn(() => ({
@@ -162,5 +165,44 @@ describe('useExpenseActions', () => {
       expect(onSuccess).toHaveBeenCalledOnce()
       expect(pendingDeleteExpense.value).toBeNull()
     })
+  })
+})
+
+describe('deleteExpenseWithUndo', () => {
+  type NotifyOptions = { actions: { handler: () => void }[]; onDismiss: () => void }
+  const lastNotify = () => mockNotify.mock.calls.at(-1)?.[0] as NotifyOptions
+
+  it('hides the row at once and deletes when the snackbar closes', async () => {
+    const { deleteExpenseWithUndo, isUndoPending } = useExpenseActions()
+    const onSuccess = vi.fn()
+
+    deleteExpenseWithUndo(mockExpense, onSuccess)
+    expect(isUndoPending(mockExpense.id)).toBe(true)
+    expect(mockMutateAsync).not.toHaveBeenCalled()
+
+    lastNotify().onDismiss()
+    await vi.waitFor(() => expect(onSuccess).toHaveBeenCalled())
+    expect(mockMutateAsync).toHaveBeenCalledWith({ expenseId: 'expense-1', planId: 'plan-1' })
+  })
+
+  it('keeps the expense when the user taps Undo', () => {
+    const { deleteExpenseWithUndo, isUndoPending } = useExpenseActions()
+
+    deleteExpenseWithUndo({ ...mockExpense, id: 'expense-2' })
+    lastNotify().actions[0]?.handler()
+    lastNotify().onDismiss()
+
+    expect(isUndoPending('expense-2')).toBe(false)
+    expect(mockMutateAsync).not.toHaveBeenCalled()
+  })
+
+  it('shows the row again when the delete fails', async () => {
+    mockMutateAsync.mockRejectedValueOnce(new Error('offline'))
+    const { deleteExpenseWithUndo, isUndoPending } = useExpenseActions()
+
+    deleteExpenseWithUndo({ ...mockExpense, id: 'expense-3' })
+    lastNotify().onDismiss()
+
+    await vi.waitFor(() => expect(isUndoPending('expense-3')).toBe(false))
   })
 })

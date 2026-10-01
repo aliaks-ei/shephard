@@ -1,4 +1,4 @@
-export type StatusTone = 'success' | 'warning' | 'destructive' | 'info' | 'muted'
+export type StatusTone = 'success' | 'warning' | 'destructive' | 'info' | 'muted' | 'pace' | 'over'
 
 /**
  * Maps the Quasar color names returned by `getStatusColor` (src/utils/plans.ts)

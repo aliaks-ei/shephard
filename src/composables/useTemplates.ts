@@ -14,9 +14,9 @@ export function useTemplates() {
 
   const sortOptions = [
     { label: 'Name', value: 'name' },
-    { label: 'Total Amount', value: 'total' },
+    { label: 'Total amount', value: 'total' },
     { label: 'Duration', value: 'duration' },
-    { label: 'Created Date', value: 'created_at' },
+    { label: 'Created date', value: 'created_at' },
   ]
 
   return useListPage<TemplateWithPermission>(

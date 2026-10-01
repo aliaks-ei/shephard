@@ -14,14 +14,14 @@
             class="q-mr-sm"
             size="20px"
           />
-          <h2 class="text-h6 q-my-none">Recent Expenses</h2>
+          <h2 class="text-h6 q-my-none">Recent expenses</h2>
         </div>
         <q-btn
           v-if="expenses.length > 5"
           flat
           dense
           color="primary"
-          label="View All"
+          label="View all"
           no-caps
           @click="$emit('view-all')"
         />
@@ -111,8 +111,8 @@
                   {{ expense.name }}
                 </q-item-label>
                 <q-item-label caption>
-                  {{ getCategoryName(expense.category_id) }} •
-                  {{ formatDateRelative(expense.expense_date) }}
+                  {{ getCategoryName(expense.category_id) }},
+                  {{ formatDayInline(expense.expense_date) }}
                 </q-item-label>
               </q-item-section>
 
@@ -163,8 +163,8 @@
                 {{ expense.name }}
               </q-item-label>
               <q-item-label caption>
-                {{ getCategoryName(expense.category_id) }} •
-                {{ formatDateRelative(expense.expense_date) }}
+                {{ getCategoryName(expense.category_id) }},
+                {{ formatDayInline(expense.expense_date) }}
               </q-item-label>
             </q-item-section>
 
@@ -196,9 +196,8 @@
                   round
                   size="sm"
                   icon="eva-trash-2-outline"
-                  color="negative"
+                  class="icon-action-destructive mobile-touch-target"
                   aria-label="Delete expense"
-                  class="mobile-touch-target"
                   @click="confirmDeleteExpense(expense, () => emit('refresh'))"
                 >
                   <q-tooltip v-if="!$q.screen.lt.md">Delete expense</q-tooltip>
@@ -218,11 +217,11 @@
           size="48px"
           class="q-mb-md"
         />
-        <div class="q-mb-md">No expenses registered yet</div>
+        <div class="q-mb-md">No expenses yet</div>
         <q-btn
           v-if="canAddExpenses"
           color="primary"
-          label="Add First Expense"
+          label="Add first expense"
           dense
           no-caps
           @click="$emit('add-expense')"
@@ -236,7 +235,7 @@
 import { computed } from 'vue'
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
-import { formatDateRelative } from 'src/utils/date'
+import { formatDayInline } from 'src/utils/date'
 import { useCategoryHelpers } from 'src/composables/useCategoryHelpers'
 import { useExpenseActions } from 'src/composables/useExpenseActions'
 import type { ExpenseWithCategory } from 'src/api'
@@ -256,14 +255,14 @@ const emit = defineEmits<{
 }>()
 
 const { getCategoryName, getCategoryColor, getCategoryIcon } = useCategoryHelpers()
-const { confirmDeleteExpense } = useExpenseActions()
+const { confirmDeleteExpense, deleteExpenseWithUndo, isUndoPending } = useExpenseActions()
 
 const displayedExpenses = computed(() => {
-  return props.expenses.slice(0, 5)
+  return props.expenses.filter((expense) => !isUndoPending(expense.id)).slice(0, 5)
 })
 
 function handleSwipeDelete(expense: ExpenseWithCategory, details: { reset: () => void }) {
   details.reset()
-  confirmDeleteExpense(expense, () => emit('refresh'))
+  deleteExpenseWithUndo(expense, () => emit('refresh'))
 }
 </script>

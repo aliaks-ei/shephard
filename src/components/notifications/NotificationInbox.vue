@@ -67,97 +67,113 @@
               v-for="(notification, index) in section.notifications"
               :key="notification.id"
             >
-              <q-item
-                clickable
-                class="notifications-inbox__item items-start"
-                :class="
-                  mobile
-                    ? 'notifications-inbox__item--mobile'
-                    : 'notifications-inbox__item--desktop-row'
-                "
-                data-testid="notification-item"
-                @click="$emit('open', notification)"
+              <!-- Swipe left to delete; tap opens and marks as read -->
+              <q-slide-item
+                right-color="negative"
+                class="notifications-inbox__swipe"
+                @right="(details) => onSwipeRemove(notification.id, details)"
               >
-                <q-item-section
-                  avatar
-                  top
-                  class="notifications-inbox__avatar-section q-pr-sm"
-                >
-                  <div class="notifications-inbox__leading flex flex-center">
+                <template #right>
+                  <div class="row items-center q-gutter-sm">
                     <q-icon
-                      :name="getNotificationIcon(notification.type)"
-                      size="16px"
+                      name="eva-trash-2-outline"
+                      size="20px"
                     />
+                    <span class="text-weight-medium">Delete</span>
                   </div>
-                </q-item-section>
+                </template>
 
-                <q-item-section class="notifications-inbox__content min-w-0">
-                  <div class="row items-start justify-between no-wrap q-col-gutter-sm">
-                    <div class="col min-w-0 notifications-inbox__title-col">
+                <q-item
+                  clickable
+                  class="notifications-inbox__item items-start"
+                  :class="
+                    mobile
+                      ? 'notifications-inbox__item--mobile'
+                      : 'notifications-inbox__item--desktop-row'
+                  "
+                  data-testid="notification-item"
+                  @click="$emit('open', notification)"
+                >
+                  <q-item-section
+                    avatar
+                    top
+                    class="notifications-inbox__avatar-section q-pr-sm"
+                  >
+                    <div class="notifications-inbox__leading flex flex-center">
+                      <q-icon
+                        :name="getNotificationIcon(notification.type)"
+                        size="16px"
+                      />
+                    </div>
+                  </q-item-section>
+
+                  <q-item-section class="notifications-inbox__content min-w-0">
+                    <div class="row items-start justify-between no-wrap q-col-gutter-sm">
+                      <div class="col min-w-0 notifications-inbox__title-col">
+                        <div
+                          class="notifications-inbox__item-title row items-center no-wrap min-w-0"
+                          :class="{ 'text-weight-medium': !notification.read_at }"
+                        >
+                          <span
+                            v-if="!notification.read_at"
+                            data-testid="notification-unread-dot"
+                            class="notifications-inbox__dot q-mr-sm"
+                          />
+                          <span class="ellipsis">
+                            {{ notification.title }}
+                          </span>
+                        </div>
+                      </div>
+
                       <div
-                        class="notifications-inbox__item-title row items-center no-wrap min-w-0"
-                        :class="{ 'text-weight-medium': !notification.read_at }"
+                        v-if="!mobile"
+                        class="notifications-inbox__actions notifications-inbox__actions--desktop row items-center no-wrap col-auto"
                       >
-                        <span
+                        <q-btn
                           v-if="!notification.read_at"
-                          data-testid="notification-unread-dot"
-                          class="notifications-inbox__dot q-mr-sm"
-                        />
-                        <span class="ellipsis">
-                          {{ notification.title }}
-                        </span>
+                          flat
+                          round
+                          dense
+                          size="sm"
+                          icon="eva-checkmark-outline"
+                          class="notifications-inbox__icon-action mobile-touch-target"
+                          aria-label="Mark notification as read"
+                          @click.stop="$emit('mark-read', notification.id)"
+                        >
+                          <q-tooltip v-if="!mobile && !$q.screen.lt.md">Mark read</q-tooltip>
+                        </q-btn>
+                        <q-btn
+                          flat
+                          round
+                          dense
+                          size="sm"
+                          icon="eva-trash-2-outline"
+                          class="notifications-inbox__icon-action mobile-touch-target"
+                          aria-label="Remove notification"
+                          @click.stop="$emit('remove', notification.id)"
+                        >
+                          <q-tooltip v-if="!mobile && !$q.screen.lt.md"
+                            >Remove notification</q-tooltip
+                          >
+                        </q-btn>
                       </div>
                     </div>
 
                     <div
-                      class="notifications-inbox__actions row items-center no-wrap col-auto"
-                      :class="mobile ? 'q-gutter-xs' : 'notifications-inbox__actions--desktop'"
+                      class="notifications-inbox__item-body text-muted q-mt-xs"
+                      :class="{ 'notifications-inbox__item-body--desktop': !mobile }"
                     >
-                      <q-btn
-                        v-if="!notification.read_at"
-                        flat
-                        round
-                        dense
-                        size="sm"
-                        icon="eva-checkmark-outline"
-                        class="notifications-inbox__icon-action mobile-touch-target"
-                        aria-label="Mark notification as read"
-                        @click.stop="$emit('mark-read', notification.id)"
-                      >
-                        <q-tooltip v-if="!mobile && !$q.screen.lt.md">Mark read</q-tooltip>
-                      </q-btn>
-                      <q-btn
-                        flat
-                        round
-                        dense
-                        size="sm"
-                        icon="eva-trash-2-outline"
-                        color="negative"
-                        class="notifications-inbox__icon-action mobile-touch-target"
-                        aria-label="Remove notification"
-                        @click.stop="$emit('remove', notification.id)"
-                      >
-                        <q-tooltip v-if="!mobile && !$q.screen.lt.md"
-                          >Remove notification</q-tooltip
-                        >
-                      </q-btn>
+                      {{ notification.body }}
                     </div>
-                  </div>
 
-                  <div
-                    class="notifications-inbox__item-body text-muted q-mt-xs"
-                    :class="{ 'notifications-inbox__item-body--desktop': !mobile }"
-                  >
-                    {{ notification.body }}
-                  </div>
-
-                  <div class="row justify-end q-mt-xs">
-                    <span class="notifications-inbox__time text-muted no-wrap">
-                      {{ formatNotificationRelativeTime(notification.created_at) }}
-                    </span>
-                  </div>
-                </q-item-section>
-              </q-item>
+                    <div class="row justify-end q-mt-xs">
+                      <span class="notifications-inbox__time text-muted no-wrap">
+                        {{ formatNotificationRelativeTime(notification.created_at) }}
+                      </span>
+                    </div>
+                  </q-item-section>
+                </q-item>
+              </q-slide-item>
 
               <q-separator
                 v-if="index < section.notifications.length - 1"
@@ -197,13 +213,18 @@ const props = withDefaults(
   },
 )
 
-defineEmits<{
+const emit = defineEmits<{
   open: [notification: NotificationRecord]
   'mark-read': [notificationId: string]
   remove: [notificationId: string]
   'mark-all-read': []
   'clear-all': []
 }>()
+
+function onSwipeRemove(notificationId: string, details: { reset: () => void }) {
+  details.reset()
+  emit('remove', notificationId)
+}
 
 const hasNotifications = computed(() => props.notifications.length > 0)
 const sections = computed(() => getNotificationSections(props.notifications))
@@ -265,6 +286,10 @@ const sections = computed(() => getNotificationSections(props.notifications))
 .notifications-inbox__section-header {
   padding: 8px 14px 5px;
   font-size: 0.7rem;
+}
+
+.notifications-inbox__swipe :deep(.q-slide-item__content) {
+  background: hsl(var(--card));
 }
 
 .notifications-inbox__item {

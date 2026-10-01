@@ -1,7 +1,7 @@
 <template>
   <DeleteDialog
     :model-value="pendingDeleteExpense !== null"
-    title="Delete Expense"
+    title="Delete expense"
     warning-message="This action cannot be undone."
     :confirmation-message="confirmationMessage"
     confirm-label="Delete"

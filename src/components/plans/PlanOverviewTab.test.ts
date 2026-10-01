@@ -69,7 +69,6 @@ const renderPlanOverviewTab = (props: PlanOverviewTabProps) => {
       ],
       stubs: {
         PlanSummaryCard: { template: '<div class="plan-summary-card" />' },
-        CategoryBudgetCard: { template: '<div class="category-budget-card" />' },
         RecentExpensesList: { template: '<div class="recent-expenses-list" />' },
         CategoryExpensesDialog: { template: '<div class="category-expenses-dialog" />' },
         AllExpensesDialog: { template: '<div class="all-expenses-dialog" />' },

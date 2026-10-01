@@ -28,6 +28,7 @@ vi.mock('src/utils/plans', () => ({
   getStatusColor: vi.fn(() => 'green'),
   getStatusIcon: vi.fn(() => 'eva-play-circle-outline'),
   formatDateRange: vi.fn(() => 'Jan 1 - Jan 31, 2024'),
+  getPlanPace: vi.fn(() => ({ status: 'ahead', dailyAllowance: 10, elapsedRatio: 0.1 })),
 }))
 
 type PlanCardProps = ComponentProps<typeof PlanCard>
@@ -463,5 +464,29 @@ describe('PlanCard', () => {
 
     expect(vi.mocked(currencyUtils.formatCurrencyPrivate)).toHaveBeenCalled()
     expect(vi.mocked(currencyUtils.formatCurrency)).not.toHaveBeenCalled()
+  })
+
+  it('shows spend progress and the pace status when spent is known', () => {
+    const wrapper = renderPlanCard({ plan: mockPlan, spent: 400 })
+
+    expect(wrapper.text()).toContain('USD 400.00')
+    expect(wrapper.text()).toContain('of')
+    expect(wrapper.text()).toContain('Ahead of plan')
+  })
+
+  it('shows the overspend amount when spent passes the budget', () => {
+    const wrapper = renderPlanCard({ plan: mockPlan, spent: 1012.4 })
+
+    expect(wrapper.text()).toContain('USD 12.40 over')
+  })
+
+  it('shows member initials and folds extra members into a count', () => {
+    const wrapper = renderPlanCard({ plan: mockPlan, memberInitials: ['J', 'S', 'D', 'B'] })
+
+    const members = wrapper.findAll('.plan-card__member').map((member) => member.text())
+    expect(members).toEqual(['J', 'S', '+2'])
+    expect(wrapper.find('.plan-card__members').attributes('aria-label')).toBe(
+      'Shared with 4 people',
+    )
   })
 })

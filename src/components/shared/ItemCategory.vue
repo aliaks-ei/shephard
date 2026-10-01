@@ -57,7 +57,7 @@
           <q-btn
             color="primary"
             outline
-            label="Add Item"
+            label="Add item"
             dense
             no-caps
             @click="$emit('add-item', categoryId, categoryColor)"

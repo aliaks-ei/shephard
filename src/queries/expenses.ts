@@ -114,6 +114,30 @@ export function useRecentExpensesInfiniteQuery(
   }
 }
 
+const ACTIVITY_SUMMARY_LIMIT = 100
+
+/** Newest expenses across plans, for the month total and 14-day strip on Activity. */
+export function useActivitySummaryQuery(userId: MaybeRefOrGetter<string | undefined>) {
+  const query = useQuery({
+    queryKey: computed(() => [...queryKeys.expenses.recentAll(), toValue(userId) ?? '', 'summary']),
+    queryFn: () =>
+      getRecentExpensesPageForUser(toValue(userId)!, {
+        offset: 0,
+        limit: ACTIVITY_SUMMARY_LIMIT,
+        sortBy: 'date-desc',
+      }),
+    enabled: computed(() => !!toValue(userId)),
+    staleTime: EXPENSES_STALE_TIME_MS,
+    gcTime: EXPENSES_CACHE_TIME_MS,
+    meta: { handledInline: true },
+  })
+
+  const expenses = computed((): ExpenseWithCategoryAndPlan[] => query.data.value ?? [])
+  const isComplete = computed(() => expenses.value.length < ACTIVITY_SUMMARY_LIMIT)
+
+  return { ...query, expenses, isComplete }
+}
+
 export function usePlanExpensesInfiniteQuery(
   planId: MaybeRefOrGetter<string | null>,
   enabled: MaybeRefOrGetter<boolean> = true,

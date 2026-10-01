@@ -1,0 +1,2976 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+    <title>Shephard UI refresh</title>
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --paper: #eef2f1;
+        --surface: #ffffff;
+        --ink: #102a2b;
+        --ink-2: #4a5d5e;
+        --line: #d9e2e1;
+        --teal: #007a80;
+        --teal-fill: #00757b;
+        --teal-soft: #dcefee;
+        --mint: #7fe0c6;
+        --over: #c8323f;
+        --over-soft: #fbe3e5;
+        --warn: #a35a00;
+        --warn-soft: #fbecd6;
+        --hero: #0f2e2f;
+        --c-sky: #3a78d4;
+        --c-violet: #7458db;
+        --c-amber: #c97f12;
+        --c-rose: #c9457a;
+        --c-leaf: #2f8f55;
+        --phone-bg: #f3f6f5;
+        --phone-frame: #102a2b;
+        --code-bg: #e3eae9;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme='light']) {
+          --paper: #0c1a1b;
+          --surface: #132526;
+          --ink: #e4eeed;
+          --ink-2: #a3b5b4;
+          --line: #23393a;
+          --teal: #4cc3c9;
+          --teal-soft: #173a3b;
+          --over: #ff7b86;
+          --over-soft: #3a1e22;
+          --warn: #f0b25c;
+          --warn-soft: #3a2c17;
+          --code-bg: #1b3132;
+          --phone-frame: #000000;
+        }
+      }
+      :root[data-theme='dark'] {
+        --paper: #0c1a1b;
+        --surface: #132526;
+        --ink: #e4eeed;
+        --ink-2: #a3b5b4;
+        --line: #23393a;
+        --teal: #4cc3c9;
+        --teal-soft: #173a3b;
+        --over: #ff7b86;
+        --over-soft: #3a1e22;
+        --warn: #f0b25c;
+        --warn-soft: #3a2c17;
+        --code-bg: #1b3132;
+        --phone-frame: #000000;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        -webkit-text-size-adjust: 100%;
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family:
+          Geist,
+          -apple-system,
+          system-ui,
+          sans-serif;
+        font-size: 16px;
+        line-height: 1.55;
+        font-feature-settings: 'tnum' 1;
+      }
+      a {
+        color: var(--teal);
+        text-underline-offset: 2px;
+      }
+      a:focus-visible,
+      button:focus-visible {
+        outline: 3px solid var(--teal);
+        outline-offset: 2px;
+        border-radius: 4px;
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.86em;
+        background: var(--code-bg);
+        padding: 1px 5px;
+        border-radius: 5px;
+        overflow-wrap: anywhere;
+      }
+
+      .wrap {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 56px 24px 96px;
+      }
+      .prose {
+        max-width: 680px;
+      }
+
+      header.top h1 {
+        font-size: clamp(34px, 6vw, 56px);
+        line-height: 1.02;
+        letter-spacing: -0.035em;
+        font-weight: 700;
+        margin: 0 0 20px;
+        max-width: 12ch;
+      }
+      header.top p.lead {
+        font-size: 19px;
+        color: var(--ink-2);
+        margin: 0 0 12px;
+        max-width: 60ch;
+      }
+      header.top p.meta {
+        font-size: 14px;
+        color: var(--ink-2);
+        margin: 0;
+      }
+
+      h2 {
+        font-size: 30px;
+        letter-spacing: -0.025em;
+        line-height: 1.15;
+        margin: 88px 0 16px;
+        font-weight: 650;
+      }
+      h3 {
+        font-size: 19px;
+        margin: 28px 0 8px;
+        letter-spacing: -0.01em;
+        font-weight: 600;
+      }
+      p {
+        margin: 0 0 14px;
+      }
+      ul,
+      ol {
+        margin: 0 0 16px;
+        padding-left: 22px;
+      }
+      li {
+        margin-bottom: 6px;
+      }
+      li::marker {
+        color: var(--ink-2);
+      }
+      .muted {
+        color: var(--ink-2);
+      }
+      .small {
+        font-size: 14px;
+      }
+      sup.ref a {
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 0 1px;
+      }
+
+      /* Works-now strip */
+      .keep {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+        margin-top: 16px;
+      }
+      .keep div {
+        background: var(--surface);
+        border-radius: 14px;
+        padding: 14px 16px;
+        font-size: 15px;
+      }
+      .keep strong {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 2px;
+      }
+
+      /* Build order table */
+      .order {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 12px;
+        font-size: 15px;
+      }
+      .order th {
+        text-align: left;
+        font-weight: 600;
+        color: var(--ink-2);
+        font-size: 13px;
+        padding: 0 12px 10px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .order td {
+        padding: 14px 12px 14px 0;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+      .order td.n {
+        font-weight: 700;
+        color: var(--teal);
+        width: 32px;
+        font-size: 17px;
+      }
+      .order td.what {
+        font-weight: 600;
+        min-width: 200px;
+      }
+      .order td.what span {
+        display: block;
+        font-weight: 400;
+        color: var(--ink-2);
+        font-size: 14px;
+        margin-top: 2px;
+      }
+      .effort {
+        display: inline-block;
+        font-size: 12px;
+        font-weight: 600;
+        border-radius: 99px;
+        padding: 2px 9px;
+        background: var(--teal-soft);
+        color: var(--teal);
+        white-space: nowrap;
+      }
+      .effort.m {
+        background: var(--warn-soft);
+        color: var(--warn);
+      }
+      @media (max-width: 720px) {
+        .order thead {
+          display: none;
+        }
+        .order,
+        .order tbody,
+        .order tr,
+        .order td {
+          display: block;
+          width: 100%;
+        }
+        .order tr {
+          border-bottom: 1px solid var(--line);
+          padding: 12px 0;
+          display: grid;
+          grid-template-columns: 32px 1fr;
+        }
+        .order td {
+          border: 0;
+          padding: 2px 0;
+        }
+        .order td.n {
+          grid-row: span 4;
+        }
+        .order td:not(.n) {
+          grid-column: 2;
+        }
+      }
+
+      /* Screen sections */
+      .screen {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 316px;
+        gap: 48px;
+        align-items: start;
+        margin-top: 8px;
+      }
+      @media (max-width: 860px) {
+        .screen {
+          grid-template-columns: 1fr;
+          gap: 28px;
+        }
+        .screen .phone-col {
+          justify-self: center;
+        }
+      }
+      .saw,
+      .change {
+        padding-left: 16px;
+        border-left: 3px solid var(--line);
+        margin: 18px 0;
+      }
+      .change {
+        border-left-color: var(--teal);
+      }
+      .saw h3,
+      .change h3 {
+        margin-top: 0;
+      }
+      .phone-col figcaption {
+        font-size: 13px;
+        color: var(--ink-2);
+        margin-top: 12px;
+        max-width: 300px;
+      }
+
+      /* Phone mockups */
+      .phone {
+        width: 300px;
+        height: 640px;
+        border-radius: 46px;
+        border: 9px solid var(--phone-frame);
+        background: var(--phone-bg);
+        color: #102a2b;
+        position: relative;
+        overflow: hidden;
+        font-size: 13px;
+        line-height: 1.35;
+        box-shadow: 0 30px 60px -30px rgb(16 42 43 / 0.45);
+        font-feature-settings: 'tnum' 1;
+      }
+      .phone .scr {
+        position: absolute;
+        inset: 0;
+        padding: 40px 14px 0;
+        overflow: hidden;
+      }
+      .phone .island {
+        position: absolute;
+        top: 9px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 84px;
+        height: 24px;
+        background: #000;
+        border-radius: 20px;
+        z-index: 5;
+      }
+      .p-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .p-avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #dcefee;
+        color: #00757b;
+        display: grid;
+        place-items: center;
+        font-weight: 600;
+      }
+      .p-icon-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #fff;
+        display: grid;
+        place-items: center;
+        position: relative;
+      }
+      .p-icon-btn .dot {
+        position: absolute;
+        top: 6px;
+        right: 7px;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #c8323f;
+        border: 1.5px solid #fff;
+      }
+      .p-cap {
+        color: #5b6d6e;
+        font-size: 12px;
+      }
+      .p-h {
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+
+      .hero {
+        background: var(--hero);
+        color: #fff;
+        border-radius: 24px;
+        padding: 16px 16px 14px;
+        margin-top: 12px;
+      }
+      .hero .p-cap {
+        color: #a9c7c6;
+      }
+      .hero .big {
+        font-size: 40px;
+        font-weight: 650;
+        letter-spacing: -0.035em;
+        line-height: 1.05;
+        margin: 6px 0 2px;
+      }
+      .hero .big small {
+        font-size: 22px;
+        font-weight: 600;
+        opacity: 0.85;
+      }
+      .pace {
+        position: relative;
+        height: 8px;
+        background: rgb(255 255 255 / 0.16);
+        border-radius: 99px;
+        margin: 14px 0 8px;
+      }
+      .pace i {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        border-radius: 99px;
+        background: #f0b25c;
+      }
+      .pace b {
+        position: absolute;
+        top: -4px;
+        width: 2px;
+        height: 16px;
+        background: #fff;
+        border-radius: 2px;
+      }
+      .chip-l {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11.5px;
+        font-weight: 600;
+        border-radius: 99px;
+        padding: 3px 9px;
+        background: rgb(255 255 255 / 0.12);
+        color: #fff;
+      }
+      .chip-l.warn {
+        background: rgb(240 178 92 / 0.18);
+        color: #f6c987;
+      }
+
+      .card {
+        background: #fff;
+        border-radius: 20px;
+        padding: 12px 14px;
+        margin-top: 10px;
+      }
+      .card-t {
+        font-weight: 600;
+        font-size: 14px;
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+      }
+      .card-t a {
+        font-size: 12px;
+        font-weight: 500;
+        color: #007a80;
+        text-decoration: none;
+      }
+      .stack {
+        display: flex;
+        height: 10px;
+        border-radius: 99px;
+        overflow: hidden;
+        gap: 2px;
+        margin: 10px 0 8px;
+        background: #e6ecec;
+      }
+      .stack span {
+        display: block;
+        height: 100%;
+      }
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 12px;
+        font-size: 11.5px;
+        color: #4a5d5e;
+      }
+      .legend span::before {
+        content: '';
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 3px;
+        background: currentColor;
+        margin-right: 5px;
+        vertical-align: 0;
+      }
+      .legend .sky {
+        color: var(--c-sky);
+      }
+      .legend .violet {
+        color: var(--c-violet);
+      }
+      .legend .rose {
+        color: var(--c-rose);
+      }
+      .legend .leaf {
+        color: var(--c-leaf);
+      }
+      .legend .amber {
+        color: var(--c-amber);
+      }
+      .legend span {
+        color: #4a5d5e;
+      }
+      .legend span.sky::before {
+        background: var(--c-sky);
+      }
+      .legend span.violet::before {
+        background: var(--c-violet);
+      }
+      .legend span.rose::before {
+        background: var(--c-rose);
+      }
+      .legend span.leaf::before {
+        background: var(--c-leaf);
+      }
+      .legend span.amber::before {
+        background: var(--c-amber);
+      }
+
+      .tx {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 0;
+      }
+      .tx + .tx {
+        border-top: 1px solid #edf1f1;
+      }
+      .tile {
+        width: 34px;
+        height: 34px;
+        border-radius: 11px;
+        display: grid;
+        place-items: center;
+        flex: none;
+      }
+      .tile svg {
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .t-leaf {
+        background: #e2f2e8;
+        color: var(--c-leaf);
+      }
+      .t-violet {
+        background: #ece7fb;
+        color: var(--c-violet);
+      }
+      .t-rose {
+        background: #f8e3ec;
+        color: var(--c-rose);
+      }
+      .t-sky {
+        background: #e2ecfa;
+        color: var(--c-sky);
+      }
+      .t-amber {
+        background: #f8ecd8;
+        color: var(--c-amber);
+      }
+      .tx .nm {
+        flex: 1;
+        min-width: 0;
+      }
+      .tx .nm b {
+        display: block;
+        font-weight: 550;
+        font-size: 13.5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .tx .nm span {
+        font-size: 11.5px;
+        color: #5b6d6e;
+      }
+      .tx .amt {
+        font-weight: 600;
+        font-size: 13.5px;
+        color: #102a2b;
+      }
+
+      /* Tab bar: 3 tabs + detached add */
+      .tabbar {
+        position: absolute;
+        left: 12px;
+        right: 12px;
+        bottom: 18px;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        z-index: 4;
+      }
+      .tabs {
+        flex: 1;
+        display: flex;
+        justify-content: space-around;
+        background: rgb(255 255 255 / 0.82);
+        backdrop-filter: blur(18px) saturate(160%);
+        -webkit-backdrop-filter: blur(18px) saturate(160%);
+        border: 1px solid rgb(255 255 255 / 0.7);
+        box-shadow: 0 10px 24px -14px rgb(16 42 43 / 0.45);
+        border-radius: 99px;
+        padding: 5px;
+      }
+      .tabs span {
+        flex: 1;
+        display: grid;
+        place-items: center;
+        gap: 1px;
+        font-size: 10.5px;
+        font-weight: 550;
+        color: #3d4f50;
+        border-radius: 99px;
+        padding: 5px 0;
+      }
+      .tabs span.on {
+        background: #dcefee;
+        color: #00757b;
+      }
+      .tabs svg,
+      .addbtn svg {
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.9;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .addbtn {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: #00757b;
+        color: #fff;
+        display: grid;
+        place-items: center;
+        box-shadow: 0 12px 22px -12px rgb(0 117 123 / 0.8);
+        flex: none;
+      }
+      .addbtn svg {
+        width: 22px;
+        height: 22px;
+        stroke-width: 2.2;
+      }
+      .fade-bottom {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 110px;
+        background: linear-gradient(to top, var(--phone-bg) 35%, rgb(243 246 245 / 0));
+        z-index: 3;
+      }
+
+      /* Plans list mock */
+      .seg {
+        display: flex;
+        background: #e3eaea;
+        border-radius: 99px;
+        padding: 3px;
+        margin-top: 10px;
+      }
+      .seg span {
+        flex: 1;
+        text-align: center;
+        padding: 6px 0;
+        border-radius: 99px;
+        font-weight: 550;
+        font-size: 12.5px;
+        color: #4a5d5e;
+      }
+      .seg span.on {
+        background: #fff;
+        color: #102a2b;
+        box-shadow: 0 2px 6px -3px rgb(16 42 43 / 0.3);
+      }
+      .plan {
+        background: #fff;
+        border-radius: 20px;
+        padding: 12px 14px;
+        margin-top: 8px;
+      }
+      .plan .top {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 8px;
+      }
+      .plan .top b {
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .plan .top em {
+        font-style: normal;
+        font-size: 11.5px;
+        color: #5b6d6e;
+        white-space: nowrap;
+      }
+      .bar {
+        position: relative;
+        height: 6px;
+        background: #e6ecec;
+        border-radius: 99px;
+        margin: 9px 0 7px;
+        overflow: hidden;
+      }
+      .bar i {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        border-radius: 99px;
+        background: #00757b;
+      }
+      .plan .bot {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 12px;
+        color: #4a5d5e;
+      }
+      .plan .bot strong {
+        color: #102a2b;
+        font-weight: 600;
+      }
+      .status {
+        font-size: 11px;
+        font-weight: 600;
+        border-radius: 99px;
+        padding: 2px 8px;
+      }
+      .s-ok {
+        background: #e2f2e8;
+        color: #1f6b3e;
+      }
+      .s-warn {
+        background: #fbecd6;
+        color: #8a4b00;
+      }
+      .s-over {
+        background: #fbe3e5;
+        color: #a3202d;
+      }
+      .faces {
+        display: inline-flex;
+        margin-left: 6px;
+        vertical-align: -4px;
+      }
+      .faces i {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        display: inline-grid;
+        place-items: center;
+        font-size: 8.5px;
+        font-style: normal;
+        font-weight: 700;
+        color: #fff;
+        margin-left: -5px;
+      }
+      .faces i:first-child {
+        margin-left: 0;
+      }
+      .group-t {
+        margin: 14px 2px 0;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: #4a5d5e;
+        display: flex;
+        justify-content: space-between;
+      }
+      .txt-btn {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: #007a80;
+        background: #dcefee;
+        border-radius: 99px;
+        padding: 6px 12px;
+      }
+
+      /* Plan detail mock */
+      .cat {
+        padding: 9px 0;
+      }
+      .cat + .cat {
+        border-top: 1px solid #edf1f1;
+      }
+      .cat .head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .cat .head .nm {
+        flex: 1;
+      }
+      .cat .head .nm b {
+        font-weight: 550;
+        font-size: 13.5px;
+        display: block;
+      }
+      .cat .head .nm span {
+        font-size: 11.5px;
+        color: #5b6d6e;
+      }
+      .cat .head .left {
+        text-align: right;
+        font-size: 12px;
+        color: #4a5d5e;
+      }
+      .cat .head .left strong {
+        display: block;
+        font-size: 13.5px;
+        color: #102a2b;
+        font-weight: 600;
+      }
+      .cat .head .left.over strong {
+        color: #a3202d;
+      }
+      .cbar {
+        position: relative;
+        height: 6px;
+        background: #e6ecec;
+        border-radius: 99px;
+        margin: 8px 0 0 44px;
+      }
+      .cbar i {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        border-radius: 99px;
+      }
+      .cbar .tail {
+        position: absolute;
+        top: -3px;
+        bottom: -3px;
+        right: -2px;
+        width: 8px;
+        border-radius: 3px;
+        background: #c8323f;
+      }
+      .actionbar {
+        position: absolute;
+        left: 12px;
+        right: 12px;
+        bottom: 18px;
+        display: flex;
+        gap: 8px;
+        z-index: 4;
+      }
+      .actionbar .primary {
+        flex: 1;
+        height: 50px;
+        border-radius: 99px;
+        background: #00757b;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        box-shadow: 0 12px 22px -12px rgb(0 117 123 / 0.8);
+      }
+      .actionbar .round {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: rgb(255 255 255 / 0.85);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        border: 1px solid rgb(255 255 255 / 0.7);
+        box-shadow: 0 10px 24px -14px rgb(16 42 43 / 0.45);
+        display: grid;
+        place-items: center;
+        color: #102a2b;
+      }
+      .actionbar svg {
+        width: 19px;
+        height: 19px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.9;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      /* Add expense sheet mock */
+      .dim {
+        position: absolute;
+        inset: 0;
+        background: rgb(16 42 43 / 0.35);
+      }
+      .sheet {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        top: 46px;
+        background: #fff;
+        border-radius: 26px 26px 0 0;
+        padding: 8px 16px 0;
+      }
+      .handle {
+        width: 36px;
+        height: 5px;
+        border-radius: 9px;
+        background: #d3dcdc;
+        margin: 0 auto 8px;
+      }
+      .sheet .bar-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 600;
+        font-size: 14px;
+      }
+      .x {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #eef2f1;
+        display: grid;
+        place-items: center;
+      }
+      .x svg,
+      .mini svg {
+        width: 14px;
+        height: 14px;
+        fill: none;
+        stroke: #102a2b;
+        stroke-width: 2;
+        stroke-linecap: round;
+      }
+      .amount-in {
+        text-align: center;
+        margin: 6px 0 2px;
+        font-size: 42px;
+        font-weight: 650;
+        letter-spacing: -0.04em;
+      }
+      .amount-in small {
+        font-size: 26px;
+        color: #5b6d6e;
+        font-weight: 600;
+        margin-right: 2px;
+      }
+      .amount-in .caret {
+        display: inline-block;
+        width: 2px;
+        height: 40px;
+        background: #00757b;
+        vertical-align: -6px;
+        margin-left: 2px;
+      }
+      .cur {
+        text-align: center;
+      }
+      .cur span {
+        font-size: 11.5px;
+        font-weight: 600;
+        background: #eef2f1;
+        border-radius: 99px;
+        padding: 3px 9px;
+        color: #4a5d5e;
+      }
+      .field {
+        margin-top: 6px;
+        border-bottom: 1px solid #e3eaea;
+        padding: 6px 2px;
+        font-size: 14px;
+      }
+      .label {
+        font-size: 11.5px;
+        color: #5b6d6e;
+        margin: 8px 2px 5px;
+        display: flex;
+        justify-content: space-between;
+      }
+      .chips {
+        display: flex;
+        gap: 6px;
+        flex-wrap: nowrap;
+        overflow: hidden;
+      }
+      .chips span {
+        white-space: nowrap;
+        font-size: 12px;
+        font-weight: 550;
+        border-radius: 99px;
+        padding: 6px 10px;
+        background: #eef2f1;
+        color: #2c3e3f;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .chips span.sel {
+        background: #e2f2e8;
+        color: #1f6b3e;
+        box-shadow: inset 0 0 0 1.5px #2f8f55;
+      }
+      .spark {
+        width: 12px;
+        height: 12px;
+        fill: currentColor;
+      }
+      .impact {
+        margin-top: 8px;
+        background: #f3f6f5;
+        border-radius: 14px;
+        padding: 9px 12px;
+        font-size: 12px;
+        color: #4a5d5e;
+      }
+      .impact strong {
+        color: #102a2b;
+      }
+      .impact .bar {
+        margin: 6px 0 0;
+      }
+      .impact .bar i {
+        background: var(--c-leaf);
+      }
+      .save {
+        position: absolute;
+        left: 16px;
+        right: 16px;
+        bottom: 184px;
+        height: 42px;
+        border-radius: 99px;
+        background: #00757b;
+        color: #fff;
+        display: grid;
+        place-items: center;
+        font-weight: 600;
+        font-size: 14px;
+      }
+      .keys {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 176px;
+        background: #d3d8d8;
+        padding: 7px 5px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+      }
+      .keys span {
+        background: #fbfcfc;
+        border-radius: 6px;
+        display: grid;
+        place-items: center;
+        font-size: 17px;
+        color: #102a2b;
+        font-weight: 450;
+      }
+      .keys span.g {
+        background: transparent;
+      }
+
+      /* Activity mock */
+      .search {
+        margin-top: 10px;
+        background: #e3eaea;
+        border-radius: 99px;
+        padding: 8px 12px;
+        color: #5b6d6e;
+        font-size: 12.5px;
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+      .search svg {
+        width: 14px;
+        height: 14px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+      }
+      .filters {
+        display: flex;
+        gap: 6px;
+        margin-top: 10px;
+        overflow: hidden;
+        -webkit-mask-image: linear-gradient(to right, #000 80%, transparent);
+        mask-image: linear-gradient(to right, #000 80%, transparent);
+      }
+      .filters span {
+        white-space: nowrap;
+        font-size: 12px;
+        font-weight: 550;
+        border-radius: 99px;
+        padding: 6px 11px;
+        background: #fff;
+        color: #2c3e3f;
+      }
+      .filters span.on {
+        background: #102a2b;
+        color: #fff;
+      }
+      .month {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .month .v {
+        font-size: 22px;
+        font-weight: 650;
+        letter-spacing: -0.03em;
+      }
+      .days {
+        display: flex;
+        align-items: end;
+        gap: 3px;
+        height: 34px;
+      }
+      .days i {
+        width: 6px;
+        background: #b9d9d8;
+        border-radius: 2px;
+      }
+      .days i.t {
+        background: #00757b;
+      }
+      .day-h {
+        display: flex;
+        justify-content: space-between;
+        margin: 12px 4px 4px;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: #4a5d5e;
+      }
+      .swipe {
+        position: relative;
+        overflow: hidden;
+        border-radius: 0;
+      }
+      .swipe .under {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 76px;
+        background: #c8323f;
+        color: #fff;
+        display: grid;
+        place-items: center;
+        font-size: 11.5px;
+        font-weight: 600;
+      }
+      .swipe .tx {
+        background: #fff;
+        transform: translateX(-76px);
+        position: relative;
+      }
+
+      /* Visual system */
+      .swatches {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 10px;
+        margin: 14px 0 6px;
+      }
+      .sw {
+        background: var(--surface);
+        border-radius: 14px;
+        overflow: hidden;
+        font-size: 13px;
+      }
+      .sw div {
+        height: 54px;
+      }
+      .sw p {
+        margin: 0;
+        padding: 8px 10px 10px;
+      }
+      .sw p b {
+        display: block;
+        font-weight: 600;
+      }
+      .sw p span {
+        color: var(--ink-2);
+        font-size: 12px;
+      }
+      .typespec {
+        background: var(--surface);
+        border-radius: 18px;
+        padding: 20px 22px;
+        margin: 14px 0;
+      }
+      .typespec .n1 {
+        font-size: 52px;
+        font-weight: 650;
+        letter-spacing: -0.04em;
+        line-height: 1;
+      }
+      .typespec .n2 {
+        font-size: 22px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        margin-top: 10px;
+      }
+      .typespec .n3 {
+        font-size: 15px;
+        color: var(--ink-2);
+        margin-top: 6px;
+      }
+      .compare {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin: 14px 0;
+      }
+      @media (max-width: 560px) {
+        .compare {
+          grid-template-columns: 1fr;
+        }
+      }
+      .compare > div {
+        background: var(--surface);
+        border-radius: 14px;
+        padding: 14px 16px;
+        font-size: 14px;
+      }
+      .compare b {
+        display: block;
+        margin-bottom: 4px;
+      }
+      pre {
+        background: var(--code-bg);
+        border-radius: 12px;
+        padding: 14px 16px;
+        overflow-x: auto;
+        font-size: 13px;
+        line-height: 1.5;
+        margin: 10px 0 18px;
+      }
+      pre code {
+        background: none;
+        padding: 0;
+        font-size: inherit;
+      }
+
+      /* Issues list */
+      .issues {
+        list-style: none;
+        padding: 0;
+      }
+      .issues li {
+        background: var(--surface);
+        border-radius: 14px;
+        padding: 14px 16px;
+        margin-bottom: 8px;
+      }
+      .issues li b {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 2px;
+      }
+      .issues li .where {
+        font-size: 13px;
+        color: var(--ink-2);
+        margin-top: 4px;
+        display: block;
+      }
+
+      .refs ol {
+        padding-left: 24px;
+      }
+      .refs li {
+        margin-bottom: 10px;
+        font-size: 15px;
+      }
+      .refs li span {
+        display: block;
+        color: var(--ink-2);
+        font-size: 14px;
+      }
+      .shots {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+        gap: 10px;
+        margin: 12px 0 24px;
+      }
+      .shots a {
+        display: block;
+        background: var(--surface);
+        border-radius: 14px;
+        padding: 12px 14px;
+        text-decoration: none;
+        color: var(--ink);
+        font-size: 14px;
+      }
+      .shots a b {
+        display: block;
+        font-weight: 600;
+        color: var(--teal);
+        margin-bottom: 4px;
+      }
+      .shots a span {
+        color: var(--ink-2);
+        font-size: 13px;
+      }
+
+      footer {
+        margin-top: 80px;
+        font-size: 13px;
+        color: var(--ink-2);
+      }
+      @media (max-width: 480px) {
+        .wrap {
+          padding: 36px 16px 72px;
+        }
+        h2 {
+          font-size: 25px;
+          margin-top: 64px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="top">
+        <h1>Shephard UI refresh for 2026</h1>
+        <p class="lead">
+          A review of the main mobile screens, with changes ranked by impact and effort. Each change
+          links to the design reference or the research it comes from.
+        </p>
+        <p class="meta">
+          Reviewed on 1 October 2026. I opened 8 screens at 390 px width in mock mode (<code
+            >npm run dev:mock</code
+          >), and I did a dark mode check on Home. I did not test on a real device or with real
+          data.
+        </p>
+      </header>
+
+      <section class="prose">
+        <h2>Keep these</h2>
+        <p>The base is good. Do not rebuild these parts. Refine them.</p>
+      </section>
+      <div class="keep">
+        <div>
+          <strong>Floating glass tab bar</strong>It already follows the iOS 26 pattern. It needs
+          fewer items, not a new design.
+        </div>
+        <div>
+          <strong>Motion tokens</strong><code>--ease-out-quint</code> and
+          <code>--ease-spring</code> in <code>theme.scss</code> are correct for native feel.
+        </div>
+        <div>
+          <strong>AI category and budget impact</strong><code>useAICategorization</code> and
+          <code>BudgetImpactCard</code> are strong. The form hides them below a long field list.
+        </div>
+        <div>
+          <strong>Date-grouped activity</strong>Day groups with a total per day match the best
+          references.
+        </div>
+        <div>
+          <strong>Privacy eye and pull to refresh</strong>Both are expected in 2026 money apps.
+        </div>
+      </div>
+
+      <section>
+        <h2>Changes in build order</h2>
+        <p class="prose">
+          Small fixes come first because they remove visible defects at low cost. The larger layout
+          changes follow. Effort: S is less than a day, M is one to three days.
+        </p>
+        <table class="order">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Change</th>
+              <th>Why</th>
+              <th>Effort</th>
+              <th>Files</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="n">1</td>
+              <td class="what">
+                Fix contrast and number format<span
+                  >Text teal, dark-mode amounts, zero amounts</span
+                >
+              </td>
+              <td>Three values fail WCAG AA or show the wrong decimal mark.</td>
+              <td><span class="effort">S</span></td>
+              <td><code>theme.scss</code>, <code>utils/currency.ts</code></td>
+            </tr>
+            <tr>
+              <td class="n">2</td>
+              <td class="what">
+                One "add" button per screen<span
+                  >Remove the header + on Plans, Activity, Templates</span
+                >
+              </td>
+              <td>Two + buttons on one screen do different things.</td>
+              <td><span class="effort">S</span></td>
+              <td><code>ListPageLayout.vue</code>, list pages</td>
+            </tr>
+            <tr>
+              <td class="n">3</td>
+              <td class="what">
+                Show over-budget clearly<span>Red overflow tail and "€0,98 over"</span>
+              </td>
+              <td>Now 104% shows "€0.00 left" and a teal bar.</td>
+              <td><span class="effort">S</span></td>
+              <td><code>CategoryBudgetListItem.vue</code>, <code>TopCategoriesCard.vue</code></td>
+            </tr>
+            <tr>
+              <td class="n">4</td>
+              <td class="what">Progress on plan cards<span>Spent of total, status chip</span></td>
+              <td>The Plans list shows only the budget, not the state.</td>
+              <td><span class="effort">S</span></td>
+              <td><code>PlanCard.vue</code></td>
+            </tr>
+            <tr>
+              <td class="n">5</td>
+              <td class="what">
+                Amount-first add expense<span
+                  >Large amount, category chips, AI suggestion on top</span
+                >
+              </td>
+              <td>This is the most frequent task in the app.</td>
+              <td><span class="effort m">M</span></td>
+              <td>
+                <code>CustomEntryPanel.vue</code>, <code>ExpenseAmountCurrencyFields.vue</code>
+              </td>
+            </tr>
+            <tr>
+              <td class="n">6</td>
+              <td class="what">
+                Daily pace on the Home hero<span>"€22,84 a day" and a "today" marker</span>
+              </td>
+              <td>Users want to know if they are on track, not only the remainder.</td>
+              <td><span class="effort m">M</span></td>
+              <td><code>BudgetOverviewCard.vue</code>, <code>usePlanOverview.ts</code></td>
+            </tr>
+            <tr>
+              <td class="n">7</td>
+              <td class="what">
+                Three tabs and a separate add button<span>Templates moves into Plans</span>
+              </td>
+              <td>Templates is a setup task. It does not need a main tab.</td>
+              <td><span class="effort m">M</span></td>
+              <td><code>MainLayout.vue</code>, <code>PlansPage.vue</code></td>
+            </tr>
+            <tr>
+              <td class="n">8</td>
+              <td class="what">
+                Category colour system<span>Tinted tiles with one lightness for all hues</span>
+              </td>
+              <td>Material default colours clash with teal. Bills red looks like "over budget".</td>
+              <td><span class="effort m">M</span></td>
+              <td><code>theme.scss</code>, category avatar components</td>
+            </tr>
+            <tr>
+              <td class="n">9</td>
+              <td class="what">Display numerals<span>One typeface for money figures</span></td>
+              <td>Money is the hero of every screen. It needs its own voice.</td>
+              <td><span class="effort">S</span></td>
+              <td><code>app.scss</code> (<code>.text-amount</code>)</td>
+            </tr>
+            <tr>
+              <td class="n">10</td>
+              <td class="what">
+                Plan detail action bar<span>"Add expense" plus Share and More</span>
+              </td>
+              <td>"Edit" shows twice. Export is rare but sits in the thumb zone.</td>
+              <td><span class="effort">S</span></td>
+              <td><code>DetailPageLayout.vue</code>, <code>PlanPage.vue</code></td>
+            </tr>
+            <tr>
+              <td class="n">11</td>
+              <td class="what">Copy pass<span>One word for each idea</span></td>
+              <td>"Left to spend", "Still to pay" and "left" mean the same thing.</td>
+              <td><span class="effort">S</span></td>
+              <td>Several components</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- HOME -->
+      <section>
+        <h2>Home</h2>
+        <div class="screen">
+          <div>
+            <div class="saw">
+              <h3>What I saw</h3>
+              <ul>
+                <li>
+                  The greeting "Morning, Demo" is the largest text on the screen. The money figure
+                  is second.
+                </li>
+                <li>
+                  The hero shows "LEFT TO SPEND" in capitals and a remainder. It does not say if the
+                  spend rate is safe.
+                </li>
+                <li>
+                  All category bars are teal. Transport is at 100% but it looks the same as the
+                  others.
+                </li>
+                <li>
+                  Category avatars use Material colours (#4CAF50, #9C27B0). They do not match the
+                  teal brand.
+                </li>
+                <li>
+                  Expense amounts are grey (<code>rgb(117,117,117)</code>). In dark mode this is
+                  3.7:1 on the card, below the 4.5:1 AA minimum.
+                </li>
+                <li>The "Active plans" and "Templates" links at the bottom repeat the tab bar.</li>
+                <li>
+                  In mock data the hero says "11% of €2.500,00 spent". The plan page says "27%" of
+                  €975,00. Check this with real data.
+                </li>
+              </ul>
+            </div>
+            <div class="change">
+              <h3>Change</h3>
+              <ul>
+                <li>
+                  Make the remainder the largest element. Make the greeting a small caption next to
+                  the avatar.
+                </li>
+                <li>
+                  Add the daily pace: <code>remaining / daysLeft</code>. Kippo and the Fahmi Nugraha
+                  shot both show "you can spend €X a day".<sup class="ref"
+                    ><a href="#r-kippo">K</a></sup
+                  ><sup class="ref"><a href="#r-fahmi">F</a></sup>
+                </li>
+                <li>
+                  Add a "today" marker on the hero bar at <code>elapsedDays / totalDays</code>. When
+                  the fill passes the marker, show an amber "Ahead of plan" chip.
+                </li>
+                <li>
+                  Later: subtract unpaid fixed items (rent, bills) from "left" before the pace math.
+                  Copilot Money treats known recurring bills as already spent.<sup class="ref"
+                    ><a href="#r-copilot">9</a></sup
+                  >
+                </li>
+                <li>
+                  Replace the three teal bars with one stacked bar in category colours and a legend.
+                  The Cansaas shot uses this pattern.<sup class="ref"
+                    ><a href="#r-cansaas">S</a></sup
+                  >
+                </li>
+                <li>Show amounts in ink colour, not grey. Amounts are the main data in a list.</li>
+                <li>Remove the bottom "Active plans" and "Templates" links.</li>
+              </ul>
+              <p class="small muted">
+                Research: Kaye et al. found that people track money to feel in control and to plan
+                for an unknown future.<sup class="ref"><a href="#r-kaye">1</a></sup> A pace signal
+                answers "am I OK?" directly. Keep the tone neutral: amber for "ahead", never red
+                until the budget is over.
+              </p>
+            </div>
+          </div>
+          <figure
+            class="phone-col"
+            style="margin: 0"
+          >
+            <div
+              class="phone"
+              role="img"
+              aria-label="Proposed Home screen mockup"
+            >
+              <div class="island"></div>
+              <div class="scr">
+                <div class="p-row">
+                  <div
+                    class="p-row"
+                    style="gap: 8px"
+                  >
+                    <div class="p-avatar">D</div>
+                    <div>
+                      <div class="p-cap">Wednesday, 1 October</div>
+                      <div style="font-weight: 600">Morning, Demo</div>
+                    </div>
+                  </div>
+                  <div class="p-icon-btn">
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="16"
+                      height="16"
+                      fill="none"
+                      stroke="#102a2b"
+                      stroke-width="1.9"
+                      stroke-linecap="round"
+                    >
+                      <path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                      <path d="M10.3 21a1.9 1.9 0 0 0 3.4 0" /></svg
+                    ><span class="dot"></span>
+                  </div>
+                </div>
+                <div class="hero">
+                  <div class="p-row">
+                    <span class="p-cap">February Budget</span
+                    ><span class="chip-l">31 days left</span>
+                  </div>
+                  <div class="big">€708<small>,10</small></div>
+                  <div class="p-cap">left of €975,00</div>
+                  <div class="pace"><i style="width: 27%"></i><b style="left: 6%"></b></div>
+                  <div class="p-row">
+                    <span class="chip-l warn">Ahead of plan</span
+                    ><span style="font-size: 12px; color: #d6e6e5">€22,84 a day</span>
+                  </div>
+                </div>
+                <div class="card">
+                  <div class="card-t">Spent by category <a href="#">See all</a></div>
+                  <div class="stack">
+                    <span style="width: 34%; background: var(--c-rose)"></span
+                    ><span style="width: 30%; background: var(--c-sky)"></span
+                    ><span style="width: 27%; background: var(--c-leaf)"></span
+                    ><span style="width: 9%; background: var(--c-violet)"></span>
+                  </div>
+                  <div class="legend">
+                    <span class="rose">Shopping €89,90</span
+                    ><span class="sky">Transport €80,00</span><span class="leaf">Food €72,00</span>
+                  </div>
+                </div>
+                <div class="card">
+                  <div class="card-t">Recent <a href="#">View all</a></div>
+                  <div class="tx">
+                    <div class="tile t-leaf">
+                      <svg viewBox="0 0 24 24">
+                        <path d="M3 4h2l2.4 10.2a1 1 0 0 0 1 .8h8.7a1 1 0 0 0 1-.8L20 8H6" />
+                        <circle
+                          cx="9"
+                          cy="19.5"
+                          r="1.3"
+                        />
+                        <circle
+                          cx="17"
+                          cy="19.5"
+                          r="1.3"
+                        />
+                      </svg>
+                    </div>
+                    <div class="nm"><b>Bakery croissants</b><span>Food, today</span></div>
+                    <div class="amt">€4,50</div>
+                  </div>
+                  <div class="tx">
+                    <div class="tile t-violet">
+                      <svg viewBox="0 0 24 24">
+                        <rect
+                          x="3"
+                          y="4"
+                          width="18"
+                          height="16"
+                          rx="2"
+                        />
+                        <path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4" />
+                      </svg>
+                    </div>
+                    <div class="nm"><b>Cinema tickets</b><span>Entertainment, today</span></div>
+                    <div class="amt">€24,00</div>
+                  </div>
+                  <div class="tx">
+                    <div class="tile t-leaf">
+                      <svg viewBox="0 0 24 24">
+                        <path d="M3 4h2l2.4 10.2a1 1 0 0 0 1 .8h8.7a1 1 0 0 0 1-.8L20 8H6" />
+                        <circle
+                          cx="9"
+                          cy="19.5"
+                          r="1.3"
+                        />
+                        <circle
+                          cx="17"
+                          cy="19.5"
+                          r="1.3"
+                        />
+                      </svg>
+                    </div>
+                    <div class="nm"><b>Lunch at cafe</b><span>Food, yesterday</span></div>
+                    <div class="amt">€14,50</div>
+                  </div>
+                </div>
+                <div class="fade-bottom"></div>
+                <div class="tabbar">
+                  <div class="tabs">
+                    <span class="on"
+                      ><svg viewBox="0 0 24 24">
+                        <path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z" /></svg
+                      >Home</span
+                    >
+                    <span
+                      ><svg viewBox="0 0 24 24">
+                        <rect
+                          x="3.5"
+                          y="5"
+                          width="17"
+                          height="15.5"
+                          rx="2.5"
+                        />
+                        <path d="M3.5 10h17M8 3v4M16 3v4" /></svg
+                      >Plans</span
+                    >
+                    <span
+                      ><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4" /></svg
+                      >Activity</span
+                    >
+                  </div>
+                  <div
+                    class="addbtn"
+                    aria-label="Add expense"
+                  >
+                    <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <figcaption>
+              Proposed Home. The money and the pace come first. The add button sits apart from the
+              tabs, like the iOS 26 search button.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- ADD EXPENSE -->
+      <section>
+        <h2>Add expense</h2>
+        <div class="screen">
+          <div>
+            <div class="saw">
+              <h3>What I saw</h3>
+              <ul>
+                <li>
+                  The title "Register New Expense" is formal. The button says "Register Expense".
+                </li>
+                <li>
+                  The order is: tabs, receipt photo, a divider "OR ENTER MANUALLY", amount,
+                  currency, name, category select, plan select. The amount is a normal-size input.
+                </li>
+                <li>
+                  Category is a dropdown. The AI suggestion shows only after the name is typed, and
+                  only as a small row.
+                </li>
+                <li>
+                  The tabs "Custom Entry" and "Quick Select" use system words, not user words.
+                </li>
+                <li>
+                  The sheet opens to full height. NN/g says sheets suit short tasks and a swipe-down
+                  can lose the input by accident.<sup class="ref"><a href="#r-nng-sheet">2</a></sup
+                  ><sup class="ref"><a href="#r-nng-dismiss">3</a></sup>
+                </li>
+              </ul>
+            </div>
+            <div class="change">
+              <h3>Change</h3>
+              <ul>
+                <li>
+                  Put the amount first, at 44–48 px, with autofocus and the existing
+                  <code>inputmode="decimal"</code>. The native decimal keyboard is enough. A custom
+                  keypad is not necessary. The Cansaas, Kippo and Fahmi shots all lead with a large
+                  amount.<sup class="ref"><a href="#r-cansaas">S</a></sup
+                  ><sup class="ref"><a href="#r-kippo">K</a></sup
+                  ><sup class="ref"><a href="#r-fahmi">F</a></sup>
+                </li>
+                <li>
+                  Show the currency as a small chip under the amount. Most entries use the default
+                  currency.
+                </li>
+                <li>
+                  Replace the category dropdown with a chip row: the AI suggestion first (with a
+                  sparkle icon), then the 3–4 most used categories, then "More". One tap instead of
+                  open, scroll, tap.
+                </li>
+                <li>
+                  Show the plan as a chip with the <code>BudgetImpactCard</code> line under it:
+                  "€528,00 left in Food after this".
+                </li>
+                <li>
+                  Move "Scan receipt" to an icon chip next to the name field. Remove the "OR ENTER
+                  MANUALLY" divider.
+                </li>
+                <li>
+                  Rename: "Add expense" (title and button), "New" and "From plan" (tabs). The toast
+                  then says "Expense added".
+                </li>
+                <li>
+                  Block swipe-to-dismiss when the form has input, or ask "Discard expense?" first.
+                </li>
+              </ul>
+            </div>
+          </div>
+          <figure
+            class="phone-col"
+            style="margin: 0"
+          >
+            <div
+              class="phone"
+              role="img"
+              aria-label="Proposed Add expense sheet mockup"
+            >
+              <div class="island"></div>
+              <div class="dim"></div>
+              <div class="sheet">
+                <div class="handle"></div>
+                <div class="bar-top">
+                  <div class="x">
+                    <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                  </div>
+                  <span>Add expense</span><span style="width: 28px"></span>
+                </div>
+                <div class="amount-in"><small>€</small>14,50<span class="caret"></span></div>
+                <div class="cur"><span>EUR</span></div>
+                <div class="p-row field">
+                  <span>Lunch at cafe</span
+                  ><span class="mini x"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      style="stroke: #00757b"
+                    >
+                      <rect
+                        x="3"
+                        y="6"
+                        width="18"
+                        height="14"
+                        rx="3"
+                      />
+                      <circle
+                        cx="12"
+                        cy="13"
+                        r="3.5"
+                      />
+                      <path d="M9 6l1.5-2h3L15 6" /></svg
+                  ></span>
+                </div>
+                <div class="label"><span>Category</span></div>
+                <div class="chips">
+                  <span class="sel"
+                    ><svg
+                      class="spark"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M12 2l2.2 6.8L21 11l-6.8 2.2L12 20l-2.2-6.8L3 11l6.8-2.2z" /></svg
+                    >Food &amp; Groceries</span
+                  >
+                  <span>Entertainment</span>
+                  <span>Shopping</span>
+                  <span>More</span>
+                </div>
+                <div class="label"><span>Plan</span><span>Today</span></div>
+                <div class="chips">
+                  <span
+                    class="sel"
+                    style="
+                      background: #dcefee;
+                      color: #00575c;
+                      box-shadow: inset 0 0 0 1.5px #00757b;
+                    "
+                    >February Budget</span
+                  ><span>This Week</span>
+                </div>
+                <div class="impact">
+                  <strong>€513,50</strong> left in Food after this
+                  <div class="bar"><i style="width: 14%"></i></div>
+                </div>
+                <div class="save">Add expense</div>
+                <div class="keys">
+                  <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span
+                  ><span>6</span><span>7</span><span>8</span><span>9</span><span>,</span
+                  ><span>0</span><span class="g">⌫</span>
+                </div>
+              </div>
+            </div>
+            <figcaption>
+              Proposed Add expense. The amount, the suggested category and the budget impact fit
+              above the native keyboard.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- PLANS -->
+      <section>
+        <h2>Plans</h2>
+        <div class="screen">
+          <div>
+            <div class="saw">
+              <h3>What I saw</h3>
+              <ul>
+                <li>
+                  Each card shows name, dates, total and "31 days left". It does not show how much
+                  is spent.
+                </li>
+                <li>
+                  A teal + in the header creates a plan. The + in the tab bar adds an expense. Same
+                  icon, different action, on one screen.
+                </li>
+                <li>
+                  The subtitle "Manage your financial plans and track your progress" fills space but
+                  gives no information.
+                </li>
+                <li>Each card has a kebab menu. This adds a small 24 px target to every card.</li>
+                <li>Completed plans sit in the same list as active plans.</li>
+              </ul>
+            </div>
+            <div class="change">
+              <h3>Change</h3>
+              <ul>
+                <li>
+                  Add a thin progress bar and "€267,88 of €975,00" to each card. Add one status
+                  chip: "On track", "Ahead of plan" or "€12,40 over".
+                </li>
+                <li>
+                  Replace the header + with a text button "New plan". Keep the tab bar + for
+                  expenses only.
+                </li>
+                <li>
+                  Add a "Plans / Templates" segmented control at the top. Templates leaves the tab
+                  bar.
+                </li>
+                <li>Show shared plans with member initials, not only a people icon.</li>
+                <li>Collapse completed plans into a "Completed (2)" group.</li>
+                <li>
+                  Move the kebab actions into a long-press or swipe menu, and keep them in the
+                  plan's "More" menu.
+                </li>
+                <li>Remove the subtitle.</li>
+              </ul>
+            </div>
+          </div>
+          <figure
+            class="phone-col"
+            style="margin: 0"
+          >
+            <div
+              class="phone"
+              role="img"
+              aria-label="Proposed Plans list mockup"
+            >
+              <div class="island"></div>
+              <div class="scr">
+                <div
+                  class="p-row"
+                  style="margin-top: 6px"
+                >
+                  <span class="p-h">Plans</span><span class="txt-btn">New plan</span>
+                </div>
+                <div class="seg"><span class="on">Plans</span><span>Templates</span></div>
+                <div class="plan">
+                  <div class="top"><b>February Budget</b><em>30 Sep – 31 Oct</em></div>
+                  <div class="bar"><i style="width: 27%"></i></div>
+                  <div class="bot">
+                    <span><strong>€267,88</strong> of €975,00</span
+                    ><span class="status s-warn">Ahead of plan</span>
+                  </div>
+                </div>
+                <div class="plan">
+                  <div class="top">
+                    <b
+                      >Household February<span class="faces"
+                        ><i style="background: #3a78d4">JS</i
+                        ><i style="background: #7458db">D</i></span
+                      ></b
+                    ><em>30 Sep – 31 Oct</em>
+                  </div>
+                  <div class="bar"><i style="width: 8%"></i></div>
+                  <div class="bot">
+                    <span><strong>€142,00</strong> of €1.800,00</span
+                    ><span class="status s-ok">On track</span>
+                  </div>
+                </div>
+                <div class="plan">
+                  <div class="top"><b>This Week</b><em>3 days left</em></div>
+                  <div class="bar"><i style="width: 100%; background: #c8323f"></i></div>
+                  <div class="bot">
+                    <span><strong>€362,40</strong> of €350,00</span
+                    ><span class="status s-over">€12,40 over</span>
+                  </div>
+                </div>
+                <div class="plan">
+                  <div class="top">
+                    <b
+                      >Travel Week<span class="faces"
+                        ><i style="background: #c9457a">BV</i></span
+                      ></b
+                    ><em>3 days left</em>
+                  </div>
+                  <div class="bar"><i style="width: 46%"></i></div>
+                  <div class="bot">
+                    <span><strong>$230.00</strong> of $500.00</span
+                    ><span class="status s-ok">On track</span>
+                  </div>
+                </div>
+                <div class="group-t">
+                  <span>Completed (2)</span><span style="color: #007a80">Show</span>
+                </div>
+                <div class="fade-bottom"></div>
+                <div class="tabbar">
+                  <div class="tabs">
+                    <span
+                      ><svg viewBox="0 0 24 24">
+                        <path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z" /></svg
+                      >Home</span
+                    >
+                    <span class="on"
+                      ><svg viewBox="0 0 24 24">
+                        <rect
+                          x="3.5"
+                          y="5"
+                          width="17"
+                          height="15.5"
+                          rx="2.5"
+                        />
+                        <path d="M3.5 10h17M8 3v4M16 3v4" /></svg
+                      >Plans</span
+                    >
+                    <span
+                      ><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4" /></svg
+                      >Activity</span
+                    >
+                  </div>
+                  <div class="addbtn">
+                    <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <figcaption>
+              Proposed Plans. Each card answers "how is this plan doing?". The values for the last
+              three cards are examples.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- PLAN DETAIL -->
+      <section>
+        <h2>Plan detail</h2>
+        <div class="screen">
+          <div>
+            <div class="saw">
+              <h3>What I saw</h3>
+              <ul>
+                <li>
+                  Entertainment is at 104%. The row shows a red "Over" badge, "€0.00 left" and a
+                  teal bar. The overspend amount is not visible.
+                </li>
+                <li>
+                  Bills &amp; Utilities uses a red avatar. Red also means "over budget" on the same
+                  screen.
+                </li>
+                <li>
+                  "€0.00" uses a dot. All other EUR values use a comma. The cause is
+                  <code>utils/currency.ts:25</code>, which returns a fixed string for zero.
+                </li>
+                <li>
+                  The summary says "Still to pay". Home says "Left to spend". The rows say "left".
+                </li>
+                <li>
+                  The tabs include "Edit". The bottom bar also has "Edit". The bar gives Export and
+                  Share the same weight as adding an expense.
+                </li>
+              </ul>
+            </div>
+            <div class="change">
+              <h3>Change</h3>
+              <ul>
+                <li>
+                  For over-budget rows, show "€0,98 over" in red and add a red tail past the bar
+                  end. The Fahmi Nugraha shot marks the overspend on the bar in the same way.<sup
+                    class="ref"
+                    ><a href="#r-fahmi">F</a></sup
+                  >
+                </li>
+                <li>Colour each category bar in its category colour. Use red only for "over".</li>
+                <li>Use one word: "left". "€708,10 left of €975,00".</li>
+                <li>
+                  Tabs: Overview, Items, Activity. Move Edit to the More menu, or show it as a
+                  header action for owners.
+                </li>
+                <li>
+                  Bottom bar: one wide "Add expense" button, plus Share and More as round glass
+                  buttons. Export goes into More.
+                </li>
+                <li>
+                  Fix the zero format: run zero through the same <code>toLocaleString</code> path as
+                  other values.
+                </li>
+              </ul>
+            </div>
+          </div>
+          <figure
+            class="phone-col"
+            style="margin: 0"
+          >
+            <div
+              class="phone"
+              role="img"
+              aria-label="Proposed Plan detail mockup"
+            >
+              <div class="island"></div>
+              <div class="scr">
+                <div
+                  class="p-row"
+                  style="margin-top: 4px"
+                >
+                  <div class="p-icon-btn">
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="16"
+                      height="16"
+                      fill="none"
+                      stroke="#102a2b"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M15 5l-7 7 7 7" />
+                    </svg>
+                  </div>
+                  <div style="font-weight: 600; font-size: 14px">February Budget</div>
+                  <div class="p-icon-btn">
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="16"
+                      height="16"
+                      fill="#102a2b"
+                    >
+                      <circle
+                        cx="5"
+                        cy="12"
+                        r="1.7"
+                      />
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="1.7"
+                      />
+                      <circle
+                        cx="19"
+                        cy="12"
+                        r="1.7"
+                      />
+                    </svg>
+                  </div>
+                </div>
+                <div style="margin-top: 14px">
+                  <div class="p-cap">30 Sep – 31 Oct, 31 days left</div>
+                  <div
+                    style="
+                      font-size: 30px;
+                      font-weight: 650;
+                      letter-spacing: -0.035em;
+                      line-height: 1.1;
+                      margin-top: 2px;
+                    "
+                  >
+                    €708,10
+                    <span
+                      style="font-size: 14px; font-weight: 500; color: #4a5d5e; letter-spacing: 0"
+                      >left of €975,00</span
+                    >
+                  </div>
+                  <div
+                    class="stack"
+                    style="margin-top: 10px"
+                  >
+                    <span style="width: 2.7%; background: var(--c-violet)"></span
+                    ><span style="width: 8.2%; background: var(--c-sky)"></span
+                    ><span style="width: 9.2%; background: var(--c-rose)"></span
+                    ><span style="width: 7.4%; background: var(--c-leaf)"></span>
+                  </div>
+                </div>
+                <div class="seg">
+                  <span class="on">Overview</span><span>Items</span><span>Activity</span>
+                </div>
+                <div
+                  class="card"
+                  style="padding-top: 4px; padding-bottom: 6px"
+                >
+                  <div class="cat">
+                    <div class="head">
+                      <div class="tile t-violet">
+                        <svg viewBox="0 0 24 24">
+                          <rect
+                            x="3"
+                            y="4"
+                            width="18"
+                            height="16"
+                            rx="2"
+                          />
+                          <path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4" />
+                        </svg>
+                      </div>
+                      <div class="nm"><b>Entertainment</b><span>€25,98 of €25,00</span></div>
+                      <div class="left over"><strong>€0,98 over</strong></div>
+                    </div>
+                    <div class="cbar">
+                      <i style="width: 100%; background: var(--c-violet)"></i
+                      ><span class="tail"></span>
+                    </div>
+                  </div>
+                  <div class="cat">
+                    <div class="head">
+                      <div class="tile t-sky">
+                        <svg viewBox="0 0 24 24">
+                          <rect
+                            x="4"
+                            y="4"
+                            width="16"
+                            height="13"
+                            rx="3"
+                          />
+                          <path d="M4 11h16M8 17v3M16 17v3" />
+                          <circle
+                            cx="8"
+                            cy="14"
+                            r=".6"
+                          />
+                          <circle
+                            cx="16"
+                            cy="14"
+                            r=".6"
+                          />
+                        </svg>
+                      </div>
+                      <div class="nm"><b>Transport</b><span>€80,00 of €80,00</span></div>
+                      <div class="left"><strong>All used</strong></div>
+                    </div>
+                    <div class="cbar"><i style="width: 100%; background: var(--c-sky)"></i></div>
+                  </div>
+                  <div class="cat">
+                    <div class="head">
+                      <div class="tile t-rose">
+                        <svg viewBox="0 0 24 24">
+                          <path d="M3 12V4h8l9 9-8 8z" />
+                          <circle
+                            cx="7.5"
+                            cy="7.5"
+                            r="1.3"
+                          />
+                        </svg>
+                      </div>
+                      <div class="nm"><b>Shopping</b><span>€89,90 of €150,00</span></div>
+                      <div class="left"><strong>€60,10</strong>left</div>
+                    </div>
+                    <div class="cbar"><i style="width: 60%; background: var(--c-rose)"></i></div>
+                  </div>
+                  <div class="cat">
+                    <div class="head">
+                      <div class="tile t-amber">
+                        <svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z" /></svg>
+                      </div>
+                      <div class="nm">
+                        <b>Bills &amp; Utilities</b><span>€0,00 of €120,00</span>
+                      </div>
+                      <div class="left"><strong>€120,00</strong>left</div>
+                    </div>
+                    <div class="cbar"><i style="width: 0%"></i></div>
+                  </div>
+                </div>
+                <div class="fade-bottom"></div>
+                <div class="actionbar">
+                  <div class="primary">
+                    <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>Add expense
+                  </div>
+                  <div
+                    class="round"
+                    aria-label="Share"
+                  >
+                    <svg viewBox="0 0 24 24">
+                      <circle
+                        cx="18"
+                        cy="5"
+                        r="2.5"
+                      />
+                      <circle
+                        cx="6"
+                        cy="12"
+                        r="2.5"
+                      />
+                      <circle
+                        cx="18"
+                        cy="19"
+                        r="2.5"
+                      />
+                      <path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <figcaption>
+              Proposed Plan detail. Red appears only on the over-budget row. Bills moves from red to
+              amber.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- ACTIVITY -->
+      <section>
+        <h2>Activity</h2>
+        <div class="screen">
+          <div>
+            <div class="saw">
+              <h3>What I saw</h3>
+              <ul>
+                <li>
+                  Rows under the "TODAY" header also show "Oct 1, 2026". The date shows twice.
+                </li>
+                <li>Day headers use capitals ("TODAY", "SEP 29").</li>
+                <li>Amounts are grey and lighter than the item names.</li>
+                <li>
+                  The category chips cut off at the right edge with no fade. "Food &amp; Groc" looks
+                  broken.
+                </li>
+                <li>The header + and the tab bar + both show here.</li>
+                <li>
+                  Swipe actions exist in <code>RecentExpensesList.vue</code> but not on this list.
+                </li>
+              </ul>
+            </div>
+            <div class="change">
+              <h3>Change</h3>
+              <ul>
+                <li>
+                  Remove the date from rows inside a day group. Show the plan name only, or category
+                  and plan.
+                </li>
+                <li>Use sentence case for day headers: "Today", "Yesterday", "Mon 29 Sep".</li>
+                <li>Show amounts in ink colour with tabular figures.</li>
+                <li>Add an "All" chip first and a fade mask on the chip row edge.</li>
+                <li>
+                  Add a small summary on top: month total and a 14-day bar strip. The Keitoto and
+                  Morph Studio shots open the history with a summary like this.<sup class="ref"
+                    ><a href="#r-keitoto">T</a></sup
+                  ><sup class="ref"><a href="#r-morph">M</a></sup>
+                </li>
+                <li>
+                  Reuse the <code>q-slide-item</code> swipe from
+                  <code>RecentExpensesList.vue</code>. Delete with an undo snackbar, not a confirm
+                  dialog.
+                </li>
+              </ul>
+            </div>
+          </div>
+          <figure
+            class="phone-col"
+            style="margin: 0"
+          >
+            <div
+              class="phone"
+              role="img"
+              aria-label="Proposed Activity list mockup"
+            >
+              <div class="island"></div>
+              <div class="scr">
+                <div
+                  class="p-h"
+                  style="margin-top: 6px"
+                >
+                  Activity
+                </div>
+                <div class="search">
+                  <svg viewBox="0 0 24 24">
+                    <circle
+                      cx="11"
+                      cy="11"
+                      r="7"
+                    />
+                    <path d="M20 20l-4-4" /></svg
+                  >Search expenses
+                </div>
+                <div class="filters">
+                  <span class="on">All</span><span>Food</span><span>Entertainment</span
+                  ><span>Shopping</span><span>Transport</span>
+                </div>
+                <div class="card">
+                  <div class="month">
+                    <div>
+                      <div class="p-cap">October so far</div>
+                      <div class="v">€110,50</div>
+                    </div>
+                    <div class="days">
+                      <i style="height: 30%"></i><i style="height: 55%"></i
+                      ><i style="height: 20%"></i><i style="height: 80%"></i
+                      ><i style="height: 40%"></i><i style="height: 25%"></i
+                      ><i style="height: 60%"></i><i style="height: 35%"></i
+                      ><i style="height: 90%"></i><i style="height: 45%"></i
+                      ><i style="height: 15%"></i><i style="height: 70%"></i
+                      ><i style="height: 100%"></i
+                      ><i
+                        class="t"
+                        style="height: 38%"
+                      ></i>
+                    </div>
+                  </div>
+                </div>
+                <div class="day-h"><span>Today</span><span>€28,50</span></div>
+                <div
+                  class="card"
+                  style="padding-top: 2px; padding-bottom: 2px; margin-top: 0"
+                >
+                  <div class="tx">
+                    <div class="tile t-leaf">
+                      <svg viewBox="0 0 24 24">
+                        <path d="M3 4h2l2.4 10.2a1 1 0 0 0 1 .8h8.7a1 1 0 0 0 1-.8L20 8H6" />
+                        <circle
+                          cx="9"
+                          cy="19.5"
+                          r="1.3"
+                        />
+                        <circle
+                          cx="17"
+                          cy="19.5"
+                          r="1.3"
+                        />
+                      </svg>
+                    </div>
+                    <div class="nm"><b>Bakery croissants</b><span>February Budget</span></div>
+                    <div class="amt">€4,50</div>
+                  </div>
+                  <div class="swipe">
+                    <div class="under">Delete</div>
+                    <div class="tx">
+                      <div class="tile t-violet">
+                        <svg viewBox="0 0 24 24">
+                          <rect
+                            x="3"
+                            y="4"
+                            width="18"
+                            height="16"
+                            rx="2"
+                          />
+                          <path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4" />
+                        </svg>
+                      </div>
+                      <div class="nm"><b>Cinema tickets</b><span>This Week</span></div>
+                      <div class="amt">€24,00</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="day-h"><span>Yesterday</span><span>€82,00</span></div>
+                <div
+                  class="card"
+                  style="padding-top: 2px; padding-bottom: 2px; margin-top: 0"
+                >
+                  <div class="tx">
+                    <div class="tile t-leaf">
+                      <svg viewBox="0 0 24 24">
+                        <path d="M3 4h2l2.4 10.2a1 1 0 0 0 1 .8h8.7a1 1 0 0 0 1-.8L20 8H6" />
+                        <circle
+                          cx="9"
+                          cy="19.5"
+                          r="1.3"
+                        />
+                        <circle
+                          cx="17"
+                          cy="19.5"
+                          r="1.3"
+                        />
+                      </svg>
+                    </div>
+                    <div class="nm"><b>Lunch at cafe</b><span>This Week</span></div>
+                    <div class="amt">€14,50</div>
+                  </div>
+                  <div class="tx">
+                    <div class="tile t-leaf">
+                      <svg viewBox="0 0 24 24">
+                        <path d="M3 4h2l2.4 10.2a1 1 0 0 0 1 .8h8.7a1 1 0 0 0 1-.8L20 8H6" />
+                        <circle
+                          cx="9"
+                          cy="19.5"
+                          r="1.3"
+                        />
+                        <circle
+                          cx="17"
+                          cy="19.5"
+                          r="1.3"
+                        />
+                      </svg>
+                    </div>
+                    <div class="nm">
+                      <b>Weekly groceries at Lidl</b><span>February Budget</span>
+                    </div>
+                    <div class="amt">€67,50</div>
+                  </div>
+                </div>
+                <div class="fade-bottom"></div>
+                <div class="tabbar">
+                  <div class="tabs">
+                    <span
+                      ><svg viewBox="0 0 24 24">
+                        <path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z" /></svg
+                      >Home</span
+                    >
+                    <span
+                      ><svg viewBox="0 0 24 24">
+                        <rect
+                          x="3.5"
+                          y="5"
+                          width="17"
+                          height="15.5"
+                          rx="2.5"
+                        />
+                        <path d="M3.5 10h17M8 3v4M16 3v4" /></svg
+                      >Plans</span
+                    >
+                    <span class="on"
+                      ><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4" /></svg
+                      >Activity</span
+                    >
+                  </div>
+                  <div class="addbtn">
+                    <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <figcaption>
+              Proposed Activity. The second row shows the swipe state. The month strip values are
+              examples.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- OTHER SCREENS -->
+      <section class="prose">
+        <h2>Templates, Settings, Notifications</h2>
+        <h3>Templates</h3>
+        <ul>
+          <li>
+            Every card shows the caption "Total amount". Remove it. The number explains itself.
+          </li>
+          <li>
+            Show the item count and the category colours as a small stacked bar. This shows what the
+            template contains before you open it.
+          </li>
+          <li>
+            Add a "Start plan" action on each card. Creating a plan is the main reason to open a
+            template.
+          </li>
+        </ul>
+        <h3>Settings</h3>
+        <ul>
+          <li>
+            Theme uses a dropdown for three values. Use a segmented control: Light, Dark, System.
+          </li>
+          <li>
+            The "Sign out" button sits under the tab bar at the end of the scroll. Add bottom
+            padding equal to the tab bar height plus <code>env(safe-area-inset-bottom)</code>.
+          </li>
+          <li>
+            An error toast "Unable to load AI connections" showed at the top in mock mode. Show this
+            error inside the AI connections card, not as a toast.
+          </li>
+          <li>Move Settings to the avatar on Home. Remove the gear from the global header.</li>
+        </ul>
+        <h3>Notifications</h3>
+        <ul>
+          <li>The bell badge says 12. The sheet says 6 unread. Check which number is correct.</li>
+          <li>
+            Each row has a red trash icon and a check icon. Six red icons make the list look like an
+            error state. Use swipe to delete and tap to mark as read. Keep "Mark all as read" in the
+            menu.
+          </li>
+          <li>Group by "New" and "Earlier" in sentence case.</li>
+        </ul>
+      </section>
+
+      <!-- VISUAL SYSTEM -->
+      <section class="prose">
+        <h2>Visual system</h2>
+
+        <h3>Colour</h3>
+        <p>
+          Keep teal as the brand. Use a deeper teal for text and for buttons with white labels. Add
+          a dark "pine" for the hero. Use one lightness for all category hues.
+        </p>
+      </section>
+      <div class="swatches">
+        <div class="sw">
+          <div style="background: #00757b"></div>
+          <p><b>Teal fill #00757B</b><span>White text 5.5:1. Now #00919A, 3.8:1</span></p>
+        </div>
+        <div class="sw">
+          <div style="background: #007a80"></div>
+          <p><b>Teal text #007A80</b><span>On white 5.1:1</span></p>
+        </div>
+        <div class="sw">
+          <div style="background: #0f2e2f"></div>
+          <p><b>Pine #0F2E2F</b><span>Hero surface, replaces the gradient</span></p>
+        </div>
+        <div class="sw">
+          <div style="background: #102a2b"></div>
+          <p><b>Ink #102A2B</b><span>Text and amounts</span></p>
+        </div>
+        <div class="sw">
+          <div style="background: #c8323f"></div>
+          <p><b>Over #C8323F</b><span>Only for over budget</span></p>
+        </div>
+        <div class="sw">
+          <div style="background: #f0b25c"></div>
+          <p><b>Pace amber #F0B25C</b><span>"Ahead of plan" on dark</span></p>
+        </div>
+      </div>
+      <div class="swatches">
+        <div class="sw">
+          <div style="background: var(--c-leaf)"></div>
+          <p><b>Leaf</b><span>Food</span></p>
+        </div>
+        <div class="sw">
+          <div style="background: var(--c-sky)"></div>
+          <p><b>Sky</b><span>Transport</span></p>
+        </div>
+        <div class="sw">
+          <div style="background: var(--c-violet)"></div>
+          <p><b>Violet</b><span>Entertainment</span></p>
+        </div>
+        <div class="sw">
+          <div style="background: var(--c-rose)"></div>
+          <p><b>Rose</b><span>Shopping</span></p>
+        </div>
+        <div class="sw">
+          <div style="background: var(--c-amber)"></div>
+          <p><b>Amber</b><span>Bills (was red)</span></p>
+        </div>
+      </div>
+      <section class="prose">
+        <p>
+          Category colours come from <code>categories.color</code> in the database, as Material hex
+          values. You do not need a migration. Normalise them in CSS with relative colour syntax.
+          This keeps the stored hue and sets one lightness and chroma:
+        </p>
+        <pre><code>.category-tile {
+  --c: var(--category-color);           /* bound from category.color */
+  color: oklch(from var(--c) 0.55 0.14 h);
+  background: oklch(from var(--c) 0.94 0.03 h);
+}
+.body--dark .category-tile {
+  color: oklch(from var(--c) 0.78 0.12 h);
+  background: oklch(from var(--c) 0.30 0.05 h);
+}</code></pre>
+        <p class="small muted">
+          Relative colour syntax works in Safari 18+, Chrome 119+ and Firefox 128+, to my knowledge.
+          Check your browser support target first. Red categories still need a manual hue change,
+          because red is reserved for "over".
+        </p>
+
+        <h3>Type</h3>
+        <p>
+          Body text uses the system stack at 14 px. Keep the system stack for body text, because it
+          feels native. Add one display face for money figures and page titles. I suggest
+          <a href="https://fonts.google.com/specimen/Geist">Geist</a>: it has tabular figures and a
+          clear comma, and this page uses it. One weight range in WOFF2, subset to Latin, is about
+          30–40 KB. The service worker can cache it.
+        </p>
+      </section>
+      <div class="typespec">
+        <div class="n1">€708,10</div>
+        <div class="n2">February Budget</div>
+        <div class="n3">
+          Hero 44/1.05 weight 650, tracking −0.035em. Titles 22/1.2 weight 650. Amounts in lists 14
+          weight 600, tabular.
+        </div>
+      </div>
+      <section class="prose">
+        <ul>
+          <li>
+            Raise the base body size from 14 px to 15 px on mobile. iOS body text is 17 pt. 14 px is
+            small for a list of amounts.
+          </li>
+          <li>
+            Remove all capital labels: "LEFT TO SPEND", "TODAY", "OR ENTER MANUALLY", "UNREAD".
+          </li>
+          <li>
+            Show cents smaller than the units in the hero (<code>€708<small>,10</small></code
+            >). Most references do this.
+          </li>
+        </ul>
+
+        <h3>Shape and surface</h3>
+        <ul>
+          <li>
+            Use radius for hierarchy: 24 px for the hero and sheets, 20 px for cards, 11 px for icon
+            tiles, full round for chips and buttons. Now buttons and inputs are 6 px and cards are
+            12 px, which reads as a 2023 web form.
+          </li>
+          <li>
+            Use glass only on the control layer: tab bar, action bar, sheet header. Apple's guidance
+            is the same: glass is for controls that float above content, not for content.<sup
+              class="ref"
+              ><a href="#r-apple">4</a></sup
+            >
+          </li>
+          <li>
+            Replace the hero gradient with flat pine. Keep one soft glow at most. Flat dark surfaces
+            read more modern than teal-to-navy gradients in the 2026 references.
+          </li>
+          <li>
+            Respect <code>prefers-reduced-transparency</code>: use the existing
+            <code>--glass-bg-fallback</code> token.
+          </li>
+        </ul>
+
+        <h3>Motion</h3>
+        <ul>
+          <li>
+            Keep one moment: the hero count-up (<code>useCountUp</code>) on first load. Remove the
+            stagger on other cards. During the walkthrough, the stagger left cards half-faded in
+            some screenshots.
+          </li>
+          <li>
+            Animate the pace bar fill once. Animate a new row into the list after "Add expense", so
+            the user sees where it went.
+          </li>
+          <li>
+            Minimise the tab bar on scroll down and restore it on scroll up. iOS 26 does this.<sup
+              class="ref"
+              ><a href="#r-learnui">5</a></sup
+            >
+          </li>
+        </ul>
+
+        <h3>Expressive emphasis, used once per screen</h3>
+        <p>
+          Google's Material 3 Expressive research ran 46 studies with more than 18,000 participants.
+          Users found key elements up to 4 times faster when the key action had a bigger size, a
+          stronger colour and a distinct shape. The age gap in visual search also went away.<sup
+            class="ref"
+            ><a href="#r-m3">6</a></sup
+          >
+          For Shephard, the key element is the money figure on Home and the "Add expense" action
+          everywhere. Give those two the emphasis. Keep the rest quiet.
+        </p>
+
+        <h3>Reach and target size</h3>
+        <ul>
+          <li>
+            Hoober's field study saw 49% one-handed use. Users also prefer to read and tap near the
+            middle of the screen.<sup class="ref"><a href="#r-hoober">7</a></sup> Keep the hero and
+            the primary list in the middle. Put the primary action at the bottom. Put rare actions
+            (Export, Delete) in menus.
+          </li>
+          <li>
+            Kebab menus and the inline check and trash icons are about 24 px. This meets WCAG 2.2
+            2.5.8 (24 px minimum) but not Apple's 44 pt.<sup class="ref"
+              ><a href="#r-wcag">8</a></sup
+            >
+            Make tap targets 44 px.
+          </li>
+        </ul>
+      </section>
+
+      <!-- ISSUES -->
+      <section class="prose">
+        <h2>Defects found during the walkthrough</h2>
+        <ul class="issues">
+          <li>
+            <b>Zero amounts use the wrong decimal mark</b>"€0.00" shows next to "€25,98".
+            <span class="where"
+              ><code>src/utils/currency.ts:25</code> returns <code>`${symbol}0.00`</code> before the
+              locale format.</span
+            >
+          </li>
+          <li>
+            <b>Teal text fails AA contrast</b>#00919A on white is 3.8:1. Links like "View all" and
+            "See all categories" are 14–15 px, so they need 4.5:1. White text on the teal "Register
+            Expense" button has the same ratio.
+            <span class="where"><code>src/css/theme.scss</code>, <code>--primary</code></span>
+          </li>
+          <li>
+            <b>Dark mode amounts fail AA contrast</b>rgb(117,117,117) on the #1C1C1C card is 3.7:1.
+            <span class="where"><code>.text-amount</code> in <code>src/css/app.scss</code></span>
+          </li>
+          <li>
+            <b>Over-budget amount is hidden</b>104% shows "€0.00 left". The user cannot see how much
+            is over. <span class="where">Plan detail category rows</span>
+          </li>
+          <li>
+            <b>Hero and plan totals disagree in mock mode</b>Hero: 11% of €2.500,00. Plan: 27% of
+            €975,00. <code>BudgetOverviewCard</code> falls back to <code>plan.total</code> when
+            <code>overview.totalBudget</code> is missing. This may be only a mock data issue.
+            <span class="where"
+              ><code>src/components/dashboard/BudgetOverviewCard.vue:138</code></span
+            >
+          </li>
+          <li>
+            <b>Badge count and unread count differ</b>Bell badge 12, sheet "Unread 6".
+            <span class="where">Notifications</span>
+          </li>
+          <li>
+            <b>Segmented control artefact</b>After a switch to "Quick Select", a white strip from
+            the old indicator stayed visible next to the new one. This may be a mid-animation frame.
+            <span class="where">Add expense sheet tabs</span>
+          </li>
+        </ul>
+      </section>
+
+      <!-- REFERENCES -->
+      <section class="refs prose">
+        <h2>References</h2>
+        <h3>Design shots I looked at</h3>
+        <p class="small muted">
+          From a Dribbble search for "budget app mobile", last 12 months. I opened the preview
+          images of these six.
+        </p>
+      </section>
+      <div class="shots">
+        <a
+          id="r-fahmi"
+          href="https://dribbble.com/shots/27371403-Finance-Budget-Tracker-App-Modern-Mobile-UI"
+          ><b>F: Fahmi Nugraha</b
+          ><span
+            >Daily limit chip, overspend marker on the bar, large amount stepper in the edit sheet,
+            action chips row.</span
+          ></a
+        >
+        <a
+          id="r-cansaas"
+          href="https://dribbble.com/shots/27030719-Budget-Tracker-Mobile-App"
+          ><b>S: Cansaas</b
+          ><span
+            >Amount-first entry, stacked category bar with legend, day-grouped history.</span
+          ></a
+        >
+        <a
+          id="r-kippo"
+          href="https://dribbble.com/shots/27645993-Kippo-Budget-Finance-Tracker-Mobile-App"
+          ><b>K: Kippo by Semusim</b
+          ><span
+            >"Safe to spend" hero with a per-day amount, add sheet with a large amount.</span
+          ></a
+        >
+        <a
+          id="r-keitoto"
+          href="https://dribbble.com/shots/27066206-Fintech-Mobile-App-Transaction-Budget-Tracking-Notification"
+          ><b>T: Keitoto</b
+          ><span>Segmented radial gauge in category colours, compact notification cards.</span></a
+        >
+        <a
+          id="r-morph"
+          href="https://dribbble.com/shots/27138661-Fintech-Budget-Tracking-Mobile-App-UI-Design"
+          ><b>M: Morph Studio</b
+          ><span>Filter chips with "All" first, tinted icon tiles, ink amounts.</span></a
+        >
+        <a
+          href="https://dribbble.com/shots/27608935-Milo-AI-Financial-Assistant-Mobile-App-UI-Design"
+          ><b>Milo by Crevio</b
+          ><span
+            >AI insight as plain sentences ("You spent 18% less this week"). A later idea for
+            Jev.</span
+          ></a
+        >
+      </div>
+      <section class="refs prose">
+        <h3>Research, guidance and articles</h3>
+        <ol>
+          <li id="r-kaye">
+            <a href="https://dl.acm.org/doi/10.1145/2556288.2556975"
+              >Kaye, McCuistion, Gulotta, Shamma. "Money talks: tracking personal finances." CHI
+              2014</a
+            ><span>Emotion, tools, and planning for an unknown future in personal finance.</span>
+          </li>
+          <li id="r-nng-sheet">
+            <a href="https://www.nngroup.com/articles/bottom-sheet/"
+              >NN/g, "Bottom Sheets: Definition and UX Guidelines"</a
+            ><span
+              >Short tasks only, a visible close button, back gesture closes, do not stack
+              sheets.</span
+            >
+          </li>
+          <li id="r-nng-dismiss">
+            <a href="https://www.nngroup.com/articles/accidental-overlay-dismissal/"
+              >NN/g, "Accidental Dismissal of Overlays"</a
+            ><span>Swipe-down and tap-outside can lose user input.</span>
+          </li>
+          <li id="r-apple">
+            <a href="https://developer.apple.com/videos/play/wwdc2025/356/"
+              >Apple, "Get to know the new design system" (WWDC25)</a
+            ><span>Liquid Glass as a separate control layer above content.</span>
+          </li>
+          <li id="r-learnui">
+            <a href="https://www.learnui.design/blog/ios-design-guidelines-templates.html"
+              >LearnUI, iOS 26 design guidelines</a
+            ><span>Floating pill tab bar, minimise on scroll, separate search button.</span>
+          </li>
+          <li id="r-m3">
+            <a href="https://design.google/library/expressive-material-design-google-research"
+              >Google Design, "Expressive Design: Google's UX Research"</a
+            ><span>46 studies, 18,000+ participants, key elements found up to 4× faster.</span>
+          </li>
+          <li id="r-hoober">
+            <a
+              href="https://www.uxmatters.com/mt/archives/2017/03/design-for-fingers-touch-and-people-part-1.php"
+              >Steven Hoober, "Design for Fingers, Touch, and People", UXmatters</a
+            ><span>Grip study of 1,300+ users, preference for the screen centre.</span>
+          </li>
+          <li id="r-wcag">
+            <a href="https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html"
+              >W3C, WCAG 2.2 Understanding 2.5.8 Target Size (Minimum)</a
+            ><span>24 × 24 CSS px minimum.</span>
+          </li>
+          <li id="r-copilot">
+            <a href="https://apps.apple.com/us/app/copilot-track-budget-money/id1447330651"
+              >Copilot Money (App Store)</a
+            ><span
+              >Apple Design Award finalist. Treats known recurring bills as already spent, so
+              "available" is real.</span
+            >
+          </li>
+          <li>
+            <a href="https://dl.acm.org/doi/10.1145/3290605.3300620"
+              >Lewis, Perry. "Follow the Money: Managing Personal Finance Digitally." CHI 2019</a
+            ><span
+              >Trust and transparency in digital tracking. Supports clear, exact numbers over vague
+              status.</span
+            >
+          </li>
+        </ol>
+      </section>
+
+      <section class="prose">
+        <h2>What I did not check</h2>
+        <ul>
+          <li>Real devices, iOS Safari standalone mode, and the safe-area insets.</li>
+          <li>Real data. All numbers come from the MSW mock seed.</li>
+          <li>Desktop layouts, Auth, OAuth consent, and the 404 page.</li>
+          <li>
+            Behance and Figma Community in depth. I used only Dribbble shot previews for visual
+            references.
+          </li>
+          <li>The exact Copilot Money pace UI. I know it from reviews, not from the app.</li>
+        </ul>
+      </section>
+
+      <footer>Prepared for the Shephard repo, <code>plans/ui-refresh-2026.html</code>.</footer>
+    </div>
+  </body>
+</html>

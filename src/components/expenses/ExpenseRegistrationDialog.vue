@@ -1,10 +1,11 @@
 <template>
   <AppDialogShell
     :model-value="modelValue"
-    title="Register New Expense"
+    title="Add expense"
     body-class="q-pa-none"
     :body-scrollable="false"
     persistent-desktop
+    :discard-confirm="hasUnsavedInput ? 'Discard expense?' : undefined"
     :footer-separator="false"
     :primary-action-label="getSubmitButtonLabel"
     :primary-action-icon="submitButtonIcon"
@@ -14,14 +15,6 @@
     @hide="handleDialogHide"
     @primary="void handleSubmit()"
   >
-    <template #header-prefix>
-      <q-icon
-        name="eva-plus-circle-outline"
-        size="32px"
-        class="q-mr-sm"
-      />
-    </template>
-
     <template #mobile-header-extra>
       <q-btn
         v-if="showBackButton"
@@ -37,7 +30,7 @@
     <q-form
       ref="formRef"
       data-pwa-update-blocker="form"
-      class="column no-wrap flex-fill-min-h-0"
+      class="expense-dialog__form column no-wrap flex-fill-min-h-0"
       @submit="handleSubmit"
     >
       <!-- Fixed Tabs -->
@@ -53,12 +46,12 @@
       >
         <q-tab
           name="custom-entry"
-          label="Custom Entry"
+          label="New"
           :ripple="false"
         />
         <q-tab
           name="quick-select"
-          label="Quick Select"
+          label="From plan"
           :ripple="false"
         />
       </q-tabs>
@@ -151,7 +144,6 @@
       />
       <q-btn
         :label="getSubmitButtonLabel"
-        :icon="submitButtonIcon"
         color="primary"
         unelevated
         dense
@@ -170,7 +162,7 @@ import AppDialogShell from 'src/components/shared/AppDialogShell.vue'
 import QuickSelectPanel from './QuickSelectPanel.vue'
 import CustomEntryPanel from './CustomEntryPanel.vue'
 import { useExpenseRegistration } from 'src/composables/useExpenseRegistration'
-import type { QForm } from 'quasar'
+import { Notify, type QForm } from 'quasar'
 
 const props = defineProps<{
   modelValue: boolean
@@ -234,6 +226,13 @@ const submitButtonIcon = computed(() => {
   return 'eva-checkmark-circle-2-outline'
 })
 
+// Ask before a swipe or tap outside throws away what the user typed
+const hasUnsavedInput = computed(() =>
+  currentMode.value === 'quick-select'
+    ? selectedPlanItems.value.length > 0
+    : !!form.value.name || !!form.value.amount,
+)
+
 function closeDialog() {
   emit('update:modelValue', false)
 }
@@ -269,6 +268,15 @@ const hasDefaultCategoryOption = computed(() =>
     : false,
 )
 
+function notifyAdded(message: string) {
+  Notify.create({
+    type: 'positive',
+    message,
+    icon: 'eva-checkmark-circle-2-outline',
+    timeout: 2000,
+  })
+}
+
 async function handleSubmit() {
   if (!formRef.value) return
 
@@ -281,15 +289,18 @@ async function handleSubmit() {
 
   try {
     if (currentMode.value === 'quick-select') {
+      const count = selectedPlanItems.value.length
       await handleQuickSelectSubmit(() => {
         emit('expense-created')
         closeDialog()
+        notifyAdded(count === 1 ? 'Expense added' : 'Expenses added')
       })
     } else {
       const isValid = await formRef.value.validate()
       await handleCustomEntrySubmit(isValid, () => {
         emit('expense-created')
         closeDialog()
+        notifyAdded('Expense added')
       })
     }
   } finally {
@@ -316,3 +327,13 @@ watch(
   { immediate: true },
 )
 </script>
+
+<style lang="scss" scoped>
+// Desktop: one fixed height for both tabs, so switching New / From plan does not resize the
+// dialog. The tab panels scroll inside it. Mobile sheets already have a fixed height.
+@media (min-width: $breakpoint-md-min) {
+  .expense-dialog__form {
+    height: min(620px, calc(100dvh - 200px));
+  }
+}
+</style>

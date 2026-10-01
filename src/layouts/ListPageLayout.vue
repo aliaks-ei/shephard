@@ -17,7 +17,10 @@
           >
             {{ title }}
           </h1>
-          <p class="list-page-description text-body2 text-muted q-mb-none">
+          <p
+            v-if="description"
+            class="list-page-description text-body2 text-muted q-mb-none"
+          >
             {{ description }}
           </p>
         </div>
@@ -25,15 +28,14 @@
           v-if="showCreateButton"
           class="col-auto"
         >
-          <!-- Mobile: compact round action next to the large title; desktop keeps the labelled button -->
+          <!-- Mobile: text action, so it never looks like the tab bar add-expense button -->
           <q-btn
             v-if="$q.screen.lt.md"
             color="primary"
-            icon="eva-plus-outline"
-            round
-            unelevated
-            :aria-label="createButtonLabel"
-            class="list-page-create-fab pressable"
+            :label="createButtonLabel"
+            flat
+            no-caps
+            class="list-page-create-action pressable"
             :disable="createButtonDisabled"
             @click="emit('create')"
           />
@@ -70,7 +72,7 @@ const emit = defineEmits<{
 withDefaults(
   defineProps<{
     title: string
-    description: string
+    description?: string
     createButtonLabel?: string
     showCreateButton?: boolean
     createButtonDisabled?: boolean
@@ -83,9 +85,9 @@ withDefaults(
 </script>
 
 <style lang="scss" scoped>
-.list-page-create-fab {
-  min-width: 44px;
+.list-page-create-action {
   min-height: 44px;
+  font-weight: 600;
 }
 
 .list-page-description {

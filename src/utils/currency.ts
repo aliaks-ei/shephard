@@ -22,12 +22,10 @@ export function formatCurrency(
   amount: number | null | undefined,
   currencyCode: CurrencyCode,
 ): string {
-  if (!amount) return `${getCurrencySymbol(currencyCode)}0.00`
-
   const locale = CURRENCY_LOCALES[currencyCode]
   const symbol = getCurrencySymbol(currencyCode)
 
-  const formattedAmount = amount.toLocaleString(locale, {
+  const formattedAmount = (amount || 0).toLocaleString(locale, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })

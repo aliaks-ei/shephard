@@ -31,6 +31,17 @@ vi.mock('src/api', async () => {
   }
 })
 
+vi.mock('src/queries/expenses', () => ({
+  usePlanOverviewSnapshotsQuery: vi.fn(() => ({
+    snapshots: ref([]),
+    isSuccess: ref(true),
+  })),
+}))
+
+vi.mock('src/queries/sharing', () => ({
+  usePlanMembersQueries: vi.fn(() => ({ membersByPlanId: ref({}) })),
+}))
+
 vi.mock('src/queries/categories', () => ({
   useCategoriesQuery: vi.fn(() => ({
     categories: ref([
@@ -151,7 +162,7 @@ const EmptyStateStub = {
         <h3>{{ hasSearchQuery ? searchTitle : emptyTitle }}</h3>
         <p>{{ hasSearchQuery ? searchDescription : emptyDescription }}</p>
         <button v-if="hasSearchQuery" @click="$emit('clear-search')" class="clear-search-btn">
-          Clear Search
+          Clear search
         </button>
         <button v-else @click="$emit('create')" class="create-btn">
           {{ createButtonLabel }}
@@ -254,9 +265,9 @@ function createWrapper(
     hasItems: computed(() => hasPlans),
     sortOptions: [
       { label: 'Name', value: 'name' },
-      { label: 'Total Amount', value: 'total' },
-      { label: 'Start Date', value: 'start_date' },
-      { label: 'Created Date', value: 'created_at' },
+      { label: 'Total amount', value: 'total' },
+      { label: 'Start date', value: 'start_date' },
+      { label: 'Created date', value: 'created_at' },
     ],
     emptyStateConfig: computed(() => ({
       searchIcon: 'eva-search-outline',
@@ -379,20 +390,20 @@ it('should render page title and description', () => {
   const { wrapper } = createWrapper()
 
   expect(wrapper.text()).toContain('Plans')
-  expect(wrapper.text()).toContain('Manage your financial plans and track your progress')
+  expect(wrapper.text()).not.toContain('Manage your financial plans')
 })
 
 it('should render create plan button', () => {
   const { wrapper } = createWrapper()
 
-  const createButton = wrapper.find('[data-label="Create Plan"]')
+  const createButton = wrapper.find('[data-label="New plan"]')
   expect(createButton.exists()).toBe(true)
 })
 
 it('should call goToNew when create button is clicked', async () => {
   const { wrapper, mockUsePlans } = createWrapper()
 
-  const createButton = wrapper.find('[data-label="Create Plan"]')
+  const createButton = wrapper.find('[data-label="New plan"]')
   await createButton.trigger('click')
 
   expect(mockUsePlans.goToNew).toHaveBeenCalledOnce()
@@ -403,7 +414,7 @@ it('should render search and sort component', () => {
 
   const searchAndSort = wrapper.findComponent(SearchAndSortStub)
   expect(searchAndSort.exists()).toBe(true)
-  expect(searchAndSort.props('searchPlaceholder')).toBe('Search plans...')
+  expect(searchAndSort.props('searchPlaceholder')).toBe('Search plans')
 })
 
 it('should show loading skeleton when plans are loading', () => {
@@ -429,7 +440,7 @@ it('should show owned plans group when owned plans exist', () => {
     hasPlans: true,
   })
 
-  const ownedGroup = wrapper.find('[data-title="My Plans"]')
+  const ownedGroup = wrapper.find('.plans-group-mock')
   expect(ownedGroup.exists()).toBe(true)
   expect(ownedGroup.attributes('data-plans-count')).toBe('2')
 })
@@ -440,7 +451,7 @@ it('should show shared plans group when shared plans exist', () => {
     hasPlans: true,
   })
 
-  const group = wrapper.find('[data-title="My Plans"]')
+  const group = wrapper.find('.plans-group-mock')
   expect(group.exists()).toBe(true)
   expect(group.attributes('data-plans-count')).toBe('1')
 })
@@ -452,7 +463,7 @@ it('should show both plan groups when both exist', () => {
     hasPlans: true,
   })
 
-  const group = wrapper.find('[data-title="My Plans"]')
+  const group = wrapper.find('.plans-group-mock')
   expect(group.exists()).toBe(true)
   expect(group.attributes('data-plans-count')).toBe('3')
 })
@@ -608,7 +619,7 @@ it('should handle empty plan arrays gracefully', () => {
     hasPlans: false,
   })
 
-  expect(wrapper.find('[data-title="My Plans"]').exists()).toBe(false)
+  expect(wrapper.find('.plans-group-mock').exists()).toBe(false)
   expect(wrapper.find('[data-title="Shared with Me"]').exists()).toBe(false)
 
   const emptyState = wrapper.findComponent(EmptyStateStub)
@@ -622,7 +633,7 @@ it('should show only owned plans group when no shared plans', () => {
     hasPlans: true,
   })
 
-  expect(wrapper.find('[data-title="My Plans"]').exists()).toBe(true)
+  expect(wrapper.find('.plans-group-mock').exists()).toBe(true)
   expect(wrapper.find('[data-title="Shared with Me"]').exists()).toBe(false)
 })
 
@@ -633,7 +644,7 @@ it('should show only shared plans group when no owned plans', () => {
     hasPlans: true,
   })
 
-  expect(wrapper.find('[data-title="My Plans"]').exists()).toBe(true)
+  expect(wrapper.find('.plans-group-mock').exists()).toBe(true)
 })
 
 it('should pass correct sort options to search and sort component', () => {
@@ -644,9 +655,9 @@ it('should pass correct sort options to search and sort component', () => {
 
   expect(sortOptions).toHaveLength(4)
   expect(sortOptions[0]).toEqual({ label: 'Name', value: 'name' })
-  expect(sortOptions[1]).toEqual({ label: 'Total Amount', value: 'total' })
-  expect(sortOptions[2]).toEqual({ label: 'Start Date', value: 'start_date' })
-  expect(sortOptions[3]).toEqual({ label: 'Created Date', value: 'created_at' })
+  expect(sortOptions[1]).toEqual({ label: 'Total amount', value: 'total' })
+  expect(sortOptions[2]).toEqual({ label: 'Start date', value: 'start_date' })
+  expect(sortOptions[3]).toEqual({ label: 'Created date', value: 'created_at' })
 })
 
 it('should create new plan when create button clicked from empty state', async () => {
@@ -676,7 +687,7 @@ it('should handle plan operations for both owned and shared plans', async () => 
     hasPlans: true,
   })
 
-  const group = wrapper.find('[data-title="My Plans"]')
+  const group = wrapper.find('.plans-group-mock')
   expect(group.exists()).toBe(true)
 
   const editButtons = wrapper.findAll('.edit-btn')

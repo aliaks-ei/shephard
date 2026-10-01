@@ -207,15 +207,21 @@ describe('TemplateCard', () => {
     expect(vi.mocked(currencyUtils.formatCurrency)).not.toHaveBeenCalled()
   })
 
-  it('renders the duration in an info status pill', () => {
+  it('shows the duration and item count instead of a Total amount caption', () => {
     const wrapper = renderTemplateCard({
       template: mockTemplate,
+      composition: { itemCount: 3, segments: [{ color: '#22c55e', share: 100 }] },
     })
 
-    const pill = wrapper.find('.status-pill')
-    expect(pill.exists()).toBe(true)
-    expect(pill.text()).toContain('1 hour')
-    expect(pill.classes()).toContain('status-pill--info')
+    expect(wrapper.text()).toContain('1 hour, 3 items')
+    expect(wrapper.text()).not.toContain('Total amount')
+    expect(wrapper.findAll('.template-card__segment')).toHaveLength(1)
+  })
+
+  it('has no Start plan action', () => {
+    const wrapper = renderTemplateCard({ template: mockTemplate })
+
+    expect(wrapper.text()).not.toContain('Start plan')
   })
 
   it('renders a pressable card with the actions button when editable', () => {

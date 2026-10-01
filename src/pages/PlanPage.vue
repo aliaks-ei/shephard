@@ -154,22 +154,22 @@
 
       <DeleteDialog
         v-model="showCancelDialog"
-        title="Cancel Plan"
+        title="Cancel plan"
         warning-message="This will mark the plan as cancelled and stop any active tracking."
         :confirmation-message="`Are you sure you want to cancel &quot;${form.name}&quot;?`"
-        cancel-label="Keep Active"
-        confirm-label="Cancel Plan"
+        cancel-label="Keep active"
+        confirm-label="Cancel plan"
         @confirm="cancelPlan"
       />
 
       <DeleteDialog
         v-if="showDeleteDialog"
         v-model="showDeleteDialog"
-        title="Delete Plan"
+        title="Delete plan"
         warning-message="This will permanently delete your plan and all its data. This action cannot be undone."
         :confirmation-message="`Are you sure you want to delete this plan?`"
-        cancel-label="Keep Plan"
-        confirm-label="Delete Plan"
+        cancel-label="Keep plan"
+        confirm-label="Delete plan"
         :is-deleting="deletePlanMutation.isPending.value"
         @confirm="deletePlan"
       />

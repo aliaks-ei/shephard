@@ -599,7 +599,7 @@ describe('PlanPage', () => {
   it('should not show template selection for existing plan', () => {
     const { wrapper } = createWrapper({ isNewPlan: false })
 
-    expect(wrapper.text()).not.toContain('Select Template')
+    expect(wrapper.text()).not.toContain('Select template')
   })
 
   it('should show read-only banner when in read-only mode', () => {
@@ -706,10 +706,10 @@ describe('PlanPage', () => {
   })
 
   it('should show correct page title for new plan', () => {
-    mockUseDetailPageState.pageTitle.value = 'Create Plan'
+    mockUseDetailPageState.pageTitle.value = 'Create plan'
     const { wrapper } = createWrapper({ isNewPlan: true })
 
-    expect(wrapper.text()).toContain('Create Plan')
+    expect(wrapper.text()).toContain('Create plan')
   })
 
   it('should show correct page title for edit plan', () => {

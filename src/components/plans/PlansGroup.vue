@@ -8,6 +8,8 @@
     <template #item-card="{ item }">
       <PlanCard
         :plan="item"
+        :spent="spentByPlanId?.[item.id] ?? null"
+        :member-initials="memberInitialsByPlanId?.[item.id] ?? []"
         @edit="emit('edit', $event)"
         @export="emit('export', $event)"
         @delete="emit('delete', $event)"
@@ -34,7 +36,9 @@ const emit = defineEmits<{
 withDefaults(
   defineProps<{
     plans: PlanWithPermission[]
-    title: string
+    title?: string
+    spentByPlanId?: Record<string, number>
+    memberInitialsByPlanId?: Record<string, string[]>
     chipColor?: string
   }>(),
   {

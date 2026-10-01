@@ -5,161 +5,79 @@
     expand
     :offset="[0, 0]"
   >
-    <div class="full-width q-px-sm safe-area-bottom-toolbar--glass">
-      <div class="q-px-xs q-mb-none floating-bar liquid-glass-surface">
-        <div class="row q-gutter-xs items-center">
-          <div class="col">
-            <q-btn
-              v-if="slot1Action"
-              :icon="slot1Action.icon"
-              :label="slot1Action.label"
-              :loading="slot1Action.loading"
-              :disabled="slot1Action.loading || slot1Action.disabled"
-              size="sm"
-              flat
-              stack
-              dense
-              no-caps
-              :class="getMobileActionButtonClasses(slot1Action)"
-              @click="void handleActionClick(slot1Action)"
-            />
-            <div
-              v-else
-              class="mobile-slot-placeholder"
-            />
-          </div>
+    <!-- One wide primary action, then round glass buttons for the rest -->
+    <div class="detail-action-bar full-width q-px-sm safe-area-bottom-toolbar--glass">
+      <q-btn
+        :icon="primaryAction.icon"
+        :label="primaryAction.label"
+        :loading="primaryAction.loading"
+        :disable="primaryAction.loading || primaryAction.disabled || isPrimaryOffline"
+        no-caps
+        unelevated
+        class="detail-action-bar__primary glass-fab-btn liquid-glass-animated"
+        @click="void handlePrimaryClick()"
+      />
 
-          <div class="col">
-            <q-btn
-              v-if="slot2Action"
-              :icon="slot2Action.icon"
-              :label="slot2Action.label"
-              :loading="slot2Action.loading"
-              :disabled="slot2Action.loading || slot2Action.disabled"
-              size="sm"
-              flat
-              stack
-              dense
-              no-caps
-              :class="getMobileActionButtonClasses(slot2Action)"
-              @click="void handleActionClick(slot2Action)"
-            />
-            <div
-              v-else
-              class="mobile-slot-placeholder"
-            />
-          </div>
+      <q-btn
+        v-for="action in directActions"
+        :key="action.key"
+        :icon="action.icon"
+        :loading="action.loading"
+        :disable="action.loading || action.disabled"
+        round
+        flat
+        :aria-label="action.label"
+        class="detail-action-bar__round liquid-glass-surface liquid-glass-animated"
+        @click="void handleActionClick(action)"
+      />
 
-          <div class="col column items-center justify-center">
-            <q-btn
-              icon="eva-plus-outline"
-              round
-              size="md"
-              class="mobile-action-add-btn glass-fab-btn liquid-glass-animated"
-              :loading="addExpenseAction?.loading"
-              :disable="addExpenseAction?.loading || addExpenseAction?.disabled || isOffline"
-              aria-label="Add expense"
-              @click="void handleAddExpenseClick()"
-            />
-          </div>
-
-          <div class="col">
-            <q-btn
-              v-if="slot4Action"
-              :icon="slot4Action.icon"
-              :label="slot4Action.label"
-              :loading="slot4Action.loading"
-              :disabled="slot4Action.loading || slot4Action.disabled"
-              size="sm"
-              flat
-              stack
-              dense
-              no-caps
-              :class="getMobileActionButtonClasses(slot4Action)"
-              @click="void handleActionClick(slot4Action)"
-            />
-            <div
-              v-else
-              class="mobile-slot-placeholder"
-            />
-          </div>
-
-          <div class="col">
-            <q-btn
-              v-if="hasMoreMenu"
-              icon="eva-more-horizontal-outline"
-              label="More"
-              size="sm"
-              flat
-              stack
-              dense
-              no-caps
-              class="full-width mobile-action-btn liquid-glass-animated"
-              aria-haspopup="menu"
-              :aria-expanded="String(showMoreMenu)"
-              aria-controls="detail-mobile-actions-menu"
+      <q-btn
+        v-if="moreMenuActions.length > 0"
+        icon="eva-more-horizontal-outline"
+        round
+        flat
+        aria-label="More actions"
+        class="detail-action-bar__round liquid-glass-surface liquid-glass-animated"
+        aria-haspopup="menu"
+        :aria-expanded="String(showMoreMenu)"
+        aria-controls="detail-mobile-actions-menu"
+      >
+        <q-menu
+          id="detail-mobile-actions-menu"
+          v-model="showMoreMenu"
+          auto-close
+          anchor="top right"
+          self="bottom right"
+          :offset="[0, 8]"
+        >
+          <q-list class="menu-list--wide">
+            <q-item
+              v-for="action in moreMenuActions"
+              :key="action.key"
+              clickable
+              :disable="action.disabled"
+              class="detail-action-bar__menu-item"
+              @click="void handleActionClick(action)"
             >
-              <q-menu
-                id="detail-mobile-actions-menu"
-                v-model="showMoreMenu"
-                auto-close
-                anchor="top right"
-                self="bottom right"
-                class="shadow-4"
+              <q-item-section
+                avatar
+                class="menu-avatar q-pr-sm"
               >
-                <q-list
-                  dense
-                  class="menu-list--wide"
-                >
-                  <q-item
-                    v-for="action in moreMenuActions"
-                    :key="action.key"
-                    clickable
-                    :disable="action.disabled"
-                    @click="void handleActionClick(action)"
-                  >
-                    <q-item-section
-                      avatar
-                      class="menu-avatar q-pr-sm"
-                    >
-                      <q-icon
-                        :name="action.icon"
-                        :color="isDestructiveAction(action) ? 'negative' : undefined"
-                        :class="{ 'text-muted': !isDestructiveAction(action) }"
-                        size="xs"
-                      />
-                    </q-item-section>
+                <q-icon
+                  :name="action.icon"
+                  :color="isDestructiveAction(action) ? 'negative' : undefined"
+                  :class="{ 'text-muted': !isDestructiveAction(action) }"
+                  size="xs"
+                />
+              </q-item-section>
 
-                    <q-item-section :class="isDestructiveAction(action) ? 'text-negative' : ''">
-                      {{ action.label }}
-                    </q-item-section>
-                  </q-item>
-                </q-list>
-              </q-menu>
-            </q-btn>
-
-            <q-btn
-              v-else-if="slot5Action"
-              :icon="slot5Action.icon"
-              :label="slot5Action.label"
-              :loading="slot5Action.loading"
-              :disabled="slot5Action.loading || slot5Action.disabled"
-              size="sm"
-              flat
-              stack
-              dense
-              no-caps
-              :class="getMobileActionButtonClasses(slot5Action)"
-              @click="void handleActionClick(slot5Action)"
-            />
-
-            <div
-              v-else
-              class="mobile-slot-placeholder"
-            />
-          </div>
-        </div>
-      </div>
+              <q-item-section :class="isDestructiveAction(action) ? 'text-negative' : ''">
+                {{ action.label }}
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-menu>
+      </q-btn>
     </div>
   </q-page-sticky>
 
@@ -179,10 +97,6 @@ import { usePreferencesStore } from 'src/stores/preferences'
 import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 import { useNetworkStatus } from 'src/composables/useNetworkStatus'
 
-interface ToolbarAction extends ActionBarAction {
-  fallback?: boolean
-}
-
 const emit = defineEmits<{
   (e: 'action-clicked', key: string): void
 }>()
@@ -201,278 +115,156 @@ const hasOpenedExpenseDialog = ref(false)
 const showExpenseDialog = ref(false)
 const showMoreMenu = ref(false)
 
-const visibleActions = computed(() => {
-  return props.actions.filter((action) => action.visible !== false)
-})
+// The primary action gets the wide button. Add expense wins, then Save.
+const PRIMARY_KEYS = ['add-expense', 'save']
+// One round shortcut next to the primary action; the rest go into More
+const DIRECT_KEYS = ['add-category', 'share']
+
+const visibleActions = computed(() => props.actions.filter((action) => action.visible !== false))
 
 const fallbackPlanId = computed(() => {
   if (route.name !== 'plan') return null
   return typeof route.params.id === 'string' ? route.params.id : null
 })
 
-const addExpenseAction = computed(() => {
-  return visibleActions.value.find((action) => action.key === 'add-expense')
-})
-
-const nonExpenseActions = computed(() => {
-  return visibleActions.value.filter((action) => action.key !== 'add-expense')
-})
-
-const contextListAction = computed<ToolbarAction | null>(() => {
-  if (route.path.startsWith('/plans/')) {
-    return {
-      key: 'plans-list',
-      icon: 'eva-calendar-outline',
-      label: 'List',
-      color: 'info',
-      fallback: true,
-      handler: async () => {
-        await router.push({ name: 'plans' })
-      },
-    }
-  }
-
-  if (route.path.startsWith('/templates/')) {
-    return {
-      key: 'templates-list',
-      icon: 'eva-file-text-outline',
-      label: 'List',
-      color: 'info',
-      fallback: true,
-      handler: async () => {
-        await router.push({ name: 'templates' })
-      },
-    }
-  }
-
-  return null
-})
-
-const settingsAction = computed<ToolbarAction>(() => ({
-  key: 'settings',
-  icon: 'eva-settings-2-outline',
-  label: 'Settings',
-  color: 'info',
-  fallback: true,
-  handler: async () => {
-    await router.push({ name: 'settings' })
+const fallbackAddExpense: ActionBarAction = {
+  key: 'add-expense',
+  icon: 'eva-plus-outline',
+  label: 'Add expense',
+  color: 'primary',
+  handler: () => {
+    hasOpenedExpenseDialog.value = true
+    showExpenseDialog.value = true
   },
-}))
+}
 
-const privacyAction = computed<ToolbarAction>(() => ({
-  key: 'privacy',
-  icon: preferencesStore.isPrivacyModeEnabled ? 'eva-eye-off-outline' : 'eva-eye-outline',
-  label: preferencesStore.isPrivacyModeEnabled ? 'Show' : 'Hide',
-  color: 'info',
-  fallback: true,
-  handler: async () => {
-    await preferencesStore.togglePrivacyMode()
-  },
-}))
-
-const contextSwitchAction = computed<ToolbarAction | null>(() => {
-  if (route.path.startsWith('/plans/')) {
-    return {
-      key: 'templates',
-      icon: 'eva-file-text-outline',
-      label: 'Templates',
-      color: 'info',
-      fallback: true,
-      handler: async () => {
-        await router.push({ name: 'templates' })
-      },
-    }
+const primaryAction = computed<ActionBarAction>(() => {
+  for (const key of PRIMARY_KEYS) {
+    const action = visibleActions.value.find((item) => item.key === key)
+    if (action) return action
   }
-
-  if (route.path.startsWith('/templates/')) {
-    return {
-      key: 'plans',
-      icon: 'eva-calendar-outline',
-      label: 'Plans',
-      color: 'info',
-      fallback: true,
-      handler: async () => {
-        await router.push({ name: 'plans' })
-      },
-    }
-  }
-
-  return null
+  return fallbackAddExpense
 })
 
-const utilityFallbackActions = computed(() => {
-  const actions: ToolbarAction[] = []
+const isPrimaryOffline = computed(
+  () => primaryAction.value.key === 'add-expense' && isOffline.value,
+)
 
-  if (contextListAction.value) {
-    actions.push(contextListAction.value)
-  }
+const secondaryActions = computed(() =>
+  visibleActions.value.filter((action) => action.key !== primaryAction.value.key),
+)
 
-  actions.push(settingsAction.value)
-  actions.push(privacyAction.value)
-
-  if (contextSwitchAction.value) {
-    actions.push(contextSwitchAction.value)
-  }
-
-  return actions
+const directActions = computed(() => {
+  const direct = DIRECT_KEYS.map((key) =>
+    secondaryActions.value.find((action) => action.key === key),
+  ).find(Boolean)
+  return direct ? [direct] : []
 })
 
 function isDestructiveAction(action: ActionBarAction): boolean {
   return action.key === 'cancel' || action.key === 'delete'
 }
 
-function isHighlightedAction(action: ToolbarAction): boolean {
-  return action.key === 'save'
-}
-
-const nonDestructiveActions = computed(() => {
-  return nonExpenseActions.value.filter((action) => !isDestructiveAction(action))
-})
-
-const destructiveActions = computed(() => {
-  return nonExpenseActions.value.filter((action) => isDestructiveAction(action))
-})
-
-const hasMoreMenu = computed(() => {
-  return destructiveActions.value.length > 0 || nonDestructiveActions.value.length > 4
-})
-
-const directActionCapacity = computed(() => {
-  return hasMoreMenu.value ? 3 : 4
-})
-
-const directActions = computed<ToolbarAction[]>(() => {
-  const selected = nonDestructiveActions.value.slice(0, directActionCapacity.value)
-  const selectedKeys = new Set(selected.map((action) => action.key))
-
-  for (const utilityAction of utilityFallbackActions.value) {
-    if (selected.length >= directActionCapacity.value) break
-
-    if (selectedKeys.has(utilityAction.key)) continue
-    if (nonExpenseActions.value.some((action) => action.key === utilityAction.key)) continue
-
-    selected.push(utilityAction)
-    selectedKeys.add(utilityAction.key)
+// Detail pages hide the global header on mobile, so its utilities live here
+const utilityActions = computed<ActionBarAction[]>(() => {
+  const list: ActionBarAction[] = []
+  if (route.path.startsWith('/plans/')) {
+    list.push({
+      key: 'plans-list',
+      icon: 'eva-calendar-outline',
+      label: 'All plans',
+      color: 'info',
+      handler: async () => {
+        await router.push({ name: 'plans' })
+      },
+    })
   }
-
-  return selected
-})
-
-const moreMenuActions = computed<ToolbarAction[]>(() => {
-  if (!hasMoreMenu.value) return []
-
-  const selectedKeys = new Set(directActions.value.map((action) => action.key))
-
-  const remainingActions = nonDestructiveActions.value.slice(directActionCapacity.value)
-  const utilityActions = utilityFallbackActions.value.filter(
-    (action) => !selectedKeys.has(action.key),
-  )
-  const combined = [...remainingActions, ...destructiveActions.value, ...utilityActions]
-
-  const deduped: ToolbarAction[] = []
-  const seenKeys = new Set<string>()
-
-  for (const action of combined) {
-    if (seenKeys.has(action.key)) continue
-    seenKeys.add(action.key)
-    deduped.push(action)
+  if (route.path.startsWith('/templates/')) {
+    list.push({
+      key: 'templates-list',
+      icon: 'eva-file-text-outline',
+      label: 'All templates',
+      color: 'info',
+      handler: async () => {
+        await router.push({ name: 'templates' })
+      },
+    })
   }
-
-  return deduped
+  list.push({
+    key: 'privacy',
+    icon: preferencesStore.isPrivacyModeEnabled ? 'eva-eye-outline' : 'eva-eye-off-outline',
+    label: preferencesStore.isPrivacyModeEnabled ? 'Show amounts' : 'Hide amounts',
+    color: 'info',
+    handler: async () => {
+      await preferencesStore.togglePrivacyMode()
+    },
+  })
+  return list
 })
 
-const slot1Action = computed(() => {
-  return directActions.value[0] ?? null
+const moreMenuActions = computed<ActionBarAction[]>(() => {
+  const directKeys = new Set(directActions.value.map((action) => action.key))
+  const rest = secondaryActions.value.filter((action) => !directKeys.has(action.key))
+  return [
+    ...rest.filter((action) => !isDestructiveAction(action)),
+    ...utilityActions.value,
+    ...rest.filter(isDestructiveAction),
+  ]
 })
 
-const slot2Action = computed(() => {
-  return directActions.value[1] ?? null
-})
+const hasVisibleToolbar = computed(() => props.visible !== false)
 
-const slot4Action = computed(() => {
-  return directActions.value[2] ?? null
-})
-
-const slot5Action = computed(() => {
-  if (hasMoreMenu.value) return null
-  return directActions.value[3] ?? null
-})
-
-const hasVisibleToolbar = computed(() => {
-  return props.visible !== false
-})
-
-async function handleActionClick(action: ToolbarAction): Promise<void> {
+async function handleActionClick(action: ActionBarAction): Promise<void> {
   if (action.disabled) return
 
   emit('action-clicked', action.key)
   await action.handler()
 }
 
-async function handleAddExpenseClick(): Promise<void> {
-  if (isOffline.value || addExpenseAction.value?.disabled) return
-
-  if (addExpenseAction.value) {
-    await handleActionClick(addExpenseAction.value)
-    return
-  }
-
-  hasOpenedExpenseDialog.value = true
-  showExpenseDialog.value = true
-}
-
-function getMobileActionButtonClasses(
-  action: ToolbarAction,
-): Array<string | Record<string, boolean>> {
-  return [
-    'full-width',
-    'mobile-action-btn',
-    'liquid-glass-animated',
-    {
-      'text-primary': isHighlightedAction(action),
-    },
-  ]
+async function handlePrimaryClick(): Promise<void> {
+  if (isPrimaryOffline.value) return
+  await handleActionClick(primaryAction.value)
 }
 </script>
 
 <style lang="scss" scoped>
-.floating-bar {
-  padding-top: 2px;
-  padding-bottom: 2px;
+.detail-action-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.mobile-action-btn {
-  border-radius: var(--radius-full);
+.detail-action-bar__primary {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 52px;
+  font-size: 16px;
+  font-weight: 600;
+
+  :deep(.q-icon) {
+    font-size: 20px;
+  }
+}
+
+.detail-action-bar__round {
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
   color: hsl(var(--foreground));
-  transition:
-    background-color 0.2s ease,
-    box-shadow 0.2s ease,
-    color 0.2s ease;
-  min-height: 44px;
-}
 
-.mobile-action-add-btn {
-  min-width: 44px;
-  min-height: 44px;
-}
-
-.mobile-slot-placeholder {
-  min-height: 44px;
-}
-
-.floating-bar :deep(.q-btn__content .block) {
-  white-space: nowrap;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .mobile-action-btn:hover {
-    background: hsl(var(--glass-active-bg));
+  // The glass top highlight reads as a separate cap on a small circle
+  &::after {
+    display: none;
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .mobile-action-btn {
-    transition: none;
-  }
+.detail-action-bar__menu-item {
+  min-height: 44px;
+}
+
+.detail-action-bar__primary:focus-visible,
+.detail-action-bar__round:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px hsl(var(--glass-focus-ring));
 }
 </style>

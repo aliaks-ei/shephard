@@ -6,10 +6,10 @@
         class="q-mr-sm"
         size="20px"
       />
-      <h2 class="text-h6 text-weight-medium q-my-none">Quick Actions</h2>
+      <h2 class="text-h6 text-weight-medium q-my-none">Quick actions</h2>
     </div>
 
-    <!-- Quick Actions Grid -->
+    <!-- Quick actions Grid -->
     <div class="row q-col-gutter-md">
       <div
         v-for="action in quickActions"
@@ -77,9 +77,9 @@ type QuickAction = {
 
 const quickActions = computed<QuickAction[]>(() => [
   {
-    label: 'Add Expense',
+    label: 'Add expense',
     icon: 'eva-plus-circle-outline',
-    color: 'positive',
+    color: 'primary',
     requiresExpensePlan: true,
     requiresOnline: true,
     action: () => {
@@ -89,14 +89,14 @@ const quickActions = computed<QuickAction[]>(() => [
     },
   },
   {
-    label: 'New Plan',
+    label: 'New plan',
     icon: 'eva-calendar-outline',
     color: 'primary',
     to: '/plans/new',
     requiresOnline: true,
   },
   {
-    label: 'New Template',
+    label: 'New template',
     icon: 'eva-file-text-outline',
     color: 'primary',
     to: '/templates/new',
@@ -105,7 +105,7 @@ const quickActions = computed<QuickAction[]>(() => [
   {
     label: 'Settings',
     icon: 'eva-settings-2-outline',
-    color: 'warning',
+    color: 'primary',
     to: '/settings',
   },
 ])

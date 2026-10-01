@@ -71,10 +71,14 @@ describe('DashboardHeader', () => {
     expect(wrapper.exists()).toBe(true)
   })
 
-  it('hides the component on mobile', () => {
+  it('shows a compact greeting with a settings avatar on mobile', () => {
     mockScreen.lt.md = true
-    const wrapper = createWrapper()
-    expect(wrapper.exists()).toBe(true)
+    const wrapper = mount(DashboardHeader, {
+      global: { stubs: { QBtn: { template: '<a :data-to="to"><slot /></a>', props: ['to'] } } },
+    })
+    expect(wrapper.find('a[aria-label="Settings"]').attributes('data-to')).toBe('/settings')
+    expect(wrapper.find('h1').text()).toMatch(/Morning|Afternoon|Evening/)
+    expect(wrapper.text()).not.toContain('What would you like to do today?')
   })
 
   it('displays greeting with user first name', () => {

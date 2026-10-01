@@ -33,7 +33,7 @@
           color="primary"
           unelevated
           icon="eva-clipboard-outline"
-          label="View Plans"
+          label="View plans"
           :to="{ name: 'plans' }"
           no-caps
           dense
@@ -45,12 +45,12 @@
           color="primary"
           unelevated
           icon="eva-settings-outline"
-          label="Open Settings"
+          label="Open settings"
           :to="{ name: 'settings' }"
           no-caps
           dense
           class="q-py-md q-px-lg"
-          aria-label="Open Settings"
+          aria-label="Open settings"
         />
       </div>
     </div>

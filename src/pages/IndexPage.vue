@@ -5,11 +5,11 @@
   >
     <section class="page-content-spacing">
       <div class="row justify-center">
-        <div class="col-12 col-lg-10 col-xl-8 list-stagger">
+        <div class="col-12 col-lg-10 col-xl-8">
           <!-- Dashboard Header -->
           <DashboardHeader />
 
-          <!-- Quick Actions Section (hidden on mobile) -->
+          <!-- Quick actions Section (hidden on mobile) -->
           <QuickActionsGrid
             v-if="!$q.screen.lt.md"
             :can-add-expense="canAddExpense"
@@ -96,102 +96,16 @@
             @retry="retryRecentExpenses"
           />
 
-          <QueryErrorState
-            v-if="$q.screen.lt.md && templatesLoadError"
-            entity-name="Templates"
-            :retrying="templatesRetrying"
-            class="section-spacing"
-            @retry="retryTemplates"
-          />
-
           <!-- First-run: no active plans -->
           <EmptyPlansState
             v-if="!plansLoadError && !isLoading && activePlansCount === 0"
             class="section-spacing"
           />
 
-          <!-- Mobile: compact links instead of full card sections -->
-          <div
-            v-if="$q.screen.lt.md && !plansLoadError && !templatesLoadError && activePlansCount > 0"
-            class="mobile-dashboard-links section-spacing"
-          >
-            <q-list separator>
-              <q-item
-                clickable
-                to="/plans"
-                class="pressable-row"
-              >
-                <q-item-section
-                  avatar
-                  class="min-w-auto"
-                >
-                  <q-icon
-                    name="eva-calendar-outline"
-                    color="primary"
-                    size="22px"
-                  />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label class="text-weight-medium">Active plans</q-item-label>
-                  <q-item-label caption>Review budgets and progress</q-item-label>
-                </q-item-section>
-                <q-item-section side>
-                  <div class="row items-center q-gutter-xs">
-                    <q-badge
-                      color="primary"
-                      rounded
-                    >
-                      {{ activePlansCount }}
-                    </q-badge>
-                    <q-icon
-                      name="eva-chevron-right-outline"
-                      size="18px"
-                    />
-                  </div>
-                </q-item-section>
-              </q-item>
-
-              <q-item
-                clickable
-                to="/templates"
-                class="pressable-row"
-              >
-                <q-item-section
-                  avatar
-                  class="min-w-auto"
-                >
-                  <q-icon
-                    name="eva-file-text-outline"
-                    color="primary"
-                    size="22px"
-                  />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label class="text-weight-medium">Templates</q-item-label>
-                  <q-item-label caption>Reuse saved budget setups</q-item-label>
-                </q-item-section>
-                <q-item-section side>
-                  <div class="row items-center q-gutter-xs">
-                    <q-badge
-                      color="primary"
-                      rounded
-                    >
-                      {{ templatesCount }}
-                    </q-badge>
-                    <q-icon
-                      name="eva-chevron-right-outline"
-                      size="18px"
-                    />
-                  </div>
-                </q-item-section>
-              </q-item>
-            </q-list>
-          </div>
-
-          <!-- Desktop: full Active Plans section -->
+          <!-- Desktop: full Active plans section -->
           <DashboardSection
             v-if="!$q.screen.lt.md && !plansLoadError && activePlansCount > 0"
-            title="Active Plans"
+            title="Active plans"
             icon="eva-calendar-outline"
             :items="recentActivePlans"
             :count="activePlansCount"
@@ -203,6 +117,7 @@
             <template #card="{ item }">
               <PlanCard
                 :plan="item"
+                :spent="overviewByPlanId[item.id]?.totalSpent ?? null"
                 @edit="goToPlan"
                 @share="openSharePlanDialog"
               />
@@ -223,7 +138,7 @@
             </template>
           </DashboardSection>
 
-          <!-- Desktop: full Recent Templates section -->
+          <!-- Desktop: full Recent templates section -->
           <QueryErrorState
             v-if="!$q.screen.lt.md && templatesLoadError"
             entity-name="Templates"
@@ -234,7 +149,7 @@
 
           <DashboardSection
             v-else-if="!$q.screen.lt.md"
-            title="Recent Templates"
+            title="Recent templates"
             icon="eva-file-text-outline"
             :items="recentTemplates"
             :count="templatesCount"
@@ -396,14 +311,3 @@ function openShareTemplateDialog(templateId: string) {
   showShareTemplateDialog.value = true
 }
 </script>
-
-<style lang="scss" scoped>
-.mobile-dashboard-links {
-  border-block: 1px solid hsl(var(--border));
-}
-
-.mobile-dashboard-links :deep(.q-item) {
-  min-height: 56px;
-  padding-inline: 4px;
-}
-</style>

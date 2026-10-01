@@ -65,6 +65,11 @@
           </q-menu>
         </q-btn>
 
+        <PrivacyModeToggle
+          v-if="$q.screen.lt.md"
+          class="q-mr-sm"
+        />
+
         <q-btn
           v-if="$q.screen.lt.md"
           flat
@@ -74,11 +79,6 @@
           aria-label="Settings"
           to="/settings"
           class="q-mr-sm mobile-touch-target"
-        />
-
-        <PrivacyModeToggle
-          v-if="$q.screen.lt.md"
-          class="q-mr-sm"
         />
       </q-toolbar>
     </q-header>
@@ -104,6 +104,7 @@
     >
       <MobileBottomNavigation
         :can-add-expense="canAddExpense"
+        :collapsed="isNavCollapsed"
         @open-expense-dialog="openExpenseDialog"
       />
     </q-footer>
@@ -234,7 +235,7 @@ const { isOnline, isOffline } = useNetworkStatus()
 const canAddExpense = computed(() => isOnline.value && plansForExpenses.value.length > 0)
 const route = useRoute()
 const $q = useQuasar()
-const { isScrolled } = useScrolledHeader()
+const { isScrolled, isCollapsed: isNavCollapsed } = useScrolledHeader()
 const { isInstallable, isIosInstallGuidanceAvailable, promptInstall, dismissInstall } =
   usePwaInstall()
 const { canShowInstallPrompt, markInstallPromptShown } = useInstallPromptGate()
@@ -331,7 +332,8 @@ function showPwaInstallNotification() {
       actions: [
         {
           label: 'Not now',
-          color: 'white',
+          color: 'primary',
+          noCaps: true,
           handler: dismissInstall,
         },
       ],
@@ -347,14 +349,16 @@ function showPwaInstallNotification() {
     actions: [
       {
         label: 'Install',
-        color: 'white',
+        color: 'primary',
+        noCaps: true,
         handler: () => {
           void promptInstall()
         },
       },
       {
         label: 'Not now',
-        color: 'white',
+        color: 'primary',
+        noCaps: true,
         handler: () => {
           dismissInstall()
         },

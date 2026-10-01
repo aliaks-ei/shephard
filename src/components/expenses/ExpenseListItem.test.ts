@@ -9,11 +9,14 @@ installQuasarPlugin()
 
 const deleteExpenseMock = vi.fn()
 const confirmDeleteExpenseMock = vi.fn()
+const deleteExpenseWithUndoMock = vi.fn()
 
 vi.mock('src/composables/useExpenseActions', () => ({
   useExpenseActions: vi.fn(() => ({
     deleteExpense: deleteExpenseMock,
     confirmDeleteExpense: confirmDeleteExpenseMock,
+    deleteExpenseWithUndo: deleteExpenseWithUndoMock,
+    isUndoPending: () => false,
   })),
 }))
 
@@ -72,7 +75,7 @@ it('should display expense date', () => {
     props: defaultProps,
   })
 
-  expect(wrapper.text()).toContain('Jan 15, 2024')
+  expect(wrapper.text()).toContain('15 Jan 2024')
 })
 
 it('should not show category icon when showCategory is false', () => {
@@ -182,7 +185,7 @@ it('should make the expense row navigate when a source route is provided', () =>
   expect(item.props('to')).toEqual(to)
 })
 
-it('should call confirmDeleteExpense when mobile swipe delete is triggered', async () => {
+it('should delete with undo, without a confirm dialog, on mobile swipe', async () => {
   const reset = vi.fn()
   const wrapper = mount(ExpenseListItem, {
     props: defaultProps,
@@ -209,7 +212,8 @@ it('should call confirmDeleteExpense when mobile swipe delete is triggered', asy
   await wrapper.find('.swipe-delete').trigger('click')
 
   expect(reset).toHaveBeenCalledOnce()
-  expect(confirmDeleteExpenseMock).toHaveBeenCalledWith(mockExpense, expect.any(Function))
+  expect(deleteExpenseWithUndoMock).toHaveBeenCalledWith(mockExpense, expect.any(Function))
+  expect(confirmDeleteExpenseMock).not.toHaveBeenCalled()
   expect(deleteExpenseMock).not.toHaveBeenCalled()
 })
 

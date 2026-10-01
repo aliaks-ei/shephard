@@ -72,7 +72,7 @@ describe('NotificationInbox', () => {
       .map((node) => node.attributes('data-section-key'))
 
     expect(sectionKeys).toEqual(['unread', 'earlier'])
-    expect(wrapper.text()).toContain('Unread')
+    expect(wrapper.text()).toContain('New')
     expect(wrapper.text()).toContain('Earlier')
   })
 
@@ -137,14 +137,17 @@ describe('NotificationInbox', () => {
     expect(items[1]?.find('[data-testid="notification-unread-dot"]').exists()).toBe(false)
   })
 
-  it('keeps compact icon actions on mobile without swipe controls', () => {
+  it('uses swipe to delete on mobile instead of inline icon buttons', () => {
     const wrapper = renderInbox({
       mobile: true,
       showHeader: false,
     })
 
-    expect(wrapper.html()).not.toContain('q-slide-item')
-    expect(wrapper.findAll('button[aria-label="Mark notification as read"]')).toHaveLength(1)
-    expect(wrapper.findAll('button[aria-label="Remove notification"]')).toHaveLength(2)
+    expect(wrapper.findAll('button[aria-label="Mark notification as read"]')).toHaveLength(0)
+    expect(wrapper.findAll('button[aria-label="Remove notification"]')).toHaveLength(0)
+
+    const reset = () => {}
+    wrapper.findComponent({ name: 'QSlideItem' }).vm.$emit('right', { reset })
+    expect(wrapper.emitted('remove')).toEqual([['notif-1']])
   })
 })

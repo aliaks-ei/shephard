@@ -17,7 +17,7 @@ const baseConfig: DetailPageConfig = {
 describe('titles', () => {
   it('returns Create title for new entity', () => {
     const { pageTitle } = useDetailPageState(baseConfig, true, false)
-    expect(pageTitle.value).toBe('Create Plan')
+    expect(pageTitle.value).toBe('Create plan')
   })
 
   it('returns View title for read-only state', () => {
@@ -41,7 +41,7 @@ describe('titles', () => {
     expect(pageTitle.value).toBe('Plan')
 
     isNew.value = true
-    expect(pageTitle.value).toBe('Create Plan')
+    expect(pageTitle.value).toBe('Create plan')
   })
 })
 

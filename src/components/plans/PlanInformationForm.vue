@@ -5,7 +5,7 @@
   >
     <SectionHeader
       icon="eva-info-outline"
-      title="Plan Information"
+      title="Plan information"
       icon-size="24px"
     />
 
@@ -37,7 +37,7 @@
           for="plan-start-date-label"
           class="form-label form-label--required"
         >
-          Start Date
+          Start date
         </label>
         <q-input
           for="plan-start-date-label"
@@ -88,7 +88,7 @@
           for="plan-end-date-label"
           class="form-label form-label--required"
         >
-          End Date
+          End date
         </label>
         <q-input
           for="plan-end-date-label"

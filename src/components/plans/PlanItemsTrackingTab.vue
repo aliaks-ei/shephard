@@ -16,7 +16,7 @@
                 class="q-mr-sm"
                 size="20px"
               />
-              <h2 class="text-h6 q-my-none">Items Progress</h2>
+              <h2 class="text-h6 q-my-none">Items progress</h2>
             </div>
           </div>
 
@@ -220,7 +220,7 @@
                     header
                     class="text-caption q-py-xs q-px-sm"
                   >
-                    For Reference
+                    For reference
                   </q-item-label>
 
                   <CompactDisplayItemRow

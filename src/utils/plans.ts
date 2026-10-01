@@ -171,3 +171,51 @@ export function formatDateRange(startDate: string, endDate: string): string {
 
   return `${startFormatted} - ${endFormatted}`
 }
+
+export type PlanPaceStatus = 'on-track' | 'ahead' | 'over'
+
+export type PlanPace = {
+  // What the user can spend per day for the rest of the plan, today included.
+  dailyAllowance: number
+  // Share of the plan period used up by the end of today, 0..1. Drives the "today" marker.
+  elapsedRatio: number
+  status: PlanPaceStatus
+}
+
+const DAY_MS = 1000 * 60 * 60 * 24
+
+/**
+ * Spend pace for an active plan. "ahead" means spending runs ahead of the calendar:
+ * the spent share is larger than the elapsed share of the period.
+ */
+export function getPlanPace(
+  plan: Plan,
+  totalBudget: number,
+  totalSpent: number,
+  now: Date = new Date(),
+): PlanPace | null {
+  if (getPlanStatus(plan) !== 'active' || totalBudget <= 0) return null
+
+  const today = new Date(now)
+  const start = new Date(plan.start_date)
+  const end = new Date(plan.end_date)
+  today.setHours(0, 0, 0, 0)
+  start.setHours(0, 0, 0, 0)
+  end.setHours(0, 0, 0, 0)
+
+  const totalDays = Math.round((end.getTime() - start.getTime()) / DAY_MS) + 1
+  const elapsedDays = Math.round((today.getTime() - start.getTime()) / DAY_MS) + 1
+  const daysLeft = Math.max(1, totalDays - elapsedDays + 1)
+  const remaining = totalBudget - totalSpent
+  const elapsedRatio = Math.min(1, Math.max(0, elapsedDays / totalDays))
+
+  let status: PlanPaceStatus = 'on-track'
+  if (remaining < 0) status = 'over'
+  else if (totalSpent / totalBudget > elapsedRatio) status = 'ahead'
+
+  return {
+    dailyAllowance: Math.max(0, remaining) / daysLeft,
+    elapsedRatio,
+    status,
+  }
+}

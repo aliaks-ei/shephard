@@ -2,7 +2,7 @@ import { computed, ref } from 'vue'
 import { refDebounced } from '@vueuse/core'
 import { useQueryClient } from '@tanstack/vue-query'
 import type { RouteLocationRaw } from 'vue-router'
-import { useRecentExpensesInfiniteQuery } from 'src/queries/expenses'
+import { useActivitySummaryQuery, useRecentExpensesInfiniteQuery } from 'src/queries/expenses'
 import { usePlansQuery } from 'src/queries/plans'
 import { useCategoriesQuery } from 'src/queries/categories'
 import { queryKeys } from 'src/queries/query-keys'
@@ -11,6 +11,7 @@ import { usePreferencesStore } from 'src/stores/preferences'
 import { useNetworkStatus } from './useNetworkStatus'
 import { formatCurrency, formatCurrencyPrivate, type CurrencyCode } from 'src/utils/currency'
 import { formatDateRelative } from 'src/utils/date'
+import { buildActivitySummary } from 'src/utils/activity-summary'
 import type { ExpenseSort, ExpenseWithCategoryAndPlan } from 'src/api'
 
 export function useExpensesPage() {
@@ -125,6 +126,33 @@ export function useExpensesPage() {
     }))
   })
 
+  const summaryQuery = useActivitySummaryQuery(userId)
+  const activitySummary = computed(() => {
+    const summary = buildActivitySummary(
+      summaryQuery.expenses.value.map((expense) => ({
+        amount: expense.amount,
+        expense_date: expense.expense_date,
+        currency: expenseCurrency(expense),
+      })),
+      { complete: summaryQuery.isComplete.value },
+    )
+    if (!summary) return null
+    const currency = summary.currency as CurrencyCode
+    const peak = Math.max(...summary.days.map((day) => day.total), 0)
+    return {
+      monthTotalLabel: preferencesStore.isPrivacyModeEnabled
+        ? formatCurrencyPrivate(currency)
+        : formatCurrency(summary.monthTotal, currency),
+      // Bar heights as a share of the busiest day; empty days keep a small stub
+      days: summary.days.map((day, index) => ({
+        date: day.date,
+        height: peak > 0 ? Math.max(6, (day.total / peak) * 100) : 6,
+        isToday: index === summary.days.length - 1,
+        isEmpty: day.total === 0,
+      })),
+    }
+  })
+
   function sourcePlanRoute(expense: ExpenseWithCategoryAndPlan): RouteLocationRaw {
     return { name: 'plan', params: { id: expense.plans?.id ?? expense.plan_id } }
   }
@@ -149,6 +177,7 @@ export function useExpensesPage() {
     availableCategories,
     hasActiveFilter,
     dayGroups,
+    activitySummary,
     retryActivity,
     onRefresh,
     openExpenseDialog,

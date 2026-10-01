@@ -43,7 +43,7 @@ describe('EmptyTemplatesState', () => {
     const wrapper = createWrapper()
     const btn = wrapper.findComponent({ name: 'QBtn' })
     expect(btn.exists()).toBe(true)
-    expect(btn.props('label')).toBe('Create Template')
+    expect(btn.props('label')).toBe('Create template')
     expect(btn.props('to')).toBe('/templates')
   })
 })

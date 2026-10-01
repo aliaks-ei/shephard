@@ -5,15 +5,14 @@
   >
     <ListPageLayout
       title="Templates"
-      description="Manage your templates and create new ones"
-      create-button-label="Create Template"
+      create-button-label="New template"
       :create-button-disabled="isOffline"
       @create="goToNew"
     >
       <SearchAndSort
         v-model:search-query="searchQuery"
         v-model:sort-by="sortBy"
-        search-placeholder="Search templates..."
+        search-placeholder="Search templates"
         :sort-options="sortOptions"
       />
 
@@ -28,8 +27,8 @@
 
       <TemplatesGroup
         v-else-if="hasItems"
-        title="My Templates"
         :templates="allFilteredAndSortedItems"
+        :composition-by-template-id="compositionByTemplateId"
         @edit="viewItem"
         @export="openExportDialog"
         @delete="deleteItem"
@@ -51,7 +50,7 @@
         @create="goToNew"
       />
 
-      <!-- Share Template Dialog -->
+      <!-- Share template Dialog -->
       <ShareTemplateDialog
         v-if="shareTemplateId"
         v-model="isShareDialogOpen"
@@ -90,6 +89,7 @@ const {
   isRetrying,
   allFilteredAndSortedItems,
   hasItems,
+  compositionByTemplateId,
   sortOptions,
   emptyStateConfig,
   goToNew,

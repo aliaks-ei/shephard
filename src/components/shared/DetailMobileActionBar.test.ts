@@ -55,7 +55,7 @@ const renderComponent = () =>
         },
         QBtn: {
           template:
-            '<button class="q-btn" :data-label="label" :class="$attrs.class" @click="$emit(\'click\')">{{ label }}<slot /></button>',
+            '<button class="q-btn" :data-label="label" :aria-label="$attrs[\'aria-label\']" :class="$attrs.class" @click="$emit(\'click\')">{{ label }}<slot /></button>',
           props: ['label', 'icon', 'loading', 'disabled', 'size', 'flat', 'stack', 'dense'],
           emits: ['click'],
         },
@@ -84,17 +84,19 @@ describe('DetailMobileActionBar', () => {
     vi.clearAllMocks()
   })
 
-  it('highlights the save action on mobile', () => {
+  it('shows the save action as the wide primary button', () => {
     const wrapper = renderComponent()
 
     const saveButton = wrapper.find('[data-label="Save"]')
-    expect(saveButton.classes()).toContain('text-primary')
+    expect(saveButton.classes()).toContain('detail-action-bar__primary')
   })
 
-  it('keeps non-save actions neutral', () => {
+  it('shows share as a round shortcut and keeps utilities in More', () => {
     const wrapper = renderComponent()
 
-    const shareButton = wrapper.find('[data-label="Share"]')
-    expect(shareButton.classes()).not.toContain('text-primary')
+    const shareButton = wrapper.find('[aria-label="Share"]')
+    expect(shareButton.classes()).toContain('detail-action-bar__round')
+    expect(wrapper.find('.q-menu').text()).toContain('All plans')
+    expect(wrapper.find('.q-menu').text()).toContain('Hide amounts')
   })
 })

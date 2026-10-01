@@ -1,7 +1,7 @@
 <template>
   <q-item
     clickable
-    class="q-px-md q-py-sm"
+    class="category-budget-row q-px-md q-py-sm"
     @click="$emit('click', category)"
   >
     <q-item-section
@@ -16,55 +16,48 @@
     </q-item-section>
 
     <q-item-section class="overflow-hidden">
-      <!-- Top row: Name and Remaining -->
-      <div class="row justify-between items-center q-mb-xs no-wrap">
-        <div class="row items-center no-wrap ellipsis">
-          <span class="text-weight-medium text-body2 ellipsis">{{ category.categoryName }}</span>
-          <q-badge
-            v-if="statusBadge"
-            :color="statusBadge.color"
-            text-color="white"
-            class="q-ml-xs"
+      <div class="row justify-between items-baseline no-wrap">
+        <span class="text-weight-medium ellipsis">{{ category.categoryName }}</span>
+        <span
+          class="category-budget-row__status text-amount q-pl-sm"
+          :class="`category-budget-row__status--${state}`"
+        >
+          <template v-if="state === 'over'"
+            >{{ formatCurrency(overAmount, currency) }} over</template
           >
-            {{ statusBadge.label }}
-          </q-badge>
-        </div>
-        <div class="text-right q-pl-sm flex-shrink-0">
-          <span
-            class="text-weight-bold text-body2 text-amount"
-            :class="remainingAmountColor"
-          >
-            {{ formatCurrencyWithSign(category.remainingAmount, currency) }}
-          </span>
-          <span class="text-caption q-ml-xs">
-            {{ category.remainingAmount >= 0 ? 'left' : 'over' }}
-          </span>
-        </div>
+          <template v-else-if="state === 'used'">All used</template>
+          <template v-else>
+            {{ formatCurrency(category.remainingAmount, currency) }}
+            <span class="category-budget-row__unit">left</span>
+          </template>
+        </span>
       </div>
 
-      <!-- Middle row: Spent of Planned & Percentage -->
-      <div class="row justify-between items-center text-caption q-mb-xs">
-        <div class="ellipsis">
-          <span class="text-weight-medium text-amount">{{
-            formatCurrency(category.actualAmount, currency)
-          }}</span>
-          <span class="text-muted q-mx-xs">of</span>
-          <span class="text-muted text-amount">{{
-            formatCurrency(category.plannedAmount, currency)
-          }}</span>
-        </div>
-        <div class="text-weight-medium text-muted flex-shrink-0 q-pl-sm">
-          {{ roundedPercentage }}%
-        </div>
+      <div class="text-caption q-mt-xs">
+        <span class="text-amount">{{ formatCurrency(category.actualAmount, currency) }}</span>
+        of
+        <span class="text-amount">{{ formatCurrency(category.plannedAmount, currency) }}</span>
       </div>
 
-      <!-- Bottom row: Progress bar -->
-      <q-linear-progress
-        :value="progressValue"
-        :color="progressColor"
-        size="sm"
-        rounded
-      />
+      <!-- Category colour up to the budget, then a red tail for the overspend -->
+      <div
+        class="category-budget-row__bar q-mt-sm"
+        role="progressbar"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        :aria-valuenow="roundedPercentage"
+        :aria-label="`${category.categoryName}: ${roundedPercentage}% of budget used`"
+      >
+        <div
+          class="category-budget-row__fill category-tone-fg"
+          :style="[toneStyle, { width: `${budgetShare}%` }]"
+        />
+        <div
+          v-if="state === 'over'"
+          class="category-budget-row__overflow"
+          :style="{ width: `${100 - budgetShare}%` }"
+        />
+      </div>
     </q-item-section>
   </q-item>
 </template>
@@ -72,8 +65,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
-import { formatCurrency, formatCurrencyWithSign, type CurrencyCode } from 'src/utils/currency'
-import { getBudgetProgressColor, getBudgetRemainingColorClass } from 'src/utils/budget'
+import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
+import { getCategoryToneStyle } from 'src/utils/categories'
 import type { CategoryBudget } from 'src/types'
 
 const props = defineProps<{
@@ -85,41 +78,84 @@ defineEmits<{
   (e: 'click', category: CategoryBudget): void
 }>()
 
+const toneStyle = computed(() => getCategoryToneStyle(props.category.categoryColor))
+
 const percentageUsed = computed(() => {
-  if (props.category.plannedAmount === 0) return 0
+  if (props.category.plannedAmount === 0) return props.category.actualAmount > 0 ? 999 : 0
   return (props.category.actualAmount / props.category.plannedAmount) * 100
 })
 
 const roundedPercentage = computed(() => Math.round(Math.min(percentageUsed.value, 999)))
 
-const progressValue = computed(() => {
-  if (percentageUsed.value <= 0) return 0
-  return Math.min(percentageUsed.value / 100, 1)
+// Over is spent vs planned: remainingAmount counts only unpaid fixed items, so it can be 0
+// while spend is past the budget.
+const overAmount = computed(() =>
+  Math.max(props.category.actualAmount - props.category.plannedAmount, 0),
+)
+
+const state = computed<'left' | 'used' | 'over'>(() => {
+  if (overAmount.value > 0.005) return 'over'
+  if (props.category.remainingAmount <= 0 && props.category.plannedAmount > 0) return 'used'
+  return 'left'
 })
 
-const progressColor = computed(() => getBudgetProgressColor(percentageUsed.value))
-const remainingAmountColor = computed(() => getBudgetRemainingColorClass(percentageUsed.value))
-
-const statusBadge = computed<null | { label: string; color: string }>(() => {
-  if (percentageUsed.value > 100) {
-    return { label: 'Over', color: 'negative' }
-  }
-
-  if (percentageUsed.value === 100) {
-    return { label: 'Done', color: 'positive' }
-  }
-
-  if (percentageUsed.value >= 90) {
-    return { label: 'Near', color: 'warning' }
-  }
-
-  return null
+// Over budget: the bar spans the actual spend, the budget part is a share of it
+const budgetShare = computed(() => {
+  const { plannedAmount, actualAmount } = props.category
+  if (state.value === 'over') return actualAmount > 0 ? (plannedAmount / actualAmount) * 100 : 0
+  return Math.min(percentageUsed.value, 100)
 })
 </script>
 
 <style lang="scss" scoped>
-:deep(.q-circular-progress__track),
-:deep(.q-linear-progress__track) {
-  color: hsl(var(--muted));
+.category-budget-row__status {
+  flex: 0 0 auto;
+  font-weight: 600;
+  color: hsl(var(--ink));
+
+  &--used {
+    color: hsl(var(--muted-foreground));
+  }
+
+  &--over {
+    color: hsl(var(--over));
+  }
+}
+
+.category-budget-row__unit {
+  font-family: inherit;
+  font-weight: 400;
+  color: hsl(var(--muted-foreground));
+}
+
+.category-budget-row__bar {
+  display: flex;
+  gap: 2px;
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: hsl(var(--muted-foreground) / 0.14);
+}
+
+.category-budget-row__fill,
+.category-budget-row__overflow {
+  height: 100%;
+  transform-origin: 0 50%;
+  animation: progress-grow 700ms var(--ease-out-quint) both;
+}
+
+.category-budget-row__fill {
+  background: currentColor;
+}
+
+.category-budget-row__overflow {
+  background: hsl(var(--over));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .category-budget-row__fill,
+  .category-budget-row__overflow {
+    animation: none;
+  }
 }
 </style>

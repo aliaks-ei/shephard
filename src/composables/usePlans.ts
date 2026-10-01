@@ -17,9 +17,9 @@ export function usePlans() {
 
   const sortOptions = [
     { label: 'Name', value: 'name' },
-    { label: 'Total Amount', value: 'total' },
-    { label: 'Start Date', value: 'start_date' },
-    { label: 'Created Date', value: 'created_at' },
+    { label: 'Total amount', value: 'total' },
+    { label: 'Start date', value: 'start_date' },
+    { label: 'Created date', value: 'created_at' },
   ]
 
   async function cancelPlan(plan: PlanWithPermission): Promise<void> {

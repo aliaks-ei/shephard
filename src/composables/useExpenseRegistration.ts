@@ -179,9 +179,9 @@ export function useExpenseRegistration(defaultPlanId?: Ref<string | null | undef
         return 'Continue'
       }
       const count = selectedPlanItems.value.length
-      return count > 0 ? `Register ${count} Item${count !== 1 ? 's' : ''}` : 'Register Items'
+      return count > 0 ? `Add ${count} expense${count !== 1 ? 's' : ''}` : 'Add expenses'
     }
-    return 'Register Expense'
+    return 'Add expense'
   })
 
   const canSubmit = computed(() => {

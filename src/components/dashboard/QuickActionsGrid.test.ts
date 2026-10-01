@@ -58,9 +58,9 @@ describe('QuickActionsGrid', () => {
     expect(wrapper.exists()).toBe(true)
   })
 
-  it('displays the Quick Actions title', () => {
+  it('displays the Quick actions title', () => {
     const wrapper = createWrapper()
-    expect(wrapper.text()).toContain('Quick Actions')
+    expect(wrapper.text()).toContain('Quick actions')
   })
 
   it('renders all four action cards', () => {
@@ -71,17 +71,17 @@ describe('QuickActionsGrid', () => {
 
   it('displays Add Expense action', () => {
     const wrapper = createWrapper()
-    expect(wrapper.text()).toContain('Add Expense')
+    expect(wrapper.text()).toContain('Add expense')
   })
 
   it('displays New Plan action', () => {
     const wrapper = createWrapper()
-    expect(wrapper.text()).toContain('New Plan')
+    expect(wrapper.text()).toContain('New plan')
   })
 
   it('displays New Template action', () => {
     const wrapper = createWrapper()
-    expect(wrapper.text()).toContain('New Template')
+    expect(wrapper.text()).toContain('New template')
   })
 
   it('displays Settings action', () => {

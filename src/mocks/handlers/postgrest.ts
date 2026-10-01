@@ -34,9 +34,14 @@ function isValidTable(name: string): name is TableName {
   return VALID_TABLES.has(name as TableName)
 }
 
+const IS_NULL = '\u0000is-null'
+
 function parseEqFilters(url: URL): Record<string, string> {
   const filters: Record<string, string> = {}
   for (const [key, value] of url.searchParams.entries()) {
+    if (value === 'is.null') {
+      filters[key] = IS_NULL
+    }
     if (value.startsWith('eq.')) {
       filters[key] = value.slice(3)
     }
@@ -61,7 +66,10 @@ function applyFilters<T extends Record<string, unknown>>(
   inFilters: Record<string, string[]> = {},
 ): T[] {
   return rows.filter((row) => {
-    const eqMatch = Object.entries(eqFilters).every(([key, val]) => String(row[key]) === val)
+    // "is.null" arrives as the eq value "null" sentinel below
+    const eqMatch = Object.entries(eqFilters).every(([key, val]) =>
+      val === IS_NULL ? row[key] == null : String(row[key]) === val,
+    )
     const inMatch = Object.entries(inFilters).every(([key, vals]) =>
       vals.includes(String(row[key])),
     )

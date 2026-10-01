@@ -98,7 +98,7 @@ describe('ShareDialog', () => {
 
   it('mounts and shows title', () => {
     const wrapper = renderComponent(baseProps)
-    expect(wrapper.text()).toContain('Share Plan')
+    expect(wrapper.text()).toContain('Share plan')
   })
 
   it('emits update:modelValue when close button is clicked', async () => {

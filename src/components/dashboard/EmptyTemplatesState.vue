@@ -13,7 +13,7 @@
       <div class="text-body2 text-muted q-mb-md">Create templates to quickly plan your budgets</div>
       <q-btn
         color="primary"
-        label="Create Template"
+        label="Create template"
         icon="eva-plus-outline"
         unelevated
         dense

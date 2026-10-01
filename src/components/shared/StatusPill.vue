@@ -19,7 +19,7 @@ import type { StatusTone } from './status-tone'
 withDefaults(
   defineProps<{
     label: string
-    icon?: string
+    icon?: string | undefined
     tone: StatusTone
     size?: 'sm' | 'md'
   }>(),
@@ -70,6 +70,18 @@ withDefaults(
   &--muted {
     background: hsl(var(--muted));
     color: hsl(var(--muted-foreground));
+  }
+
+  // Spending runs ahead of the calendar: amber, never red
+  &--pace {
+    background: hsl(var(--pace-soft-bg));
+    color: hsl(var(--pace-strong));
+  }
+
+  // Over budget: the only place red is used for money
+  &--over {
+    background: hsl(var(--over-soft-bg));
+    color: hsl(var(--over));
   }
 }
 

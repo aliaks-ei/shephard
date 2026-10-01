@@ -65,6 +65,26 @@ export async function getTemplates(userId: string): Promise<TemplateWithPermissi
   return templateService.getEntitiesWithPermissions(userId)
 }
 
+export type TemplateItemSummaryRow = {
+  template_id: string
+  amount: number
+  categories: { color: string } | null
+}
+
+/** Amount and category colour of every item, for the composition bar on template cards. */
+export async function getTemplateItemSummaries(
+  templateIds: string[],
+): Promise<TemplateItemSummaryRow[]> {
+  if (templateIds.length === 0) return []
+  const { data, error } = await templateService.supabase
+    .from('template_items')
+    .select('template_id, amount, categories(color)')
+    .in('template_id', templateIds)
+
+  if (error) throw error
+  return (data || []) as unknown as TemplateItemSummaryRow[]
+}
+
 export async function createTemplate(template: TemplateInsert): Promise<Template> {
   return templateService.create(template)
 }

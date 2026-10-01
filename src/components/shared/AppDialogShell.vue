@@ -2,7 +2,7 @@
   <q-dialog
     :model-value="modelValue"
     data-pwa-update-blocker="dialog"
-    :persistent="persistentDesktop && !isMobile"
+    :persistent="(persistentDesktop && !isMobile) || !!discardConfirm"
     :position="isMobile ? 'bottom' : 'standard'"
     :transition-show="isMobile ? 'slide-up' : 'scale'"
     :transition-hide="isMobile ? 'slide-down' : 'scale'"
@@ -196,6 +196,11 @@ const props = withDefaults(
      * `content` = sized by its content (short confirms).
      */
     detent?: 'full' | 'half' | 'content'
+    /**
+     * When set, closing (swipe down, close button, backdrop) asks this question first,
+     * so unsaved input is not lost by accident. Pass it only while there is input.
+     */
+    discardConfirm?: string | undefined
   }>(),
   {
     detent: 'full',
@@ -262,7 +267,7 @@ const dialogCardStyle = computed(() => {
     maxWidth: '100vw',
     height: sheetHeight.value ?? 'auto',
     maxHeight: '95dvh',
-    borderRadius: 'var(--radius-xl) var(--radius-xl) 0 0',
+    borderRadius: 'var(--radius-hero) var(--radius-hero) 0 0',
     margin: '0',
     overflow: 'hidden',
     transform: `translateY(${dragTranslateY.value}px)`,
@@ -276,7 +281,21 @@ const dialogCardStyle = computed(() => {
 })
 
 function closeDialog() {
+  if (props.discardConfirm) {
+    confirmDiscard()
+    return
+  }
   emit('update:modelValue', false)
+}
+
+function confirmDiscard() {
+  $q.dialog({
+    title: props.discardConfirm ?? '',
+    message: 'What you entered will be lost.',
+    persistent: true,
+    cancel: { label: 'Keep editing', flat: true, noCaps: true, color: 'primary' },
+    ok: { label: 'Discard', unelevated: true, noCaps: true, color: 'negative' },
+  }).onOk(() => emit('update:modelValue', false))
 }
 
 function handleSheetPan(details: TouchPanDetails) {
@@ -370,6 +389,12 @@ function finishPanGesture() {
     dragTranslateY.value >= getDismissThresholdPx() ||
     (dragTranslateY.value >= MIN_VELOCITY_DRAG_PX &&
       dragVelocityY.value >= DISMISS_VELOCITY_THRESHOLD)
+
+  if (shouldDismiss === true && props.discardConfirm) {
+    animateSheetTo(0)
+    confirmDiscard()
+    return
+  }
 
   if (shouldDismiss === true) {
     // An expanded half sheet collapses back to its resting detent before it can be dismissed.
@@ -569,6 +594,21 @@ onBeforeUnmount(() => {
 
 .dialog-shell__mobile-primary {
   min-height: 48px;
+}
+
+// Pill buttons need room: dense padding makes them cramped and the icon looks oversized
+.dialog-shell__footer--desktop {
+  padding: 12px 16px;
+
+  :deep(.q-btn) {
+    min-height: 40px;
+    padding: 0 18px;
+    font-weight: 600;
+  }
+
+  :deep(.q-btn .q-icon) {
+    font-size: 18px;
+  }
 }
 
 @supports (background: color-mix(in srgb, white, black)) {

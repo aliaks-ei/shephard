@@ -146,7 +146,7 @@ it('should show category loading state while plan categories load', () => {
 
   expect(categorySelect?.props('disable')).toBe(true)
   expect(categorySelect?.props('loading')).toBe(true)
-  expect(categorySelect?.props('hint')).toBe('Loading categories...')
+  expect(wrapper.text()).toContain('Loading categories...')
 })
 
 it('should explain when the selected plan has no categories', () => {
@@ -162,7 +162,8 @@ it('should explain when the selected plan has no categories', () => {
     .findAllComponents({ name: 'QSelect' })
     .find((select) => select.props('optionLabel') === 'label')
 
-  expect(categorySelect?.props('hint')).toBe('No categories are available in this plan')
+  expect(categorySelect).toBeDefined()
+  expect(wrapper.text()).toContain('No categories are available in this plan')
 })
 
 it('waits for categories to load before applying a detected category', async () => {
@@ -199,7 +200,7 @@ it('waits for categories to load before applying a detected category', async () 
   vi.useRealTimers()
 })
 
-it('shows a message when a detected category cannot be applied', async () => {
+it('ignores a detected category that is not in the plan, without any message', async () => {
   vi.useFakeTimers()
   mockSuggestExpenseCategory.mockResolvedValue({
     status: 'selected',
@@ -225,7 +226,9 @@ it('shows a message when a detected category cannot be applied', async () => {
   await vi.advanceTimersByTimeAsync(300)
   await flushPromises()
 
-  expect(wrapper.text()).toContain("Couldn't apply the suggested category")
+  expect(mockSuggestExpenseCategory).toHaveBeenCalled()
+  expect(wrapper.emitted('update:categoryId')).toBeUndefined()
+  expect(wrapper.text()).not.toContain("Couldn't apply")
   vi.useRealTimers()
 })
 
@@ -358,10 +361,7 @@ it('should display budget impact card when all required information is provided'
     },
   })
 
-  expect(wrapper.text()).toContain('Budget Impact')
-  expect(wrapper.text()).toContain('Current:')
-  expect(wrapper.text()).toContain('Adding:')
-  expect(wrapper.text()).toContain('After:')
+  expect(wrapper.text()).toContain('left in Food after this')
 })
 
 it('should hide budget impact card while saving', () => {
@@ -418,7 +418,7 @@ it('should pass loading prop to PlanSelectorField', () => {
   expect(planSelector.props('loading')).toBe(true)
 })
 
-it('should display CategoryIcon in category options', () => {
+it('should display CategoryIcon for the selected category', () => {
   const wrapper = mount(CustomEntryPanel, {
     props: {
       ...defaultProps,
@@ -431,4 +431,68 @@ it('should display CategoryIcon in category options', () => {
 
   const categoryIcon = wrapper.findComponent({ name: 'CategoryIcon' })
   expect(categoryIcon.exists()).toBe(true)
+})
+
+it('shows the category field loading while a category is being detected', async () => {
+  vi.useFakeTimers()
+  let resolveSuggestion: (value: unknown) => void = () => undefined
+  mockSuggestExpenseCategory.mockReturnValue(
+    new Promise((resolve) => {
+      resolveSuggestion = resolve
+    }),
+  )
+  const wrapper = mount(CustomEntryPanel, {
+    props: {
+      ...defaultProps,
+      planId: 'plan-1',
+      selectedPlan: mockPlan,
+      categoryOptions: mockCategoryOptions,
+    },
+  })
+  const categorySelect = () =>
+    wrapper.findAllComponents({ name: 'QSelect' }).find((s) => s.props('optionLabel') === 'label')
+
+  const nameInput = wrapper.findAllComponents({ name: 'QInput' })[1]
+  await nameInput?.vm.$emit('update:modelValue', 'Groceries')
+  await vi.advanceTimersByTimeAsync(300)
+
+  expect(categorySelect()?.props('loading')).toBe(true)
+
+  resolveSuggestion({ status: 'no_match' })
+  await flushPromises()
+
+  expect(categorySelect()?.props('loading')).toBe(false)
+  vi.useRealTimers()
+})
+
+it('shows no AI indicator after a category is detected', async () => {
+  vi.useFakeTimers()
+  mockSuggestExpenseCategory.mockResolvedValue({
+    status: 'selected',
+    suggestion: {
+      categoryId: 'cat-1',
+      categoryName: 'Food',
+      confidence: 0.95,
+      reasoning: 'Matched a planned item.',
+      source: 'plan_item',
+    },
+  })
+  const wrapper = mount(CustomEntryPanel, {
+    props: {
+      ...defaultProps,
+      planId: 'plan-1',
+      selectedPlan: mockPlan,
+      categoryOptions: mockCategoryOptions,
+    },
+  })
+
+  const nameInput = wrapper.findAllComponents({ name: 'QInput' })[1]
+  await nameInput?.vm.$emit('update:modelValue', 'Groceries')
+  await vi.advanceTimersByTimeAsync(300)
+  await flushPromises()
+
+  expect(wrapper.emitted('update:categoryId')).toContainEqual(['cat-1'])
+  expect(wrapper.text()).not.toContain('automatically')
+  expect(wrapper.text()).not.toContain('AI')
+  vi.useRealTimers()
 })

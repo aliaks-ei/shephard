@@ -2,6 +2,7 @@ import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import {
   getTemplates,
+  getTemplateItemSummaries,
   getTemplateWithItems,
   createTemplate,
   createTemplateWithItems,
@@ -15,6 +16,7 @@ import {
   type TemplateTransactionInsert,
   type TemplateTransactionUpdate,
   type TemplateWithPermission,
+  type TemplateItemSummaryRow,
   type TemplateItemInsert,
   type TemplateItemTransactionInput,
   getEntityLoadErrorKind,
@@ -24,6 +26,20 @@ import { createSpecificErrorHandler, createMutationErrorHandler } from './query-
 
 function invalidateTemplateQueries(queryClient: ReturnType<typeof useQueryClient>) {
   queryClient.invalidateQueries({ queryKey: queryKeys.templates.all })
+}
+
+export function useTemplateItemSummariesQuery(templateIds: MaybeRefOrGetter<string[]>) {
+  const sortedIds = computed(() => [...toValue(templateIds)].sort())
+  const query = useQuery({
+    queryKey: computed(() => queryKeys.templates.itemSummaries(sortedIds.value)),
+    queryFn: () => getTemplateItemSummaries(sortedIds.value),
+    enabled: computed(() => sortedIds.value.length > 0),
+    meta: { handledInline: true },
+  })
+
+  const summaries = computed((): TemplateItemSummaryRow[] => query.data.value ?? [])
+
+  return { ...query, summaries }
 }
 
 export function useTemplatesQuery(userId: MaybeRefOrGetter<string | undefined>) {

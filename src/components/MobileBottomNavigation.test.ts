@@ -65,7 +65,7 @@ it('renders all navigation buttons', () => {
   const wrapper = createWrapper()
   const buttons = wrapper.findAll('.q-btn')
 
-  expect(buttons.length).toBeGreaterThanOrEqual(5)
+  expect(buttons.length).toBe(5)
   expect(buttons.some((btn) => btn.text().includes('Home'))).toBe(true)
   expect(buttons.some((btn) => btn.text().includes('Plans'))).toBe(true)
   expect(buttons.some((btn) => btn.text().includes('Activity'))).toBe(true)
@@ -135,20 +135,27 @@ it('sets correct to attributes for navigation buttons', () => {
   const homeButton = buttons.find((btn) => btn.text().includes('Home'))
   const plansButton = buttons.find((btn) => btn.text().includes('Plans'))
   const activityButton = buttons.find((btn) => btn.text().includes('Activity'))
-  const templatesButton = buttons.find((btn) => btn.text().includes('Templates'))
 
   expect(homeButton?.attributes('data-to')).toBe('/')
   expect(plansButton?.attributes('data-to')).toBe('/plans')
   expect(activityButton?.attributes('data-to')).toBe('/expenses')
-  expect(templatesButton?.attributes('data-to')).toBe('/templates')
 })
 
-it('highlights templates button when on templates route', () => {
+it('highlights the templates tab on the templates route', () => {
   mockRoute.fullPath = '/templates'
   const wrapper = createWrapper()
 
-  const templatesButton = wrapper.findAll('.q-btn').find((btn) => btn.text().includes('Templates'))
+  const buttons = wrapper.findAll('.q-btn')
+  const templatesButton = buttons.find((btn) => btn.text().includes('Templates'))
+  const plansButton = buttons.find((btn) => btn.text().includes('Plans'))
+  expect(templatesButton?.attributes('data-to')).toBe('/templates')
   expect(templatesButton?.attributes('data-color')).toBe('primary')
+  expect(plansButton?.attributes('data-color')).toBeUndefined()
+})
+
+it('adds the collapsed modifier when collapsed', () => {
+  const wrapper = mount(MobileBottomNavigation, { props: { collapsed: true } })
+  expect(wrapper.find('.mobile-nav--collapsed').exists()).toBe(true)
 })
 
 it('does not show an active highlight for settings', () => {

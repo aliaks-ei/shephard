@@ -5,16 +5,43 @@
   >
     <ListPageLayout
       title="Activity"
-      description="Your spending across all plans"
-      create-button-label="Add Expense"
-      :show-create-button="hasExpensePlan"
-      :create-button-disabled="isOffline"
-      @create="openExpenseDialog"
+      :show-create-button="false"
     >
+      <q-card
+        v-if="activitySummary"
+        :bordered="$q.dark.isActive"
+        class="activity-summary shadow-1 q-mb-md"
+      >
+        <q-card-section class="row items-end justify-between no-wrap q-gutter-x-md">
+          <div class="col-auto">
+            <div class="text-caption">{{ monthLabel }} so far</div>
+            <div class="activity-summary__total text-amount text-ink">
+              {{ activitySummary.monthTotalLabel }}
+            </div>
+          </div>
+          <div
+            class="activity-summary__strip col"
+            role="img"
+            aria-label="Spending per day for the last 14 days"
+          >
+            <span
+              v-for="day in activitySummary.days"
+              :key="day.date"
+              class="activity-summary__bar"
+              :class="{
+                'activity-summary__bar--today': day.isToday,
+                'activity-summary__bar--empty': day.isEmpty,
+              }"
+              :style="{ height: `${day.height}%` }"
+            />
+          </div>
+        </q-card-section>
+      </q-card>
+
       <SearchAndSort
         v-model:search-query="searchQuery"
         v-model:sort-by="sortBy"
-        search-placeholder="Search expenses..."
+        search-placeholder="Search expenses"
         :sort-options="sortOptions"
       />
 
@@ -23,6 +50,15 @@
         v-if="availableCategories.length > 1"
         class="category-filter-row q-mb-md"
       >
+        <q-chip
+          clickable
+          :aria-pressed="String(selectedCategoryId === null)"
+          :class="{ 'category-filter-chip--active': selectedCategoryId === null }"
+          class="category-filter-chip"
+          @click="selectedCategoryId = null"
+        >
+          All
+        </q-chip>
         <q-chip
           v-for="category in availableCategories"
           :key="category.id"
@@ -84,24 +120,21 @@
       />
 
       <!-- Incrementally loaded day-grouped expense list -->
-      <div
-        v-else-if="dayGroups.length > 0"
-        class="list-stagger"
-      >
+      <div v-else-if="dayGroups.length > 0">
         <div
           v-for="group in dayGroups"
           :key="group.date"
           class="q-mb-md"
         >
           <div class="row items-baseline justify-between q-px-sm q-mb-xs">
-            <h2 class="section-overline text-caption q-my-none">
+            <h2 class="activity-day__label q-my-none">
               {{ group.label }}
             </h2>
-            <span class="text-caption text-amount">{{ group.totalLabel }}</span>
+            <span class="activity-day__total text-amount">{{ group.totalLabel }}</span>
           </div>
           <q-card
             :bordered="$q.dark.isActive"
-            class="shadow-1"
+            class="shadow-1 overflow-hidden"
           >
             <q-list separator>
               <ExpenseListItem
@@ -111,6 +144,7 @@
                 :currency="expenseCurrency(expense)"
                 :can-edit="true"
                 show-category
+                :show-date="group.date === 'all'"
                 :category-name="expense.plans?.name || ''"
                 :category-color="expense.categories?.color || DEFAULT_CATEGORY_COLOR"
                 :category-icon="expense.categories?.icon || 'eva-folder-outline'"
@@ -143,7 +177,7 @@
         search-icon="eva-search-outline"
         search-title="No matching expenses"
         search-description="Try a different search or clear the filters."
-        create-button-label="Add Expense"
+        create-button-label="Add expense"
         :show-create-button="canAddExpense"
         @clear-search="clearFilters"
         @create="openExpenseDialog"
@@ -182,6 +216,8 @@ import { DEFAULT_CATEGORY_COLOR } from 'src/utils/categories'
 
 useMeta({ title: 'Activity' })
 
+const monthLabel = new Date().toLocaleDateString(undefined, { month: 'long' })
+
 const {
   searchQuery,
   sortBy,
@@ -191,7 +227,6 @@ const {
   isFetchingNextPage,
   fetchNextPage,
   isOffline,
-  hasExpensePlan,
   canAddExpense,
   hasLoadError,
   isRetrying,
@@ -201,6 +236,7 @@ const {
   availableCategories,
   hasActiveFilter,
   dayGroups,
+  activitySummary,
   retryActivity,
   onRefresh,
   openExpenseDialog,
@@ -212,12 +248,57 @@ const {
 </script>
 
 <style lang="scss" scoped>
+.activity-summary__total {
+  font-size: 26px;
+  line-height: 1.15;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.activity-summary__strip {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 44px;
+}
+
+.activity-summary__bar {
+  flex: 1 1 0;
+  min-width: 0;
+  border-radius: 3px;
+  background: hsl(var(--primary) / 0.35);
+
+  &--today {
+    background: hsl(var(--primary));
+  }
+
+  &--empty {
+    background: hsl(var(--muted-foreground) / 0.18);
+  }
+}
+
+.activity-day__label {
+  font-size: 14px;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+
+.activity-day__total {
+  font-size: 13px;
+  color: hsl(var(--muted-foreground));
+}
+
+// Chips scroll sideways; the fade shows there is more past the edge
 .category-filter-row {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   overflow-x: auto;
   padding-bottom: 4px;
+  margin-inline: -4px;
+  padding-inline: 4px 32px;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
 
   &::-webkit-scrollbar {
     display: none;
@@ -227,6 +308,9 @@ const {
 .category-filter-chip {
   flex: 0 0 auto;
   min-height: 44px;
+  margin: 0;
+  padding-inline: 14px;
+  font-size: 14px;
   background: hsl(var(--muted));
   color: hsl(var(--muted-foreground));
 }

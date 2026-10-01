@@ -3,7 +3,7 @@
     class="q-mb-sm block"
     for="expense-date-input"
   >
-    <span class="form-label form-label--required">Expense Date</span>
+    <span class="form-label form-label--required">Expense date</span>
     <q-input
       id="expense-date-input"
       :model-value="expenseDate"

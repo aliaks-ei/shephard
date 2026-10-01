@@ -27,7 +27,7 @@ describe('EmptyPlansState', () => {
 
   it('displays the empty state message', () => {
     const wrapper = createWrapper()
-    expect(wrapper.text()).toContain('No Active Plans')
+    expect(wrapper.text()).toContain('No Active plans')
     expect(wrapper.text()).toContain('Create your first plan to start tracking expenses')
   })
 
@@ -43,7 +43,7 @@ describe('EmptyPlansState', () => {
     const wrapper = createWrapper()
     const btn = wrapper.findComponent({ name: 'QBtn' })
     expect(btn.exists()).toBe(true)
-    expect(btn.props('label')).toBe('Create Plan')
+    expect(btn.props('label')).toBe('Create plan')
     expect(btn.props('to')).toBe('/plans')
   })
 })

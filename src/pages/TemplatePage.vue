@@ -72,11 +72,11 @@
       <DeleteDialog
         v-if="!isNewTemplate"
         v-model="showDeleteDialog"
-        title="Delete Template"
+        title="Delete template"
         warning-message="This will permanently delete your template and all its data. This action cannot be undone."
         :confirmation-message="`Are you sure you want to delete this template?`"
-        cancel-label="Keep Template"
-        confirm-label="Delete Template"
+        cancel-label="Keep template"
+        confirm-label="Delete template"
         :is-deleting="deleteTemplateMutation.isPending.value"
         @confirm="deleteTemplate"
       />

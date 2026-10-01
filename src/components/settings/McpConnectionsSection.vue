@@ -1,7 +1,15 @@
 <template>
   <SettingsSectionCard title="AI connections">
+    <!-- A load error belongs in this card, next to its retry, not in a toast -->
+    <QueryErrorState
+      v-if="!isLoading && hasLoadError"
+      compact
+      entity-name="AI connections"
+      :retrying="isLoading"
+      @retry="loadConnections"
+    />
     <q-list
-      v-if="!isLoading"
+      v-else-if="!isLoading"
       separator
     >
       <q-item
@@ -64,6 +72,7 @@ import {
   type McpAuthorization,
 } from 'src/api/mcp'
 import SettingsSectionCard from './SettingsSectionCard.vue'
+import QueryErrorState from 'src/components/shared/QueryErrorState.vue'
 
 type McpConnection = {
   clientId: string
@@ -72,11 +81,13 @@ type McpConnection = {
 }
 
 const isLoading = ref(true)
+const hasLoadError = ref(false)
 const pendingClientId = ref<string | null>(null)
 const connections = ref<McpConnection[]>([])
 
 async function loadConnections() {
   isLoading.value = true
+  hasLoadError.value = false
   try {
     const authorizations = await getMcpAuthorizations()
     connections.value = authorizations.map((authorization) => ({
@@ -85,7 +96,7 @@ async function loadConnections() {
       accessLevel: authorization.access_level,
     }))
   } catch {
-    Notify.create({ type: 'negative', message: 'Unable to load AI connections.' })
+    hasLoadError.value = true
   } finally {
     isLoading.value = false
   }

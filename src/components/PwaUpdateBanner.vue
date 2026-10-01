@@ -48,7 +48,7 @@ const { activateUpdate, hasBlockingWork, isApplying, isUpdateAvailable } = usePw
   z-index: 7000;
   max-width: 560px;
   margin-inline: auto;
-  background: hsl(var(--hero-gradient-to));
+  background: hsl(var(--hero-bg));
   color: hsl(var(--hero-foreground));
 }
 

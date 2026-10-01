@@ -1,7 +1,7 @@
 <template>
   <AppDialogShell
     :model-value="modelValue"
-    title="Select Category"
+    title="Select category"
     subtitle="Choose from available predefined categories"
     body-class="q-pa-none"
     :body-scrollable="false"

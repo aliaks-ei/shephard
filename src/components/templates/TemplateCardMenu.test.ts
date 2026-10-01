@@ -109,7 +109,7 @@ describe('TemplateCardMenu', () => {
       canShare: false,
     })
 
-    expect(wrapper.text()).not.toContain('Share Template')
-    expect(wrapper.text()).toContain('Delete Template')
+    expect(wrapper.text()).not.toContain('Share template')
+    expect(wrapper.text()).toContain('Delete template')
   })
 })

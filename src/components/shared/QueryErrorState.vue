@@ -78,6 +78,13 @@ const props = withDefaults(
 
 const { isOffline } = useNetworkStatus()
 
+// "Plans" -> "plans" inside a sentence, but "AI connections" keeps its acronym
+const entityInSentence = computed(() =>
+  /^[A-Z][a-z]/.test(props.entityName)
+    ? props.entityName.charAt(0).toLowerCase() + props.entityName.slice(1)
+    : props.entityName,
+)
+
 const content = computed(() => {
   if (isOffline.value) {
     return {
@@ -85,7 +92,7 @@ const content = computed(() => {
       color: 'warning',
       iconClass: undefined,
       title: 'You are offline',
-      message: `Connect to the internet to load ${props.entityName.toLowerCase()}.`,
+      message: `Connect to the internet to load ${entityInSentence.value}.`,
     }
   }
 
@@ -96,7 +103,7 @@ const content = computed(() => {
         color: undefined,
         iconClass: 'text-faint',
         title: `${props.entityName} not found`,
-        message: `This ${props.entityName.toLowerCase()} may have been deleted or the link is no longer valid.`,
+        message: `This ${entityInSentence.value} may have been deleted or the link is no longer valid.`,
       }
     case 'denied':
       return {
@@ -104,14 +111,14 @@ const content = computed(() => {
         color: 'warning',
         iconClass: undefined,
         title: 'Access denied',
-        message: `You do not have permission to view this ${props.entityName.toLowerCase()}.`,
+        message: `You do not have permission to view this ${entityInSentence.value}.`,
       }
     case 'error':
       return {
         icon: 'eva-alert-triangle-outline',
         color: 'negative',
         iconClass: undefined,
-        title: `Could not load ${props.entityName.toLowerCase()}`,
+        title: `Could not load ${entityInSentence.value}`,
         message: 'Something went wrong while loading this data. Please try again.',
       }
     default: {

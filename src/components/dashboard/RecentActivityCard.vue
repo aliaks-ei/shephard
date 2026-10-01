@@ -6,7 +6,7 @@
   >
     <q-card-section class="q-pb-none">
       <div class="row items-center justify-between">
-        <h2 class="text-subtitle1 text-weight-medium q-my-none">Recent activity</h2>
+        <h2 class="text-subtitle1 text-weight-bold q-my-none">Recent</h2>
         <q-btn
           flat
           no-caps
@@ -53,10 +53,13 @@
       @retry="retry"
     />
 
-    <q-list
+    <!-- A new expense slides in at the top, so the user sees where it went -->
+    <TransitionGroup
       v-else
-      separator
-      class="q-pb-sm"
+      name="list"
+      tag="div"
+      class="recent-activity__list q-list q-list--separator q-pb-sm"
+      :class="{ 'q-list--dark': $q.dark.isActive }"
     >
       <q-item
         v-for="expense in recentExpenses"
@@ -77,10 +80,7 @@
 
         <q-item-section>
           <q-item-label class="text-weight-medium">{{ expense.name }}</q-item-label>
-          <q-item-label caption>
-            <template v-if="expense.plans?.name">{{ expense.plans.name }} • </template>
-            {{ formatDate(expense.expense_date) }}
-          </q-item-label>
+          <q-item-label caption>{{ expenseCaption(expense) }}</q-item-label>
         </q-item-section>
 
         <q-item-section side>
@@ -89,7 +89,7 @@
           </q-item-label>
         </q-item-section>
       </q-item>
-    </q-list>
+    </TransitionGroup>
   </q-card>
 </template>
 
@@ -100,7 +100,7 @@ import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import QueryErrorState from 'src/components/shared/QueryErrorState.vue'
 import { usePreferencesStore } from 'src/stores/preferences'
 import { formatCurrency, formatCurrencyPrivate, type CurrencyCode } from 'src/utils/currency'
-import { formatDate } from 'src/utils/date'
+import { formatDayInline } from 'src/utils/date'
 import { DEFAULT_CATEGORY_COLOR } from 'src/utils/categories'
 import type { ExpenseWithCategoryAndPlan } from 'src/api'
 
@@ -136,6 +136,13 @@ function formatAmount(expense: ExpenseWithCategoryAndPlan): string {
   return formatCurrency(expense.amount, currency)
 }
 
+// "Food, today" reads faster than a plan name plus a full date
+function expenseCaption(expense: ExpenseWithCategoryAndPlan): string {
+  return [expense.categories?.name, formatDayInline(expense.expense_date)]
+    .filter(Boolean)
+    .join(', ')
+}
+
 function openExpensePlan(expense: ExpenseWithCategoryAndPlan) {
   if (expense.plans?.id) {
     void router.push({ name: 'plan', params: { id: expense.plans.id } })
@@ -144,3 +151,10 @@ function openExpensePlan(expense: ExpenseWithCategoryAndPlan) {
   }
 }
 </script>
+
+<style lang="scss" scoped>
+// Leaving rows are absolutely positioned by the list transition
+.recent-activity__list {
+  position: relative;
+}
+</style>

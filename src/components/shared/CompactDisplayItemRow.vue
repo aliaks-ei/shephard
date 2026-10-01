@@ -82,7 +82,8 @@ const amountClass = computed(() => {
     return props.strike ? 'text-faint' : 'text-muted'
   }
 
-  return props.strike ? 'text-faint' : ''
+  // A completed item reads as done: amount muted like its name
+  return props.strike ? 'text-muted' : ''
 })
 </script>
 

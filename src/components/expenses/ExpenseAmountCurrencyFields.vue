@@ -1,47 +1,45 @@
 <template>
-  <div class="row q-col-gutter-sm q-mb-sm">
+  <!-- The amount leads the form: large, centred, decimal keyboard -->
+  <div class="expense-amount column items-center q-mb-md">
     <label
-      class="col block"
       for="expense-amount-input"
+      class="sr-only"
     >
-      <span class="form-label form-label--required">Amount</span>
-      <q-input
-        id="expense-amount-input"
-        :model-value="displayAmount"
-        placeholder="0.00"
-        type="text"
-        outlined
-        dense
-        no-error-icon
-        inputmode="decimal"
-        hide-bottom-space
-        :rules="amountRules"
-        :disable="disable"
-        @update:model-value="emit('update:amount', $event)"
-      />
+      Amount
     </label>
+    <q-input
+      for="expense-amount-input"
+      :model-value="displayAmount"
+      placeholder="0,00"
+      type="text"
+      borderless
+      no-error-icon
+      inputmode="decimal"
+      autocomplete="off"
+      :autofocus="autofocus"
+      :rules="amountRules"
+      :disable="disable"
+      class="expense-amount__input full-width"
+      input-class="expense-amount__native text-amount text-center"
+      @update:model-value="emit('update:amount', $event)"
+    />
 
-    <label
-      class="col-auto block"
-      for="expense-currency-input"
-    >
-      <span class="form-label">Currency</span>
-      <q-select
-        :model-value="selectedCurrency"
-        id="expense-currency-input"
-        :options="currencyOptions"
-        outlined
-        dense
-        no-error-icon
-        emit-value
-        options-dense
-        map-options
-        class="currency-select"
-        :disable="disable"
-        hide-bottom-space
-        @update:model-value="emit('update:currency', $event)"
-      />
-    </label>
+    <q-select
+      id="expense-currency-input"
+      :model-value="selectedCurrency"
+      :options="currencyOptions"
+      borderless
+      dense
+      no-error-icon
+      emit-value
+      options-dense
+      map-options
+      aria-label="Currency"
+      class="expense-amount__currency"
+      :disable="disable"
+      hide-bottom-space
+      @update:model-value="emit('update:currency', $event)"
+    />
   </div>
 
   <div
@@ -108,6 +106,7 @@ defineProps<{
   conversionError: string
   conversionResult: ConversionResult | null
   convertedAmountDisplay: string
+  autofocus?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -117,11 +116,61 @@ const emit = defineEmits<{
 </script>
 
 <style lang="scss" scoped>
-.currency-select {
-  min-width: 80px;
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
 
+.expense-amount__input {
   :deep(.q-field__control) {
-    height: 40px;
+    height: 64px;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  :deep(.q-field__bottom) {
+    justify-content: center;
+    text-align: center;
+  }
+}
+
+// iOS zooms inputs under 16px; this one is far larger
+.expense-amount__input :deep(.expense-amount__native) {
+  font-size: 46px !important;
+  line-height: 1.1;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  color: hsl(var(--ink));
+
+  &::placeholder {
+    color: hsl(var(--muted-foreground) / 0.5);
+  }
+}
+
+// Currency as a small chip under the amount
+.expense-amount__currency {
+  :deep(.q-field__control) {
+    min-height: 32px;
+    height: 32px;
+    padding: 0 6px 0 12px;
+    border-radius: var(--radius-full);
+    background: hsl(var(--muted));
+    box-shadow: none;
+  }
+
+  :deep(.q-field__native) {
+    min-height: 32px;
+    padding: 0;
+    font-size: 13px !important;
+    font-weight: 600;
+  }
+
+  :deep(.q-field__append) {
+    height: 32px;
   }
 }
 </style>

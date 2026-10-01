@@ -144,10 +144,10 @@ describe('TemplateCategory', () => {
       categoryIcon: 'eva-pricetags-outline',
     })
 
-    const addButton = wrapper.find('button[aria-label="Add Item"], .q-btn:has([class*="plus"])')
+    const addButton = wrapper.find('button[aria-label="Add item"], .q-btn:has([class*="plus"])')
     if (!addButton.exists()) {
       const buttons = wrapper.findAll('.q-btn')
-      const addBtn = buttons.find((btn) => btn.text().includes('Add Item'))
+      const addBtn = buttons.find((btn) => btn.text().includes('Add item'))
       if (addBtn) {
         await addBtn.trigger('click')
       }

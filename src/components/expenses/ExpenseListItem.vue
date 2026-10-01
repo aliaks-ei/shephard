@@ -1,6 +1,6 @@
 <template>
   <q-slide-item
-    v-if="$q.screen.lt.md && canEdit"
+    v-if="!isHidden && $q.screen.lt.md && canEdit"
     v-bind="$attrs"
     class="mobile-expense-swipe-item"
     right-color="negative"
@@ -38,11 +38,11 @@
           {{ expense.name }}
         </q-item-label>
         <q-item-label
+          v-if="caption"
           caption
           class="q-mt-xs"
         >
-          <template v-if="categoryName">{{ categoryName }} • </template>
-          {{ formatDate(expense.expense_date) }}
+          {{ caption }}
         </q-item-label>
       </q-item-section>
 
@@ -67,7 +67,7 @@
   </q-slide-item>
 
   <q-item
-    v-else
+    v-else-if="!isHidden"
     v-bind="$attrs"
     :class="itemClass"
     :to="to"
@@ -90,11 +90,11 @@
         {{ expense.name }}
       </q-item-label>
       <q-item-label
+        v-if="caption"
         caption
         class="q-mt-xs"
       >
-        <template v-if="categoryName">{{ categoryName }} • </template>
-        {{ formatDate(expense.expense_date) }}
+        {{ caption }}
       </q-item-label>
     </q-item-section>
 
@@ -121,9 +121,8 @@
           round
           size="sm"
           icon="eva-trash-2-outline"
-          color="negative"
+          class="icon-action-destructive expense-list-item__icon-action"
           aria-label="Delete expense"
-          class="expense-list-item__icon-action"
           @click.stop="handleConfirmDelete"
         >
           <q-tooltip v-if="!$q.screen.lt.md">Delete expense</q-tooltip>
@@ -134,11 +133,12 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { RouteLocationRaw } from 'vue-router'
 
 import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
-import { formatDate } from 'src/utils/date'
+import { formatDayInline } from 'src/utils/date'
 import { DEFAULT_CATEGORY_COLOR } from 'src/utils/categories'
 import { useExpenseActions } from 'src/composables/useExpenseActions'
 import { hapticTap } from 'src/utils/haptics'
@@ -151,6 +151,8 @@ type ExpenseListItemProps = {
   currency: CurrencyCode
   canEdit: boolean
   showCategory?: boolean
+  // Off inside day groups, where the header already names the day
+  showDate?: boolean
   categoryName?: string
   categoryColor?: string
   categoryIcon?: string
@@ -160,6 +162,7 @@ type ExpenseListItemProps = {
 
 const props = withDefaults(defineProps<ExpenseListItemProps>(), {
   showCategory: false,
+  showDate: true,
   itemClass: '',
 })
 
@@ -167,12 +170,19 @@ const emit = defineEmits<{
   deleted: []
 }>()
 
-const { confirmDeleteExpense } = useExpenseActions()
+const caption = computed(() =>
+  [props.categoryName, props.showDate ? formatDayInline(props.expense.expense_date) : '']
+    .filter(Boolean)
+    .join(', '),
+)
+
+const { confirmDeleteExpense, deleteExpenseWithUndo, isUndoPending } = useExpenseActions()
+const isHidden = computed(() => isUndoPending(props.expense.id))
 
 function handleSwipeDelete(details: { reset: () => void }) {
   hapticTap()
   details.reset()
-  confirmDeleteExpense(props.expense, () => emit('deleted'))
+  deleteExpenseWithUndo(props.expense, () => emit('deleted'))
 }
 
 function handleConfirmDelete() {

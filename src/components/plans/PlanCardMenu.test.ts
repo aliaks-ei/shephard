@@ -118,7 +118,7 @@ describe('PlanCardMenu', () => {
       planStatus: 'active',
     })
 
-    expect(wrapper.text()).not.toContain('Share Plan')
-    expect(wrapper.text()).toContain('Cancel Plan')
+    expect(wrapper.text()).not.toContain('Share plan')
+    expect(wrapper.text()).toContain('Cancel plan')
   })
 })
