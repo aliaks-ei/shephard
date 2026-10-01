@@ -70,7 +70,7 @@
     "lucide-static": "^1.42.0",
     "msw": "^2.12.10",
     "prettier": "^3.3.3",
-    "supabase": "^2.51.0",
+    "supabase": "^2.119.0",
     "tsx": "4.21.0",
     "typescript": "~5.5.3",
     "vite-plugin-checker": "^0.9.0",
