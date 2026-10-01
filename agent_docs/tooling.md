@@ -166,7 +166,7 @@ Important nuance:
 
 - Edge functions run in Deno and are operationally separate from the frontend build/lint setup.
 - Frontend docs and tests should not assume ESLint coverage or Node runtime conventions apply there.
-- `supabase/config.toml` does not currently enumerate every function directory in the repo, so review it when adding or changing edge functions.
+- Each edge function has a `[functions.<name>]` entry in `supabase/config.toml`. Add one when you add a function.
 - Each function pins its import-map dependencies; do not replace exact versions with floating major ranges.
 - `emit-notification-event` claims durable outbox rows and schedules web-push delivery with `EdgeRuntime.waitUntil`.
 
@@ -196,20 +196,6 @@ For Capacitor:
 - treat `src-capacitor/www` as generated output, not source of truth
 - treat root app code in `src/` as the source of truth for runtime behavior
 - assume iOS is the clearest maintained target unless you confirm Android-specific wiring locally
-
-## Codex Docs Automation
-
-The repo now includes Codex-driven docs workflows under `.github/workflows/`.
-
-- `codex-doc-review.yml`: runs on same-repo pull requests in read-only mode and comments when durable docs may be stale.
-- `codex-doc-update.yml`: runs only when a maintainer triggers it with `workflow_dispatch` or an `@codex update docs` pull request comment.
-
-Important behavior:
-
-- Codex review/update prompts live in `.github/codex/prompts/`.
-- The write-capable workflow is restricted to `AGENTS.md`, `README.md`, and `agent_docs/*.md`.
-- Both workflows require the `OPENAI_API_KEY` repository secret.
-- Forked pull requests are intentionally limited to review-only/manual follow-up patterns because automatic pushes back to fork branches are not supported by this setup.
 
 ## Deployment
 

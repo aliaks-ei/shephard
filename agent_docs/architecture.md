@@ -27,7 +27,8 @@ Other important roots:
 - `src-pwa/`: PWA manifest and service worker files.
 - `src-capacitor/`: mobile wrapper artifacts and config, not the main source of app logic.
 - `supabase/`: local backend config and edge functions.
-- `scripts/`: operational support (Codex docs automation helpers).
+- `services/shephard-mcp/`: MCP server that exposes Shephard data to AI clients through the `mcp_*` Supabase RPCs.
+- `scripts/`: build helpers (Lucide icon sprite).
 
 ## Domain Model
 
