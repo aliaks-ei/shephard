@@ -73,7 +73,7 @@ const features = [
   color: hsl(var(--hero-foreground));
   background:
     radial-gradient(120% 140% at 85% -20%, hsl(var(--hero-glow)) 0%, transparent 55%),
-    linear-gradient(135deg, hsl(var(--hero-gradient-from)) 0%, hsl(var(--hero-gradient-to)) 100%);
+    hsl(var(--hero-bg));
 }
 
 .auth-layout__hero-muted {

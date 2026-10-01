@@ -1,7 +1,7 @@
 <template>
   <AppDialogShell
     :model-value="modelValue"
-    title="Category Details"
+    title="Category details"
     body-class="q-pa-none"
     @update:model-value="emit('update:modelValue', $event)"
   >

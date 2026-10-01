@@ -21,7 +21,7 @@
             class="q-mr-sm"
             size="24px"
           />
-          <h2 class="text-h6 q-my-none">Budget by Category</h2>
+          <h2 class="text-h6 q-my-none">Budget by category</h2>
         </div>
 
         <div
@@ -81,11 +81,18 @@
               :key="category.categoryId"
               class="col-12 col-sm-6 col-md-4"
             >
-              <CategoryBudgetCard
-                :category="category"
-                :currency="planCurrency"
-                @click="openCategoryModal(category)"
-              />
+              <!-- Same row as mobile, one per card: one visual language for budgets -->
+              <q-card
+                :bordered="$q.dark.isActive"
+                class="shadow-1 full-height overflow-hidden"
+              >
+                <CategoryBudgetListItem
+                  :category="category"
+                  :currency="planCurrency"
+                  class="full-height q-py-md"
+                  @click="openCategoryModal(category)"
+                />
+              </q-card>
             </div>
           </div>
         </template>
@@ -150,7 +157,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import PlanSummaryCard from './PlanSummaryCard.vue'
-import CategoryBudgetCard from './CategoryBudgetCard.vue'
 import CategoryBudgetListItem from './CategoryBudgetListItem.vue'
 import RecentExpensesList from './RecentExpensesList.vue'
 import CategoryExpensesDialog from './CategoryExpensesDialog.vue'

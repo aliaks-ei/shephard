@@ -15,7 +15,7 @@ export function formatDateRelative(dateString: string): string {
   } else if (parsed.toDateString() === yesterday.toDateString()) {
     return 'Yesterday'
   } else {
-    const format = parsed.getFullYear() !== today.getFullYear() ? 'MMM D, YYYY' : 'MMM D'
+    const format = parsed.getFullYear() !== today.getFullYear() ? 'D MMM YYYY' : 'ddd D MMM'
     return quasarDate.formatDate(parsed, format)
   }
 }
@@ -57,4 +57,9 @@ export function parseDateInput(value: string): Date | null {
   }
 
   return parsed
+}
+
+/** Relative day for use inside a sentence: "today", "yesterday", "Mon 29 Sep". */
+export function formatDayInline(dateString: string): string {
+  return formatDateRelative(dateString).replace(/^(Today|Yesterday)$/, (word) => word.toLowerCase())
 }

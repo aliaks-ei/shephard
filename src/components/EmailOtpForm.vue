@@ -115,7 +115,7 @@
 
       <q-btn
         type="submit"
-        label="Verify Code"
+        label="Verify code"
         color="primary"
         class="full-width"
         :loading="isVerifying"

@@ -1,14 +1,5 @@
 <template>
   <q-card-section class="q-pt-none">
-    <ExpensePhotoAnalysisSection
-      ref="photoAnalysisSectionRef"
-      :plan-id="planId"
-      :selected-plan-currency="selectedPlan?.currency ?? null"
-      :default-category-id="defaultCategoryId ?? null"
-      class="q-mb-md"
-      @analysis-applied="handlePhotoAnalysisApplied"
-    />
-
     <ExpenseAmountCurrencyFields
       :display-amount="displayAmount"
       :amount-rules="amountRules"
@@ -21,6 +12,7 @@
       :conversion-error="conversionError ?? ''"
       :conversion-result="conversionResult"
       :converted-amount-display="convertedAmountDisplay"
+      autofocus
       @update:amount="handleUpdateAmount"
       @update:currency="selectedCurrency = $event"
     />
@@ -29,11 +21,11 @@
       class="q-mb-sm block"
       for="expense-name-input"
     >
-      <span class="form-label form-label--required">Expense Name</span>
+      <span class="form-label form-label--required">What was it?</span>
       <q-input
-        id="expense-name-input"
+        for="expense-name-input"
         :model-value="name"
-        placeholder="e.g., Grocery shopping"
+        placeholder="e.g. Lunch at a cafe"
         outlined
         dense
         no-error-icon
@@ -42,156 +34,109 @@
         :disable="loading ?? false"
         hide-bottom-space
         @update:model-value="handleUpdateName"
-      />
+      >
+        <template #append>
+          <q-btn
+            flat
+            round
+            dense
+            icon="eva-camera-outline"
+            aria-label="Scan receipt"
+            aria-controls="receipt-photo-panel"
+            :aria-expanded="String(isReceiptOpen)"
+            :color="isReceiptOpen ? 'primary' : undefined"
+            :disable="loading ?? false"
+            class="expense-name__scan"
+            @click="toggleReceipt"
+          />
+        </template>
+      </q-input>
     </label>
 
-    <div class="column q-mb-sm">
-      <label
-        class="block"
-        for="expense-category-input"
+    <ExpensePhotoAnalysisSection
+      ref="photoAnalysisSectionRef"
+      v-model:open="isReceiptOpen"
+      :plan-id="planId"
+      :selected-plan-currency="selectedPlan?.currency ?? null"
+      :default-category-id="defaultCategoryId ?? null"
+      @analysis-applied="handlePhotoAnalysisApplied"
+    />
+
+    <label
+      class="q-mt-md q-mb-sm block"
+      for="expense-category-input"
+    >
+      <span class="form-label form-label--required">Category</span>
+      <q-select
+        id="expense-category-input"
+        :model-value="categoryId"
+        :options="categoryOptions"
+        option-label="label"
+        option-value="value"
+        outlined
+        dense
+        emit-value
+        options-dense
+        map-options
+        no-error-icon
+        :disable="!selectedPlan || isLoadingCategories || (loading ?? false)"
+        :loading="isLoadingCategories || aiCategorization.isCategorizing.value"
+        :readonly="!!defaultCategoryId"
+        :rules="[(val: string) => !!val || 'Choose a category']"
+        :hint="categoryHint"
+        :hide-bottom-space="!categoryHint"
+        @update:model-value="handleUpdateCategoryId"
       >
-        <span class="form-label form-label--required">Category</span>
-        <q-select
-          id="expense-category-input"
-          :model-value="categoryId"
-          :options="categoryOptions"
-          option-label="label"
-          option-value="value"
-          outlined
-          dense
-          emit-value
-          options-dense
-          map-options
-          :disable="!selectedPlan || isLoadingCategories || (loading ?? false)"
-          :loading="isLoadingCategories"
-          :readonly="!!defaultCategoryId"
-          :rules="[(val: string) => !!val || 'Category is required']"
-          :hint="categoryHint"
-          :hide-bottom-space="!categoryHint"
-          @update:model-value="handleUpdateCategoryId"
+        <template
+          v-if="categoryId && selectedCategoryOption"
+          #prepend
         >
-          <template
-            v-if="categoryId && selectedCategoryOption"
-            #prepend
-          >
-            <CategoryIcon
-              :color="selectedCategoryOption.color"
-              :icon="selectedCategoryOption.icon"
-              size="xs"
-            />
-          </template>
-          <template #append>
-            <q-spinner
-              v-if="aiCategorization.isCategorizing.value"
-              color="primary"
-              size="20px"
-              class="q-mr-xs"
-            />
-            <q-chip
-              v-else-if="isAiSelected"
-              size="sm"
-              icon="eva-bulb-outline"
-              class="bg-info-soft text-info-strong q-mr-xs"
-            >
-              AI
-            </q-chip>
-          </template>
-          <template #option="scope">
-            <q-item
-              v-bind="scope.itemProps"
-              class="q-py-xs q-px-md"
-            >
-              <q-item-section avatar>
-                <CategoryIcon
-                  :color="scope.opt.color"
-                  :icon="scope.opt.icon"
-                  size="sm"
-                />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label>{{ scope.opt.label }}</q-item-label>
-                <q-item-label caption>
-                  Budget:
-                  {{
-                    formatCurrency(
-                      scope.opt.plannedAmount,
-                      (selectedPlan?.currency || 'USD') as CurrencyCode,
-                    )
-                  }}
-                  <span
-                    v-if="scope.opt.remainingAmount !== undefined"
-                    :class="scope.opt.remainingAmount >= 0 ? 'text-positive' : 'text-negative'"
-                  >
-                    • Still to pay:
-                    {{
-                      formatCurrency(
-                        scope.opt.remainingAmount,
-                        (selectedPlan?.currency || 'USD') as CurrencyCode,
-                      )
-                    }}
-                  </span>
-                </q-item-label>
-              </q-item-section>
-            </q-item>
-          </template>
-          <template #no-option>
-            <q-item class="q-py-xs q-px-md">
-              <q-item-section class="text-muted">
-                {{
-                  isLoadingCategories
-                    ? 'Loading categories...'
-                    : selectedPlan
-                      ? 'No categories in selected plan'
-                      : 'Select a plan first'
-                }}
-              </q-item-section>
-            </q-item>
-          </template>
-        </q-select>
-      </label>
-
-      <!-- AI Suggestion Banner (Low Confidence) -->
-      <q-banner
-        v-if="aiCategorization.lowConfidenceSuggestion.value && !isAiSelected"
-        class="bg-info-soft text-info-strong q-mt-md q-mb-md"
-        dense
-        rounded
-      >
-        <template #avatar>
-          <q-icon name="eva-bulb-outline" />
-        </template>
-        <div class="column">
-          <div class="col">
-            AI suggests:
-            <strong>{{ aiCategorization.lowConfidenceSuggestion.value.categoryName }}</strong>
-            <div class="text-caption">
-              {{ aiCategorization.lowConfidenceSuggestion.value.reasoning }}
-            </div>
-          </div>
-          <q-btn
-            label="Apply"
-            color="primary"
-            class="self-end"
-            flat
-            dense
-            no-caps
-            @click="applyLowConfidenceSuggestion"
+          <CategoryIcon
+            :color="selectedCategoryOption.color"
+            :icon="selectedCategoryOption.icon"
+            size="xs"
           />
-        </div>
-      </q-banner>
-
-      <q-banner
-        v-else-if="aiCategorization.hasError.value || aiCategorization.hasNoSuggestion.value"
-        class="themed-muted-banner q-mt-md q-mb-md"
-        dense
-        rounded
-      >
-        <template #avatar>
-          <q-icon name="eva-info-outline" />
         </template>
-        {{ aiCategorization.errorMessage.value || aiCategorization.noSuggestionMessage.value }}
-      </q-banner>
-    </div>
+        <template #option="scope">
+          <q-item
+            v-bind="scope.itemProps"
+            class="q-py-xs q-px-md"
+          >
+            <q-item-section avatar>
+              <CategoryIcon
+                :color="scope.opt.color"
+                :icon="scope.opt.icon"
+                size="sm"
+              />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>{{ scope.opt.label }}</q-item-label>
+              <q-item-label
+                v-if="selectedPlan?.currency"
+                caption
+                class="text-amount"
+                :class="{ 'text-over': isCategoryOver(scope.opt) }"
+              >
+                {{ categoryBalanceLabel(scope.opt) }}
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+        </template>
+        <template #no-option>
+          <q-item class="q-py-xs q-px-md">
+            <q-item-section class="text-muted">
+              {{
+                isLoadingCategories
+                  ? 'Loading categories...'
+                  : selectedPlan
+                    ? 'No categories in selected plan'
+                    : 'Select a plan first'
+              }}
+            </q-item-section>
+          </q-item>
+        </template>
+      </q-select>
+    </label>
 
     <PlanSelectorField
       v-model="localPlanId"
@@ -199,16 +144,13 @@
       :readonly="readonly ?? false"
       :loading="loading ?? false"
       :show-auto-select-hint="(showAutoSelectHint ?? false) && !!selectedPlan"
-      class="q-mb-md"
+      class="q-mt-md q-mb-md"
       :display-value="planDisplayValue"
       @plan-selected="handlePlanSelected"
     />
 
-    <!-- Budget Impact Display -->
     <BudgetImpactCard
-      v-if="
-        !loading && categoryId && effectiveAmount && effectiveAmount > 0 && selectedCategoryOption
-      "
+      v-if="!loading && categoryId && selectedCategoryOption"
       :category-id="categoryId"
       :amount="effectiveAmount"
       :currency="(selectedPlan?.currency as CurrencyCode) ?? null"
@@ -286,6 +228,12 @@ const ExpensePhotoAnalysisSection = defineAsyncComponent(
 )
 
 const photoAnalysisSectionRef = ref<{ reset: () => void } | null>(null)
+const isReceiptOpen = ref(false)
+
+function toggleReceipt() {
+  isReceiptOpen.value = !isReceiptOpen.value
+}
+
 const planIdRef = toRef(props, 'planId')
 
 const aiCategorization = useAICategorization(planIdRef)
@@ -366,14 +314,6 @@ const categoryHint = computed(() => {
     return 'Loading categories...'
   }
 
-  if (aiCategorization.isCategorizing.value) {
-    return 'Finding a category...'
-  }
-
-  if (isAiSelected.value) {
-    return 'Category selected automatically'
-  }
-
   if (props.selectedPlan && props.categoryOptions.length === 0) {
     return 'No categories are available in this plan'
   }
@@ -384,6 +324,20 @@ const categoryHint = computed(() => {
 const selectedCategoryOption = computed(() => {
   return props.categoryOptions.find((opt) => opt.value === props.categoryId)
 })
+
+const planCurrency = computed(() => (props.selectedPlan?.currency ?? 'EUR') as CurrencyCode)
+
+// Over is spent vs planned: remainingAmount counts only unpaid fixed items
+function isCategoryOver(option: CategoryOption): boolean {
+  return option.actualAmount > option.plannedAmount
+}
+
+function categoryBalanceLabel(option: CategoryOption): string {
+  if (isCategoryOver(option)) {
+    return `${formatCurrency(option.actualAmount - option.plannedAmount, planCurrency.value)} over`
+  }
+  return `${formatCurrency(Math.max(option.remainingAmount, 0), planCurrency.value)} left`
+}
 
 function handlePhotoAnalysisApplied(result: {
   expenseName: string
@@ -416,18 +370,6 @@ const handleUpdateCategoryId = (value: string | null) => {
   emit('update:categoryId', value)
 }
 
-function applyLowConfidenceSuggestion() {
-  const suggestion = aiCategorization.lowConfidenceSuggestion.value
-  if (
-    suggestion &&
-    props.categoryOptions.some((option) => option.value === suggestion.categoryId)
-  ) {
-    aiSelectedCategoryId.value = suggestion.categoryId
-    emit('update:categoryId', suggestion.categoryId)
-    aiCategorization.clearSuggestion()
-  }
-}
-
 async function runCategorization(expenseName: string): Promise<void> {
   if (
     !canCategorize.value ||
@@ -445,16 +387,12 @@ async function runCategorization(expenseName: string): Promise<void> {
     return
   }
 
+  // Apply the detected category silently; the user can still change it
   const suggestion = result.suggestion
   if (props.categoryOptions.some((option) => option.value === suggestion.categoryId)) {
     aiSelectedCategoryId.value = suggestion.categoryId
     emit('update:categoryId', suggestion.categoryId)
-    return
   }
-
-  aiCategorization.reportUnavailable(
-    "Couldn't apply the suggested category. Please choose one manually.",
-  )
 }
 
 async function handleUpdateName(value: string | number | null) {
@@ -520,3 +458,10 @@ watch([() => props.planId, canCategorize], ([planId, ready], [previousPlanId]) =
   }
 })
 </script>
+
+<style lang="scss" scoped>
+.expense-name__scan {
+  min-width: 36px;
+  min-height: 36px;
+}
+</style>

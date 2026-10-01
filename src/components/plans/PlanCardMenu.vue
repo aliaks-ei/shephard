@@ -22,7 +22,7 @@
           />
         </q-item-section>
         <q-item-section>
-          <q-item-label>Export Plan</q-item-label>
+          <q-item-label>Export plan</q-item-label>
         </q-item-section>
       </q-item>
       <q-item
@@ -40,7 +40,7 @@
           />
         </q-item-section>
         <q-item-section>
-          <q-item-label>Share Plan</q-item-label>
+          <q-item-label>Share plan</q-item-label>
         </q-item-section>
       </q-item>
       <q-item
@@ -60,7 +60,7 @@
           />
         </q-item-section>
         <q-item-section>
-          <q-item-label>Cancel Plan</q-item-label>
+          <q-item-label>Cancel plan</q-item-label>
         </q-item-section>
       </q-item>
       <q-item
@@ -80,7 +80,7 @@
           />
         </q-item-section>
         <q-item-section>
-          <q-item-label>Delete Plan</q-item-label>
+          <q-item-label>Delete plan</q-item-label>
         </q-item-section>
       </q-item>
     </q-list>

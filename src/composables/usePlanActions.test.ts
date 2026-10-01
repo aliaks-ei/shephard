@@ -59,7 +59,6 @@ describe('usePlanActions', () => {
       onDelete: vi.fn(),
       onExport: vi.fn(),
       onAddExpense: vi.fn(),
-      onSwitchToEdit: vi.fn(),
     },
     ...overrides,
   })
@@ -232,7 +231,7 @@ describe('usePlanActions', () => {
       expect(addExpenseAction?.visible).toBe(false)
     })
 
-    it('shows Edit button when in edit mode and can edit plan data', () => {
+    it('does not offer Edit as an action, because Edit is a page tab', () => {
       const context = createContext({
         currentTab: ref('overview'),
         isEditMode: ref(true),
@@ -241,21 +240,7 @@ describe('usePlanActions', () => {
       })
       const { actionBarActions } = usePlanActions(context)
 
-      const editAction = actionBarActions.value.find((a) => a.key === 'edit')
-      expect(editAction?.visible).toBe(true)
-    })
-
-    it('hides Edit button when cannot edit plan data', () => {
-      const context = createContext({
-        currentTab: ref('overview'),
-        isEditMode: ref(true),
-        canEditPlanData: ref(false),
-        isNewPlan: ref(false),
-      })
-      const { actionBarActions } = usePlanActions(context)
-
-      const editAction = actionBarActions.value.find((a) => a.key === 'edit')
-      expect(editAction?.visible).toBe(false)
+      expect(actionBarActions.value.some((a) => a.key === 'edit')).toBe(false)
     })
 
     it('shows Share button when user can edit', () => {
@@ -293,10 +278,7 @@ describe('usePlanActions', () => {
       const { actionBarActions } = usePlanActions(context)
 
       const addExpenseAction = actionBarActions.value.find((a) => a.key === 'add-expense')
-      const editAction = actionBarActions.value.find((a) => a.key === 'edit')
-
       expect(addExpenseAction?.visible).toBe(true)
-      expect(editAction?.visible).toBe(true)
     })
   })
 
@@ -353,7 +335,6 @@ describe('usePlanActions', () => {
         onDelete: vi.fn(),
         onExport: vi.fn(),
         onAddExpense: vi.fn(),
-        onSwitchToEdit: vi.fn(),
       }
       const context = createContext({ handlers })
       const { actionBarActions } = usePlanActions(context)
@@ -372,7 +353,6 @@ describe('usePlanActions', () => {
         onDelete: vi.fn(),
         onExport: vi.fn(),
         onAddExpense: vi.fn(),
-        onSwitchToEdit: vi.fn(),
       }
       const context = createContext({
         currentTab: ref('overview'),

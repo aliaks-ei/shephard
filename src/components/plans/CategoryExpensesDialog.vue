@@ -4,7 +4,7 @@
     :title="category?.categoryName || 'Category'"
     body-class="q-pa-none"
     :body-scrollable="false"
-    :primary-action-label="canAddExpenses ? 'Add Expense' : undefined"
+    :primary-action-label="canAddExpenses ? 'Add expense' : undefined"
     @update:model-value="emit('update:modelValue', $event)"
     @primary="openExpenseDialog"
   >
@@ -33,7 +33,7 @@
           <div class="col-4">
             <div class="text-center">
               <div class="text-caption text-caption-secondary">Spent</div>
-              <div class="text-body1 text-weight-bold text-info text-amount">
+              <div class="text-body1 text-weight-bold text-amount">
                 {{ formatCurrency(category?.actualAmount || 0, currency) }}
               </div>
             </div>
@@ -41,13 +41,13 @@
           <div class="col-4">
             <div class="text-center">
               <div class="text-caption text-caption-secondary">
-                {{ (category?.remainingAmount || 0) >= 0 ? 'Still to pay' : 'Over' }}
+                {{ isOver ? 'Over' : 'Left' }}
               </div>
               <div
                 class="text-body1 text-weight-bold text-amount"
-                :class="remainingColorClass"
+                :class="{ 'text-over': isOver }"
               >
-                {{ formatCurrency(Math.abs(category?.remainingAmount || 0), currency) }}
+                {{ formatCurrency(balanceAmount, currency) }}
               </div>
             </div>
           </div>
@@ -61,7 +61,8 @@
           </div>
           <q-linear-progress
             :value="progressPercentage / 100"
-            :color="progressColor"
+            :class="isOver ? 'text-over' : 'category-tone-fg'"
+            :style="toneStyle"
             size="8px"
             rounded
           />
@@ -173,7 +174,7 @@
                 header
                 class="text-caption q-py-xs text-caption-secondary"
               >
-                For Reference
+                For reference
               </q-item-label>
 
               <!-- Non-fixed items (read-only, greyed out) -->
@@ -290,7 +291,7 @@
       />
       <q-btn
         v-if="canAddExpenses"
-        label="Add Expense"
+        label="Add expense"
         color="primary"
         unelevated
         dense
@@ -318,8 +319,7 @@ import CategoryIcon from 'src/components/categories/CategoryIcon.vue'
 import ExpenseRegistrationDialog from 'src/components/expenses/ExpenseRegistrationDialog.vue'
 import ExpenseListItem from 'src/components/expenses/ExpenseListItem.vue'
 import { formatCurrency, type CurrencyCode } from 'src/utils/currency'
-import { DEFAULT_CATEGORY_COLOR } from 'src/utils/categories'
-import { getBudgetProgressColor, getBudgetRemainingColorClass } from 'src/utils/budget'
+import { DEFAULT_CATEGORY_COLOR, getCategoryToneStyle } from 'src/utils/categories'
 import { useItemCompletion } from 'src/composables/useItemCompletion'
 import { useTrackablePlanItems } from 'src/composables/useTrackablePlanItems'
 import type { PlanItem } from 'src/api/plans'
@@ -380,12 +380,15 @@ const progressPercentage = computed(() => {
   return Math.min((props.category.actualAmount / props.category.plannedAmount) * 100, 999)
 })
 
-const progressColor = computed(() => getBudgetProgressColor(progressPercentage.value))
-
-const remainingColorClass = computed(() => {
-  if (!props.category) return ''
-  return getBudgetRemainingColorClass(progressPercentage.value)
-})
+// Over is spent vs planned: remainingAmount counts only unpaid fixed items
+const overAmount = computed(() =>
+  props.category ? Math.max(props.category.actualAmount - props.category.plannedAmount, 0) : 0,
+)
+const isOver = computed(() => overAmount.value > 0.005)
+const balanceAmount = computed(() =>
+  isOver.value ? overAmount.value : Math.max(props.category?.remainingAmount ?? 0, 0),
+)
+const toneStyle = computed(() => getCategoryToneStyle(props.category?.categoryColor))
 
 function openExpenseDialog() {
   if (!props.canAddExpenses) return

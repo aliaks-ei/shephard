@@ -30,7 +30,7 @@
           v-if="showClearSearch"
           flat
           color="primary"
-          label="Clear Search"
+          label="Clear search"
           dense
           no-caps
           @click="emit('clearSearch')"

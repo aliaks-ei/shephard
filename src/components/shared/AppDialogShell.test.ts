@@ -204,7 +204,7 @@ it('renders the mobile bottom sheet variant with swipe zone and primary action',
   const cardStyle = wrapper.find('.q-card-stub').attributes('style')
   expect(cardStyle).toContain('height: 95dvh')
   expect(cardStyle).toContain('max-height: 95dvh')
-  expect(cardStyle).toContain('border-radius: var(--radius-xl) var(--radius-xl)')
+  expect(cardStyle).toContain('border-radius: var(--radius-hero) var(--radius-hero)')
 })
 
 it('applies card surface to mobile body when mobileBodyCardSurface is set', () => {

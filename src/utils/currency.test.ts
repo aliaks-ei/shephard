@@ -48,7 +48,7 @@ describe('currency utilities', () => {
   describe('formatCurrency', () => {
     it('should format EUR amounts correctly', () => {
       expect(formatCurrency(1234.56, 'EUR')).toBe('€1.234,56')
-      expect(formatCurrency(0, 'EUR')).toBe('€0.00')
+      expect(formatCurrency(0, 'EUR')).toBe('€0,00')
       expect(formatCurrency(1000, 'EUR')).toBe('€1.000,00')
     })
 
@@ -71,14 +71,14 @@ describe('currency utilities', () => {
     })
 
     it('should handle null amounts', () => {
-      expect(formatCurrency(null, 'EUR')).toBe('€0.00')
+      expect(formatCurrency(null, 'EUR')).toBe('€0,00')
       expect(formatCurrency(null, 'USD')).toBe('$0.00')
       expect(formatCurrency(null, 'GBP')).toBe('£0.00')
       expect(formatCurrency(null, 'JPY')).toBe('¥0.00')
     })
 
     it('should handle undefined amounts', () => {
-      expect(formatCurrency(undefined, 'EUR')).toBe('€0.00')
+      expect(formatCurrency(undefined, 'EUR')).toBe('€0,00')
       expect(formatCurrency(undefined, 'USD')).toBe('$0.00')
       expect(formatCurrency(undefined, 'GBP')).toBe('£0.00')
       expect(formatCurrency(undefined, 'JPY')).toBe('¥0.00')

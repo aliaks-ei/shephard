@@ -69,16 +69,16 @@
               <q-item-label class="text-body2">Theme</q-item-label>
             </q-item-section>
             <q-item-section side>
-              <q-select
+              <!-- Three values: a segmented control is one tap, a dropdown is two -->
+              <q-btn-toggle
                 :model-value="selectedTheme"
                 :options="themeOptions"
+                no-caps
+                unelevated
                 dense
-                outlined
-                class="settings-select"
-                emit-value
-                options-dense
-                map-options
-                hide-bottom-space
+                toggle-color="primary"
+                class="theme-toggle"
+                aria-label="Theme"
                 @update:model-value="updatePreference('theme', $event)"
               />
             </q-item-section>
@@ -90,14 +90,14 @@
 
       <McpConnectionsSection />
 
-      <!-- Sign Out -->
-      <div class="text-center">
+      <!-- Sign out -->
+      <div class="settings-sign-out text-center">
         <q-btn
           outline
           no-caps
           color="negative"
           icon="eva-log-out-outline"
-          label="Sign Out"
+          label="Sign out"
           dense
           padding="sm lg"
           :loading="isSigningOut"
@@ -134,9 +134,9 @@ const currencyOptions = [
 ]
 
 const themeOptions = [
-  { label: 'System', value: 'system' },
   { label: 'Light', value: 'light' },
   { label: 'Dark', value: 'dark' },
+  { label: 'System', value: 'system' },
 ]
 
 const selectedCurrency = computed(() => userStore.preferences.currency)
@@ -181,5 +181,32 @@ async function handleSignOut() {
 
 .settings-select :deep(.q-field__native) {
   font-weight: 500;
+}
+
+// Segmented control: one track, the active value as a raised pill
+.theme-toggle {
+  padding: 3px;
+  border-radius: var(--radius-full);
+  background: hsl(var(--tab-surface));
+  box-shadow: inset 0 0 0 1px hsl(var(--tab-surface-border));
+
+  :deep(.q-btn) {
+    min-height: 32px;
+    padding: 0 12px;
+    border-radius: var(--radius-full);
+    color: hsl(var(--tab-inactive-foreground));
+    font-weight: 600;
+  }
+
+  :deep(.q-btn.bg-primary) {
+    background: hsl(var(--tab-active-bg)) !important;
+    color: hsl(var(--tab-active-foreground)) !important;
+    box-shadow: var(--tab-active-shadow);
+  }
+}
+
+// Keep Sign out clear of the floating tab bar
+.settings-sign-out {
+  padding-bottom: 24px;
 }
 </style>

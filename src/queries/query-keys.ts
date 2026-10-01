@@ -11,6 +11,8 @@ export const queryKeys = {
       [...queryKeys.templates.all, 'detail', templateId, userId] as const,
     sharedUsers: (templateId: string) =>
       [...queryKeys.templates.all, 'shared-users', templateId] as const,
+    itemSummaries: (templateIds: string[]) =>
+      [...queryKeys.templates.all, 'item-summaries', ...templateIds] as const,
   },
   plans: {
     all: ['plans'] as const,

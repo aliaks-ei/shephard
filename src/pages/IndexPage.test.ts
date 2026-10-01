@@ -301,7 +301,7 @@ it('should pass correct data to plans section', async () => {
   const dashboardSections = wrapper.findAllComponents({ name: 'DashboardSection' })
   const plansSection = dashboardSections[0]
 
-  expect(plansSection?.attributes('title')).toBe('Active Plans')
+  expect(plansSection?.attributes('title')).toBe('Active plans')
   expect(plansSection?.attributes('icon')).toBe('eva-calendar-outline')
   expect(plansSection?.props('viewAllRoute')).toBe('/plans')
 })
@@ -313,7 +313,7 @@ it('should pass correct data to templates section', async () => {
   const dashboardSections = wrapper.findAllComponents({ name: 'DashboardSection' })
   const templatesSection = dashboardSections[1]
 
-  expect(templatesSection?.attributes('title')).toBe('Recent Templates')
+  expect(templatesSection?.attributes('title')).toBe('Recent templates')
   expect(templatesSection?.attributes('icon')).toBe('eva-file-text-outline')
   expect(templatesSection?.props('viewAllRoute')).toBe('/templates')
 })
@@ -404,7 +404,7 @@ it('should show a retry state instead of the empty plans state when plans fail t
   expect(wrapper.findComponent({ name: 'EmptyPlansState' }).exists()).toBe(false)
 })
 
-it('should show compact links instead of full sections on mobile', async () => {
+it('should not repeat tab bar links on mobile', async () => {
   setScreenWidth(600)
   mockPlansIsPending.value = false
   mockTemplatesIsPending.value = false
@@ -413,19 +413,8 @@ it('should show compact links instead of full sections on mobile', async () => {
   await flushPromises()
 
   expect(wrapper.findAllComponents({ name: 'DashboardSection' })).toHaveLength(0)
-
-  const items = wrapper.findAllComponents({ name: 'QItem' })
-  const plansItem = items.find((item) => item.text().includes('Active plans'))
-  const templatesItem = items.find((item) => item.text().includes('Templates'))
-
-  expect(plansItem?.props('to')).toBe('/plans')
-  expect(templatesItem?.props('to')).toBe('/templates')
-
-  expect(plansItem?.text()).toContain(String(mockActivePlans.value.length))
-  expect(templatesItem?.text()).toContain(String(mockTemplatesData.value.length))
-  expect(plansItem?.text()).toContain('Review budgets and progress')
-  expect(templatesItem?.text()).toContain('Reuse saved budget setups')
-  expect(wrapper.find('.mobile-dashboard-links').exists()).toBe(true)
+  expect(wrapper.text()).not.toContain('Review budgets and progress')
+  expect(wrapper.text()).not.toContain('Reuse saved budget setups')
 })
 
 it('should not show compact links on mobile when there are no active plans', async () => {

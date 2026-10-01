@@ -52,7 +52,7 @@ describe('ItemsSummarySection', () => {
       formattedAmount: '$100.00',
       itemCount: 5,
     })
-    expect(wrapper.text()).toContain('Total Amount')
+    expect(wrapper.text()).toContain('Total amount')
   })
 
   it('should render description with categories', () => {

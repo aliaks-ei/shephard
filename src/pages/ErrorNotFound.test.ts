@@ -51,7 +51,7 @@ it('should render view plans button with correct attributes', () => {
   const wrapper = createWrapper()
   const buttons = wrapper.findAllComponents({ name: 'QBtn' })
 
-  expect(buttons[1]?.attributes('label')).toBe('View Plans')
+  expect(buttons[1]?.attributes('label')).toBe('View plans')
   expect(buttons[1]?.attributes('icon')).toBe('eva-clipboard-outline')
 })
 
@@ -59,7 +59,7 @@ it('should render open settings button with correct attributes', () => {
   const wrapper = createWrapper()
   const buttons = wrapper.findAllComponents({ name: 'QBtn' })
 
-  expect(buttons[2]?.attributes('label')).toBe('Open Settings')
+  expect(buttons[2]?.attributes('label')).toBe('Open settings')
   expect(buttons[2]?.attributes('icon')).toBe('eva-settings-outline')
 })
 
@@ -93,7 +93,7 @@ it('should have proper accessibility labels', () => {
 
   expect(buttons[0]?.attributes('aria-label')).toBe('Go to Home')
   expect(buttons[1]?.attributes('aria-label')).toBe('Go to Plans')
-  expect(buttons[2]?.attributes('aria-label')).toBe('Open Settings')
+  expect(buttons[2]?.attributes('aria-label')).toBe('Open settings')
 })
 
 it('should have all buttons with consistent styling', () => {

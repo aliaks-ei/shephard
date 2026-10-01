@@ -1,7 +1,7 @@
 <template>
   <AppDialogShell
     :model-value="modelValue"
-    title="Expense History"
+    title="Expense history"
     body-class="q-pa-none"
     :body-scrollable="false"
     mobile-body-card-surface

@@ -1,5 +1,5 @@
 import { computed, toValue, type MaybeRefOrGetter } from 'vue'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
+import { useQuery, useQueries, useMutation, useQueryClient } from '@tanstack/vue-query'
 import {
   getTemplateSharedUsers,
   shareTemplate,
@@ -10,6 +10,7 @@ import {
   unsharePlan,
   updatePlanSharePermission,
   searchUsersByEmail,
+  type PlanSharedUser,
 } from 'src/api'
 import { createMutationErrorHandler, createSpecificErrorHandler } from './query-error-handler'
 import { queryKeys } from './query-keys'
@@ -61,6 +62,35 @@ export function useSharedUsersQuery(entityType: EntityType, entityId: MaybeRefOr
     enabled: computed(() => !!toValue(entityId)),
     meta: { errorKey: `${api.errorPrefix}.LOAD_SHARED_USERS_FAILED` as ErrorMessageKey },
   })
+}
+
+/**
+ * Shared users for several plans at once (plan cards show member initials).
+ * Shares the cache key with useSharedUsersQuery. Failures stay silent: the card
+ * falls back to its people icon.
+ */
+export function usePlanMembersQueries(planIds: MaybeRefOrGetter<string[]>) {
+  const results = useQueries({
+    queries: computed(() =>
+      toValue(planIds).map((planId) => ({
+        queryKey: queryKeys.plans.sharedUsers(planId),
+        queryFn: () => getPlanSharedUsers(planId),
+        meta: { handledInline: true },
+      })),
+    ),
+  })
+
+  const membersByPlanId = computed(() => {
+    const ids = toValue(planIds)
+    const map: Record<string, PlanSharedUser[]> = {}
+    results.value.forEach((result, index) => {
+      const planId = ids[index]
+      if (planId && result.data) map[planId] = result.data
+    })
+    return map
+  })
+
+  return { membersByPlanId }
 }
 
 export function useShareEntityMutation(

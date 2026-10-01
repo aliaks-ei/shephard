@@ -24,7 +24,7 @@
         flat
         dense
         color="primary"
-        label="View All"
+        label="View all"
         no-caps
         :to="viewAllRoute"
       />

@@ -131,7 +131,7 @@
                   color="negative"
                 />
               </q-item-section>
-              <q-item-section>Sign Out</q-item-section>
+              <q-item-section>Sign out</q-item-section>
             </q-item>
           </q-list>
         </q-menu>

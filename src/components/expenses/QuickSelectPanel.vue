@@ -46,14 +46,14 @@
             <h2 class="text-h6 q-my-none">Review & Finalize</h2>
           </div>
 
-          <!-- Selected Plan Info -->
+          <!-- Selected plan Info -->
           <q-card
             flat
             bordered
             class="q-mb-md"
           >
             <q-card-section class="q-pa-sm">
-              <div class="text-body2 text-muted q-mb-xs">Selected Plan</div>
+              <div class="text-body2 text-muted q-mb-xs">Selected plan</div>
               <div class="text-subtitle1 text-weight-medium">
                 {{ selectedPlan?.name }}
               </div>

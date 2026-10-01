@@ -2,6 +2,8 @@ import { computed, ref } from 'vue'
 import { useQueryClient } from '@tanstack/vue-query'
 import { usePlans } from './usePlans'
 import { useCategoriesQuery } from 'src/queries/categories'
+import { usePlanOverviewSnapshotsQuery } from 'src/queries/expenses'
+import { usePlanMembersQueries } from 'src/queries/sharing'
 import { queryKeys } from 'src/queries/query-keys'
 import { useUserStore } from 'src/stores/user'
 import { useBanner } from './useBanner'
@@ -13,6 +15,7 @@ import {
   type Category,
   type PlanWithPermission,
 } from 'src/api'
+import { getPlanStatus } from 'src/utils/plans'
 import { createPlanExportDownload, downloadExportFile, type ExportFormat } from 'src/utils/export'
 import type { CategoryBudget } from 'src/types'
 
@@ -33,9 +36,52 @@ export function usePlansPage() {
       : undefined,
   )
 
+  // Finished plans sit in a collapsed group, so the list leads with what is in progress
+  const isFinished = (plan: PlanWithPermission) =>
+    ['completed', 'cancelled'].includes(getPlanStatus(plan))
+  const currentPlans = computed(() =>
+    list.allFilteredAndSortedItems.value.filter((plan) => !isFinished(plan)),
+  )
+  const finishedPlans = computed(() => list.allFilteredAndSortedItems.value.filter(isFinished))
+
+  // One snapshot request for all current plans gives each card its spend
+  const overviewQuery = usePlanOverviewSnapshotsQuery(() =>
+    currentPlans.value.map((plan) => plan.id),
+  )
+  const spentByPlanId = computed(() => {
+    const result: Record<string, number> = {}
+    for (const row of overviewQuery.snapshots.value) {
+      result[row.plan_id] = (result[row.plan_id] ?? 0) + row.actual_amount
+    }
+    // Plans without expenses have no rows yet; they spent nothing
+    if (overviewQuery.isSuccess?.value) {
+      for (const plan of currentPlans.value) result[plan.id] ??= 0
+    }
+    return result
+  })
+
+  // Initials of the people a plan is shared with. Only for plans the user owns:
+  // the members RPC does not return the owner of a plan shared with the user.
+  const sharedOwnedPlanIds = computed(() =>
+    currentPlans.value
+      .filter((plan) => plan.is_shared && plan.owner_id === userStore.userProfile?.id)
+      .map((plan) => plan.id),
+  )
+  const { membersByPlanId } = usePlanMembersQueries(sharedOwnedPlanIds)
+  const memberInitialsByPlanId = computed(() => {
+    const result: Record<string, string[]> = {}
+    for (const [planId, members] of Object.entries(membersByPlanId.value)) {
+      result[planId] = members
+        .map((member) => (member.user_name || member.user_email).trim().charAt(0).toUpperCase())
+        .filter(Boolean)
+    }
+    return result
+  })
+
   async function onRefresh(done: () => void) {
     try {
       await queryClient.invalidateQueries({ queryKey: queryKeys.plans.all })
+      await queryClient.invalidateQueries({ queryKey: queryKeys.expenses.overviewSnapshotsAll() })
     } finally {
       done()
     }
@@ -104,6 +150,10 @@ export function usePlansPage() {
 
   return {
     ...list,
+    currentPlans,
+    finishedPlans,
+    spentByPlanId,
+    memberInitialsByPlanId,
     isOffline,
     isShareDialogOpen,
     isExportDialogOpen,

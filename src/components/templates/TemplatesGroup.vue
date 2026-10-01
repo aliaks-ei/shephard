@@ -8,6 +8,7 @@
     <template #item-card="{ item }">
       <TemplateCard
         :template="item"
+        :composition="compositionByTemplateId?.[item.id] ?? null"
         @edit="emit('edit', $event)"
         @export="emit('export', $event)"
         @delete="emit('delete', $event)"
@@ -21,6 +22,7 @@
 import ItemsGroup from 'src/components/shared/ItemsGroup.vue'
 import TemplateCard from './TemplateCard.vue'
 import type { TemplateWithPermission } from 'src/api'
+import type { TemplateComposition } from 'src/composables/useTemplatesPage'
 
 const emit = defineEmits<{
   (e: 'edit', id: string): void
@@ -32,7 +34,8 @@ const emit = defineEmits<{
 withDefaults(
   defineProps<{
     templates: TemplateWithPermission[]
-    title: string
+    title?: string
+    compositionByTemplateId?: Record<string, TemplateComposition>
     chipColor?: string
   }>(),
   {

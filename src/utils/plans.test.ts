@@ -11,6 +11,7 @@ import {
   getStatusColor,
   getStatusIcon,
   formatDateRange,
+  getPlanPace,
 } from './plans'
 
 describe('plans utils', () => {
@@ -454,6 +455,33 @@ describe('plans utils', () => {
     it('should handle year boundary', () => {
       const result = formatDateRange('2024-12-15', '2025-01-15')
       expect(result).toBe('15 Dec - 15 Jan 2025')
+    })
+  })
+
+  describe('getPlanPace', () => {
+    // 1–30 June, today is 15 June: 15 of 30 days used, 16 days left including today
+    const plan = { status: 'active', start_date: '2024-06-01', end_date: '2024-06-30' } as Plan
+
+    it('splits the remainder over the days left, today included', () => {
+      const pace = getPlanPace(plan, 1600, 0)
+      expect(pace?.dailyAllowance).toBe(100)
+      expect(pace?.elapsedRatio).toBe(0.5)
+      expect(pace?.status).toBe('on-track')
+    })
+
+    it('reports ahead when the spent share passes the elapsed share', () => {
+      expect(getPlanPace(plan, 1000, 600)?.status).toBe('ahead')
+    })
+
+    it('reports over and a zero allowance past the budget', () => {
+      const pace = getPlanPace(plan, 1000, 1200)
+      expect(pace?.status).toBe('over')
+      expect(pace?.dailyAllowance).toBe(0)
+    })
+
+    it('returns null for plans that are not active or have no budget', () => {
+      expect(getPlanPace({ ...plan, end_date: '2024-06-10' }, 1000, 0)).toBeNull()
+      expect(getPlanPace(plan, 0, 0)).toBeNull()
     })
   })
 })

@@ -6,7 +6,7 @@
     <q-card-section>
       <SectionHeader
         icon="eva-info-outline"
-        title="Basic Information"
+        title="Basic information"
       />
       <div class="row q-col-gutter-sm">
         <div class="col-12 col-sm-8">

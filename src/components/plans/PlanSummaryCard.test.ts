@@ -22,17 +22,13 @@ vi.mock('src/utils/plans', () => ({
   getStatusColor: vi.fn(() => 'green'),
   getStatusIcon: vi.fn(() => 'eva-play-circle-outline'),
   formatDateRange: vi.fn(() => 'Jan 1 - Jan 31, 2024'),
+  getPlanPace: vi.fn(() => null),
 }))
 
 vi.mock('src/composables/useCountUp', () => ({
   useCountUp: vi.fn((target: MaybeRefOrGetter<number>) => ({
     displayValue: computed(() => toValue(target)),
   })),
-}))
-
-vi.mock('src/utils/budget', () => ({
-  getBudgetProgressColor: vi.fn(() => 'primary'),
-  getBudgetRemainingColorClass: vi.fn(() => 'text-positive'),
 }))
 
 type PlanSummaryCardProps = ComponentProps<typeof PlanSummaryCard>
@@ -111,9 +107,9 @@ describe('PlanSummaryCard', () => {
       currency: 'USD',
     })
 
-    expect(wrapper.text()).toContain('Planned Budget')
+    expect(wrapper.text()).toContain('left of')
     expect(wrapper.text()).toContain('USD 1000.00')
-    expect(wrapper.text()).toContain('Total Spent')
+    expect(wrapper.text()).toContain('spent')
     expect(wrapper.text()).toContain('USD 500.00')
   })
 
@@ -126,7 +122,7 @@ describe('PlanSummaryCard', () => {
       currency: 'USD',
     })
 
-    expect(wrapper.text()).toContain('Still to pay')
+    expect(wrapper.text()).toContain('left of')
     expect(wrapper.text()).toContain('USD 500.00')
   })
 
@@ -239,31 +235,24 @@ describe('PlanSummaryCard', () => {
     expect(wrapper.text()).toContain('120%')
   })
 
-  it('should call getBudgetProgressColor with correct percentage', async () => {
-    const { getBudgetProgressColor } = await import('src/utils/budget')
-
-    renderPlanSummaryCard({
+  it('should mark the bar and pill red only when over budget', () => {
+    const under = renderPlanSummaryCard({
       plan: mockPlan,
       totalBudget: 1000,
       totalSpent: 500,
       stillToPay: 500,
       currency: 'USD',
     })
+    expect(under.find('.plan-summary__progress--over').exists()).toBe(false)
 
-    expect(getBudgetProgressColor).toHaveBeenCalledWith(50)
-  })
-
-  it('should call getBudgetProgressColor with over 100% when over budget', async () => {
-    const { getBudgetProgressColor } = await import('src/utils/budget')
-
-    renderPlanSummaryCard({
+    const over = renderPlanSummaryCard({
       plan: mockPlan,
       totalBudget: 1000,
       totalSpent: 1150,
       stillToPay: -150,
       currency: 'USD',
     })
-
-    expect(getBudgetProgressColor).toHaveBeenCalledWith(expect.closeTo(115, 0.01))
+    expect(over.find('.plan-summary__progress--over').exists()).toBe(true)
+    expect(over.find('.status-pill').text()).toContain('Over budget')
   })
 })

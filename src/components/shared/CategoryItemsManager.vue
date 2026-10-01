@@ -45,7 +45,7 @@
         :formatted-amount="formattedTotal"
         :item-count="enrichedCategories.length"
         item-type="categories"
-        :summary-label="summaryLabel ?? 'Total Amount'"
+        :summary-label="summaryLabel ?? 'Total amount'"
         :amount-size-mobile="amountSizeMobile ?? 'text-h6'"
         :amount-size-desktop="amountSizeDesktop ?? 'text-h5'"
       />
@@ -96,7 +96,7 @@ const props = withDefaults(defineProps<Props>(), {
   emptyMessage: 'No items yet',
   itemCount: 0,
   showItemCount: false,
-  summaryLabel: 'Total Amount',
+  summaryLabel: 'Total amount',
   amountSizeMobile: 'text-h6',
   amountSizeDesktop: 'text-h5',
   bordered: true,

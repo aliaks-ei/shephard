@@ -9,6 +9,7 @@ import type { ExpenseWithCategory } from 'src/api'
 installQuasarPlugin()
 
 const mockConfirmDeleteExpense = vi.fn()
+const mockDeleteExpenseWithUndo = vi.fn()
 const mockDeleteExpense = vi.fn((_expense: ExpenseWithCategory, onSuccess?: () => void) => {
   onSuccess?.()
 })
@@ -18,7 +19,7 @@ vi.mock('src/utils/currency', () => ({
 }))
 
 vi.mock('src/utils/date', () => ({
-  formatDateRelative: vi.fn(() => '2 days ago'),
+  formatDayInline: vi.fn(() => '2 days ago'),
 }))
 
 vi.mock('src/composables/useCategoryHelpers', () => ({
@@ -33,6 +34,8 @@ vi.mock('src/composables/useExpenseActions', () => ({
   useExpenseActions: vi.fn(() => ({
     confirmDeleteExpense: mockConfirmDeleteExpense,
     deleteExpense: mockDeleteExpense,
+    deleteExpenseWithUndo: mockDeleteExpenseWithUndo,
+    isUndoPending: () => false,
   })),
 }))
 
@@ -143,7 +146,7 @@ describe('RecentExpensesList', () => {
       isLoading: false,
     })
 
-    expect(wrapper.text()).toContain('No expenses registered yet')
+    expect(wrapper.text()).toContain('No expenses yet')
   })
 
   it('should display expenses when provided', () => {
@@ -174,7 +177,7 @@ describe('RecentExpensesList', () => {
     expect(items.length).toBeLessThanOrEqual(5)
   })
 
-  it('should show View All button when more than 5 expenses', () => {
+  it('should show View all button when more than 5 expenses', () => {
     const manyExpenses = Array.from({ length: 6 }, (_, i) => ({
       ...mockExpenses[0]!,
       id: `exp-${i}`,
@@ -257,7 +260,7 @@ describe('RecentExpensesList', () => {
     expect(wrapper.text()).toContain('Delete')
   })
 
-  it('should request confirmation on mobile swipe', async () => {
+  it('should delete with undo on mobile swipe', async () => {
     const wrapper = renderRecentExpensesList(
       {
         expenses: mockExpenses,
@@ -270,8 +273,8 @@ describe('RecentExpensesList', () => {
 
     await wrapper.find('.slide-right-trigger').trigger('click')
 
-    expect(mockConfirmDeleteExpense).toHaveBeenCalledWith(mockExpenses[0], expect.any(Function))
-    expect(mockDeleteExpense).not.toHaveBeenCalled()
+    expect(mockDeleteExpenseWithUndo).toHaveBeenCalledWith(mockExpenses[0], expect.any(Function))
+    expect(mockConfirmDeleteExpense).not.toHaveBeenCalled()
     expect(wrapper.emitted('refresh')).toBeUndefined()
   })
 

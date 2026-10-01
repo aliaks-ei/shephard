@@ -9,7 +9,7 @@
     @keyup.enter="openPlan"
     @keyup.space.prevent="openPlan"
   >
-    <q-card-section>
+    <q-card-section class="budget-hero-card__section">
       <!-- Loading state -->
       <template v-if="isOverviewLoading">
         <div class="row items-center justify-between q-mb-md">
@@ -58,48 +58,67 @@
 
       <!-- Loaded state -->
       <template v-else>
-        <!-- Row 1: Plan name + status chip -->
-        <div class="row items-center justify-between no-wrap q-mb-sm">
+        <div class="row items-center justify-between no-wrap q-mb-md">
           <div class="budget-hero-card__plan-name ellipsis col">
             {{ plan.name }}
           </div>
-          <q-chip
-            class="budget-hero-card__chip"
-            size="sm"
-            square
-          >
-            {{ getStatusText(plan) }}
-          </q-chip>
+          <span class="budget-hero-card__days">{{ getStatusText(plan) }}</span>
         </div>
 
-        <!-- Row 2: Hero metric -->
-        <div class="budget-hero-card__overline section-overline">
-          {{ isOverBudget ? 'Over budget' : 'Left to spend' }}
-        </div>
         <div class="text-display budget-hero-card__amount">
-          <q-icon
-            v-if="isOverBudget"
-            name="eva-alert-triangle-outline"
-            size="28px"
-            class="q-mr-xs"
-          />
-          {{ heroAmount }}
+          {{ heroAmountParts.major
+          }}<span
+            v-if="heroAmountParts.minor"
+            class="text-display__minor"
+            >{{ heroAmountParts.minor }}</span
+          >
+        </div>
+        <div class="budget-hero-card__caption q-mt-xs">
+          {{ amountCaption }}
         </div>
 
-        <!-- Row 3: Progress -->
-        <q-linear-progress
-          :value="overallProgress"
+        <div
+          class="budget-hero-card__bar q-mt-md"
+          role="progressbar"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          :aria-valuenow="Math.round(progressPercentage)"
           :aria-label="`${Math.round(progressPercentage)}% of budget spent`"
-          class="budget-hero-card__progress q-mt-md"
-          size="8px"
-        />
+        >
+          <div
+            class="budget-hero-card__bar-fill"
+            :class="`budget-hero-card__bar-fill--${paceStatus}`"
+            :style="{ width: `${overallProgress * 100}%` }"
+          />
+          <div
+            v-if="pace"
+            class="budget-hero-card__bar-today"
+            :style="{ left: `${pace.elapsedRatio * 100}%` }"
+          />
+        </div>
 
-        <!-- Row 4: Caption with percentage + days remaining -->
-        <div class="budget-hero-card__caption text-caption q-mt-xs">
-          {{ Math.round(progressPercentage) }}% of {{ formatAmount(totalBudget) }} spent
-          <template v-if="daysRemaining !== null">
-            &middot; {{ daysRemaining }} day{{ daysRemaining === 1 ? '' : 's' }} left
-          </template>
+        <div
+          v-if="pace"
+          class="row items-center justify-between no-wrap q-mt-md"
+        >
+          <span
+            class="budget-hero-card__pace-chip"
+            :class="`budget-hero-card__pace-chip--${paceStatus}`"
+          >
+            {{ paceLabel }}
+          </span>
+          <span
+            v-if="paceStatus !== 'over'"
+            class="budget-hero-card__daily text-amount"
+          >
+            {{ formatAmount(pace.dailyAllowance) }} a day
+          </span>
+        </div>
+        <div
+          v-else
+          class="budget-hero-card__caption q-mt-sm"
+        >
+          {{ Math.round(progressPercentage) }}% spent
         </div>
       </template>
     </q-card-section>
@@ -111,13 +130,8 @@ import { computed } from 'vue'
 import { usePreferencesStore } from 'src/stores/preferences'
 import QueryErrorState from 'src/components/shared/QueryErrorState.vue'
 import { useCountUp } from 'src/composables/useCountUp'
-import { getStatusText, getDaysRemaining } from 'src/utils/plans'
-import {
-  formatCurrency,
-  formatCurrencyPrivate,
-  formatCurrencyWithSign,
-  type CurrencyCode,
-} from 'src/utils/currency'
+import { getStatusText, getPlanPace, type PlanPaceStatus } from 'src/utils/plans'
+import { formatCurrency, formatCurrencyPrivate, type CurrencyCode } from 'src/utils/currency'
 import type { PlanWithPermission } from 'src/api'
 import type { DashboardPlanOverview } from 'src/composables/useDashboardOverview'
 
@@ -136,13 +150,29 @@ const props = defineProps<{
 
 const preferencesStore = usePreferencesStore()
 
+const PACE_LABELS: Record<PlanPaceStatus, string> = {
+  'on-track': 'On track',
+  ahead: 'Ahead of plan',
+  over: 'Over budget',
+}
+
 const totalBudget = computed(() => props.overview?.totalBudget ?? props.plan.total ?? 0)
 const totalSpent = computed(() => props.overview?.totalSpent ?? 0)
 const remainingBudget = computed(() => props.overview?.remainingBudget ?? totalBudget.value)
 
-const daysRemaining = computed(() => getDaysRemaining(props.plan))
-
 const isOverBudget = computed(() => remainingBudget.value < 0)
+
+const pace = computed(() => getPlanPace(props.plan, totalBudget.value, totalSpent.value))
+const paceStatus = computed<PlanPaceStatus>(() =>
+  isOverBudget.value ? 'over' : (pace.value?.status ?? 'on-track'),
+)
+const paceLabel = computed(() => PACE_LABELS[paceStatus.value])
+
+const amountCaption = computed(() =>
+  isOverBudget.value
+    ? `over the ${formatAmount(totalBudget.value)} budget`
+    : `left of ${formatAmount(totalBudget.value)}`,
+)
 
 const progressPercentage = computed(() => {
   if (totalBudget.value === 0) return 0
@@ -158,14 +188,11 @@ const { displayValue: animatedRemaining } = useCountUp(remainingBudget, {
   enabled: () => !preferencesStore.isPrivacyModeEnabled,
 })
 
-const heroAmount = computed(() => {
-  const currency = props.plan.currency as CurrencyCode
-
-  if (preferencesStore.isPrivacyModeEnabled) {
-    return formatCurrencyPrivate(currency)
-  }
-
-  return formatCurrencyWithSign(animatedRemaining.value, currency)
+// "€708,10" -> "€708" + ",10", so the cents can sit smaller than the units
+const heroAmountParts = computed(() => {
+  const formatted = formatAmount(Math.abs(animatedRemaining.value))
+  const match = /^(.*)([.,]\d{2})$/.exec(formatted)
+  return match ? { major: match[1], minor: match[2] } : { major: formatted, minor: '' }
 })
 
 function openPlan(): void {
@@ -191,13 +218,17 @@ function formatAmount(amount: number | null | undefined): string {
 
 <style lang="scss" scoped>
 .budget-hero-card {
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-hero);
   border: none;
   color: hsl(var(--hero-foreground));
   background:
-    radial-gradient(120% 140% at 85% -20%, hsl(var(--hero-glow)) 0%, transparent 55%),
-    linear-gradient(135deg, hsl(var(--hero-gradient-from)) 0%, hsl(var(--hero-gradient-to)) 100%);
+    radial-gradient(90% 120% at 100% 0%, hsl(var(--hero-glow)) 0%, transparent 60%),
+    hsl(var(--hero-bg));
   box-shadow: var(--shadow-md);
+}
+
+.budget-hero-card__section {
+  padding: 20px;
 }
 
 .budget-hero-card:focus-visible {
@@ -212,32 +243,89 @@ function formatAmount(amount: number | null | undefined): string {
   font-weight: 500;
 }
 
-.budget-hero-card__chip {
+.budget-hero-card__days {
+  flex: 0 0 auto;
+  margin-left: 8px;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
   background: hsl(var(--hero-track));
   color: hsl(var(--hero-foreground));
-}
-
-.budget-hero-card__overline {
-  color: hsl(var(--hero-muted));
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .budget-hero-card__amount {
   color: hsl(var(--hero-foreground));
-  display: flex;
-  align-items: center;
 }
 
 .budget-hero-card__caption {
   color: hsl(var(--hero-muted));
+  font-size: 14px;
 }
 
-.budget-hero-card__progress {
+.budget-hero-card__bar {
+  position: relative;
+  height: 8px;
   border-radius: var(--radius-full);
+  background: hsl(var(--hero-track));
+}
+
+.budget-hero-card__bar-fill {
+  max-width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: hsl(var(--hero-fill));
+  transform-origin: 0 50%;
+  animation: progress-grow 700ms var(--ease-out-quint) both;
+
+  &--ahead {
+    background: hsl(var(--pace));
+  }
+
+  &--over {
+    background: hsl(var(--over));
+  }
+}
+
+// "Today" marker: where spend would be at an even pace
+.budget-hero-card__bar-today {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: hsl(var(--hero-marker));
+}
+
+.budget-hero-card__pace-chip {
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 13px;
+  font-weight: 600;
+  background: hsl(var(--hero-track));
   color: hsl(var(--hero-foreground));
 
-  :deep(.q-linear-progress__track) {
-    background: hsl(var(--hero-track));
-    opacity: 1;
+  &--ahead {
+    background: hsl(var(--pace-soft-bg));
+    color: hsl(var(--pace));
+  }
+
+  &--over {
+    background: hsl(var(--over) / 0.28);
+    color: hsl(355 100% 86%);
+  }
+}
+
+.budget-hero-card__daily {
+  color: hsl(var(--hero-foreground));
+  font-size: 15px;
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .budget-hero-card__bar-fill {
+    animation: none;
   }
 }
 </style>

@@ -12,6 +12,7 @@ import type { CategoryBudget } from 'src/types'
 installQuasarPlugin()
 
 const mockConfirmDeleteExpense = vi.fn()
+const mockDeleteExpenseWithUndo = vi.fn()
 const mockDeleteExpense = vi.fn((_expense: ExpenseWithCategory, onSuccess?: () => void) => {
   onSuccess?.()
 })
@@ -40,16 +41,14 @@ vi.mock('src/queries/expenses', () => ({
 
 vi.mock('src/utils/date', () => ({
   formatDate: vi.fn(() => 'Jan 1, 2024'),
-}))
-
-vi.mock('src/utils/budget', () => ({
-  getBudgetProgressColor: vi.fn(() => 'primary'),
-  getBudgetRemainingColorClass: vi.fn(() => 'text-positive'),
+  formatDayInline: vi.fn(() => 'Mon 1 Jan'),
 }))
 
 vi.mock('src/composables/useExpenseActions', () => ({
   useExpenseActions: vi.fn(() => ({
     confirmDeleteExpense: mockConfirmDeleteExpense,
+    deleteExpenseWithUndo: mockDeleteExpenseWithUndo,
+    isUndoPending: () => false,
     deleteExpense: mockDeleteExpense,
   })),
 }))
@@ -295,7 +294,7 @@ describe('CategoryExpensesDialog', () => {
     expect(wrapper.emitted('refresh')).toBeTruthy()
   })
 
-  it('should request confirmation on mobile swipe in expenses tab', async () => {
+  it('should delete with undo on mobile swipe in expenses tab', async () => {
     const wrapper = renderCategoryExpensesDialog(
       {
         modelValue: true,
@@ -309,7 +308,7 @@ describe('CategoryExpensesDialog', () => {
 
     await wrapper.find('.slide-right-trigger').trigger('click')
 
-    expect(mockConfirmDeleteExpense).toHaveBeenCalledWith(mockExpenses[0], expect.any(Function))
+    expect(mockDeleteExpenseWithUndo).toHaveBeenCalledWith(mockExpenses[0], expect.any(Function))
     expect(mockDeleteExpense).not.toHaveBeenCalled()
     expect(wrapper.emitted('refresh')).toBeUndefined()
   })

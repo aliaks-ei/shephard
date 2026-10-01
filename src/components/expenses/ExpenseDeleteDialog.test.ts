@@ -90,7 +90,7 @@ describe('ExpenseDeleteDialog', () => {
     await nextTick()
 
     expect(wrapper.find('[data-test="delete-dialog"]').exists()).toBe(true)
-    expect(wrapper.find('[data-test="title"]').text()).toBe('Delete Expense')
+    expect(wrapper.find('[data-test="title"]').text()).toBe('Delete expense')
     expect(wrapper.find('[data-test="warning"]').text()).toBe('This action cannot be undone.')
     expect(wrapper.find('[data-test="message"]').text()).toBe(
       'Are you sure you want to delete "Groceries"?',

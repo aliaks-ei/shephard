@@ -22,7 +22,7 @@
           />
         </q-item-section>
         <q-item-section>
-          <q-item-label>Export Template</q-item-label>
+          <q-item-label>Export template</q-item-label>
         </q-item-section>
       </q-item>
       <q-item
@@ -40,7 +40,7 @@
           />
         </q-item-section>
         <q-item-section>
-          <q-item-label>Share Template</q-item-label>
+          <q-item-label>Share template</q-item-label>
         </q-item-section>
       </q-item>
       <q-item
@@ -60,7 +60,7 @@
           />
         </q-item-section>
         <q-item-section>
-          <q-item-label>Delete Template</q-item-label>
+          <q-item-label>Delete template</q-item-label>
         </q-item-section>
       </q-item>
     </q-list>

@@ -1,5 +1,15 @@
 @import './theme.scss';
 
+// Geist for money figures and titles. Latin only (includes €), so the PWA precaches one 29 KB file.
+@font-face {
+  font-family: 'Geist Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('../../node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2')
+    format('woff2-variations');
+}
+
 html {
   background-color: $bg-color;
   color: $text-color;
@@ -27,6 +37,13 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+// iOS body text is 17pt; 14px is small for lists of amounts
+@media (max-width: $breakpoint-sm-max) {
+  body {
+    font-size: 15px;
+  }
+}
+
 #q-app,
 .q-layout {
   min-height: 100vh;
@@ -37,7 +54,7 @@ body {
 .q-dialog__inner > .q-card {
   width: 90vw;
   min-width: 300px;
-  border-radius: var(--radius-2xl);
+  border-radius: var(--radius-hero);
   background: hsl(var(--card));
   color: hsl(var(--card-foreground));
   box-shadow: var(--shadow-lg);
@@ -256,7 +273,7 @@ body {
 // Buttons (q-btn) - shadcn-vue conventions
 // --------------------------------------------
 .q-btn {
-  border-radius: var(--radius-md); // 6px
+  border-radius: var(--radius-full);
   font-weight: 500;
   letter-spacing: var(--tracking-tight);
   text-transform: none;
@@ -275,10 +292,6 @@ body {
   &.q-btn--outline {
     border-width: var(--border-width);
     box-shadow: var(--shadow-xs);
-
-    &:hover {
-      background: var(--muted);
-    }
   }
 
   // Focus ring - 3px with 50% opacity
@@ -300,7 +313,7 @@ body {
 // Cards (q-card) - shadcn-vue conventions
 // --------------------------------------------
 .q-card {
-  border-radius: var(--radius-2xl); // 16px
+  border-radius: var(--radius-card);
   background: hsl(var(--card));
   color: hsl(var(--card-foreground));
   border: 1px solid hsl(var(--card-border));
@@ -335,15 +348,15 @@ body {
 
   .q-card__section {
     &:first-child {
-      border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+      border-radius: var(--radius-card) var(--radius-card) 0 0;
     }
 
     &:last-child {
-      border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
+      border-radius: 0 0 var(--radius-card) var(--radius-card);
     }
 
     &:only-child {
-      border-radius: var(--radius-2xl);
+      border-radius: var(--radius-card);
     }
   }
 
@@ -358,7 +371,7 @@ body {
 .q-field {
   &--outlined {
     .q-field__control {
-      border-radius: var(--radius-md); // 6px
+      border-radius: var(--radius-field);
       background: hsl(var(--popover));
       border: var(--border-width) solid var(--border-color);
       box-shadow: var(--shadow-xs);
@@ -386,7 +399,7 @@ body {
 
       &::before {
         border: 1px dashed var(--border-color-readonly);
-        border-radius: var(--radius-md);
+        border-radius: var(--radius-field);
       }
     }
 
@@ -401,8 +414,7 @@ body {
 
   &--filled {
     .q-field__control {
-      border-radius: var(--radius-md); // 6px
-      background: var(--muted);
+      border-radius: var(--radius-field);
       border: var(--border-width) solid transparent;
       box-shadow: var(--shadow-xs);
       transition:
@@ -425,7 +437,7 @@ body {
 
       &::before {
         border: 1px dashed var(--border-color-readonly);
-        border-radius: var(--radius-md);
+        border-radius: var(--radius-field);
         background: transparent;
       }
     }
@@ -460,7 +472,7 @@ body {
 // Dropdowns/Menus (q-menu) - shadcn-vue conventions
 // --------------------------------------------
 .q-menu {
-  border-radius: var(--radius-md); // 6px
+  border-radius: var(--radius-xl);
   border: 1px solid hsl(var(--border));
   background: hsl(var(--popover));
   color: hsl(var(--popover-foreground));
@@ -468,21 +480,13 @@ body {
   padding: 4px;
 
   .q-item {
-    border-radius: var(--radius-sm); // 4px
+    border-radius: var(--radius-md);
     margin: 0;
     color: inherit;
 
     .q-item__section,
     .q-item__label {
       color: inherit;
-    }
-
-    &:hover {
-      background: var(--muted);
-    }
-
-    &.q-item--active {
-      background: var(--muted);
     }
   }
 }
@@ -557,6 +561,11 @@ body {
   .q-checkbox__inner--truthy,
   .q-checkbox__inner--indet {
     color: hsl(var(--primary));
+  }
+
+  // --q-primary is a fill colour (white labels). Text needs the brighter teal.
+  .text-primary {
+    color: hsl(var(--primary)) !important;
   }
 }
 
@@ -665,17 +674,21 @@ body {
 // --------------------------------------------
 // List Items (q-item, q-expansion-item)
 // --------------------------------------------
+// Quasar paints side sections #757575 (3.7:1 on dark cards). Use theme tokens instead,
+// and show amounts in ink: they are the main data in a list.
+.q-item__section--side {
+  color: hsl(var(--muted-foreground));
+}
+
+// Explicitly muted amounts (completed items, captions) keep their colour.
+.q-item__section--side .text-amount:not(.q-item__label--caption):not(.text-muted):not(.text-faint) {
+  color: hsl(var(--ink));
+  font-weight: 600;
+}
+
 .q-item {
   border-radius: var(--radius-md); // Consistent with buttons/inputs
   transition: background-color 0.15s ease;
-
-  &--clickable:hover {
-    background: var(--muted);
-  }
-
-  &--active {
-    background: var(--muted);
-  }
 }
 
 // Keep only wrapper card corners rounded for the mobile plan overview list
@@ -694,17 +707,20 @@ body {
 // --------------------------------------------
 // Linear Progress (q-linear-progress) - shadcn-vue conventions
 // --------------------------------------------
+// The fill follows currentColor, so `color` props and inline colours work.
 .q-linear-progress {
   border-radius: var(--radius-full);
-  background: hsl(var(--primary) / 0.2);
+  color: hsl(var(--primary));
   overflow: hidden;
 
   &__track {
     border-radius: var(--radius-full);
+    background: hsl(var(--muted-foreground) / 0.16);
+    opacity: 1;
   }
 
   &__model {
-    background: hsl(var(--primary));
+    background: currentColor;
     border-radius: var(--radius-full);
   }
 }
@@ -783,8 +799,9 @@ body {
       opacity: 0;
     }
 
+    // Quasar's click-focus tint covers the white active pill; :focus-visible below is enough
     .q-focus-helper {
-      border-radius: inherit;
+      display: none;
     }
 
     &--active {
@@ -856,17 +873,19 @@ h6,
 
 h4,
 .text-h4 {
+  font-family: var(--font-display);
   font-size: 1.75rem;
   line-height: 1.25;
-  font-weight: 700;
+  font-weight: 650;
   letter-spacing: -0.025em;
 }
 
 h5,
 .text-h5 {
+  font-family: var(--font-display);
   font-size: 1.375rem;
-  line-height: 1.25;
-  font-weight: 700;
+  line-height: 1.2;
+  font-weight: 650;
   letter-spacing: -0.02em;
 }
 
@@ -877,13 +896,17 @@ h6,
   font-weight: 600;
 }
 
-// Large page titles on mobile (iOS large-title scale)
+.page-title {
+  font-family: var(--font-display);
+  font-weight: 650;
+}
+
+// Large page titles on mobile
 @media (max-width: $breakpoint-sm-max) {
   .page-title {
     font-size: 1.75rem;
     line-height: 1.2;
-    font-weight: 700;
-    letter-spacing: -0.028em;
+    letter-spacing: -0.03em;
   }
 }
 
@@ -963,18 +986,60 @@ h6,
   color: hsl(var(--muted-foreground));
 }
 
-// Money typography: tabular figures so amounts align and don't wiggle when animated
+// Money typography: one display face, tabular figures so amounts align and don't wiggle
 .text-amount {
+  font-family: var(--font-display);
   font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: -0.01em;
+}
+
+// Amounts are the main data in a list: ink, not grey
+.text-ink {
+  color: hsl(var(--ink));
+}
+
+.text-over {
+  color: hsl(var(--over));
 }
 
 // Display scale for hero metrics (glanceable money numbers)
 .text-display {
-  font-size: clamp(2.25rem, 8vw, 2.75rem);
-  line-height: 1.1;
-  font-weight: 700;
-  letter-spacing: -0.03em;
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 11vw, 2.75rem);
+  line-height: 1.05;
+  font-weight: 650;
+  letter-spacing: -0.035em;
   font-variant-numeric: tabular-nums lining-nums;
+}
+
+// Cents smaller than units in hero figures
+.text-display__minor {
+  font-size: 0.6em;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+// Category colour system: hue and chroma come from getCategoryToneStyle(),
+// lightness is set here per theme so every category reads as one family.
+.category-tone-tile {
+  color: oklch(0.5 var(--cat-c, 0) var(--cat-h, 0));
+  background: oklch(0.94 calc(var(--cat-c, 0) * 0.32) var(--cat-h, 0));
+}
+
+// Bars, dots and segments. Sets `color` so q-linear-progress fills follow it.
+.category-tone-fg {
+  color: oklch(0.64 var(--cat-c, 0) var(--cat-h, 0));
+}
+
+.body--dark {
+  .category-tone-tile {
+    color: oklch(0.84 calc(var(--cat-c, 0) * 0.8) var(--cat-h, 0));
+    background: oklch(0.32 calc(var(--cat-c, 0) * 0.45) var(--cat-h, 0));
+  }
+
+  .category-tone-fg {
+    color: oklch(0.74 var(--cat-c, 0) var(--cat-h, 0));
+  }
 }
 
 // Soft semantic surfaces — theme-aware replacements for bg-red-1/text-red-8 etc.
@@ -1068,6 +1133,18 @@ h6,
   min-width: 36px;
 }
 
+// Delete icons in lists: muted at rest, red only on hover or focus. A column of red
+// icons reads as an error state.
+.icon-action-destructive {
+  color: hsl(var(--muted-foreground));
+  transition: color var(--duration-fast) ease;
+
+  &:hover,
+  &:focus-visible {
+    color: hsl(var(--destructive));
+  }
+}
+
 .focus-ring {
   &:focus-visible {
     outline: none;
@@ -1083,8 +1160,7 @@ h6,
 .section-overline {
   color: hsl(var(--muted-foreground));
   font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0;
 }
 
 .glass-fab-btn {
@@ -1165,33 +1241,6 @@ h6,
     background: hsl(var(--muted));
     transform: scale(0.99);
   }
-}
-
-// Staggered rise-in for list children on first paint
-@keyframes rise-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.list-stagger > * {
-  animation: rise-in var(--duration-slow) var(--ease-out-quint) both;
-}
-
-@for $i from 1 through 12 {
-  .list-stagger > *:nth-child(#{$i}) {
-    animation-delay: #{($i - 1) * 32}ms;
-  }
-}
-
-.list-stagger > *:nth-child(n + 13) {
-  animation-delay: 384ms;
 }
 
 // Content entrance (skeleton → content crossfade)
@@ -1340,7 +1389,6 @@ h6,
 @media (prefers-reduced-motion: reduce) {
   .pressable,
   .pressable-row,
-  .list-stagger > *,
   .fade-in,
   .q-linear-progress__model--determinate,
   .progress-animated .q-linear-progress__model {
@@ -1404,25 +1452,6 @@ h6,
         opacity var(--duration-fast) ease;
     }
   }
-}
-
-// Shared-element morph: plan card in a list ⇄ summary card on the detail page
-::view-transition-group(plan-hero) {
-  animation-duration: var(--duration-slow);
-  animation-timing-function: var(--ease-out-quint);
-  z-index: 5;
-}
-
-::view-transition-old(plan-hero),
-::view-transition-new(plan-hero) {
-  animation: none;
-  mix-blend-mode: normal;
-  height: 100%;
-  overflow: clip;
-}
-
-::view-transition-new(plan-hero) {
-  animation: fade-in var(--duration-base) ease both;
 }
 
 @media (prefers-reduced-motion: reduce) {

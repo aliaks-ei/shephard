@@ -456,7 +456,7 @@ describe('TemplatePage', () => {
   it('should show correct page title for new template', () => {
     const { wrapper } = createWrapper({ isNewTemplate: true })
 
-    expect(wrapper.text()).toContain('Create Template')
+    expect(wrapper.text()).toContain('Create template')
   })
 
   it('should show correct page title for read-only mode', () => {
@@ -495,7 +495,7 @@ describe('TemplatePage', () => {
 
     const categoryComponents = wrapper.findAllComponents(TemplateCategoryStub)
     expect(categoryComponents.length).toBe(1)
-    expect(wrapper.text()).toContain('Total Amount')
+    expect(wrapper.text()).toContain('Total amount')
   })
 
   it('should show duplicate items warning when duplicates exist', () => {
@@ -619,7 +619,7 @@ describe('TemplatePage', () => {
 
     // The page should render in edit mode with actions
     expect(wrapper.exists()).toBe(true)
-    expect(wrapper.text()).toContain('Create Template')
+    expect(wrapper.text()).toContain('Create template')
   })
 
   it('should show save button for existing template', () => {
@@ -663,7 +663,7 @@ describe('TemplatePage', () => {
     const { wrapper } = createWrapper({ isNewTemplate: true })
 
     // Page should show appropriate title for new template
-    expect(wrapper.text()).toContain('Create Template')
+    expect(wrapper.text()).toContain('Create template')
   })
 
   it('should show correct breadcrumb labels for edit template', () => {
@@ -714,7 +714,7 @@ describe('TemplatePage', () => {
     const { wrapper } = createWrapper({ hasItems: true })
 
     // Should show category information with items
-    expect(wrapper.text()).toContain('Total Amount')
+    expect(wrapper.text()).toContain('Total amount')
     expect(wrapper.text()).toContain('Total across 1 category')
   })
 

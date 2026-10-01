@@ -1,7 +1,7 @@
 <template>
   <AppDialogShell
     :model-value="modelValue"
-    :title="`Share ${entityName}`"
+    :title="`Share ${entityName.toLowerCase()}`"
     :body-class="$q.screen.lt.md ? 'q-pa-sm' : 'q-pa-md'"
     :primary-action-label="'Share'"
     :primary-action-loading="isSharing"

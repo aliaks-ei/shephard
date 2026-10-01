@@ -170,9 +170,6 @@ export function usePlanPageState() {
       },
       onExport: () => openDialog('export'),
       onAddExpense: openExpenseRegistration,
-      onSwitchToEdit: () => {
-        activeTab.value = 'edit'
-      },
     },
   })
 

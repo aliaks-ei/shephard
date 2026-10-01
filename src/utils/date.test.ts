@@ -71,12 +71,12 @@ describe('formatDateRelative', () => {
     const currentYear = new Date().getFullYear()
     const dateInCurrentYear = `${currentYear}-06-15T10:00:00Z`
     const result = formatDateRelative(dateInCurrentYear)
-    expect(result).toMatch(/Jun 15/)
+    expect(result).toMatch(/^[A-Z][a-z]{2} 15 Jun$/)
     expect(result).not.toMatch(new RegExp(String(currentYear)))
   })
 
   it('should return formatted date with year for different year', () => {
     const result = formatDateRelative('2020-06-15T10:00:00Z')
-    expect(result).toBe('Jun 15, 2020')
+    expect(result).toBe('15 Jun 2020')
   })
 })

@@ -199,17 +199,17 @@ it('exposes account menu disclosure semantics', () => {
   expect(accountButton.attributes('aria-controls')).toBe('account-menu')
 })
 
-it('renders Sign Out option in user menu', () => {
+it('renders Sign out option in user menu', () => {
   const wrapper = createWrapper()
 
-  expect(wrapper.text()).toContain('Sign Out')
+  expect(wrapper.text()).toContain('Sign out')
 })
 
 it('calls signOut and navigates to /auth when sign out is clicked', async () => {
   mockUserStore.signOut.mockResolvedValue(undefined)
   const wrapper = createWrapper()
 
-  const signOutItem = wrapper.findAll('.q-item').find((item) => item.text().includes('Sign Out'))
+  const signOutItem = wrapper.findAll('.q-item').find((item) => item.text().includes('Sign out'))
 
   await signOutItem?.trigger('click')
   await vi.waitFor(() => {

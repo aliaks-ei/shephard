@@ -141,7 +141,7 @@ describe('ItemCategory', () => {
     expect(wrapper.props('readonly')).toBe(false)
   })
 
-  it('should not render Add Item button when readonly', () => {
+  it('should not render Add item button when readonly', () => {
     const wrapper = renderComponent({
       categoryId: 'cat-1',
       categoryName: 'Groceries',
@@ -151,7 +151,7 @@ describe('ItemCategory', () => {
       currency: 'USD',
       readonly: true,
     })
-    expect(wrapper.text()).not.toContain('Add Item')
+    expect(wrapper.text()).not.toContain('Add item')
   })
 
   it('should have add-item emitter defined', () => {

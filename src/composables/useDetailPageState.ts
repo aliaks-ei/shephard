@@ -46,7 +46,7 @@ export function useDetailPageState(
   isReadOnly: MaybeRefOrGetter<boolean>,
 ) {
   const pageTitle = computed(() => {
-    if (toValue(isNew)) return `Create ${config.entityName}`
+    if (toValue(isNew)) return `Create ${config.entityName.toLowerCase()}`
     if (toValue(isReadOnly)) return `View ${config.entityName}`
     return config.entityName
   })

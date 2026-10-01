@@ -106,7 +106,7 @@
       </q-banner>
     </div>
 
-    <!-- Summary Section (Total Amount) -->
+    <!-- Summary Section (Total amount) -->
     <slot
       v-if="showSummary"
       name="summary"

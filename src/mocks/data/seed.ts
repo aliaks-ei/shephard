@@ -350,6 +350,13 @@ export const templateItems: Tables<'template_items'>[] = [
   },
 ]
 
+// Keep totals equal to the item sums, as the database does
+for (const template of templates) {
+  template.total = templateItems
+    .filter((item) => item.template_id === template.id)
+    .reduce((sum, item) => sum + item.amount, 0)
+}
+
 export const templateShares: Tables<'template_shares'>[] = [
   {
     id: 'ts-1',
@@ -652,6 +659,12 @@ export const planItems: Tables<'plan_items'>[] = [
     updated_at: null,
   },
 ]
+
+for (const plan of plans) {
+  plan.total = planItems
+    .filter((item) => item.plan_id === plan.id)
+    .reduce((sum, item) => sum + item.amount, 0)
+}
 
 export const planShares: Tables<'plan_shares'>[] = [
   {

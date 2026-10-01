@@ -98,7 +98,7 @@
         </template>
       </CategoryItemsManager>
 
-      <!-- Total Amount as separate card -->
+      <!-- Total amount as separate card -->
       <q-card flat>
         <q-card-section>
           <div class="row items-center justify-between">
@@ -108,7 +108,7 @@
                 class="q-mr-sm"
                 size="20px"
               />
-              <h3 class="text-h6 q-my-none">Total Amount</h3>
+              <h3 class="text-h6 q-my-none">Total amount</h3>
             </div>
             <div
               :class="[

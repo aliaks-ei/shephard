@@ -1,36 +1,5 @@
 <template>
   <div class="receipt-photo-section">
-    <div class="row items-center justify-between q-col-gutter-sm">
-      <div class="col">
-        <div class="row items-center q-gutter-xs">
-          <span class="text-body2 text-weight-medium">Receipt photo</span>
-          <q-chip
-            v-if="hasCompletedAnalysis && !isExpanded"
-            size="sm"
-            color="positive"
-            text-color="white"
-            icon="eva-checkmark-circle-2-outline"
-          >
-            Analyzed
-          </q-chip>
-        </div>
-        <div class="text-caption">Prefill details from a receipt</div>
-      </div>
-
-      <q-btn
-        :label="toggleLabel"
-        :icon="toggleIcon"
-        outline
-        dense
-        no-caps
-        color="primary"
-        aria-controls="receipt-photo-panel"
-        :aria-expanded="String(shouldShowPanel)"
-        class="receipt-photo-section__toggle"
-        @click="toggleExpanded"
-      />
-    </div>
-
     <q-slide-transition>
       <div
         id="receipt-photo-panel"
@@ -39,7 +8,7 @@
       >
         <q-uploader
           ref="uploaderRef"
-          label="Upload Receipt Photo"
+          label="Upload receipt photo"
           accept="image/jpeg,image/png,image/webp,image/heic"
           :max-file-size="5242880"
           :multiple="false"
@@ -109,12 +78,6 @@
         </p>
       </div>
     </q-slide-transition>
-
-    <div class="row items-center q-mt-md">
-      <q-separator class="col" />
-      <span class="q-mx-md text-caption text-weight-medium"> OR ENTER MANUALLY </span>
-      <q-separator class="col" />
-    </div>
   </div>
 </template>
 
@@ -142,26 +105,11 @@ const uploaderRef = ref<QUploader | null>(null)
 const planIdRef = toRef(props, 'planId')
 const currencyRef = toRef(props, 'selectedPlanCurrency')
 const photoAnalysis = usePhotoExpenseAnalysis(planIdRef, currencyRef)
-const isExpanded = ref(false)
-
-const hasCompletedAnalysis = computed(() => {
-  return photoAnalysis.hasPhoto.value && !!photoAnalysis.analysisResult.value
-})
+// Opened from the camera button in the expense name field
+const isExpanded = defineModel<boolean>('open', { default: false })
 
 const shouldShowPanel = computed(() => {
   return isExpanded.value || photoAnalysis.isAnalyzing.value || photoAnalysis.hasError.value
-})
-
-const toggleLabel = computed(() => {
-  if (isExpanded.value) {
-    return 'Hide'
-  }
-
-  return hasCompletedAnalysis.value ? 'Review' : 'Use photo'
-})
-
-const toggleIcon = computed(() => {
-  return isExpanded.value ? 'eva-chevron-up-outline' : 'eva-camera-outline'
 })
 
 async function handlePhotoAdded(files: readonly File[]) {
@@ -188,10 +136,6 @@ function handlePhotoRemoved() {
   isExpanded.value = false
 }
 
-function toggleExpanded() {
-  isExpanded.value = !isExpanded.value
-}
-
 function reset() {
   photoAnalysis.clearPhoto()
   uploaderRef.value?.reset()
@@ -202,9 +146,3 @@ defineExpose({
   reset,
 })
 </script>
-
-<style lang="scss" scoped>
-.receipt-photo-section__toggle {
-  min-height: 44px;
-}
-</style>

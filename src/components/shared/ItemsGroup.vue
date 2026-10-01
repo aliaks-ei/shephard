@@ -1,5 +1,8 @@
 <template>
-  <div class="row items-center justify-between q-mb-md">
+  <div
+    v-if="title"
+    class="row items-center justify-between q-mb-md"
+  >
     <div class="row items-center">
       <q-icon
         :name="icon"
@@ -40,7 +43,7 @@
 withDefaults(
   defineProps<{
     items: ItemType[]
-    title: string
+    title?: string | undefined
     icon?: string
     chipColor?: string
   }>(),

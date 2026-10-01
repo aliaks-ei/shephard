@@ -51,6 +51,10 @@ vi.mock('src/queries/expenses', () => ({
     fetchNextPage,
     refetch: retry,
   }),
+  useActivitySummaryQuery: () => ({
+    expenses: mockExpenses,
+    isComplete: ref(true),
+  }),
 }))
 
 vi.mock('src/composables/useNetworkStatus', () => ({

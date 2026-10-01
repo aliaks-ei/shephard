@@ -46,7 +46,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   itemType: 'categories',
-  summaryLabel: 'Total Amount',
+  summaryLabel: 'Total amount',
   headingLevel: 'h3',
   amountSizeMobile: 'text-h6',
   amountSizeDesktop: 'text-h5',

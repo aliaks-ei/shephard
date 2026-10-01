@@ -62,7 +62,7 @@
         v-else
         class="text-caption text-muted"
       >
-        {{ remainingBudget >= 0 ? 'Still to pay' : 'Over' }}:
+        {{ remainingBudget >= 0 ? 'Left' : 'Over' }}:
         <span :class="remainingColorClass">{{ formatAmount(Math.abs(remainingBudget)) }}</span>
       </div>
     </q-item-section>

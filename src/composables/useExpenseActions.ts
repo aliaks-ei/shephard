@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import { Notify } from 'quasar'
 import { useDeleteExpenseMutation } from 'src/queries/expenses'
 import type { ExpenseWithCategory } from 'src/api'
 
@@ -7,6 +8,17 @@ import type { ExpenseWithCategory } from 'src/api'
 const pendingDeleteExpense = ref<ExpenseWithCategory | null>(null)
 const pendingOnSuccess = ref<(() => void) | undefined>()
 const isDeletingExpense = ref(false)
+
+// Rows removed by swipe stay hidden while the undo snackbar is open
+const undoPendingIds = ref(new Set<string>())
+const UNDO_TIMEOUT_MS = 4000
+
+function setUndoPending(id: string, pending: boolean) {
+  const next = new Set(undoPendingIds.value)
+  if (pending) next.add(id)
+  else next.delete(id)
+  undoPendingIds.value = next
+}
 
 function clearPendingDelete() {
   pendingDeleteExpense.value = null
@@ -33,6 +45,40 @@ export function useExpenseActions() {
     pendingOnSuccess.value = onSuccess
   }
 
+  /**
+   * Swipe delete: hide the row at once and delete when the snackbar closes,
+   * unless the user taps Undo. No confirm dialog.
+   */
+  function deleteExpenseWithUndo(expense: ExpenseWithCategory, onSuccess?: () => void) {
+    let undone = false
+    setUndoPending(expense.id, true)
+    Notify.create({
+      message: 'Expense deleted',
+      icon: 'eva-trash-2-outline',
+      timeout: UNDO_TIMEOUT_MS,
+      actions: [
+        {
+          label: 'Undo',
+          noCaps: true,
+          handler: () => {
+            undone = true
+            setUndoPending(expense.id, false)
+          },
+        },
+      ],
+      onDismiss: () => {
+        if (undone) return
+        // On success the row leaves the list with the refetch, so the id stays hidden.
+        // On error the mutation reports it; show the row again.
+        deleteExpense(expense, onSuccess).catch(() => setUndoPending(expense.id, false))
+      },
+    })
+  }
+
+  function isUndoPending(id: string): boolean {
+    return undoPendingIds.value.has(id)
+  }
+
   async function confirmPendingDelete(): Promise<void> {
     const expense = pendingDeleteExpense.value
     if (!expense || isDeletingExpense.value) return
@@ -55,6 +101,8 @@ export function useExpenseActions() {
   return {
     confirmDeleteExpense,
     deleteExpense,
+    deleteExpenseWithUndo,
+    isUndoPending,
     pendingDeleteExpense,
     isDeletingExpense,
     confirmPendingDelete,

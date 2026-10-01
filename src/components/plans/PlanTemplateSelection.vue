@@ -5,7 +5,7 @@
   >
     <SectionHeader
       icon="eva-file-text-outline"
-      title="Select Template"
+      title="Select template"
       icon-size="24px"
       spacing="q-mb-xs"
     />

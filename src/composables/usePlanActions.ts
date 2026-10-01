@@ -12,7 +12,6 @@ export type PlanActionHandlers = {
   onDelete: () => void
   onExport: () => void
   onAddExpense: () => void
-  onSwitchToEdit: () => void
 }
 
 export type PlanActionsContext = {
@@ -135,22 +134,14 @@ export function usePlanActions(context: PlanActionsContext) {
     {
       key: 'add-expense',
       icon: 'eva-plus-circle-outline',
-      label: 'Add Expense',
+      label: 'Add expense',
       color: 'primary',
       priority: 'primary',
       visible: context.canAddExpenses.value,
       disabled: writeDisabled.value,
       handler: context.handlers.onAddExpense,
     },
-    {
-      key: 'edit',
-      icon: 'eva-edit-outline',
-      label: 'Edit',
-      color: 'info',
-      priority: 'primary',
-      visible: context.isEditMode.value && context.canEditPlanData.value,
-      handler: context.handlers.onSwitchToEdit,
-    },
+    // Edit lives in the page tabs, not in the action bar
     ...sharedSecondaryActions.value,
   ])
 

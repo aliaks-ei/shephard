@@ -2,12 +2,12 @@ import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest'
 import CategoryIcon from './CategoryIcon.vue'
-import { QAvatar, QIcon } from 'quasar'
+import { QIcon } from 'quasar'
 
 installQuasarPlugin()
 
 describe('CategoryIcon', () => {
-  it('renders with default small size', () => {
+  it('renders a tinted tile with the default small size', () => {
     const wrapper = mount(CategoryIcon, {
       props: {
         color: '#FF5722',
@@ -15,79 +15,36 @@ describe('CategoryIcon', () => {
       },
     })
 
-    const avatar = wrapper.findComponent(QAvatar)
-    expect(avatar.exists()).toBe(true)
-    expect(avatar.props('size')).toBe('32px')
-    expect(avatar.props('textColor')).toBe('white')
-    expect(avatar.attributes('style')).toContain('background-color: #FF5722')
+    const tile = wrapper.find('.category-icon')
+    expect(tile.classes()).toContain('category-tone-tile')
+    expect(tile.attributes('style')).toContain('width: 36px')
+    expect(tile.attributes('style')).toContain('--cat-h')
 
     const icon = wrapper.findComponent(QIcon)
-    expect(icon.exists()).toBe(true)
     expect(icon.props('name')).toBe('eva-home-outline')
-    expect(icon.props('size')).toBe('16px')
+    expect(icon.props('size')).toBe('18px')
   })
 
-  it('renders with medium size', () => {
-    const wrapper = mount(CategoryIcon, {
-      props: {
-        color: '#4CAF50',
-        icon: 'eva-shopping-cart-outline',
-        size: 'md',
-      },
+  it('renders with medium and large sizes', () => {
+    const md = mount(CategoryIcon, {
+      props: { color: '#4CAF50', icon: 'eva-shopping-cart-outline', size: 'md' },
     })
+    expect(md.find('.category-icon').attributes('style')).toContain('width: 48px')
+    expect(md.findComponent(QIcon).props('size')).toBe('24px')
 
-    const avatar = wrapper.findComponent(QAvatar)
-    expect(avatar.props('size')).toBe('48px')
-
-    const icon = wrapper.findComponent(QIcon)
-    expect(icon.props('size')).toBe('24px')
+    const lg = mount(CategoryIcon, {
+      props: { color: '#2196F3', icon: 'eva-heart-outline', size: 'lg' },
+    })
+    expect(lg.find('.category-icon').attributes('style')).toContain('width: 64px')
+    expect(lg.findComponent(QIcon).props('size')).toBe('32px')
   })
 
-  it('renders with large size', () => {
-    const wrapper = mount(CategoryIcon, {
-      props: {
-        color: '#2196F3',
-        icon: 'eva-heart-outline',
-        size: 'lg',
-      },
-    })
+  it('derives a different tone for different category colours', () => {
+    const style = (color: string) =>
+      mount(CategoryIcon, { props: { color, icon: 'eva-star-outline' } })
+        .find('.category-icon')
+        .attributes('style')
 
-    const avatar = wrapper.findComponent(QAvatar)
-    expect(avatar.props('size')).toBe('64px')
-
-    const icon = wrapper.findComponent(QIcon)
-    expect(icon.props('size')).toBe('32px')
-  })
-
-  it('applies correct background color', () => {
-    const testCases = [{ color: '#FF0000' }, { color: '#00FF00' }, { color: '#0000FF' }]
-
-    testCases.forEach(({ color }) => {
-      const wrapper = mount(CategoryIcon, {
-        props: {
-          color,
-          icon: 'eva-star-outline',
-        },
-      })
-
-      const avatar = wrapper.findComponent(QAvatar)
-      expect(avatar.attributes('style')).toContain(`background-color: ${color}`)
-    })
-  })
-
-  it('renders different icons correctly', () => {
-    const icons = ['eva-home-outline', 'eva-shopping-cart-outline', 'eva-heart-outline']
-
-    icons.forEach((iconName) => {
-      const wrapper = mount(CategoryIcon, {
-        props: {
-          color: '#FF5722',
-          icon: iconName,
-        },
-      })
-
-      const icon = wrapper.findComponent(QIcon)
-      expect(icon.props('name')).toBe(iconName)
-    })
+    expect(style('#00FF00')).not.toBe(style('#0000FF'))
   })
 })

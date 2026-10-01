@@ -30,6 +30,16 @@ vi.mock('@tanstack/vue-query', async () => {
   }
 })
 
+vi.mock('src/queries/templates', () => ({
+  useTemplateItemSummariesQuery: vi.fn(() => ({ summaries: ref([]) })),
+}))
+
+const mockRouterPush = vi.fn()
+vi.mock('vue-router', () => ({
+  useRouter: () => ({ push: mockRouterPush }),
+  useRoute: () => ({ path: '/templates', query: {} }),
+}))
+
 vi.mock('src/queries/categories', () => ({
   useCategoriesQuery: vi.fn(() => ({
     categories: ref([
@@ -149,7 +159,7 @@ const EmptyStateStub = {
         <h3>{{ hasSearchQuery ? searchTitle : emptyTitle }}</h3>
         <p>{{ hasSearchQuery ? searchDescription : emptyDescription }}</p>
         <button v-if="hasSearchQuery" @click="$emit('clear-search')" class="clear-search-btn">
-          Clear Search
+          Clear search
         </button>
         <button v-else @click="$emit('create')" class="create-btn">
           {{ createButtonLabel }}
@@ -219,9 +229,9 @@ function createWrapper(
     hasItems: computed(() => hasTemplates),
     sortOptions: [
       { label: 'Name', value: 'name' },
-      { label: 'Total Amount', value: 'total' },
+      { label: 'Total amount', value: 'total' },
       { label: 'Duration', value: 'duration' },
-      { label: 'Created Date', value: 'created_at' },
+      { label: 'Created date', value: 'created_at' },
     ],
     emptyStateConfig: computed(() => ({
       searchIcon: 'eva-search-outline',
@@ -326,13 +336,13 @@ it('should render page title and description', () => {
   const { wrapper } = createWrapper()
 
   expect(wrapper.find('h1').text()).toBe('Templates')
-  expect(wrapper.text()).toContain('Manage your templates and create new ones')
+  expect(wrapper.text()).not.toContain('Manage your templates')
 })
 
 it('should render create template button', () => {
   const { wrapper } = createWrapper()
 
-  const createButton = wrapper.find('[data-label="Create Template"]')
+  const createButton = wrapper.find('[data-label="New template"]')
   expect(createButton.exists()).toBe(true)
   expect(createButton.attributes('data-color')).toBe('primary')
 })
@@ -340,7 +350,7 @@ it('should render create template button', () => {
 it('should call goToNew when create button is clicked', async () => {
   const { wrapper, mockUseTemplates } = createWrapper()
 
-  const createButton = wrapper.find('[data-label="Create Template"]')
+  const createButton = wrapper.find('[data-label="New template"]')
   await createButton.trigger('click')
 
   expect(mockUseTemplates.goToNew).toHaveBeenCalledOnce()
@@ -351,7 +361,7 @@ it('should render search and sort component', () => {
 
   const searchAndSort = wrapper.findComponent(SearchAndSortStub)
   expect(searchAndSort.exists()).toBe(true)
-  expect(searchAndSort.props('searchPlaceholder')).toBe('Search templates...')
+  expect(searchAndSort.props('searchPlaceholder')).toBe('Search templates')
 })
 
 it('should show loading skeleton when templates are loading', () => {
@@ -377,7 +387,7 @@ it('should show owned templates group when owned templates exist', () => {
     hasTemplates: true,
   })
 
-  const ownedGroup = wrapper.find('[data-title="My Templates"]')
+  const ownedGroup = wrapper.find('.templates-group-mock')
   expect(ownedGroup.exists()).toBe(true)
   expect(ownedGroup.attributes('data-templates-count')).toBe('2')
 })
@@ -388,7 +398,7 @@ it('should show shared templates group when shared templates exist', () => {
     hasTemplates: true,
   })
 
-  const group = wrapper.find('[data-title="My Templates"]')
+  const group = wrapper.find('.templates-group-mock')
   expect(group.exists()).toBe(true)
   expect(group.attributes('data-templates-count')).toBe('1')
 })
@@ -400,7 +410,7 @@ it('should show both template groups when both exist', () => {
     hasTemplates: true,
   })
 
-  const group = wrapper.find('[data-title="My Templates"]')
+  const group = wrapper.find('.templates-group-mock')
   expect(group.exists()).toBe(true)
   expect(group.attributes('data-templates-count')).toBe('3')
 })
@@ -511,9 +521,9 @@ it('should pass correct sort options to search and sort component', () => {
 
   expect(sortOptions).toHaveLength(4)
   expect(sortOptions[0]).toEqual({ label: 'Name', value: 'name' })
-  expect(sortOptions[1]).toEqual({ label: 'Total Amount', value: 'total' })
+  expect(sortOptions[1]).toEqual({ label: 'Total amount', value: 'total' })
   expect(sortOptions[2]).toEqual({ label: 'Duration', value: 'duration' })
-  expect(sortOptions[3]).toEqual({ label: 'Created Date', value: 'created_at' })
+  expect(sortOptions[3]).toEqual({ label: 'Created date', value: 'created_at' })
 })
 
 it('should update search query when search input changes', async () => {
@@ -569,7 +579,7 @@ it('should handle empty template arrays gracefully', () => {
     hasTemplates: false,
   })
 
-  expect(wrapper.find('[data-title="My Templates"]').exists()).toBe(false)
+  expect(wrapper.find('.templates-group-mock').exists()).toBe(false)
   expect(wrapper.find('[data-title="Shared with Me"]').exists()).toBe(false)
 
   const emptyState = wrapper.findComponent(EmptyStateStub)
@@ -583,7 +593,7 @@ it('should show only owned templates group when no shared templates', () => {
     hasTemplates: true,
   })
 
-  expect(wrapper.find('[data-title="My Templates"]').exists()).toBe(true)
+  expect(wrapper.find('.templates-group-mock').exists()).toBe(true)
   expect(wrapper.find('[data-title="Shared with Me"]').exists()).toBe(false)
 })
 
@@ -594,7 +604,7 @@ it('should show only shared templates group when no owned templates', () => {
     hasTemplates: true,
   })
 
-  expect(wrapper.find('[data-title="My Templates"]').exists()).toBe(true)
+  expect(wrapper.find('.templates-group-mock').exists()).toBe(true)
 })
 
 it('should show proper create button label in empty state', () => {

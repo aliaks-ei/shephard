@@ -102,15 +102,15 @@ it('updates currency preference when select is changed', () => {
   expect(selects.length).toBeGreaterThan(0)
 })
 
-it('updates theme preference when select value changes', async () => {
+it('updates theme preference from the segmented control', async () => {
   const { wrapper, userStore } = createWrapper()
 
   userStore.updateUserPreferences = vi.fn()
 
-  const selects = wrapper.findAllComponents({ name: 'QSelect' })
-  const themeSelect = selects[1]
+  const themeToggle = wrapper.findComponent({ name: 'QBtnToggle' })
+  expect(themeToggle.exists()).toBe(true)
 
-  await themeSelect?.vm.$emit('update:modelValue', 'dark')
+  await themeToggle.vm.$emit('update:modelValue', 'dark')
 
   expect(userStore.updateUserPreferences).toHaveBeenCalledWith({
     preferences: { theme: 'dark' },
@@ -138,8 +138,9 @@ it('handles sign out process correctly', async () => {
   userStore.signOut = vi.fn()
   mockRouterPush.mockClear()
 
-  const signOutButton = wrapper.find('.q-btn')
-  signOutButton.element.textContent = 'Sign Out'
+  const signOutButton = wrapper
+    .findAll('.q-btn')
+    .find((button) => button.text().includes('Sign out'))!
 
   await signOutButton.trigger('click')
 

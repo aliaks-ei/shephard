@@ -1,7 +1,9 @@
 import { computed, ref } from 'vue'
 import { useQueryClient } from '@tanstack/vue-query'
 import { useTemplates } from './useTemplates'
+import { DEFAULT_CATEGORY_COLOR } from 'src/utils/categories'
 import { useCategoriesQuery } from 'src/queries/categories'
+import { useTemplateItemSummariesQuery } from 'src/queries/templates'
 import { queryKeys } from 'src/queries/query-keys'
 import { useUserStore } from 'src/stores/user'
 import { useBanner } from './useBanner'
@@ -12,6 +14,14 @@ import {
   downloadExportFile,
   type ExportFormat,
 } from 'src/utils/export'
+
+export type TemplateComposition = {
+  itemCount: number
+  // Category colour and share of the total, largest first
+  segments: { color: string; share: number }[]
+}
+
+const MAX_COMPOSITION_SEGMENTS = 5
 
 export function useTemplatesPage() {
   const list = useTemplates()
@@ -31,6 +41,41 @@ export function useTemplatesPage() {
         )?.owner_id
       : undefined,
   )
+
+  const itemSummariesQuery = useTemplateItemSummariesQuery(() =>
+    list.allFilteredAndSortedItems.value.map((template) => template.id),
+  )
+  const compositionByTemplateId = computed(() => {
+    const byTemplate = new Map<string, { color: string; amount: number }[]>()
+    for (const row of itemSummariesQuery.summaries.value) {
+      const items = byTemplate.get(row.template_id) ?? []
+      items.push({ color: row.categories?.color ?? '', amount: row.amount })
+      byTemplate.set(row.template_id, items)
+    }
+    const result: Record<string, TemplateComposition> = {}
+    for (const [templateId, items] of byTemplate) {
+      const total = items.reduce((sum, item) => sum + item.amount, 0)
+      const amountByColor = new Map<string, number>()
+      for (const item of items) {
+        amountByColor.set(item.color, (amountByColor.get(item.color) ?? 0) + item.amount)
+      }
+      const segments = [...amountByColor]
+        .map(([color, amount]) => ({ color, share: total > 0 ? (amount / total) * 100 : 0 }))
+        .sort((a, b) => b.share - a.share)
+      // Many small categories turn the bar into noise: keep the largest, merge the rest
+      const otherShare = segments
+        .slice(MAX_COMPOSITION_SEGMENTS)
+        .reduce((sum, segment) => sum + segment.share, 0)
+      result[templateId] = {
+        itemCount: items.length,
+        segments: [
+          ...segments.slice(0, MAX_COMPOSITION_SEGMENTS),
+          ...(otherShare > 0 ? [{ color: DEFAULT_CATEGORY_COLOR, share: otherShare }] : []),
+        ],
+      }
+    }
+    return result
+  })
 
   async function onRefresh(done: () => void) {
     try {
@@ -70,6 +115,7 @@ export function useTemplatesPage() {
 
   return {
     ...list,
+    compositionByTemplateId,
     isOffline,
     isShareDialogOpen,
     isExportDialogOpen,
