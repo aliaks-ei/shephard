@@ -196,4 +196,24 @@ describe('advertised tool schemas', () => {
 
     expect(required).toContain('idempotency_key')
   })
+
+  it('limits plan status and template duration to the values the app understands', async () => {
+    const tools = await listTools()
+    const inputProperty = (toolName: string, property: string) =>
+      tools.find((tool) => tool.name === toolName)?.inputSchema?.properties?.[property] as
+        | { enum?: string[] }
+        | undefined
+
+    expect(inputProperty('update_plan', 'status')?.enum).toEqual([
+      'pending',
+      'active',
+      'completed',
+      'cancelled',
+    ])
+    expect(inputProperty('create_template', 'duration')?.enum).toEqual([
+      'weekly',
+      'monthly',
+      'yearly',
+    ])
+  })
 })
