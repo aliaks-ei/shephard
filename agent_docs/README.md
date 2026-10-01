@@ -6,5 +6,6 @@ Use these docs progressively. Read only the files that match the task instead of
 - `implementation.md`: runtime editing rules, data flow, mutation/error patterns, and Vue/Quasar conventions.
 - `testing.md`: Vitest setup, mocking conventions, test placement, and coverage expectations.
 - `tooling.md`: commands, env, Quasar/PWA/MSW/Supabase details, and verification guidance.
+- `performance-verification.md`: performance, PWA, and device release gates.
 
 Authoritative source files still live in the codebase. These docs point to those areas so agents can load the right files without bloating context.

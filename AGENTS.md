@@ -10,6 +10,7 @@ Keep this file compact. Read only the docs that match the task under `agent_docs
 - `agent_docs/implementation.md`: data flow, layer responsibilities, mutation/error patterns, permissions, and Vue/Quasar implementation rules.
 - `agent_docs/testing.md`: Vitest setup, mocking conventions, test placement, and coverage expectations.
 - `agent_docs/tooling.md`: commands, env, Quasar/PWA/MSW/Supabase details, and verification guidance.
+- `agent_docs/performance-verification.md`: performance, PWA, and device release gates. Run its commands only when the user asks for verification.
 
 ## Always Applicable Rules
 
@@ -34,6 +35,7 @@ Keep this file compact. Read only the docs that match the task under `agent_docs
 - Mock query hooks at the module boundary with `vi.mock()` and return the same reactive shape as production hooks.
 - Add coverage for rollback paths, permission branches, and visibility/guard logic when behavior changes.
 - Run the smallest relevant checks before finishing: `npm run type-check`, `npm run test:unit:ci`, `npm run lint`, `npm run build`.
+- Root checks do not cover `supabase/functions/` or `services/shephard-mcp/`. Use `npm run test:edge` for edge functions and `npm run mcp:type-check` + `npm run mcp:test` for the MCP service.
 
 ## Environment
 

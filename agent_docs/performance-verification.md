@@ -24,18 +24,6 @@ desktop localhost result is not a substitute for installed iOS or Android behavi
 
 No measurements have been recorded by this document.
 
-## Existing Artifact Snapshot
-
-The existing `dist/pwa` output inspected during the repository audit was not rebuilt and may be
-stale. It is a directional reference only:
-
-- entry JavaScript: about 157 KB uncompressed
-- global CSS: about 236 KB uncompressed
-- lazy `heic2any` chunk: about 1.3 MB uncompressed
-- expense registration dialog chunk: about 66 KB uncompressed
-
-A fresh baseline must replace these values before any measurement-gated optimization is approved.
-
 ## Bundle Baseline
 
 1. Run `npm run build:analyze`.
@@ -167,5 +155,4 @@ Only implement an optimization when the corresponding evidence is recorded:
 - dialog consolidation/lazy loading: closed-dialog route cost is material and open latency is safe.
 - glass reduction: target-device paint/FPS trace shows jank.
 - View Transition narrowing: route interaction timing regresses.
-- Brotli artifacts: deployment is confirmed to serve precompressed files correctly.
 - splash trimming: retained assets cover supported iOS devices without launch regressions.
