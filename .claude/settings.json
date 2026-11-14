@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx vitest run *)",
+      "Bash(npm view *)",
+      "mcp__claude_ai_Cloudflare_Developer_Platform__search_cloudflare_documentation",
+      "Bash(npm run type-check)",
+      "mcp__claude-in-chrome__tabs_context_mcp",
+      "mcp__supabase__list_edge_functions",
+      "mcp__claude_ai_Supabase__query_logs",
+      "mcp__claude-in-chrome__get_page_text",
+      "mcp__claude-in-chrome__find",
+      "mcp__claude-in-chrome__read_console_messages",
+      "mcp__supabase__get_edge_function"
+    ]
+  }
+}
